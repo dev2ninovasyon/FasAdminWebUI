@@ -3,8 +3,17 @@ import React, { useEffect, useState } from "react";
 import CustomFormLabel from "@/app/components/Forms/ThemeElements/CustomFormLabel";
 import { usePathname } from "next/navigation";
 import { getDenetciById } from "@/api/DenetciIslemleri/DenetciIslemleri";
+import { useSelector } from "@/store/hooks";
+import { AppState } from "@/store/store";
 
 const DenetciDetay = () => {
+  const user = useSelector((state: AppState) => state.userReducer);
+
+  const pathname = usePathname();
+  const segments = pathname.split("/");
+  const idIndex = segments.indexOf("DenetciDetay") + 1;
+  const pathId = segments[idIndex];
+
   const [firmaAdi, setFirmaAdi] = useState(0);
   const [firmaUnvani, setFirmaUnvani] = useState("");
   const [adres, setAdress] = useState("");
@@ -20,14 +29,10 @@ const DenetciDetay = () => {
     new Date().toISOString().substr(0, 10)
   );
   const [aktifmi, setAktifmi] = useState(true);
-  const pathname = usePathname();
-  const segments = pathname.split("/");
-  const idIndex = segments.indexOf("DenetciDetay") + 1;
-  const pathId = segments[idIndex];
 
   const fetchData = async () => {
     try {
-      const result = await getDenetciById(pathId);
+      const result = await getDenetciById(user.token || "", pathId);
       setFirmaAdi(result.firmaAdi);
       setFirmaUnvani(result.firmaUnvani);
       setAdress(result.adres);

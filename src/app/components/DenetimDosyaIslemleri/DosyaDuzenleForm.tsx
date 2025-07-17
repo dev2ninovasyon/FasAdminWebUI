@@ -7,12 +7,18 @@ import {
   getDosyaById,
   updateDosya,
 } from "@/api/DenetimDosyaBelgeleri/DenetimDosyaIslemleri";
+import { useSelector } from "@/store/hooks";
+import { AppState } from "@/store/store";
 
 const DosyaDuzenleForm = () => {
+  const user = useSelector((state: AppState) => state.userReducer);
+
   const pathname = usePathname();
   const segments = pathname.split("/");
   const idIndex = segments.indexOf("DosyaDuzenle") + 1;
   const pathId = segments[idIndex];
+
+  const router = useRouter();
 
   const [dosyaNevi, setDosyaNevi] = useState("");
   const [belgeAdi, setBelgeAdi] = useState("");
@@ -21,8 +27,6 @@ const DosyaDuzenleForm = () => {
   const [formUrl, setFormUrl] = useState("");
   const [referansNo, setReferansNo] = useState("");
   const [arsivKlasorAdi, setArsivKlasorAdi] = useState("");
-
-  const router = useRouter();
 
   const handleButtonClick = async () => {
     const updatedDosya = {
@@ -35,7 +39,7 @@ const DosyaDuzenleForm = () => {
       arsivKlasorAdi,
     };
     try {
-      const result = await updateDosya(pathId, updatedDosya);
+      const result = await updateDosya(user.token || "", pathId, updatedDosya);
       if (result) {
         router.push("/DenetimDosyaBelgeleri");
       } else {
@@ -48,7 +52,7 @@ const DosyaDuzenleForm = () => {
 
   const fetchData = async () => {
     try {
-      const dosyaVerileri = await getDosyaById(pathId);
+      const dosyaVerileri = await getDosyaById(user.token || "", pathId);
       setDosyaNevi(dosyaVerileri.dosyaNevi);
       setBelgeAdi(dosyaVerileri.belgeAdi);
       setBds(dosyaVerileri.bds || ""); // Set to empty string if null

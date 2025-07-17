@@ -20,8 +20,11 @@ import { PersistGate } from "redux-persist/integration/react";
 import { store, persistor } from "@/store/storeConfig";
 import { SnackbarProvider } from "notistack";
 import RTL from "./components/Layout/Shared/Customizer/RTL";
+import useAutoLogout from "@/utils/useAutoLogOut";
 
 export const MyApp = ({ children }: { children: React.ReactNode }) => {
+  useAutoLogout(45 * 60 * 1000, 40 * 60 * 1000); // 45 dakika idle süresi, 40 dakika refresh süresi
+
   const theme = ThemeSettings();
 
   const customizer = useSelector((state: AppState) => state.customizer);
@@ -58,7 +61,7 @@ export default function RootLayout({
     setTimeout(() => setLoading(true), 3000);
   }, []);
   return (
-    <html lang="en" suppressHydrationWarning>
+    <html suppressHydrationWarning>
       <body>
         <Provider store={store}>
           <PersistGate loading={null} persistor={persistor}>

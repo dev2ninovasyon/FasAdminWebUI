@@ -8,6 +8,8 @@ import {
   getDosya,
 } from "@/api/DenetimDosyaBelgeleri/DenetimDosyaIslemleri";
 import CustomSelect from "@/app/components/Forms/ThemeElements/CustomSelect";
+import { useSelector } from "@/store/hooks";
+import { AppState } from "@/store/store";
 
 interface RowData {
   id: number;
@@ -24,6 +26,8 @@ interface RowData {
 }
 
 const DosyaEkleForm: React.FC = () => {
+  const user = useSelector((state: AppState) => state.userReducer);
+
   const router = useRouter();
 
   const [rows, setRows] = useState<RowData[]>([]);
@@ -55,7 +59,7 @@ const DosyaEkleForm: React.FC = () => {
     };
 
     try {
-      const result = await createDosya(createdDosya);
+      const result = await createDosya(user.token || "", createdDosya);
       if (result) {
         router.push("/DenetciFirmaIslemleri");
       } else {
@@ -68,7 +72,7 @@ const DosyaEkleForm: React.FC = () => {
 
   const fetchData = async () => {
     try {
-      const denetciVerileri = await getDosya();
+      const denetciVerileri = await getDosya(user.token || "");
       const newRows: RowData[] = denetciVerileri.map((dosya: any) => ({
         id: dosya.id, // Assuming there's an 'id' field in the actual entity
         parentId: dosya.parentId,

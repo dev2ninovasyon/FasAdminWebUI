@@ -7,18 +7,22 @@ import {
   getFormatById,
   updateFormat,
 } from "@/api/FormatIslemleri/FormatIslemleri";
+import { useSelector } from "@/store/hooks";
+import { AppState } from "@/store/store";
 
 const FormatDuzenleForm = () => {
+  const user = useSelector((state: AppState) => state.userReducer);
+
   const pathname = usePathname();
   const segments = pathname.split("/");
   const idIndex = segments.indexOf("FormatDuzenle") + 1;
   const pathId = segments[idIndex];
 
+  const router = useRouter();
+
   const id = pathId;
   const [adi, setAdi] = useState("");
   const [satirSayisi, setSatirSayisi] = useState(0);
-
-  const router = useRouter();
 
   const handleButtonClick = async () => {
     const updatedFormat = {
@@ -26,7 +30,7 @@ const FormatDuzenleForm = () => {
       satirSayisi,
     };
     try {
-      const result = await updateFormat(id, updatedFormat);
+      const result = await updateFormat(user.token || "", id, updatedFormat);
       if (result) {
         router.push("/Formatlar");
       } else {
@@ -39,7 +43,7 @@ const FormatDuzenleForm = () => {
 
   const fetchData = async () => {
     try {
-      const formatVerileri = await getFormatById(pathId);
+      const formatVerileri = await getFormatById(user.token || "", pathId);
       setAdi(formatVerileri.adi);
       setSatirSayisi(formatVerileri.satirSayisi);
     } catch (error) {

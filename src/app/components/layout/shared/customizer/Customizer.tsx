@@ -240,7 +240,7 @@ const Customizer: FC = () => {
             </Grid>
             <Box pt={4} />
             {/* ------------------------------------------- */}
-            {/* ------------ Layout Horizontal / Vertical ------------- */}
+            {/* ------------ Layout Vertical / Horizontal ------------- */}
             {/* ------------------------------------------- */}
             <Typography variant="h6" gutterBottom>
               Layout Type
@@ -302,18 +302,11 @@ const Customizer: FC = () => {
                 Full
               </StyledBox>
             </Stack>
-            <Box pt={4} />
             {/* ------------------------------------------- */}
-            {/* ------------ Sidebar Color setting ------------- */}
+            {/* ------------ Sidebar Full / Mini ------------- */}
             {/* ------------------------------------------- */}
-
-            {/* ------------------------------------------- */}
-            {/* ------------ Theme Color setting ------------- */}
-            {/* ------------------------------------------- */}
-            {customizer.isHorizontal ? (
-              ""
-            ) : (
-              <>
+            {customizer.isHorizontal ? null : (
+              <Box pt={4}>
                 <Typography variant="h6" gutterBottom>
                   Sidebar Type
                 </Typography>
@@ -336,10 +329,10 @@ const Customizer: FC = () => {
                     <ViewSidebarTwoToneIcon
                       color={customizer.isCollapse ? "primary" : "inherit"}
                     />
-                    mini
+                    Mini
                   </StyledBox>
                 </Stack>
-              </>
+              </Box>
             )}
             <Box pt={4} />
             <Typography variant="h6" gutterBottom>

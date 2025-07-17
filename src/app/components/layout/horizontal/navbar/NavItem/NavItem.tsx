@@ -2,15 +2,14 @@ import React from "react";
 import Link from "next/link";
 
 // mui imports
-import Chip from '@mui/material/Chip';
-import List from '@mui/material/List';
-import ListItemButton from '@mui/material/ListItemButton';
-import ListItemIcon from '@mui/material/ListItemIcon';
-import ListItemText from '@mui/material/ListItemText';
-import { Theme } from '@mui/material/styles';
-import Typography from '@mui/material/Typography';
-import useMediaQuery from '@mui/material/useMediaQuery';
-import { styled, useTheme } from '@mui/material/styles';
+import List from "@mui/material/List";
+import ListItemButton from "@mui/material/ListItemButton";
+import ListItemIcon from "@mui/material/ListItemIcon";
+import ListItemText from "@mui/material/ListItemText";
+import { Theme } from "@mui/material/styles";
+import Typography from "@mui/material/Typography";
+import useMediaQuery from "@mui/material/useMediaQuery";
+import { styled, useTheme } from "@mui/material/styles";
 import { useSelector } from "@/store/hooks";
 import { useTranslation } from "react-i18next";
 import { AppState } from "@/store/store";
@@ -61,10 +60,10 @@ export default function NavItem({
 
   const ListItemStyled = styled(ListItemButton)(() => ({
     whiteSpace: "nowrap",
-    padding: '5px 10px',
-    gap: '10px',
+    padding: "5px 10px",
+    gap: "10px",
     borderRadius: `${customizer.borderRadius}px`,
-    marginBottom: level > 1 ? '3px' : '0px',
+    marginBottom: level > 1 ? "3px" : "0px",
     backgroundColor: level > 1 ? "transparent !important" : "inherit",
     color:
       level > 1 && pathDirect === item?.href
@@ -107,7 +106,7 @@ export default function NavItem({
         >
           <ListItemIcon
             sx={{
-              minWidth: 'auto',
+              minWidth: "auto",
               p: "3px 0",
               color:
                 level > 1 && pathDirect === item?.href

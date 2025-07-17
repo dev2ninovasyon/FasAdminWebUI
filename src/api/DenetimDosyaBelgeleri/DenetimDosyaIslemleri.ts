@@ -1,11 +1,12 @@
-import { url } from "../apiBase";
+import { url } from "@/api/apiBase";
 
-export const getDosya = async () => {
+export const getDosya = async (token: string) => {
   try {
     const response = await fetch(`${url}/DenetimDosyaBelgeleri/Hepsi`, {
       method: "GET",
       headers: {
         accept: "application/json",
+        Authorization: `Bearer ${token}`,
       },
     });
     if (response.ok) {
@@ -18,12 +19,13 @@ export const getDosya = async () => {
   }
 };
 
-export const getDosyaById = async (id: any) => {
+export const getDosyaById = async (token: string, id: any) => {
   try {
     const response = await fetch(`${url}/DenetimDosyaBelgeleri/${id}`, {
       method: "GET",
       headers: {
         accept: "application/json",
+        Authorization: `Bearer ${token}`,
       },
     });
     if (response.ok) {
@@ -36,13 +38,14 @@ export const getDosyaById = async (id: any) => {
   }
 };
 
-export const createDosya = async (createdDosya: any) => {
+export const createDosya = async (token: string, createdDosya: any) => {
   try {
     const response = await fetch(`${url}/DenetimDosyaBelgeleri`, {
       method: "POST",
       headers: {
         accept: "*/*",
         "Content-Type": "application/json",
+        Authorization: `Bearer ${token}`,
       },
       body: JSON.stringify(createdDosya),
     });
@@ -57,13 +60,18 @@ export const createDosya = async (createdDosya: any) => {
   }
 };
 
-export const updateDosya = async (id: any, updatedDosya: any) => {
+export const updateDosya = async (
+  token: string,
+  id: any,
+  updatedDosya: any
+) => {
   try {
     const response = await fetch(`${url}/DenetimDosyaBelgeleri/${id}`, {
       method: "PUT",
       headers: {
         accept: "*/*",
         "Content-Type": "application/json",
+        Authorization: `Bearer ${token}`,
       },
       body: JSON.stringify(updatedDosya),
     });

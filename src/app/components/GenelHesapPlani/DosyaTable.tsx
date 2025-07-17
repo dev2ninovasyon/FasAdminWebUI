@@ -20,7 +20,7 @@ import { Stack } from "@mui/system";
 import { useSelector } from "@/store/hooks";
 import { AppState } from "@/store/store";
 import TablePaginationActions from "@mui/material/TablePagination/TablePaginationActions";
-import { ConfirmPopUpComponent } from "../PopUps/ConfirmPopUpComponent";
+import { ConfirmPopUpComponent } from "@/app/components/PopUps/ConfirmPopUpComponent";
 import {
   deleteDosyaBilgileri,
   getDosyaBilgileri,

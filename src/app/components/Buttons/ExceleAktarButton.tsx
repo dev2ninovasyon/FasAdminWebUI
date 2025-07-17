@@ -1,6 +1,6 @@
 import React from "react";
 import { Button } from "@mui/material";
-import { IconFileTypeDocx, IconFileTypeXls } from "@tabler/icons-react";
+import { IconFileTypeXls } from "@tabler/icons-react";
 
 interface Props {
   handleDownload: () => void;

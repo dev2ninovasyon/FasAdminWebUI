@@ -4,12 +4,18 @@ import CustomFormLabel from "@/app/components/Forms/ThemeElements/CustomFormLabe
 import CustomTextField from "@/app/components/Forms/ThemeElements/CustomTextField";
 import { usePathname, useRouter } from "next/navigation";
 import { createKullanici } from "@/api/DenetciIslemleri/DenetciIslemleri";
+import { useSelector } from "@/store/hooks";
+import { AppState } from "@/store/store";
 
 const KullaniciEkleForm = () => {
+  const user = useSelector((state: AppState) => state.userReducer);
+
   const pathname = usePathname();
   const segments = pathname.split("/");
   const idIndex = segments.indexOf("KullaniciEkle") + 1;
   const pathId = segments[idIndex];
+
+  const router = useRouter();
 
   const denetciId = pathId;
   const [bdScilNo, setBdSicilNo] = useState("");
@@ -21,8 +27,6 @@ const KullaniciEkleForm = () => {
   const [sifre, setSifre] = useState("");
   const [personelDosyaArsivId, setPersonelDosyaArsivId] = useState("");
   const [aktifPasif, setAktifPasif] = useState(true);
-
-  const router = useRouter();
 
   const handleButtonClick = async () => {
     const createdKullanici = {
@@ -37,7 +41,7 @@ const KullaniciEkleForm = () => {
       aktifPasif,
     };
     try {
-      const result = await createKullanici(createdKullanici);
+      const result = await createKullanici(user.token || "", createdKullanici);
       if (result) {
         router.push("/DenetciFirmaIslemleri");
       } else {
