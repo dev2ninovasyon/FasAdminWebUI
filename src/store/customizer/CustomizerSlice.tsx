@@ -1,9 +1,10 @@
 import { createSlice } from "@reduxjs/toolkit";
 
 interface StateType {
-  activeDir?: string | any;
-  activeMode?: string; // This can be light or dark
   activeTheme?: string; // BLUE_THEME, GREEN_THEME, BLACK_THEME, PURPLE_THEME, ORANGE_THEME
+  activeMode?: string; // This can be light or dark
+  activeDir?: string | any;
+  avatarSrc?: string;
   SidebarWidth?: number;
   MiniSidebarWidth?: number;
   TopbarHeight?: number;
@@ -18,9 +19,10 @@ interface StateType {
 }
 
 const initialState: StateType = {
-  activeDir: "ltr",
-  activeMode: "light", // This can be light or dark
   activeTheme: "BLUE_THEME", // BLUE_THEME, GREEN_THEME, BLACK_THEME, PURPLE_THEME, ORANGE_THEME
+  activeMode: "light", // This can be light or dark
+  activeDir: "ltr",
+  avatarSrc: "/images/profile/user-1.jpg",
   SidebarWidth: 270,
   MiniSidebarWidth: 87,
   TopbarHeight: 70,
@@ -46,6 +48,9 @@ export const CustomizerSlice = createSlice({
     },
     setDir: (state: StateType, action) => {
       state.activeDir = action.payload;
+    },
+    setAvatar: (state: StateType, action) => {
+      state.avatarSrc = action.payload;
     },
     setLanguage: (state: StateType, action) => {
       state.isLanguage = action.payload;
@@ -81,6 +86,8 @@ export const {
   setTheme,
   setDarkMode,
   setDir,
+  setAvatar,
+  setCollapse,
   toggleSidebar,
   hoverSidebar,
   toggleMobileSidebar,
@@ -89,7 +96,6 @@ export const {
   toggleHorizontal,
   setLanguage,
   setCardShadow,
-  setCollapse,
 } = CustomizerSlice.actions;
 
 export default CustomizerSlice.reducer;

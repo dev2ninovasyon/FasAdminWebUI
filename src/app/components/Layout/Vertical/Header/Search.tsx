@@ -13,7 +13,7 @@ import {
   ListItemButton,
 } from "@mui/material";
 import { IconSearch, IconX } from "@tabler/icons-react";
-import Menuitems from "../Sidebar/MenuItems";
+import Menuitems from "@/app/components/Layout/Vertical/Sidebar/MenuItems";
 import Link from "next/link";
 
 interface menuType {
@@ -37,7 +37,7 @@ const Search = () => {
     if (rotr.length > 1)
       return rotr.filter((t: any) =>
         t.title
-          ? t.href.toLocaleLowerCase().includes(cSearch.toLocaleLowerCase())
+          ? t.title.toLocaleLowerCase().includes(cSearch.toLocaleLowerCase())
           : ""
       );
 
@@ -70,7 +70,7 @@ const Search = () => {
           <Stack direction="row" spacing={2} alignItems="center">
             <TextField
               id="tb-search"
-              placeholder="Search here"
+              placeholder="Ara..."
               fullWidth
               onChange={(e) => setSerach(e.target.value)}
               inputProps={{ "aria-label": "Search here" }}
@@ -82,9 +82,6 @@ const Search = () => {
         </DialogContent>
         <Divider />
         <Box p={2} sx={{ maxHeight: "60vh", overflow: "auto" }}>
-          <Typography variant="h5" p={1}>
-            Quick Page Links
-          </Typography>
           <Box>
             <List component="nav">
               {searchData.map((menu: menuType) => {

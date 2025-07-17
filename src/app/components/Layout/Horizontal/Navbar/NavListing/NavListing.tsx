@@ -1,25 +1,25 @@
-import Menudata from '../Menudata';
+import Menudata from "@/app/components/Layout/Horizontal/Navbar/Menudata";
 import { usePathname } from "next/navigation";
-import Box from '@mui/material/Box';
-import List from '@mui/material/List';
-import { Theme } from '@mui/material/styles';
-import useMediaQuery from '@mui/material/useMediaQuery';
-import { useSelector } from '@/store/hooks';
-import NavItem from '../NavItem/NavItem';
-import NavCollapse from '../NavCollapse/NavCollapse';
-import { AppState } from '@/store/store';
+import Box from "@mui/material/Box";
+import List from "@mui/material/List";
+import { Theme } from "@mui/material/styles";
+import useMediaQuery from "@mui/material/useMediaQuery";
+import { useSelector } from "@/store/hooks";
+import NavItem from "@/app/components/Layout/Horizontal/Navbar/NavItem/NavItem";
+import NavCollapse from "@/app/components/Layout/Horizontal/Navbar/NavCollapse/NavCollapse";
+import { AppState } from "@/store/store";
 
 const NavListing = () => {
-  const pathname  = usePathname();
+  const pathname = usePathname();
   const pathDirect = pathname;
-  const pathWithoutLastPart = pathname.slice(0, pathname.lastIndexOf('/'));
+  const pathWithoutLastPart = pathname.slice(0, pathname.lastIndexOf("/"));
   const customizer = useSelector((state: AppState) => state.customizer);
-  const lgUp = useMediaQuery((theme: Theme) => theme.breakpoints.up('lg'));
-  const hideMenu = lgUp ? customizer.isCollapse && !customizer.isSidebarHover : '';
+  const lgUp = useMediaQuery((theme: Theme) => theme.breakpoints.up("lg"));
+  const hideMenu = !lgUp;
 
   return (
     <Box>
-      <List sx={{ p: 0, display: 'flex', gap: '3px', zIndex: '100' }}>
+      <List sx={{ p: 0, display: "flex", gap: "3px", zIndex: "100" }}>
         {Menudata.map((item) => {
           if (item.children) {
             return (
@@ -29,15 +29,23 @@ const NavListing = () => {
                 hideMenu={hideMenu}
                 pathWithoutLastPart={pathWithoutLastPart}
                 level={1}
-                key={item.id} onClick={undefined} />
+                key={item.id}
+                onClick={undefined}
+              />
             );
 
             // {/********If Sub No Menu**********/}
           } else {
             return (
-              <NavItem item={item} key={item.id} pathDirect={pathDirect} hideMenu={hideMenu} onClick={function (): void {
-                throw new Error('Function not implemented.');
-              }} />
+              <NavItem
+                item={item}
+                key={item.id}
+                pathDirect={pathDirect}
+                hideMenu={hideMenu}
+                onClick={function (): void {
+                  throw new Error("Function not implemented.");
+                }}
+              />
             );
           }
         })}

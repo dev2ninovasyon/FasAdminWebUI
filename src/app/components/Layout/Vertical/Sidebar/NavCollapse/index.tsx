@@ -14,7 +14,7 @@ import useMediaQuery from "@mui/material/useMediaQuery";
 import { styled, useTheme } from "@mui/material/styles";
 
 // custom imports
-import NavItem from "../NavItem";
+import NavItem from "@/app/components/Layout/Vertical/Sidebar/NavItem";
 import { isNull } from "lodash";
 
 // plugins

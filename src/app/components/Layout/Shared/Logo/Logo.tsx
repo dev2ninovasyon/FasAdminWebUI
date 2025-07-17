@@ -16,7 +16,7 @@ const Logo = () => {
 
   if (customizer.activeDir === "ltr") {
     return (
-      <LinkStyled href="/">
+      <LinkStyled href="/Anasayfa">
         {customizer.activeMode === "dark" ? (
           <Image
             src="/images/logos/fas-logo-yazili-beyaz.png"
@@ -41,7 +41,7 @@ const Logo = () => {
   }
 
   return (
-    <LinkStyled href="/">
+    <LinkStyled href="/Anasayfa">
       {customizer.activeMode === "dark" ? (
         <Image
           src="/images/logos/fas-logo-yazili-beyaz.png"

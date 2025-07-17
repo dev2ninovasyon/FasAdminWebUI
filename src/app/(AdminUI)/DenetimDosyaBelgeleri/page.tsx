@@ -3,8 +3,6 @@ import { Box, Grid } from "@mui/material";
 import PageContainer from "@/app/components/Container/PageContainer";
 import Breadcrumb from "@/app/components/Layout/Shared/Breadcrumb/Breadcrumb";
 import ParentCard from "@/app/components/Shared/ParentCard";
-import DenetciTable from "@/app/components/Tables/DenetciTable";
-import DenetciEkleButton from "@/app/components/DenetciIslemleri/DenetciEkleButton";
 import DenetimDosyaTable from "@/app/components/Tables/DenetimDosyaTable";
 import DosyaEkleButton from "@/app/components/DenetimDosyaIslemleri/DosyaEkleButton";
 

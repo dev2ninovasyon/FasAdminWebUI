@@ -8,15 +8,17 @@ import Toolbar from "@mui/material/Toolbar";
 import useMediaQuery from "@mui/material/useMediaQuery";
 import { styled } from "@mui/material/styles";
 import { useSelector, useDispatch } from "@/store/hooks";
-import { toggleMobileSidebar } from "@/store/customizer/CustomizerSlice";
+import {
+  toggleMobileSidebar,
+  toggleSidebar,
+} from "@/store/customizer/CustomizerSlice";
 import { IconMenu2 } from "@tabler/icons-react";
-import Notifications from "../../Vertical/Header/Notification";
+import Notifications from "@/app/components/Layout/Vertical/Header/Notification";
 
-import Profile from "../../Vertical/Header/Profile";
-import Search from "../../Vertical/Header/Search";
-import Language from "../../Vertical/Header/Language";
-import Navigation from "../../Vertical/Header/Navigation";
-import Logo from "../../Shared/Logo/Logo";
+import Profile from "@/app/components/Layout/Vertical/Header/Profile/Profile";
+import Search from "@/app/components/Layout/Vertical/Header/Search";
+import Language from "@/app/components/Layout/Vertical/Header/Language";
+import Logo from "@/app/components/Layout/Shared/Logo/Logo";
 import { AppState } from "@/store/store";
 
 const Header = () => {
@@ -49,9 +51,11 @@ const Header = () => {
           maxWidth: customizer.isLayout === "boxed" ? "lg" : "100%!important",
         }}
       >
-        <Box sx={{ width: lgDown ? "45px" : "auto", overflow: "hidden" }}>
-          <Logo />
-        </Box>
+        {customizer.isHorizontal && lgUp && (
+          <Box sx={{ width: lgDown ? "45px" : "auto", overflow: "hidden" }}>
+            <Logo />
+          </Box>
+        )}
         {/* ------------------------------------------- */}
         {/* Toggle Button Sidebar */}
         {/* ------------------------------------------- */}
@@ -59,9 +63,13 @@ const Header = () => {
           <IconButton
             color="inherit"
             aria-label="menu"
-            onClick={() => dispatch(toggleMobileSidebar())}
+            onClick={
+              lgUp
+                ? () => dispatch(toggleSidebar())
+                : () => dispatch(toggleMobileSidebar())
+            }
           >
-            <IconMenu2 />
+            <IconMenu2 size="20" />
           </IconButton>
         ) : (
           ""
@@ -70,11 +78,6 @@ const Header = () => {
         {/* Search Dropdown */}
         {/* ------------------------------------------- */}
         <Search />
-        {lgUp ? (
-          <>
-            <Navigation />
-          </>
-        ) : null}
         <Box flexGrow={1} />
         <Stack spacing={1} direction="row" alignItems="center">
           <Language />

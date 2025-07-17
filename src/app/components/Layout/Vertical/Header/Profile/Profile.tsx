@@ -1,5 +1,6 @@
 import React, { useState } from "react";
-import Link from "next/link";
+import { useDispatch, useSelector } from "@/store/hooks";
+import { AppState } from "@/store/store";
 import {
   Box,
   Menu,
@@ -9,19 +10,25 @@ import {
   Button,
   IconButton,
 } from "@mui/material";
-import * as dropdownData from "./data";
-
 import { IconMail } from "@tabler/icons-react";
 import { Stack } from "@mui/system";
-import Image from "next/image";
+import ProfileItems from "./ProfileItems";
+import { resetToNull } from "@/store/user/UserSlice";
 
 const Profile = () => {
+  const dispatch = useDispatch();
   const [anchorEl2, setAnchorEl2] = useState(null);
+  const user = useSelector((state: AppState) => state.userReducer);
+  const customizer = useSelector((state: AppState) => state.customizer);
+
   const handleClick2 = (event: any) => {
     setAnchorEl2(event.currentTarget);
   };
   const handleClose2 = () => {
     setAnchorEl2(null);
+  };
+  const handleLogOut = () => {
+    dispatch(resetToNull(""));
   };
 
   return (
@@ -40,7 +47,11 @@ const Profile = () => {
         onClick={handleClick2}
       >
         <Avatar
-          src={"/images/profile/user-1.jpg"}
+          src={
+            customizer.avatarSrc
+              ? customizer.avatarSrc
+              : "/images/profile/user-1.jpg"
+          }
           alt={"ProfileImg"}
           sx={{
             width: 35,
@@ -66,14 +77,21 @@ const Profile = () => {
           },
         }}
       >
-        <Typography variant="h5">Kullanıcı Profili</Typography>
-        <Stack direction="row" py={3} spacing={2} alignItems="center">
+        <Stack direction="row" pb={3} spacing={2} alignItems="center">
           <Avatar
-            src={"/images/profile/user-1.jpg"}
+            src={
+              customizer.avatarSrc
+                ? customizer.avatarSrc
+                : "/images/profile/user-1.jpg"
+            }
             alt={"ProfileImg"}
             sx={{ width: 95, height: 95 }}
           />
-          <Box>
+          <Box
+            sx={{
+              maxWidth: "calc(100% - 110px)",
+            }}
+          >
             <Typography
               variant="subtitle2"
               color="textPrimary"
@@ -90,6 +108,11 @@ const Profile = () => {
               display="flex"
               alignItems="center"
               gap={1}
+              fontSize={"12px"}
+              sx={{
+                overflowWrap: "break-word",
+                wordBreak: "break-word",
+              }}
             >
               <IconMail width={15} height={15} />
               admin@gmail.com
@@ -97,65 +120,12 @@ const Profile = () => {
           </Box>
         </Stack>
         <Divider />
-        {dropdownData.profile.map((profile) => (
-          <Box key={profile.title}>
-            <Box sx={{ py: 2, px: 0 }} className="hover-text-primary">
-              <Link href={profile.href}>
-                <Stack direction="row" spacing={2}>
-                  <Box
-                    width="45px"
-                    height="45px"
-                    bgcolor="primary.light"
-                    display="flex"
-                    alignItems="center"
-                    justifyContent="center"
-                    flexShrink="0"
-                  >
-                    <Avatar
-                      src={profile.icon}
-                      alt={profile.icon}
-                      sx={{
-                        width: 24,
-                        height: 24,
-                        borderRadius: 0,
-                      }}
-                    />
-                  </Box>
-                  <Box>
-                    <Typography
-                      variant="subtitle2"
-                      fontWeight={600}
-                      color="textPrimary"
-                      className="text-hover"
-                      noWrap
-                      sx={{
-                        width: "240px",
-                      }}
-                    >
-                      {profile.title}
-                    </Typography>
-                    <Typography
-                      color="textSecondary"
-                      variant="subtitle2"
-                      sx={{
-                        width: "240px",
-                      }}
-                      noWrap
-                    >
-                      {profile.subtitle}
-                    </Typography>
-                  </Box>
-                </Stack>
-              </Link>
-            </Box>
-          </Box>
-        ))}
+        <ProfileItems />
         <Box mt={2}>
           <Button
-            href="/auth/auth1/login"
             variant="outlined"
             color="primary"
-            component={Link}
+            onClick={() => handleLogOut()}
             fullWidth
           >
             Çıkış

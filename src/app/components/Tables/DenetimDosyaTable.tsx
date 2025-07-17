@@ -1,4 +1,4 @@
-import React, { useEffect, useState } from "react";
+import React, { use, useEffect, useState } from "react";
 import {
   TableContainer,
   Table,
@@ -14,7 +14,7 @@ import {
   ListItemIcon,
   TablePagination,
 } from "@mui/material";
-import BlankCard from "../Shared/BlankCard";
+import BlankCard from "@/app/components/Shared/BlankCard";
 import {
   IconDotsVertical,
   IconEdit,
@@ -23,6 +23,8 @@ import {
 } from "@tabler/icons-react";
 import { getDosya } from "@/api/DenetimDosyaBelgeleri/DenetimDosyaIslemleri";
 import { useRouter } from "next/navigation";
+import { useSelector } from "@/store/hooks";
+import { AppState } from "@/store/store";
 
 interface RowData {
   id: number;
@@ -34,13 +36,18 @@ interface RowData {
 }
 
 const DenetimDosyaTable = () => {
-  const [anchorEl, setAnchorEl] = useState<null | HTMLElement>(null);
-  const [selectedId, setSelectedId] = useState<number | null>(null);
-  const [rows, setRows] = useState<RowData[]>([]);
-  const [page, setPage] = useState(0);
-  const [rowsPerPage, setRowsPerPage] = useState(10); // Default to 10 rows per page
-  const open = Boolean(anchorEl);
+  const user = useSelector((state: AppState) => state.userReducer);
+
   const router = useRouter();
+
+  const [anchorEl, setAnchorEl] = useState<null | HTMLElement>(null);
+  const open = Boolean(anchorEl);
+
+  const [selectedId, setSelectedId] = useState<number | null>(null);
+
+  const [page, setPage] = useState(0);
+  const [rows, setRows] = useState<RowData[]>([]);
+  const [rowsPerPage, setRowsPerPage] = useState(10); // Default to 10 rows per page
 
   const handleClick = (
     event: React.MouseEvent<HTMLButtonElement>,
@@ -64,7 +71,7 @@ const DenetimDosyaTable = () => {
     if (selectedId === null) return;
 
     try {
-      const result = await deleteDenetciById(selectedId);
+      const result = await deleteDenetciById(user.token || "", selectedId);
       if (result) {
         fetchData();
       } else {
@@ -77,7 +84,7 @@ const DenetimDosyaTable = () => {
 */
   const fetchData = async () => {
     try {
-      const denetciVerileri = await getDosya();
+      const denetciVerileri = await getDosya(user.token || "");
       const newRows: RowData[] = denetciVerileri.map((dosya: any) => ({
         id: dosya.id, // Assuming there's an 'id' field in the actual entity
         parentId: dosya.parentId,

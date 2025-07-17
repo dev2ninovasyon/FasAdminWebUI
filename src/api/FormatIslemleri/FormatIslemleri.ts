@@ -1,11 +1,12 @@
-import { url } from "../apiBase";
+import { url } from "@/api/apiBase";
 
-export const getFormatlar = async () => {
+export const getFormatlar = async (token: string) => {
   try {
     const response = await fetch(`${url}/Format/Hepsi`, {
       method: "GET",
       headers: {
         accept: "application/json",
+        Authorization: `Bearer ${token}`,
       },
     });
     if (response.ok) {
@@ -18,12 +19,13 @@ export const getFormatlar = async () => {
   }
 };
 
-export const getFormatById = async (id: any) => {
+export const getFormatById = async (token: string, id: any) => {
   try {
     const response = await fetch(`${url}/Format/${id}`, {
       method: "GET",
       headers: {
         accept: "application/json",
+        Authorization: `Bearer ${token}`,
       },
     });
     if (response.ok) {
@@ -36,13 +38,14 @@ export const getFormatById = async (id: any) => {
   }
 };
 
-export const createFormat = async (createdFormat: any) => {
+export const createFormat = async (token: string, createdFormat: any) => {
   try {
     const response = await fetch(`${url}/Format`, {
       method: "POST",
       headers: {
         accept: "*/*",
         "Content-Type": "application/json",
+        Authorization: `Bearer ${token}`,
       },
       body: JSON.stringify(createdFormat),
     });
@@ -57,13 +60,18 @@ export const createFormat = async (createdFormat: any) => {
   }
 };
 
-export const updateFormat = async (id: any, updatedFormat: any) => {
+export const updateFormat = async (
+  token: string,
+  id: any,
+  updatedFormat: any
+) => {
   try {
     const response = await fetch(`${url}/Format/${id}`, {
       method: "PUT",
       headers: {
         accept: "*/*",
         "Content-Type": "application/json",
+        Authorization: `Bearer ${token}`,
       },
       body: JSON.stringify(updatedFormat),
     });
@@ -78,12 +86,13 @@ export const updateFormat = async (id: any, updatedFormat: any) => {
   }
 };
 
-export const deleteFormatById = async (id: number) => {
+export const deleteFormatById = async (token: string, id: number) => {
   try {
     const response = await fetch(`${url}/Format/${id}`, {
       method: "DELETE",
       headers: {
         accept: "application/json",
+        Authorization: `Bearer ${token}`,
       },
     });
 

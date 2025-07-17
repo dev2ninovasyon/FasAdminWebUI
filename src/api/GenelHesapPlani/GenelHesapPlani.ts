@@ -1,4 +1,4 @@
-import { url } from "../apiBase";
+import { url } from "@/api/apiBase";
 
 export const getDosyaBilgileri = async (token: string) => {
   try {
@@ -73,8 +73,8 @@ export const deleteDosyaBilgileri = async (token: string, selected: any) => {
         method: "DELETE",
         headers: {
           accept: "application/json",
-          Authorization: `Bearer ${token}`,
           "Content-Type": "application/json",
+          Authorization: `Bearer ${token}`,
         },
         body: JSON.stringify(selected),
       }

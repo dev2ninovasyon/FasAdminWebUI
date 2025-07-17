@@ -10,12 +10,24 @@ import {
   Button,
   Chip,
 } from "@mui/material";
-import * as dropdownData from "./data";
-
 import { IconBellRinging } from "@tabler/icons-react";
 import { Stack } from "@mui/system";
 import Link from "next/link";
 import Scrollbar from "@/app/components/CustomScroll/Scrollbar";
+
+interface notificationType {
+  avatar: string;
+  title: string;
+  subtitle: string;
+}
+
+const notifications: notificationType[] = [
+  {
+    avatar: "/images/profile/user-1.jpg",
+    title: "Ahmet Uygulamaya Katıldı!",
+    subtitle: "Tebrik et.",
+  },
+];
 
 const Notifications = () => {
   const [anchorEl2, setAnchorEl2] = useState(null);
@@ -70,7 +82,7 @@ const Notifications = () => {
           <Chip label="1 new" color="primary" size="small" />
         </Stack>
         <Scrollbar sx={{ height: "385px" }}>
-          {dropdownData.notifications.map((notification, index) => (
+          {notifications.map((notification, index) => (
             <Box key={index}>
               <MenuItem sx={{ py: 2, px: 4 }}>
                 <Stack direction="row" spacing={2}>
@@ -112,7 +124,7 @@ const Notifications = () => {
         </Scrollbar>
         <Box p={3} pb={1}>
           <Button
-            href="/apps/email"
+            href="/Anasayfa"
             variant="outlined"
             component={Link}
             color="primary"

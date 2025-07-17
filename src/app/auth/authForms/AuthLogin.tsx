@@ -7,10 +7,15 @@ import { LoadingButton } from "@mui/lab";
 import { IconTrash } from "@tabler/icons-react";
 import { useDispatch, useSelector } from "@/store/hooks";
 import { setId, setToken } from "@/store/user/UserSlice";
-import { loginType } from "@/app/components/Types/auth/auth";
 import { url } from "@/api/apiBase";
 import { enqueueSnackbar } from "notistack";
 import { AppState } from "@/store/store";
+
+interface loginType {
+  title?: string;
+  subtitle?: JSX.Element | JSX.Element[];
+  subtext?: JSX.Element | JSX.Element[];
+}
 
 const AuthLogin: React.FC<loginType> = ({ title, subtitle, subtext }) => {
   const router = useRouter();
@@ -77,7 +82,7 @@ const AuthLogin: React.FC<loginType> = ({ title, subtitle, subtext }) => {
 
       {subtext}
 
-      <Stack>
+      <Stack mb={3}>
         <Box>
           <CustomFormLabel htmlFor="username">Email</CustomFormLabel>
           <CustomTextField

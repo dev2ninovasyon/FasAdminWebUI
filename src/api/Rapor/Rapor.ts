@@ -1,4 +1,4 @@
-import { url } from "../apiBase";
+import { url } from "@/api/apiBase";
 
 export const getRaporDipnot = async (token: string, denetimTuru: string) => {
   try {
