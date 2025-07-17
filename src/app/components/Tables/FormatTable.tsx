@@ -12,7 +12,7 @@ import {
   IconButton,
   ListItemIcon,
 } from "@mui/material";
-import BlankCard from "../Shared/BlankCard";
+import BlankCard from "@/app/components/Shared/BlankCard";
 import {
   IconCash,
   IconDotsVertical,
@@ -26,12 +26,17 @@ import {
   deleteFormatById,
   getFormatlar,
 } from "@/api/FormatIslemleri/FormatIslemleri";
+import { useSelector } from "@/store/hooks";
+import { AppState } from "@/store/store";
 
 const FormatTable = () => {
+  const user = useSelector((state: AppState) => state.userReducer);
+
   const [anchorEl, setAnchorEl] = React.useState<null | HTMLElement>(null);
+  const open = Boolean(anchorEl);
+
   const [selectedId, setSelectedId] = useState<number | null>(null);
 
-  const open = Boolean(anchorEl);
   const handleClick = (
     event: React.MouseEvent<HTMLButtonElement>,
     id: number
@@ -53,7 +58,7 @@ const FormatTable = () => {
   const handleDelete = async () => {
     handleClose();
     try {
-      const result = await deleteFormatById(selectedId || 0);
+      const result = await deleteFormatById(user.token || "", selectedId || 0);
       if (result) {
         fetchData();
       } else {
@@ -68,7 +73,7 @@ const FormatTable = () => {
 
   const fetchData = async () => {
     try {
-      const formatVerileri = await getFormatlar();
+      const formatVerileri = await getFormatlar(user.token || "");
 
       const newRows = formatVerileri.map((format: any) => ({
         id: format.id,

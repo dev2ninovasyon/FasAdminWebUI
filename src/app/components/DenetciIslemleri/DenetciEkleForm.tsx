@@ -4,8 +4,14 @@ import CustomFormLabel from "@/app/components/Forms/ThemeElements/CustomFormLabe
 import CustomTextField from "@/app/components/Forms/ThemeElements/CustomTextField";
 import { useRouter } from "next/navigation";
 import { createDenetci } from "@/api/DenetciIslemleri/DenetciIslemleri";
+import { useSelector } from "@/store/hooks";
+import { AppState } from "@/store/store";
 
 const DenetciEkleForm = () => {
+  const user = useSelector((state: AppState) => state.userReducer);
+
+  const router = useRouter();
+
   const [firmaAdi, setFirmaAdi] = useState(0);
   const [firmaUnvani, setFirmaUnvani] = useState("abcd");
   const [adres, setAdress] = useState("");
@@ -21,8 +27,6 @@ const DenetciEkleForm = () => {
     new Date().toISOString().substr(0, 10)
   );
   const [aktifmi, setAktifmi] = useState(true);
-
-  const router = useRouter();
 
   const handleButtonClick = async () => {
     const createdDenetci = {
@@ -41,7 +45,7 @@ const DenetciEkleForm = () => {
       aktifmi,
     };
     try {
-      const result = await createDenetci(createdDenetci);
+      const result = await createDenetci(user.token || "", createdDenetci);
       if (result) {
         router.push("/DenetciFirmaIslemleri");
       } else {

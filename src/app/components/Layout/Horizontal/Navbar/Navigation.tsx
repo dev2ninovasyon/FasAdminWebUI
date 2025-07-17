@@ -4,10 +4,10 @@ import Container from "@mui/material/Container";
 import Drawer from "@mui/material/Drawer";
 import useMediaQuery from "@mui/material/useMediaQuery";
 import NavListing from "./NavListing/NavListing";
-import Logo from "../../Shared/Logo/Logo";
+import Logo from "@/app/components/Layout/Shared/Logo/Logo";
 import { useSelector, useDispatch } from "@/store/hooks";
 import { toggleMobileSidebar } from "@/store/customizer/CustomizerSlice";
-import SidebarItems from "../../Vertical/Sidebar/SidebarItems";
+import SidebarItems from "@/app/components/Layout/Vertical/Sidebar/SidebarItems";
 import { AppState } from "@/store/store";
 
 const Navigation = () => {

@@ -6,7 +6,6 @@ import {
   TableRow,
   TableCell,
   TableBody,
-  Avatar,
   Typography,
   Chip,
   Menu,
@@ -14,7 +13,7 @@ import {
   IconButton,
   ListItemIcon,
 } from "@mui/material";
-import BlankCard from "../Shared/BlankCard";
+import BlankCard from "@/app/components/Shared/BlankCard";
 import {
   IconCash,
   IconDotsVertical,
@@ -28,8 +27,12 @@ import {
   getDenetciler,
 } from "@/api/DenetciIslemleri/DenetciIslemleri";
 import { useRouter } from "next/navigation";
+import { useSelector } from "@/store/hooks";
+import { AppState } from "@/store/store";
 
 const DenetciTable = () => {
+  const user = useSelector((state: AppState) => state.userReducer);
+
   const [anchorEl, setAnchorEl] = React.useState<null | HTMLElement>(null);
   const [selectedId, setSelectedId] = useState<number | null>(null);
 
@@ -70,7 +73,7 @@ const DenetciTable = () => {
   const handleDelete = async () => {
     handleClose();
     try {
-      const result = await deleteDenetciById(selectedId || 0);
+      const result = await deleteDenetciById(user.token || "", selectedId || 0);
       if (result) {
         fetchData();
       } else {
@@ -85,7 +88,7 @@ const DenetciTable = () => {
 
   const fetchData = async () => {
     try {
-      const denetciVerileri = await getDenetciler();
+      const denetciVerileri = await getDenetciler(user.token || "");
       const newRows = denetciVerileri.map((denetci: any) => ({
         id: denetci.id,
         firmaAdi: denetci.firmaAdi,

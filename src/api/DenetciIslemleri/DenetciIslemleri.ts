@@ -1,11 +1,12 @@
-import { url } from "../apiBase";
+import { url } from "@/api/apiBase";
 
-export const getDenetciler = async () => {
+export const getDenetciler = async (token: string) => {
   try {
     const response = await fetch(`${url}/Denetci/Hepsi`, {
       method: "GET",
       headers: {
         accept: "application/json",
+        Authorization: `Bearer ${token}`,
       },
     });
     if (response.ok) {
@@ -18,12 +19,13 @@ export const getDenetciler = async () => {
   }
 };
 
-export const getDenetciById = async (id: any) => {
+export const getDenetciById = async (token: string, id: any) => {
   try {
     const response = await fetch(`${url}/Denetci/${id}`, {
       method: "GET",
       headers: {
         accept: "application/json",
+        Authorization: `Bearer ${token}`,
       },
     });
     if (response.ok) {
@@ -36,13 +38,14 @@ export const getDenetciById = async (id: any) => {
   }
 };
 
-export const createDenetci = async (createdDenetci: any) => {
+export const createDenetci = async (token: string, createdDenetci: any) => {
   try {
     const response = await fetch(`${url}/Denetci`, {
       method: "POST",
       headers: {
         accept: "*/*",
         "Content-Type": "application/json",
+        Authorization: `Bearer ${token}`,
       },
       body: JSON.stringify(createdDenetci),
     });
@@ -57,13 +60,14 @@ export const createDenetci = async (createdDenetci: any) => {
   }
 };
 
-export const createKullanici = async (createdKullanici: any) => {
+export const createKullanici = async (token: string, createdKullanici: any) => {
   try {
     const response = await fetch(`${url}/Kullanici/AnaKullanici`, {
       method: "POST",
       headers: {
         accept: "*/*",
         "Content-Type": "application/json",
+        Authorization: `Bearer ${token}`,
       },
       body: JSON.stringify(createdKullanici),
     });
@@ -78,13 +82,18 @@ export const createKullanici = async (createdKullanici: any) => {
   }
 };
 
-export const updateDenetci = async (id: any, updatedDenetci: any) => {
+export const updateDenetci = async (
+  token: string,
+  id: any,
+  updatedDenetci: any
+) => {
   try {
     const response = await fetch(`${url}/Denetci/${id}`, {
       method: "PUT",
       headers: {
         accept: "*/*",
         "Content-Type": "application/json",
+        Authorization: `Bearer ${token}`,
       },
       body: JSON.stringify(updatedDenetci),
     });
@@ -99,12 +108,13 @@ export const updateDenetci = async (id: any, updatedDenetci: any) => {
   }
 };
 
-export const deleteDenetciById = async (id: number) => {
+export const deleteDenetciById = async (token: string, id: number) => {
   try {
     const response = await fetch(`${url}/Denetci/${id}`, {
       method: "DELETE",
       headers: {
         accept: "application/json",
+        Authorization: `Bearer ${token}`,
       },
     });
 
@@ -118,12 +128,16 @@ export const deleteDenetciById = async (id: number) => {
   }
 };
 
-export const getDenetciOdemeBilgileri = async (denetciId: any) => {
+export const getDenetciOdemeBilgileri = async (
+  token: string,
+  denetciId: any
+) => {
   try {
     const response = await fetch(`${url}/Denetci/OdemeBilgileri/${denetciId}`, {
       method: "GET",
       headers: {
         accept: "application/json",
+        Authorization: `Bearer ${token}`,
       },
     });
     if (response.ok) {
@@ -137,6 +151,7 @@ export const getDenetciOdemeBilgileri = async (denetciId: any) => {
 };
 
 export const updateDenetciOdemeBilgileri = async (
+  token: string,
   denetciId: any,
   updatedDenetciOdemeBilgileri: any
 ) => {
@@ -146,6 +161,7 @@ export const updateDenetciOdemeBilgileri = async (
       headers: {
         accept: "*/*",
         "Content-Type": "application/json",
+        Authorization: `Bearer ${token}`,
       },
       body: JSON.stringify(updatedDenetciOdemeBilgileri),
     });
@@ -160,12 +176,13 @@ export const updateDenetciOdemeBilgileri = async (
   }
 };
 
-export const getDenetciKotaGecmisi = async (denetciId: any) => {
+export const getDenetciKotaGecmisi = async (token: string, denetciId: any) => {
   try {
     const response = await fetch(`${url}/Denetci/KotaGecmisi/${denetciId}`, {
       method: "GET",
       headers: {
         accept: "application/json",
+        Authorization: `Bearer ${token}`,
       },
     });
     if (response.ok) {

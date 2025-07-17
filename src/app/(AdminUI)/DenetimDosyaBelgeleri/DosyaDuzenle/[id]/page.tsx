@@ -4,7 +4,6 @@ import { Grid } from "@mui/material";
 import ParentCard from "@/app/components/Shared/ParentCard";
 import PageContainer from "@/app/components/Container/PageContainer";
 import Breadcrumb from "@/app/components/Layout/Shared/Breadcrumb/Breadcrumb";
-import DenetciDuzenleForm from "@/app/components/DenetciIslemleri/DenetciDuzenleForm";
 import DosyaDuzenleForm from "@/app/components/DenetimDosyaIslemleri/DosyaDuzenleForm";
 
 const BCrumb = [

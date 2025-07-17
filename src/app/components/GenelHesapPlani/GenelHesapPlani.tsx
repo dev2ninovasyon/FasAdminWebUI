@@ -10,7 +10,7 @@ import { useEffect, useRef, useState } from "react";
 import ExcelJS from "exceljs";
 import { saveAs } from "file-saver";
 import { setCollapse } from "@/store/customizer/CustomizerSlice";
-import ExceleAktarButton from "../Buttons/ExceleAktarButton";
+import ExceleAktarButton from "@/app/components/Buttons/ExceleAktarButton";
 import {
   getGenelHesapPlani,
   updateGenelHesapPlaniVerisi,
@@ -263,7 +263,6 @@ const GenelHesapPlani: React.FC<Props> = ({ fileType }) => {
         user.token || "",
         fileType
       );
-      console.log(genelHesapPlaniVerileri);
 
       const rowsAll: any = [];
       genelHesapPlaniVerileri.forEach((veri: any) => {

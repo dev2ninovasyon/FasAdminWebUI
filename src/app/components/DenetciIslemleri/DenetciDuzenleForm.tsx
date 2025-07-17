@@ -7,8 +7,12 @@ import {
   getDenetciById,
   updateDenetci,
 } from "@/api/DenetciIslemleri/DenetciIslemleri";
+import { useSelector } from "@/store/hooks";
+import { AppState } from "@/store/store";
 
 const DenetciDuzenleForm = () => {
+  const user = useSelector((state: AppState) => state.userReducer);
+
   const pathname = usePathname();
   const segments = pathname.split("/");
   const idIndex = segments.indexOf("DenetciDuzenle") + 1;
@@ -49,7 +53,7 @@ const DenetciDuzenleForm = () => {
       aktifmi,
     };
     try {
-      const result = await updateDenetci(id, updatedDenetci);
+      const result = await updateDenetci(user.token || "", id, updatedDenetci);
       if (result) {
         router.push("/DenetciFirmaIslemleri");
       } else {
@@ -62,7 +66,7 @@ const DenetciDuzenleForm = () => {
 
   const fetchData = async () => {
     try {
-      const denetciVerileri = await getDenetciById(pathId);
+      const denetciVerileri = await getDenetciById(user.token || "", pathId);
       setFirmaAdi(denetciVerileri.firmaAdi);
       setFirmaUnvani(denetciVerileri.firmaUnvani);
       setAdres(denetciVerileri.adres);

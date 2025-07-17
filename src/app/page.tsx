@@ -1,13 +1,12 @@
 "use client";
-import Link from "next/link";
-import { Grid, Box, Card, Stack, Typography } from "@mui/material";
+import { Grid, Box, Card } from "@mui/material";
 
 // components
-import Logo from "./components/Layout/Shared/Logo/Logo";
+import AuthLogin from "./auth/authForms/AuthLogin";
 import PageContainer from "./components/Container/PageContainer";
-import AuthLogin from "./authForms/AuthLogin";
+import Logo from "./components/Layout/Shared/Logo/Logo";
 
-export default function Login2() {
+export default function Page() {
   return (
     <PageContainer title="Giriş" description="this is Giriş">
       <Box
@@ -57,4 +56,4 @@ export default function Login2() {
   );
 }
 
-Login2.layout = "Blank";
+Page.layout = "Blank";

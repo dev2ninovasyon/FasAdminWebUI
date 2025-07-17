@@ -28,7 +28,9 @@ import {
   getDenetciOdemeBilgileri,
 } from "@/api/DenetciIslemleri/DenetciIslemleri";
 import { usePathname, useRouter } from "next/navigation";
-import ParentCard from "../Shared/ParentCard";
+import ParentCard from "@/app/components/Shared/ParentCard";
+import { useSelector } from "@/store/hooks";
+import { AppState } from "@/store/store";
 
 interface KotaGecmisi {
   id: number;
@@ -322,6 +324,8 @@ function Row(props: { row: ReturnType<typeof createData> }) {
 }
 
 const OdemeBilgileriTable = () => {
+  const user = useSelector((state: AppState) => state.userReducer);
+
   const theme = useTheme();
 
   const pathname = usePathname();
@@ -333,8 +337,14 @@ const OdemeBilgileriTable = () => {
 
   const fetchData = async () => {
     try {
-      const denetciOdemeBilgileri = await getDenetciOdemeBilgileri(pathId);
-      const denetciKotaGecmisi = await getDenetciKotaGecmisi(pathId);
+      const denetciOdemeBilgileri = await getDenetciOdemeBilgileri(
+        user.token || "",
+        pathId
+      );
+      const denetciKotaGecmisi = await getDenetciKotaGecmisi(
+        user.token || "",
+        pathId
+      );
 
       const row = createData(
         denetciOdemeBilgileri.denetci.firmaAdi,

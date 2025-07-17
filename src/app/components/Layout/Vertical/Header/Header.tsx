@@ -12,13 +12,10 @@ import {
 } from "@/store/customizer/CustomizerSlice";
 import { IconMenu2 } from "@tabler/icons-react";
 import Notifications from "./Notification";
-import Profile from "./Profile";
-
+import Profile from "./Profile/Profile";
 import Search from "./Search";
 import Language from "./Language";
 import { AppState } from "@/store/store";
-import Navigation from "./Navigation";
-import MobileRightSidebar from "./MobileRightSidebar";
 
 const Header = () => {
   const lgUp = useMediaQuery((theme: any) => theme.breakpoints.up("lg"));
@@ -45,9 +42,6 @@ const Header = () => {
   return (
     <AppBarStyled position="sticky" color="default">
       <ToolbarStyled>
-        {/* ------------------------------------------- */}
-        {/* Toggle Button Sidebar */}
-        {/* ------------------------------------------- */}
         <IconButton
           color="inherit"
           aria-label="menu"
@@ -59,27 +53,11 @@ const Header = () => {
         >
           <IconMenu2 size="20" />
         </IconButton>
-
-        {/* ------------------------------------------- */}
-        {/* Search Dropdown */}
-        {/* ------------------------------------------- */}
         <Search />
-
-        {/*{lgUp ? (
-          <>
-            <Navigation />
-          </>
-        ) : null}*/}
-
         <Box flexGrow={1} />
         <Stack spacing={1} direction="row" alignItems="center">
           <Language />
-
           <Notifications />
-          {/* ------------------------------------------- */}
-          {/* Toggle Right Sidebar for mobile */}
-          {/* ------------------------------------------- */}
-          {lgDown ? <MobileRightSidebar /> : null}
           <Profile />
         </Stack>
       </ToolbarStyled>

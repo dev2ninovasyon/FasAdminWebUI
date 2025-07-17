@@ -1,4 +1,4 @@
-import { url } from "../apiBase";
+import { url } from "@/api/apiBase";
 
 export const getHesapKodlari = async (token: string) => {
   try {

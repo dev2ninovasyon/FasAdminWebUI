@@ -8,12 +8,18 @@ import {
   updateDenetciOdemeBilgileri,
 } from "@/api/DenetciIslemleri/DenetciIslemleri";
 import CustomSwitch from "@/app/components/Forms/ThemeElements/CustomSwitch";
+import { useSelector } from "@/store/hooks";
+import { AppState } from "@/store/store";
 
 const DenetciOdemeBilgileriDuzenleForm = () => {
+  const user = useSelector((state: AppState) => state.userReducer);
+
   const pathname = usePathname();
   const segments = pathname.split("/");
   const idIndex = segments.indexOf("DenetciOdemeBilgileriDuzenle") + 1;
   const pathId = segments[idIndex];
+
+  const router = useRouter();
 
   const [baslangicTarihi, setBaslangicTarihi] = useState("");
   const [bitisTarihi, setBitisTarihi] = useState("");
@@ -29,8 +35,6 @@ const DenetciOdemeBilgileriDuzenleForm = () => {
   const [bddkModulu, setBddkModulu] = useState(false);
   const [konsolideModulu, setKonsolideModulu] = useState(false);
   const [enflasyonModulu, setEnflasyonModulu] = useState(false);
-
-  const router = useRouter();
 
   const handleButtonClick = async () => {
     const updatedDenetciOdemeBilgileri = {
@@ -51,6 +55,7 @@ const DenetciOdemeBilgileriDuzenleForm = () => {
     };
     try {
       const result = await updateDenetciOdemeBilgileri(
+        user.token || "",
         pathId,
         updatedDenetciOdemeBilgileri
       );
@@ -66,7 +71,10 @@ const DenetciOdemeBilgileriDuzenleForm = () => {
 
   const fetchData = async () => {
     try {
-      const denetciOdemeBilgileri = await getDenetciOdemeBilgileri(pathId);
+      const denetciOdemeBilgileri = await getDenetciOdemeBilgileri(
+        user.token || "",
+        pathId
+      );
       setBaslangicTarihi(denetciOdemeBilgileri.baslangicTarihi.split("T")[0]);
       setBitisTarihi(denetciOdemeBilgileri.bitisTarihi.split("T")[0]);
       setSatisTarihi(denetciOdemeBilgileri.satisTarihi.split("T")[0]);

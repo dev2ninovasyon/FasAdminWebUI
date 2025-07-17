@@ -2,7 +2,7 @@
 import Box from "@mui/material/Box";
 import Container from "@mui/material/Container";
 import { styled, useTheme } from "@mui/material/styles";
-import React, { useState } from "react";
+import React, { useEffect, useState } from "react";
 import Header from "@/app/components/Layout/Vertical/Header/Header";
 import Sidebar from "@/app/components/Layout/Vertical/Sidebar/Sidebar";
 import Customizer from "@/app/components/Layout/Shared/Customizer/Customizer";
@@ -11,6 +11,7 @@ import HorizontalHeader from "@/app/components/Layout/Horizontal/Header/Header";
 import { useSelector } from "@/store/hooks";
 import { AppState } from "@/store/store";
 import Forbidden from "./ForbiddenPage/page";
+import { useRouter } from "next/navigation";
 
 const MainWrapper = styled("div")(() => ({
   display: "flex",
@@ -37,13 +38,23 @@ export default function RootLayout({
 }: {
   children: React.ReactNode;
 }) {
-  const [isSidebarOpen, setSidebarOpen] = useState(true);
-  const [isMobileSidebarOpen, setMobileSidebarOpen] = useState(false);
-  const user = useSelector((state: AppState) => state.userReducer);
   const customizer = useSelector((state: AppState) => state.customizer);
   const theme = useTheme();
-
-  return user.id == 1 ? (
+  const router = useRouter();
+  const user = useSelector((state: AppState) => state.userReducer);
+  const [control, setControl] = useState(false);
+  useEffect(() => {
+    // Sadece client-side'da çalışmasını sağla
+    if (typeof window !== "undefined") {
+      // Eğer token yoksa kullanıcıyı login sayfasına yönlendir
+      if (!user.token) {
+        router.push("/");
+      } else {
+        setControl(true);
+      }
+    }
+  }, [user.token]);
+  return control && user.id == 1 ? (
     <MainWrapper>
       <title>Fas Admin</title>
       {/* ------------------------------------------- */}
@@ -58,7 +69,9 @@ export default function RootLayout({
         sx={{
           ...(customizer.isCollapse && {
             [theme.breakpoints.up("lg")]: {
-              ml: `${customizer.MiniSidebarWidth}px`,
+              ml: customizer.isHorizontal
+                ? "0px"
+                : `${customizer.MiniSidebarWidth}px`,
             },
           }),
         }}
@@ -77,13 +90,11 @@ export default function RootLayout({
           {/* ------------------------------------------- */}
           {/* PageContent */}
           {/* ------------------------------------------- */}
-
           <Box sx={{ minHeight: "calc(100vh - 170px)" }}>
             {/* <Outlet /> */}
             {children}
             {/* <Index /> */}
           </Box>
-
           {/* ------------------------------------------- */}
           {/* End Page */}
           {/* ------------------------------------------- */}

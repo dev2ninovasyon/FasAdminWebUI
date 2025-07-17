@@ -4,12 +4,16 @@ import CustomFormLabel from "@/app/components/Forms/ThemeElements/CustomFormLabe
 import CustomTextField from "@/app/components/Forms/ThemeElements/CustomTextField";
 import { useRouter } from "next/navigation";
 import { createFormat } from "@/api/FormatIslemleri/FormatIslemleri";
+import { useSelector } from "@/store/hooks";
+import { AppState } from "@/store/store";
 
 const FormatEkleForm = () => {
-  const [adi, setAdi] = useState("");
-  const [satirSayisi, setSatirSayisi] = useState(0);
+  const user = useSelector((state: AppState) => state.userReducer);
 
   const router = useRouter();
+
+  const [adi, setAdi] = useState("");
+  const [satirSayisi, setSatirSayisi] = useState(0);
 
   const handleButtonClick = async () => {
     const createdFormat = {
@@ -17,7 +21,7 @@ const FormatEkleForm = () => {
       satirSayisi,
     };
     try {
-      const result = await createFormat(createdFormat);
+      const result = await createFormat(user.token || "", createdFormat);
       if (result) {
         router.push("/Formatlar");
       } else {

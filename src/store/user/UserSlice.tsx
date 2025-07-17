@@ -20,9 +20,15 @@ export const UserSlice = createSlice({
     setToken: (state: StateType, action) => {
       state.token = action.payload;
     },
+    resetToNull: (state: StateType, action) => {
+      if (action.payload == "") {
+        state.id = undefined;
+        state.token = undefined;
+      }
+    },
   },
 });
 
-export const { setId, setToken } = UserSlice.actions;
+export const { setId, setToken, resetToNull } = UserSlice.actions;
 
 export default UserSlice.reducer;
