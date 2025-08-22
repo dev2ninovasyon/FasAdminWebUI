@@ -100,7 +100,7 @@ const Profile = () => {
               Admin
             </Typography>
             <Typography variant="subtitle2" color="textSecondary">
-              Admin
+              Fas Admin
             </Typography>
             <Typography
               variant="subtitle2"
