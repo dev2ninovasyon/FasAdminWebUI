@@ -98,242 +98,236 @@ const DenetciOdemeBilgileriDuzenleForm = () => {
   }, []);
 
   return (
-    <div>
-      <Grid container spacing={3}>
-        <Grid item xs={4} lg={2} display={"flex"} justifyContent={"center"}>
-          <FormControlLabel
-            control={
-              <CustomSwitch
-                checked={bobiModulu}
-                onChange={(e: any) => setBobiModulu(e.target.checked)}
-                color="primary"
-              />
-            }
-            label="Bobi Modülü"
-            labelPlacement="top"
-            sx={{ ml: 0 }}
-          />
-        </Grid>
-        <Grid item xs={4} lg={2} display={"flex"} justifyContent={"center"}>
-          <FormControlLabel
-            control={
-              <CustomSwitch
-                checked={tfrsModulu}
-                onChange={(e: any) => setTfrsModulu(e.target.checked)}
-                color="primary"
-              />
-            }
-            label="Tfrs Modülü"
-            labelPlacement="top"
-            sx={{ ml: 0 }}
-          />
-        </Grid>
-        <Grid item xs={4} lg={2} display={"flex"} justifyContent={"center"}>
-          <FormControlLabel
-            control={
-              <CustomSwitch
-                checked={kumiModulu}
-                onChange={(e: any) => setKumiModulu(e.target.checked)}
-                color="primary"
-              />
-            }
-            label="Kümi Modülü"
-            labelPlacement="top"
-            sx={{ ml: 0 }}
-          />
-        </Grid>
-        <Grid item xs={4} lg={2} display={"flex"} justifyContent={"center"}>
-          <FormControlLabel
-            control={
-              <CustomSwitch
-                checked={bddkModulu}
-                onChange={(e: any) => setBddkModulu(e.target.checked)}
-                color="primary"
-              />
-            }
-            label="Bddk Analizi Modülü"
-            labelPlacement="top"
-            sx={{ ml: 0 }}
-          />
-        </Grid>
-        <Grid item xs={4} lg={2} display={"flex"} justifyContent={"center"}>
-          <FormControlLabel
-            control={
-              <CustomSwitch
-                checked={konsolideModulu}
-                onChange={(e: any) => setKonsolideModulu(e.target.checked)}
-                color="primary"
-              />
-            }
-            label="Konsolidasyon Modülü"
-            labelPlacement="top"
-            sx={{ ml: 0 }}
-          />
-        </Grid>
-        <Grid item xs={4} lg={2} display={"flex"} justifyContent={"center"}>
-          <FormControlLabel
-            control={
-              <CustomSwitch
-                checked={enflasyonModulu}
-                onChange={(e: any) => setEnflasyonModulu(e.target.checked)}
-                color="primary"
-              />
-            }
-            label="Enflasyon Modülü"
-            labelPlacement="top"
-            sx={{ ml: 0 }}
-          />
-        </Grid>
-        <Divider sx={{ width: "100%", mt: 2.5 }} />
-        <Grid item xs={12} sm={3} display="flex" alignItems="center">
-          <CustomFormLabel
-            htmlFor="baslangicTarihi"
-            sx={{ mt: 0, mb: { xs: "-10px", sm: 0 } }}
-          >
-            Başlangıç Tarihi
-          </CustomFormLabel>
-        </Grid>
-        <Grid item xs={12} sm={9}>
-          <CustomTextField
-            id="baslangicTarihi"
-            type="date"
-            value={baslangicTarihi}
-            fullWidth
-            onChange={(e: any) => setBaslangicTarihi(e.target.value)}
-          />
-        </Grid>
-        <Grid item xs={12} sm={3} display="flex" alignItems="center">
-          <CustomFormLabel
-            htmlFor="bitisTarihi"
-            sx={{ mt: 0, mb: { xs: "-10px", sm: 0 } }}
-          >
-            Bitiş Tarihi
-          </CustomFormLabel>
-        </Grid>
-        <Grid item xs={12} sm={9}>
-          <CustomTextField
-            id="bitisTarihi"
-            type="date"
-            value={bitisTarihi}
-            fullWidth
-            onChange={(e: any) => setBitisTarihi(e.target.value)}
-          />
-        </Grid>
-        <Grid item xs={12} sm={3} display="flex" alignItems="center">
-          <CustomFormLabel
-            htmlFor="satisTarihi"
-            sx={{ mt: 0, mb: { xs: "-10px", sm: 0 } }}
-          >
-            Satış Tarihi
-          </CustomFormLabel>
-        </Grid>
-        <Grid item xs={12} sm={9}>
-          <CustomTextField
-            id="satisTarihi"
-            type="date"
-            value={satisTarihi}
-            fullWidth
-            disabled
-          />
-        </Grid>
-        <Grid item xs={12} sm={3} display="flex" alignItems="center">
-          <CustomFormLabel
-            htmlFor="sirketKota"
-            sx={{ mt: 0, mb: { xs: "-10px", sm: 0 } }}
-          >
-            Şirket Kotası
-          </CustomFormLabel>
-        </Grid>
-        <Grid item xs={12} sm={9}>
-          <CustomTextField
-            id="sirketKota"
-            type="number"
-            value={sirketKota}
-            fullWidth
-            onChange={(e: any) => setSirketKota(e.target.value)}
-          />
-        </Grid>
-        <Grid item xs={12} sm={3} display="flex" alignItems="center">
-          <CustomFormLabel
-            htmlFor="diskKota"
-            sx={{ mt: 0, mb: { xs: "-10px", sm: 0 } }}
-          >
-            Disk Kotası
-          </CustomFormLabel>
-        </Grid>
-        <Grid item xs={12} sm={9}>
-          <CustomTextField
-            id="distKota"
-            type="number"
-            value={diskKota}
-            fullWidth
-            onChange={(e: any) => setDiskKota(e.target.value)}
-          />
-        </Grid>
-        <Grid item xs={12} sm={3} display="flex" alignItems="center">
-          <CustomFormLabel
-            htmlFor="enflasyonKota"
-            sx={{ mt: 0, mb: { xs: "-10px", sm: 0 } }}
-          >
-            Enflasyon Kotası
-          </CustomFormLabel>
-        </Grid>
-        <Grid item xs={12} sm={9}>
-          <CustomTextField
-            id="enflasyonKota"
-            type="number"
-            value={enflasyonKota}
-            fullWidth
-            onChange={(e: any) => setEnflasyonKota(e.target.value)}
-          />
-        </Grid>
-        <Grid item xs={12} sm={3} display="flex" alignItems="center">
-          <CustomFormLabel
-            htmlFor="ekKota"
-            sx={{ mt: 0, mb: { xs: "-10px", sm: 0 } }}
-          >
-            Ek Kota
-          </CustomFormLabel>
-        </Grid>
-        <Grid item xs={12} sm={9}>
-          <CustomTextField
-            id="ekKota"
-            type="number"
-            value={ekKota}
-            fullWidth
-            onChange={(e: any) => setEkKota(e.target.value)}
-          />
-        </Grid>
-        <Grid item xs={12} sm={3} display="flex" alignItems="center">
-          <CustomFormLabel
-            htmlFor="aciklama"
-            sx={{ mt: 0, mb: { xs: "-10px", sm: 0 } }}
-          >
-            Açıklama
-          </CustomFormLabel>
-        </Grid>
-        <Grid item xs={12} sm={9}>
-          <CustomTextField
-            id="aciklama"
-            type="text"
-            value={aciklama}
-            fullWidth
-            onChange={(e: any) => setAciklama(e.target.value)}
-          />
-        </Grid>
-
-        <Grid item xs={12} sm={3}></Grid>
-        <Grid item xs={12} sm={9}>
-          <Button
-            variant="contained"
-            color="primary"
-            onClick={handleButtonClick}
-          >
-            Denetçi Ödeme Bilgileri Düzenle
-          </Button>
-        </Grid>
+    <Grid container spacing={3}>
+      <Grid item xs={4} lg={2} display={"flex"} justifyContent={"center"}>
+        <FormControlLabel
+          control={
+            <CustomSwitch
+              checked={bobiModulu}
+              onChange={(e: any) => setBobiModulu(e.target.checked)}
+              color="primary"
+            />
+          }
+          label="Bobi Modülü"
+          labelPlacement="top"
+          sx={{ ml: 0 }}
+        />
       </Grid>
-    </div>
+      <Grid item xs={4} lg={2} display={"flex"} justifyContent={"center"}>
+        <FormControlLabel
+          control={
+            <CustomSwitch
+              checked={tfrsModulu}
+              onChange={(e: any) => setTfrsModulu(e.target.checked)}
+              color="primary"
+            />
+          }
+          label="Tfrs Modülü"
+          labelPlacement="top"
+          sx={{ ml: 0 }}
+        />
+      </Grid>
+      <Grid item xs={4} lg={2} display={"flex"} justifyContent={"center"}>
+        <FormControlLabel
+          control={
+            <CustomSwitch
+              checked={kumiModulu}
+              onChange={(e: any) => setKumiModulu(e.target.checked)}
+              color="primary"
+            />
+          }
+          label="Kümi Modülü"
+          labelPlacement="top"
+          sx={{ ml: 0 }}
+        />
+      </Grid>
+      <Grid item xs={4} lg={2} display={"flex"} justifyContent={"center"}>
+        <FormControlLabel
+          control={
+            <CustomSwitch
+              checked={bddkModulu}
+              onChange={(e: any) => setBddkModulu(e.target.checked)}
+              color="primary"
+            />
+          }
+          label="Bddk Analizi Modülü"
+          labelPlacement="top"
+          sx={{ ml: 0 }}
+        />
+      </Grid>
+      <Grid item xs={4} lg={2} display={"flex"} justifyContent={"center"}>
+        <FormControlLabel
+          control={
+            <CustomSwitch
+              checked={konsolideModulu}
+              onChange={(e: any) => setKonsolideModulu(e.target.checked)}
+              color="primary"
+            />
+          }
+          label="Konsolidasyon Modülü"
+          labelPlacement="top"
+          sx={{ ml: 0 }}
+        />
+      </Grid>
+      <Grid item xs={4} lg={2} display={"flex"} justifyContent={"center"}>
+        <FormControlLabel
+          control={
+            <CustomSwitch
+              checked={enflasyonModulu}
+              onChange={(e: any) => setEnflasyonModulu(e.target.checked)}
+              color="primary"
+            />
+          }
+          label="Enflasyon Modülü"
+          labelPlacement="top"
+          sx={{ ml: 0 }}
+        />
+      </Grid>
+      <Divider sx={{ width: "100%", mt: 2.5 }} />
+      <Grid item xs={12} sm={3} display="flex" alignItems="center">
+        <CustomFormLabel
+          htmlFor="baslangicTarihi"
+          sx={{ mt: 0, mb: { xs: "-10px", sm: 0 } }}
+        >
+          Başlangıç Tarihi
+        </CustomFormLabel>
+      </Grid>
+      <Grid item xs={12} sm={9}>
+        <CustomTextField
+          id="baslangicTarihi"
+          type="date"
+          value={baslangicTarihi}
+          fullWidth
+          onChange={(e: any) => setBaslangicTarihi(e.target.value)}
+        />
+      </Grid>
+      <Grid item xs={12} sm={3} display="flex" alignItems="center">
+        <CustomFormLabel
+          htmlFor="bitisTarihi"
+          sx={{ mt: 0, mb: { xs: "-10px", sm: 0 } }}
+        >
+          Bitiş Tarihi
+        </CustomFormLabel>
+      </Grid>
+      <Grid item xs={12} sm={9}>
+        <CustomTextField
+          id="bitisTarihi"
+          type="date"
+          value={bitisTarihi}
+          fullWidth
+          onChange={(e: any) => setBitisTarihi(e.target.value)}
+        />
+      </Grid>
+      <Grid item xs={12} sm={3} display="flex" alignItems="center">
+        <CustomFormLabel
+          htmlFor="satisTarihi"
+          sx={{ mt: 0, mb: { xs: "-10px", sm: 0 } }}
+        >
+          Satış Tarihi
+        </CustomFormLabel>
+      </Grid>
+      <Grid item xs={12} sm={9}>
+        <CustomTextField
+          id="satisTarihi"
+          type="date"
+          value={satisTarihi}
+          fullWidth
+          disabled
+        />
+      </Grid>
+      <Grid item xs={12} sm={3} display="flex" alignItems="center">
+        <CustomFormLabel
+          htmlFor="sirketKota"
+          sx={{ mt: 0, mb: { xs: "-10px", sm: 0 } }}
+        >
+          Şirket Kotası
+        </CustomFormLabel>
+      </Grid>
+      <Grid item xs={12} sm={9}>
+        <CustomTextField
+          id="sirketKota"
+          type="number"
+          value={sirketKota}
+          fullWidth
+          onChange={(e: any) => setSirketKota(e.target.value)}
+        />
+      </Grid>
+      <Grid item xs={12} sm={3} display="flex" alignItems="center">
+        <CustomFormLabel
+          htmlFor="diskKota"
+          sx={{ mt: 0, mb: { xs: "-10px", sm: 0 } }}
+        >
+          Disk Kotası
+        </CustomFormLabel>
+      </Grid>
+      <Grid item xs={12} sm={9}>
+        <CustomTextField
+          id="distKota"
+          type="number"
+          value={diskKota}
+          fullWidth
+          onChange={(e: any) => setDiskKota(e.target.value)}
+        />
+      </Grid>
+      <Grid item xs={12} sm={3} display="flex" alignItems="center">
+        <CustomFormLabel
+          htmlFor="enflasyonKota"
+          sx={{ mt: 0, mb: { xs: "-10px", sm: 0 } }}
+        >
+          Enflasyon Kotası
+        </CustomFormLabel>
+      </Grid>
+      <Grid item xs={12} sm={9}>
+        <CustomTextField
+          id="enflasyonKota"
+          type="number"
+          value={enflasyonKota}
+          fullWidth
+          onChange={(e: any) => setEnflasyonKota(e.target.value)}
+        />
+      </Grid>
+      <Grid item xs={12} sm={3} display="flex" alignItems="center">
+        <CustomFormLabel
+          htmlFor="ekKota"
+          sx={{ mt: 0, mb: { xs: "-10px", sm: 0 } }}
+        >
+          Ek Kota
+        </CustomFormLabel>
+      </Grid>
+      <Grid item xs={12} sm={9}>
+        <CustomTextField
+          id="ekKota"
+          type="number"
+          value={ekKota}
+          fullWidth
+          onChange={(e: any) => setEkKota(e.target.value)}
+        />
+      </Grid>
+      <Grid item xs={12} sm={3} display="flex" alignItems="center">
+        <CustomFormLabel
+          htmlFor="aciklama"
+          sx={{ mt: 0, mb: { xs: "-10px", sm: 0 } }}
+        >
+          Açıklama
+        </CustomFormLabel>
+      </Grid>
+      <Grid item xs={12} sm={9}>
+        <CustomTextField
+          id="aciklama"
+          type="text"
+          value={aciklama}
+          fullWidth
+          onChange={(e: any) => setAciklama(e.target.value)}
+        />
+      </Grid>
+
+      <Grid item xs={12} sm={3}></Grid>
+      <Grid item xs={12} sm={9}>
+        <Button variant="contained" color="primary" onClick={handleButtonClick}>
+          Denetçi Ödeme Bilgileri Düzenle
+        </Button>
+      </Grid>
+    </Grid>
   );
 };
 
