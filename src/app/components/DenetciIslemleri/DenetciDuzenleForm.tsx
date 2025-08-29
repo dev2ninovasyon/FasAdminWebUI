@@ -30,9 +30,6 @@ const DenetciDuzenleForm = () => {
   const [vergiNo, setVergiNo] = useState("");
   const [vergiDairesi, setVergidairesi] = useState("");
   const [ticaretSicilNo, setTicaretSicilNo] = useState("");
-  const [kayitTarihi, setKayitTarihi] = useState(
-    new Date().toISOString().substr(0, 10)
-  );
   const [aktifmi, setAktifmi] = useState(true);
 
   const router = useRouter();
@@ -89,199 +86,192 @@ const DenetciDuzenleForm = () => {
   }, []);
 
   return (
-    <div>
-      <Grid container spacing={3}>
-        {/* 1 */}
-        <Grid item xs={12} sm={3} display="flex" alignItems="center">
-          <CustomFormLabel
-            htmlFor="firmaAdi"
-            sx={{ mt: 0, mb: { xs: "-10px", sm: 0 } }}
-          >
-            Firma Adı
-          </CustomFormLabel>
-        </Grid>
-        <Grid item xs={12} sm={9}>
-          <CustomTextField
-            id="firmaAdi"
-            value={firmaAdi}
-            fullWidth
-            onChange={(e: any) => setFirmaAdi(e.target.value)}
-          />
-        </Grid>
-        <Grid item xs={12} sm={3} display="flex" alignItems="center">
-          <CustomFormLabel
-            htmlFor="firmaUnvani"
-            sx={{ mt: 0, mb: { xs: "-10px", sm: 0 } }}
-          >
-            Firma Ünvanı
-          </CustomFormLabel>
-        </Grid>
-        <Grid item xs={12} sm={9}>
-          <CustomTextField
-            id="firmaUnvani"
-            value={firmaUnvani}
-            fullWidth
-            onChange={(e: any) => setFirmaUnvani(e.target.value)}
-          />
-        </Grid>
-        <Grid item xs={12} sm={3} display="flex" alignItems="center">
-          <CustomFormLabel
-            htmlFor="adres"
-            sx={{ mt: 0, mb: { xs: "-10px", sm: 0 } }}
-          >
-            Adres
-          </CustomFormLabel>
-        </Grid>
-        <Grid item xs={12} sm={9}>
-          <CustomTextField
-            id="adres"
-            value={adres}
-            fullWidth
-            onChange={(e: any) => setAdres(e.target.value)}
-          />
-        </Grid>
-        <Grid item xs={12} sm={3} display="flex" alignItems="center">
-          <CustomFormLabel
-            htmlFor="il"
-            sx={{ mt: 0, mb: { xs: "-10px", sm: 0 } }}
-          >
-            İl
-          </CustomFormLabel>
-        </Grid>
-        <Grid item xs={12} sm={9}>
-          <CustomTextField
-            id="il"
-            value={il}
-            fullWidth
-            onChange={(e: any) => setIl(e.target.value)}
-          />
-        </Grid>
-        <Grid item xs={12} sm={3} display="flex" alignItems="center">
-          <CustomFormLabel
-            htmlFor="tel"
-            sx={{ mt: 0, mb: { xs: "-10px", sm: 0 } }}
-          >
-            Tel
-          </CustomFormLabel>
-        </Grid>
-        <Grid item xs={12} sm={9}>
-          <CustomTextField
-            id="tel"
-            value={tel}
-            fullWidth
-            onChange={(e: any) => setTel(e.target.value)}
-          />
-        </Grid>
-        <Grid item xs={12} sm={3} display="flex" alignItems="center">
-          <CustomFormLabel
-            htmlFor="fax"
-            sx={{ mt: 0, mb: { xs: "-10px", sm: 0 } }}
-          >
-            Fax
-          </CustomFormLabel>
-        </Grid>
-        <Grid item xs={12} sm={9}>
-          <CustomTextField
-            id="fax"
-            value={fax}
-            fullWidth
-            onChange={(e: any) => setFax(e.target.value)}
-          />
-        </Grid>
-        <Grid item xs={12} sm={3} display="flex" alignItems="center">
-          <CustomFormLabel
-            htmlFor="email"
-            sx={{ mt: 0, mb: { xs: "-10px", sm: 0 } }}
-          >
-            Email
-          </CustomFormLabel>
-        </Grid>
-        <Grid item xs={12} sm={9}>
-          <CustomTextField
-            id="email"
-            value={email}
-            fullWidth
-            onChange={(e: any) => setEmail(e.target.value)}
-          />
-        </Grid>
-        <Grid item xs={12} sm={3} display="flex" alignItems="center">
-          <CustomFormLabel
-            htmlFor="web"
-            sx={{ mt: 0, mb: { xs: "-10px", sm: 0 } }}
-          >
-            Web Sitesi
-          </CustomFormLabel>
-        </Grid>
-        <Grid item xs={12} sm={9}>
-          <CustomTextField
-            id="web"
-            value={web}
-            fullWidth
-            onChange={(e: any) => setWeb(e.target.value)}
-          />
-        </Grid>
-        <Grid item xs={12} sm={3} display="flex" alignItems="center">
-          <CustomFormLabel
-            htmlFor="vergiNo"
-            sx={{ mt: 0, mb: { xs: "-10px", sm: 0 } }}
-          >
-            Vergi Numarası
-          </CustomFormLabel>
-        </Grid>
-        <Grid item xs={12} sm={9}>
-          <CustomTextField
-            id="vergiNo"
-            value={vergiNo}
-            fullWidth
-            onChange={(e: any) => setVergiNo(e.target.value)}
-          />
-        </Grid>
-
-        <Grid item xs={12} sm={3} display="flex" alignItems="center">
-          <CustomFormLabel
-            htmlFor="vergiDairesi"
-            sx={{ mt: 0, mb: { xs: "-10px", sm: 0 } }}
-          >
-            Vergi Dairesi
-          </CustomFormLabel>
-        </Grid>
-        <Grid item xs={12} sm={9}>
-          <CustomTextField
-            id="vergiDairesi"
-            value={vergiDairesi}
-            fullWidth
-            onChange={(e: any) => setVergidairesi(e.target.value)}
-          />
-        </Grid>
-        <Grid item xs={12} sm={3} display="flex" alignItems="center">
-          <CustomFormLabel
-            htmlFor="ticaretSicilNo"
-            sx={{ mt: 0, mb: { xs: "-10px", sm: 0 } }}
-          >
-            Ticaret Sicil Numarası
-          </CustomFormLabel>
-        </Grid>
-        <Grid item xs={12} sm={9}>
-          <CustomTextField
-            id="ticaretSicilNo"
-            value={ticaretSicilNo}
-            fullWidth
-            onChange={(e: any) => setTicaretSicilNo(e.target.value)}
-          />
-        </Grid>
-
-        <Grid item xs={12} sm={3}></Grid>
-        <Grid item xs={12} sm={9}>
-          <Button
-            variant="contained"
-            color="primary"
-            onClick={handleButtonClick}
-          >
-            Denetçi Düzenle
-          </Button>
-        </Grid>
+    <Grid container spacing={3}>
+      <Grid item xs={12} sm={3} display="flex" alignItems="center">
+        <CustomFormLabel
+          htmlFor="firmaAdi"
+          sx={{ mt: 0, mb: { xs: "-10px", sm: 0 } }}
+        >
+          Firma Adı
+        </CustomFormLabel>
       </Grid>
-    </div>
+      <Grid item xs={12} sm={9}>
+        <CustomTextField
+          id="firmaAdi"
+          value={firmaAdi}
+          fullWidth
+          onChange={(e: any) => setFirmaAdi(e.target.value)}
+        />
+      </Grid>
+      <Grid item xs={12} sm={3} display="flex" alignItems="center">
+        <CustomFormLabel
+          htmlFor="firmaUnvani"
+          sx={{ mt: 0, mb: { xs: "-10px", sm: 0 } }}
+        >
+          Firma Ünvanı
+        </CustomFormLabel>
+      </Grid>
+      <Grid item xs={12} sm={9}>
+        <CustomTextField
+          id="firmaUnvani"
+          value={firmaUnvani}
+          fullWidth
+          onChange={(e: any) => setFirmaUnvani(e.target.value)}
+        />
+      </Grid>
+      <Grid item xs={12} sm={3} display="flex" alignItems="center">
+        <CustomFormLabel
+          htmlFor="adres"
+          sx={{ mt: 0, mb: { xs: "-10px", sm: 0 } }}
+        >
+          Adres
+        </CustomFormLabel>
+      </Grid>
+      <Grid item xs={12} sm={9}>
+        <CustomTextField
+          id="adres"
+          value={adres}
+          fullWidth
+          onChange={(e: any) => setAdres(e.target.value)}
+        />
+      </Grid>
+      <Grid item xs={12} sm={3} display="flex" alignItems="center">
+        <CustomFormLabel
+          htmlFor="il"
+          sx={{ mt: 0, mb: { xs: "-10px", sm: 0 } }}
+        >
+          İl
+        </CustomFormLabel>
+      </Grid>
+      <Grid item xs={12} sm={9}>
+        <CustomTextField
+          id="il"
+          value={il}
+          fullWidth
+          onChange={(e: any) => setIl(e.target.value)}
+        />
+      </Grid>
+      <Grid item xs={12} sm={3} display="flex" alignItems="center">
+        <CustomFormLabel
+          htmlFor="tel"
+          sx={{ mt: 0, mb: { xs: "-10px", sm: 0 } }}
+        >
+          Tel
+        </CustomFormLabel>
+      </Grid>
+      <Grid item xs={12} sm={9}>
+        <CustomTextField
+          id="tel"
+          value={tel}
+          fullWidth
+          onChange={(e: any) => setTel(e.target.value)}
+        />
+      </Grid>
+      <Grid item xs={12} sm={3} display="flex" alignItems="center">
+        <CustomFormLabel
+          htmlFor="fax"
+          sx={{ mt: 0, mb: { xs: "-10px", sm: 0 } }}
+        >
+          Fax
+        </CustomFormLabel>
+      </Grid>
+      <Grid item xs={12} sm={9}>
+        <CustomTextField
+          id="fax"
+          value={fax}
+          fullWidth
+          onChange={(e: any) => setFax(e.target.value)}
+        />
+      </Grid>
+      <Grid item xs={12} sm={3} display="flex" alignItems="center">
+        <CustomFormLabel
+          htmlFor="email"
+          sx={{ mt: 0, mb: { xs: "-10px", sm: 0 } }}
+        >
+          Email
+        </CustomFormLabel>
+      </Grid>
+      <Grid item xs={12} sm={9}>
+        <CustomTextField
+          id="email"
+          value={email}
+          fullWidth
+          onChange={(e: any) => setEmail(e.target.value)}
+        />
+      </Grid>
+      <Grid item xs={12} sm={3} display="flex" alignItems="center">
+        <CustomFormLabel
+          htmlFor="web"
+          sx={{ mt: 0, mb: { xs: "-10px", sm: 0 } }}
+        >
+          Web Sitesi
+        </CustomFormLabel>
+      </Grid>
+      <Grid item xs={12} sm={9}>
+        <CustomTextField
+          id="web"
+          value={web}
+          fullWidth
+          onChange={(e: any) => setWeb(e.target.value)}
+        />
+      </Grid>
+      <Grid item xs={12} sm={3} display="flex" alignItems="center">
+        <CustomFormLabel
+          htmlFor="vergiNo"
+          sx={{ mt: 0, mb: { xs: "-10px", sm: 0 } }}
+        >
+          Vergi Numarası
+        </CustomFormLabel>
+      </Grid>
+      <Grid item xs={12} sm={9}>
+        <CustomTextField
+          id="vergiNo"
+          value={vergiNo}
+          fullWidth
+          onChange={(e: any) => setVergiNo(e.target.value)}
+        />
+      </Grid>
+
+      <Grid item xs={12} sm={3} display="flex" alignItems="center">
+        <CustomFormLabel
+          htmlFor="vergiDairesi"
+          sx={{ mt: 0, mb: { xs: "-10px", sm: 0 } }}
+        >
+          Vergi Dairesi
+        </CustomFormLabel>
+      </Grid>
+      <Grid item xs={12} sm={9}>
+        <CustomTextField
+          id="vergiDairesi"
+          value={vergiDairesi}
+          fullWidth
+          onChange={(e: any) => setVergidairesi(e.target.value)}
+        />
+      </Grid>
+      <Grid item xs={12} sm={3} display="flex" alignItems="center">
+        <CustomFormLabel
+          htmlFor="ticaretSicilNo"
+          sx={{ mt: 0, mb: { xs: "-10px", sm: 0 } }}
+        >
+          Ticaret Sicil Numarası
+        </CustomFormLabel>
+      </Grid>
+      <Grid item xs={12} sm={9}>
+        <CustomTextField
+          id="ticaretSicilNo"
+          value={ticaretSicilNo}
+          fullWidth
+          onChange={(e: any) => setTicaretSicilNo(e.target.value)}
+        />
+      </Grid>
+
+      <Grid item xs={12} sm={3}></Grid>
+      <Grid item xs={12} sm={9}>
+        <Button variant="contained" color="primary" onClick={handleButtonClick}>
+          Denetçi Düzenle
+        </Button>
+      </Grid>
+    </Grid>
   );
 };
 
