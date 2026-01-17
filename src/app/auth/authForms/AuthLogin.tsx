@@ -10,6 +10,7 @@ import { setId, setToken } from "@/store/user/UserSlice";
 import { url } from "@/api/apiBase";
 import { enqueueSnackbar } from "notistack";
 import { AppState } from "@/store/store";
+import { useGoogleReCaptcha } from "react-google-recaptcha-v3";
 
 interface loginType {
   title?: string;
@@ -28,8 +29,50 @@ const AuthLogin: React.FC<loginType> = ({ title, subtitle, subtext }) => {
   const [password, setPassword] = useState("");
 
   const [isLoggedIn, setIsLoggedIn] = useState(false);
+  const [isVerifyingCaptcha, setIsVerifyingCaptcha] = useState(false);
+  const { executeRecaptcha } = useGoogleReCaptcha();
 
   const handleLogin = async () => {
+    if (!executeRecaptcha) {
+      enqueueSnackbar("Recaptcha yüklenemedi, lütfen sayfayı yenileyin.", {
+        variant: "warning",
+        autoHideDuration: 3000,
+      });
+      setIsLoggedIn(false);
+      return;
+    }
+
+    setIsVerifyingCaptcha(true);
+    let token = "";
+    try {
+      token = await executeRecaptcha("login");
+    } catch (error: any) {
+      console.error("Recaptcha hatası:", error);
+      let errorMessage = "Güvenlik doğrulaması sırasında bir hata oluştu.";
+
+      if (error?.message?.includes("message channel closed")) {
+        errorMessage = "Tarayıcı eklentileriniz güvenlik doğrulamasını engelliyor olabilir. Lütfen reklam engelleyici veya benzeri eklentileri kapatıp tekrar deneyin.";
+      }
+
+      enqueueSnackbar(errorMessage, {
+        variant: "error",
+        autoHideDuration: 5000,
+      });
+      setIsVerifyingCaptcha(false);
+      setIsLoggedIn(false);
+      return;
+    }
+    setIsVerifyingCaptcha(false);
+
+    if (!token) {
+      enqueueSnackbar("Recaptcha doğrulaması başarısız.", {
+        variant: "warning",
+        autoHideDuration: 3000,
+      });
+      setIsLoggedIn(false);
+      return;
+    }
+
     try {
       const response = await fetch(`${url}/Auth/login`, {
         method: "POST",
@@ -37,7 +80,7 @@ const AuthLogin: React.FC<loginType> = ({ title, subtitle, subtext }) => {
           accept: "*/*",
           "Content-Type": "application/json",
         },
-        body: JSON.stringify({ email, password }),
+        body: JSON.stringify({ email, password, captchaToken: token }),
       });
       if (response.ok) {
         const data = await response.json();
@@ -105,15 +148,16 @@ const AuthLogin: React.FC<loginType> = ({ title, subtitle, subtext }) => {
       </Stack>
       <Box>
         {!isLoggedIn && (
-          <Button
+          <LoadingButton
             color="primary"
             variant="contained"
             size="large"
             fullWidth
             onClick={handleLogin}
+            loading={isVerifyingCaptcha}
           >
-            Giriş
-          </Button>
+            {isVerifyingCaptcha ? "Doğrulanıyor..." : "Giriş"}
+          </LoadingButton>
         )}
         {isLoggedIn && (
           <LoadingButton
