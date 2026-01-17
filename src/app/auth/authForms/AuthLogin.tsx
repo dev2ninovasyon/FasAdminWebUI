@@ -11,7 +11,7 @@ import {
   setUserData,
   setBddkmi
 } from "@/store/user/UserSlice";
-import { url } from "@/api/apiBase";
+import { apiFetch } from "@/api/apiBase";
 
 import { enqueueSnackbar } from "notistack";
 import { AppState } from "@/store/store";
@@ -40,8 +40,10 @@ const AuthLogin: React.FC<loginType> = ({ title, subtitle, subtext }) => {
   const { executeRecaptcha } = useGoogleReCaptcha();
 
   const handleLogin = async () => {
+    console.log("HandleLogin başlatıldı...");
     console.time("Giriş İşlemi Toplam Süre");
     if (!executeRecaptcha) {
+      console.error("executeRecaptcha nesnesi bulunamadı!");
       enqueueSnackbar("Recaptcha yüklenemedi, lütfen sayfayı yenileyin.", {
         variant: "warning",
         autoHideDuration: 3000,
@@ -53,9 +55,11 @@ const AuthLogin: React.FC<loginType> = ({ title, subtitle, subtext }) => {
     setIsVerifyingCaptcha(true);
     let token = "";
     try {
+      console.log("ReCAPTCHA doğrulaması başlıyor...");
       console.time("ReCAPTCHA Doğrulaması");
       token = await executeRecaptcha("login");
       console.timeEnd("ReCAPTCHA Doğrulaması");
+      console.log("ReCAPTCHA token'ı alındı:", token ? "Başarılı" : "Boş");
     } catch (error: any) {
       console.error("Recaptcha hatası:", error);
       let errorMessage = "Güvenlik doğrulaması sırasında bir hata oluştu.";
@@ -75,6 +79,7 @@ const AuthLogin: React.FC<loginType> = ({ title, subtitle, subtext }) => {
     setIsVerifyingCaptcha(false);
 
     if (!token) {
+      console.warn("ReCAPTCHA token alınamadı!");
       enqueueSnackbar("Recaptcha doğrulaması başarısız.", {
         variant: "warning",
         autoHideDuration: 3000,
@@ -84,9 +89,10 @@ const AuthLogin: React.FC<loginType> = ({ title, subtitle, subtext }) => {
     }
 
     try {
+      console.log("API isteği gönderiliyor...");
       console.time("Login API İsteği");
       // FasAdminWebUI uses AdminLogin
-      const response = await fetch(`${url}/Auth/AdminLogin`, {
+      const response = await apiFetch(`/Auth/AdminLogin`, {
         method: "POST",
         headers: {
           accept: "*/*",
@@ -193,7 +199,21 @@ const AuthLogin: React.FC<loginType> = ({ title, subtitle, subtext }) => {
       } else {
         console.timeEnd("Giriş İşlemi Toplam Süre");
         setIsLoggedIn(false);
-        enqueueSnackbar("Giriş Başarısız", {
+
+        let errorMsg = "Giriş Başarısız";
+        try {
+          const errorData = await response.json();
+          if (errorData.message) {
+            errorMsg = errorData.message;
+          }
+        } catch (e) {
+          // JSON değilse statusText kullan
+          if (response.statusText) {
+            errorMsg = `${response.status} - ${response.statusText}`;
+          }
+        }
+
+        enqueueSnackbar(errorMsg, {
           variant: "error",
           autoHideDuration: 5000,
           style: {
@@ -209,6 +229,9 @@ const AuthLogin: React.FC<loginType> = ({ title, subtitle, subtext }) => {
       console.timeEnd("Giriş İşlemi Toplam Süre");
       console.error("Bir hata oluştu:", error);
       setIsLoggedIn(false);
+      enqueueSnackbar("Sunucuyla bağlantı kurulamadı.", {
+        variant: "error",
+      });
     }
   };
 
