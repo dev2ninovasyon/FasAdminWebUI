@@ -1,16 +1,23 @@
-import CustomFormLabel from "@/app/components/Forms/ThemeElements/CustomFormLabel";
-import CustomTextField from "@/app/components/Forms/ThemeElements/CustomTextField";
-import { Box, Typography, Button, Stack, useTheme } from "@mui/material";
-import { useState } from "react";
+import { Box, Typography, Button, Stack, useTheme, InputAdornment } from "@mui/material";
+import { useState, useRef } from "react";
 import { useRouter } from "next/navigation";
 import { LoadingButton } from "@mui/lab";
-import { IconTrash } from "@tabler/icons-react";
+import { IconTrash, IconMail, IconLock } from "@tabler/icons-react";
 import { useDispatch, useSelector } from "@/store/hooks";
-import { setId, setToken } from "@/store/user/UserSlice";
+import { useGoogleReCaptcha } from "react-google-recaptcha-v3";
+import {
+  setSonSecilenBddkmi,
+  setTurTamamlandi,
+  setUserData,
+  setBddkmi
+} from "@/store/user/UserSlice";
 import { url } from "@/api/apiBase";
+
 import { enqueueSnackbar } from "notistack";
 import { AppState } from "@/store/store";
-import { useGoogleReCaptcha } from "react-google-recaptcha-v3";
+import { getDenetciOdemeBilgileri } from "@/api/DenetciIslemleri/DenetciIslemleri";
+import CustomFormLabel from "@/app/components/Forms/ThemeElements/CustomFormLabel";
+import CustomTextField from "@/app/components/Forms/ThemeElements/CustomTextField";
 
 interface loginType {
   title?: string;
@@ -33,6 +40,7 @@ const AuthLogin: React.FC<loginType> = ({ title, subtitle, subtext }) => {
   const { executeRecaptcha } = useGoogleReCaptcha();
 
   const handleLogin = async () => {
+    console.time("Giriş İşlemi Toplam Süre");
     if (!executeRecaptcha) {
       enqueueSnackbar("Recaptcha yüklenemedi, lütfen sayfayı yenileyin.", {
         variant: "warning",
@@ -45,7 +53,9 @@ const AuthLogin: React.FC<loginType> = ({ title, subtitle, subtext }) => {
     setIsVerifyingCaptcha(true);
     let token = "";
     try {
+      console.time("ReCAPTCHA Doğrulaması");
       token = await executeRecaptcha("login");
+      console.timeEnd("ReCAPTCHA Doğrulaması");
     } catch (error: any) {
       console.error("Recaptcha hatası:", error);
       let errorMessage = "Güvenlik doğrulaması sırasında bir hata oluştu.";
@@ -74,7 +84,9 @@ const AuthLogin: React.FC<loginType> = ({ title, subtitle, subtext }) => {
     }
 
     try {
-      const response = await fetch(`${url}/Auth/login`, {
+      console.time("Login API İsteği");
+      // FasAdminWebUI uses AdminLogin
+      const response = await fetch(`${url}/Auth/AdminLogin`, {
         method: "POST",
         headers: {
           accept: "*/*",
@@ -82,25 +94,104 @@ const AuthLogin: React.FC<loginType> = ({ title, subtitle, subtext }) => {
         },
         body: JSON.stringify({ email, password, captchaToken: token }),
       });
+      console.timeEnd("Login API İsteği");
+
       if (response.ok) {
+        console.time("Veri İşleme ve Yönlendirme");
         const data = await response.json();
-        console.log("FULL LOGIN RESPONSE:", JSON.stringify(data, null, 2));
         const userToken = data.token;
+        const userRefreshToken = data.refreshToken;
         const userId = data.userId || data.kullaniciId || data.Id || 0;
-        console.log("EXTRACTED userId:", userId, "TYPE:", typeof userId);
 
-        dispatch(setToken(userToken));
-        dispatch(setId(userId));
+        const userDenetciId = data.denetciId || data.denetciId || 0;
+        const userDenetciFirmaAdi = data.denetciFirmaAdi || "";
+        const yetki = data.yetki;
+        const rol = data.rol;
+        const kullaniciAdi = data.kullaniciAdi;
+        const unvan = data.unvan;
+        const kurulumTamamlandi = data.kurulumTamamlandi;
+        const kurulumAdimi = data.kurulumAdimi;
+        const setupWizardProgress = data.setupWizardProgress;
+        const sonSecilenDenetlenenId = data.sonSecilenDenetlenenId;
+        const sonSecilenYil = data.sonSecilenYil;
+        const sonSecilenDenetlenenFirmaAdi = data.sonSecilenDenetlenenFirmaAdi;
+        const sonSecilenDenetimTuru = data.sonSecilenDenetimTuru;
+        const sonSecilenBobimi = data.sonSecilenBobimi;
+        const sonSecilenTfrsmi = data.sonSecilenTfrsmi;
+        const sonSecilenEnflasyonmu = data.sonSecilenEnflasyonmu;
+        const sonSecilenKonsolidemi = data.sonSecilenKonsolidemi;
+        const sonSecilenBddkmi = data.sonSecilenBddkmi;
+        const bddkmi = data.bddkmi;
+        const turTamamlandi = data.turTamamlandi;
 
-        setIsLoggedIn(true);
-        if (userId == 1 || userId == 2) {
-          console.log("Authorization Successful, redirecting to Anasayfa");
-          router.push("/Anasayfa");
-        } else {
-          console.warn("Authorization Failed, redirecting to ForbiddenPage. userId was:", userId);
-          router.push("/ForbiddenPage");
+        const userData = {
+          token: userToken,
+          refreshToken: userRefreshToken,
+          id: userId,
+          denetciId: userDenetciId,
+          denetciFirmaAdi: userDenetciFirmaAdi,
+          yetki: yetki,
+          rol: rol,
+          kullaniciAdi: kullaniciAdi,
+          mail: email,
+          unvan: unvan,
+          kurulumTamamlandi: kurulumTamamlandi,
+          kurulumAdimi: kurulumAdimi,
+          setupWizardProgress: setupWizardProgress,
+          sonSecilenDenetlenenId: sonSecilenDenetlenenId,
+          sonSecilenYil: sonSecilenYil,
+          sonSecilenDenetlenenFirmaAdi: sonSecilenDenetlenenFirmaAdi,
+          sonSecilenDenetimTuru: sonSecilenDenetimTuru,
+          sonSecilenBobimi: sonSecilenBobimi,
+          sonSecilenTfrsmi: sonSecilenTfrsmi,
+          sonSecilenEnflasyonmu: sonSecilenEnflasyonmu,
+          sonSecilenKonsolidemi: sonSecilenKonsolidemi,
+          sonSecilenBddkmi: sonSecilenBddkmi,
+          turTamamlandi: turTamamlandi,
+          bddkmi: bddkmi
+        };
+
+        if (sonSecilenDenetlenenId && sonSecilenYil && sonSecilenDenetlenenFirmaAdi) {
+          Object.assign(userData, {
+            denetlenenId: sonSecilenDenetlenenId,
+            denetlenenFirmaAdi: sonSecilenDenetlenenFirmaAdi,
+            yil: sonSecilenYil,
+            denetimTuru: sonSecilenDenetimTuru,
+            bobimi: sonSecilenBobimi,
+            tfrsmi: sonSecilenTfrsmi,
+            enflasyonmu: sonSecilenEnflasyonmu,
+            konsolidemi: sonSecilenKonsolidemi,
+            bddkmi: sonSecilenBddkmi
+          });
+
+          localStorage.setItem("fas_denetlenenId", sonSecilenDenetlenenId.toString());
+          localStorage.setItem("fas_yil", sonSecilenYil.toString());
         }
+
+        dispatch(setUserData(userData));
+
+        if (bddkmi === undefined) {
+          console.time("Ek Bilgi API İsteği (bddkmi)");
+          const data2 = await getDenetciOdemeBilgileri(
+            userToken,
+            userDenetciId
+          );
+          if (data2 && data2.bddkmi !== undefined) {
+            dispatch(setBddkmi(data2.bddkmi));
+          }
+          console.timeEnd("Ek Bilgi API İsteği (bddkmi)");
+        }
+
+        if (!sonSecilenDenetlenenId || !sonSecilenDenetlenenFirmaAdi) {
+          localStorage.removeItem("fas_denetlenenId");
+          localStorage.removeItem("fas_yil");
+        }
+
+        console.timeEnd("Veri İşleme ve Yönlendirme");
+        console.timeEnd("Giriş İşlemi Toplam Süre");
+        router.push("/Anasayfa");
       } else {
+        console.timeEnd("Giriş İşlemi Toplam Süre");
         setIsLoggedIn(false);
         enqueueSnackbar("Giriş Başarısız", {
           variant: "error",
@@ -115,65 +206,94 @@ const AuthLogin: React.FC<loginType> = ({ title, subtitle, subtext }) => {
         });
       }
     } catch (error) {
+      console.timeEnd("Giriş İşlemi Toplam Süre");
       console.error("Bir hata oluştu:", error);
+      setIsLoggedIn(false);
     }
+  };
+
+  const handleSubmit = (e: React.FormEvent) => {
+    e.preventDefault();
+    setIsLoggedIn(true);
+    handleLogin();
   };
 
   return (
     <>
       {title ? (
-        <Typography fontWeight="700" variant="h3" mb={1}>
+        <Typography fontWeight="700" variant="h3" mb={1} color="primary.main">
           {title}
         </Typography>
       ) : null}
 
       {subtext}
 
-      <Stack mb={3}>
+      <form onSubmit={handleSubmit}>
+        <Stack mb={3} spacing={2}>
+          <Box>
+            <CustomFormLabel htmlFor="username">Email</CustomFormLabel>
+            <CustomTextField
+              id="username"
+              variant="outlined"
+              fullWidth
+              placeholder="Email adresiniz"
+              onChange={(e: any) => setEmail(e.target.value)}
+              InputProps={{
+                startAdornment: (
+                  <InputAdornment position="start">
+                    <IconMail size={20} />
+                  </InputAdornment>
+                ),
+              }}
+            />
+          </Box>
+          <Box>
+            <CustomFormLabel htmlFor="password">Şifre</CustomFormLabel>
+            <CustomTextField
+              id="password"
+              type="password"
+              variant="outlined"
+              fullWidth
+              placeholder="Şifreniz"
+              onChange={(e: any) => setPassword(e.target.value)}
+              InputProps={{
+                startAdornment: (
+                  <InputAdornment position="start">
+                    <IconLock size={20} />
+                  </InputAdornment>
+                ),
+              }}
+            />
+          </Box>
+
+          <Box display="flex" justifyContent="center">
+            {/* ReCAPTCHA v3 is invisible */}
+          </Box>
+
+        </Stack>
         <Box>
-          <CustomFormLabel htmlFor="username">Email</CustomFormLabel>
-          <CustomTextField
-            id="username"
-            variant="outlined"
-            fullWidth
-            onChange={(e: any) => setEmail(e.target.value)}
-          />
-        </Box>
-        <Box>
-          <CustomFormLabel htmlFor="password">Şifre</CustomFormLabel>
-          <CustomTextField
-            id="password"
-            type="password"
-            variant="outlined"
-            fullWidth
-            onChange={(e: any) => setPassword(e.target.value)}
-          />
-        </Box>
-      </Stack>
-      <Box>
-        {!isLoggedIn && (
           <LoadingButton
+            type="submit"
             color="primary"
             variant="contained"
             size="large"
             fullWidth
-            onClick={handleLogin}
-            loading={isVerifyingCaptcha}
+            loading={isVerifyingCaptcha || isLoggedIn}
+            sx={{
+              background: "linear-gradient(45deg, #2196F3 30%, #21CBF3 90%)",
+              boxShadow: "0 3px 5px 2px rgba(33, 203, 243, .3)",
+              color: "white",
+              height: 48,
+              padding: "0 30px",
+              fontSize: "1.1rem",
+              textTransform: "none",
+              borderRadius: "10px"
+            }}
           >
-            {isVerifyingCaptcha ? "Doğrulanıyor..." : "Giriş"}
+            {isVerifyingCaptcha ? "Güvenlik Doğrulaması..." : isLoggedIn ? "Giriş Yapılıyor..." : "Giriş Yap"}
           </LoadingButton>
-        )}
-        {isLoggedIn && (
-          <LoadingButton
-            loading
-            color="secondary"
-            variant="contained"
-            size="large"
-            fullWidth
-            endIcon={<IconTrash width={18} />}
-          ></LoadingButton>
-        )}
-      </Box>
+        </Box>
+      </form>
       {subtitle}
     </>
   );
