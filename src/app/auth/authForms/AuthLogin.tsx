@@ -84,16 +84,20 @@ const AuthLogin: React.FC<loginType> = ({ title, subtitle, subtext }) => {
       });
       if (response.ok) {
         const data = await response.json();
+        console.log("FULL LOGIN RESPONSE:", JSON.stringify(data, null, 2));
         const userToken = data.token;
-        const userId = data.kullaniciId;
+        const userId = data.userId || data.kullaniciId || data.Id || 0;
+        console.log("EXTRACTED userId:", userId, "TYPE:", typeof userId);
 
         dispatch(setToken(userToken));
         dispatch(setId(userId));
 
         setIsLoggedIn(true);
-        if (userId === 1) {
+        if (userId == 1 || userId == 2) {
+          console.log("Authorization Successful, redirecting to Anasayfa");
           router.push("/Anasayfa");
         } else {
+          console.warn("Authorization Failed, redirecting to ForbiddenPage. userId was:", userId);
           router.push("/ForbiddenPage");
         }
       } else {
