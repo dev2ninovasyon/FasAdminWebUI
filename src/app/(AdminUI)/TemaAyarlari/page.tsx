@@ -119,7 +119,7 @@ const Page = () => {
           </Typography>
           <Grid container spacing={2}>
             {thColors.map((thcolor) => (
-              <Grid item xs={4} key={thcolor.id}>
+              <Grid size={{ xs: 4 }} key={thcolor.id}>
                 <StyledBox onClick={() => dispatch(setTheme(thcolor.disp))}>
                   <Tooltip title={`${thcolor.disp}`} placement="top">
                     <Box

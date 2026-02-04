@@ -22,7 +22,7 @@ const Page = () => {
       <Breadcrumb title="Denetçi Detay" items={BCrumb} />
       <ParentCard title="Denetçi Detay">
         <Grid container spacing={3}>
-          <Grid item xs={12}>
+          <Grid size={{ xs: 12 }}>
             <Box>
               <DenetciDetay />
             </Box>

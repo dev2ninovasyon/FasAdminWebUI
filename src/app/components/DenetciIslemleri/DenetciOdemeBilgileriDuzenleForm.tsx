@@ -99,7 +99,7 @@ const DenetciOdemeBilgileriDuzenleForm = () => {
 
   return (
     <Grid container spacing={3}>
-      <Grid item xs={4} lg={2} display={"flex"} justifyContent={"center"}>
+      <Grid size={{ xs: 4, lg: 2 }} display={"flex"} justifyContent={"center"}>
         <FormControlLabel
           control={
             <CustomSwitch
@@ -113,7 +113,7 @@ const DenetciOdemeBilgileriDuzenleForm = () => {
           sx={{ ml: 0 }}
         />
       </Grid>
-      <Grid item xs={4} lg={2} display={"flex"} justifyContent={"center"}>
+      <Grid size={{ xs: 4, lg: 2 }} display={"flex"} justifyContent={"center"}>
         <FormControlLabel
           control={
             <CustomSwitch
@@ -127,7 +127,7 @@ const DenetciOdemeBilgileriDuzenleForm = () => {
           sx={{ ml: 0 }}
         />
       </Grid>
-      <Grid item xs={4} lg={2} display={"flex"} justifyContent={"center"}>
+      <Grid size={{ xs: 4, lg: 2 }} display={"flex"} justifyContent={"center"}>
         <FormControlLabel
           control={
             <CustomSwitch
@@ -141,7 +141,7 @@ const DenetciOdemeBilgileriDuzenleForm = () => {
           sx={{ ml: 0 }}
         />
       </Grid>
-      <Grid item xs={4} lg={2} display={"flex"} justifyContent={"center"}>
+      <Grid size={{ xs: 4, lg: 2 }} display={"flex"} justifyContent={"center"}>
         <FormControlLabel
           control={
             <CustomSwitch
@@ -155,7 +155,7 @@ const DenetciOdemeBilgileriDuzenleForm = () => {
           sx={{ ml: 0 }}
         />
       </Grid>
-      <Grid item xs={4} lg={2} display={"flex"} justifyContent={"center"}>
+      <Grid size={{ xs: 4, lg: 2 }} display={"flex"} justifyContent={"center"}>
         <FormControlLabel
           control={
             <CustomSwitch
@@ -169,7 +169,7 @@ const DenetciOdemeBilgileriDuzenleForm = () => {
           sx={{ ml: 0 }}
         />
       </Grid>
-      <Grid item xs={4} lg={2} display={"flex"} justifyContent={"center"}>
+      <Grid size={{ xs: 4, lg: 2 }} display={"flex"} justifyContent={"center"}>
         <FormControlLabel
           control={
             <CustomSwitch
@@ -184,7 +184,7 @@ const DenetciOdemeBilgileriDuzenleForm = () => {
         />
       </Grid>
       <Divider sx={{ width: "100%", mt: 2.5 }} />
-      <Grid item xs={12} sm={3} display="flex" alignItems="center">
+      <Grid size={{ xs: 12, sm: 3 }} display="flex" alignItems="center">
         <CustomFormLabel
           htmlFor="baslangicTarihi"
           sx={{ mt: 0, mb: { xs: "-10px", sm: 0 } }}
@@ -192,7 +192,7 @@ const DenetciOdemeBilgileriDuzenleForm = () => {
           Başlangıç Tarihi
         </CustomFormLabel>
       </Grid>
-      <Grid item xs={12} sm={9}>
+      <Grid size={{ xs: 12, sm: 9 }}>
         <CustomTextField
           id="baslangicTarihi"
           type="date"
@@ -201,7 +201,7 @@ const DenetciOdemeBilgileriDuzenleForm = () => {
           onChange={(e: any) => setBaslangicTarihi(e.target.value)}
         />
       </Grid>
-      <Grid item xs={12} sm={3} display="flex" alignItems="center">
+      <Grid size={{ xs: 12, sm: 3 }} display="flex" alignItems="center">
         <CustomFormLabel
           htmlFor="bitisTarihi"
           sx={{ mt: 0, mb: { xs: "-10px", sm: 0 } }}
@@ -209,7 +209,7 @@ const DenetciOdemeBilgileriDuzenleForm = () => {
           Bitiş Tarihi
         </CustomFormLabel>
       </Grid>
-      <Grid item xs={12} sm={9}>
+      <Grid size={{ xs: 12, sm: 9 }}>
         <CustomTextField
           id="bitisTarihi"
           type="date"
@@ -218,7 +218,7 @@ const DenetciOdemeBilgileriDuzenleForm = () => {
           onChange={(e: any) => setBitisTarihi(e.target.value)}
         />
       </Grid>
-      <Grid item xs={12} sm={3} display="flex" alignItems="center">
+      <Grid size={{ xs: 12, sm: 3 }} display="flex" alignItems="center">
         <CustomFormLabel
           htmlFor="satisTarihi"
           sx={{ mt: 0, mb: { xs: "-10px", sm: 0 } }}
@@ -226,7 +226,7 @@ const DenetciOdemeBilgileriDuzenleForm = () => {
           Satış Tarihi
         </CustomFormLabel>
       </Grid>
-      <Grid item xs={12} sm={9}>
+      <Grid size={{ xs: 12, sm: 9 }}>
         <CustomTextField
           id="satisTarihi"
           type="date"
@@ -235,7 +235,7 @@ const DenetciOdemeBilgileriDuzenleForm = () => {
           disabled
         />
       </Grid>
-      <Grid item xs={12} sm={3} display="flex" alignItems="center">
+      <Grid size={{ xs: 12, sm: 3 }} display="flex" alignItems="center">
         <CustomFormLabel
           htmlFor="sirketKota"
           sx={{ mt: 0, mb: { xs: "-10px", sm: 0 } }}
@@ -243,7 +243,7 @@ const DenetciOdemeBilgileriDuzenleForm = () => {
           Şirket Kotası
         </CustomFormLabel>
       </Grid>
-      <Grid item xs={12} sm={9}>
+      <Grid size={{ xs: 12, sm: 9 }}>
         <CustomTextField
           id="sirketKota"
           type="number"
@@ -252,7 +252,7 @@ const DenetciOdemeBilgileriDuzenleForm = () => {
           onChange={(e: any) => setSirketKota(e.target.value)}
         />
       </Grid>
-      <Grid item xs={12} sm={3} display="flex" alignItems="center">
+      <Grid size={{ xs: 12, sm: 3 }} display="flex" alignItems="center">
         <CustomFormLabel
           htmlFor="diskKota"
           sx={{ mt: 0, mb: { xs: "-10px", sm: 0 } }}
@@ -260,7 +260,7 @@ const DenetciOdemeBilgileriDuzenleForm = () => {
           Disk Kotası
         </CustomFormLabel>
       </Grid>
-      <Grid item xs={12} sm={9}>
+      <Grid size={{ xs: 12, sm: 9 }}>
         <CustomTextField
           id="distKota"
           type="number"
@@ -269,7 +269,7 @@ const DenetciOdemeBilgileriDuzenleForm = () => {
           onChange={(e: any) => setDiskKota(e.target.value)}
         />
       </Grid>
-      <Grid item xs={12} sm={3} display="flex" alignItems="center">
+      <Grid size={{ xs: 12, sm: 3 }} display="flex" alignItems="center">
         <CustomFormLabel
           htmlFor="enflasyonKota"
           sx={{ mt: 0, mb: { xs: "-10px", sm: 0 } }}
@@ -277,7 +277,7 @@ const DenetciOdemeBilgileriDuzenleForm = () => {
           Enflasyon Kotası
         </CustomFormLabel>
       </Grid>
-      <Grid item xs={12} sm={9}>
+      <Grid size={{ xs: 12, sm: 9 }}>
         <CustomTextField
           id="enflasyonKota"
           type="number"
@@ -286,7 +286,7 @@ const DenetciOdemeBilgileriDuzenleForm = () => {
           onChange={(e: any) => setEnflasyonKota(e.target.value)}
         />
       </Grid>
-      <Grid item xs={12} sm={3} display="flex" alignItems="center">
+      <Grid size={{ xs: 12, sm: 3 }} display="flex" alignItems="center">
         <CustomFormLabel
           htmlFor="ekKota"
           sx={{ mt: 0, mb: { xs: "-10px", sm: 0 } }}
@@ -294,7 +294,7 @@ const DenetciOdemeBilgileriDuzenleForm = () => {
           Ek Kota
         </CustomFormLabel>
       </Grid>
-      <Grid item xs={12} sm={9}>
+      <Grid size={{ xs: 12, sm: 9 }}>
         <CustomTextField
           id="ekKota"
           type="number"
@@ -303,7 +303,7 @@ const DenetciOdemeBilgileriDuzenleForm = () => {
           onChange={(e: any) => setEkKota(e.target.value)}
         />
       </Grid>
-      <Grid item xs={12} sm={3} display="flex" alignItems="center">
+      <Grid size={{ xs: 12, sm: 3 }} display="flex" alignItems="center">
         <CustomFormLabel
           htmlFor="aciklama"
           sx={{ mt: 0, mb: { xs: "-10px", sm: 0 } }}
@@ -311,7 +311,7 @@ const DenetciOdemeBilgileriDuzenleForm = () => {
           Açıklama
         </CustomFormLabel>
       </Grid>
-      <Grid item xs={12} sm={9}>
+      <Grid size={{ xs: 12, sm: 9 }}>
         <CustomTextField
           id="aciklama"
           type="text"
@@ -321,8 +321,8 @@ const DenetciOdemeBilgileriDuzenleForm = () => {
         />
       </Grid>
 
-      <Grid item xs={12} sm={3}></Grid>
-      <Grid item xs={12} sm={9}>
+      <Grid size={{ xs: 12, sm: 3 }}></Grid>
+      <Grid size={{ xs: 12, sm: 9 }}>
         <Button variant="contained" color="primary" onClick={handleButtonClick}>
           Denetçi Ödeme Bilgileri Düzenle
         </Button>

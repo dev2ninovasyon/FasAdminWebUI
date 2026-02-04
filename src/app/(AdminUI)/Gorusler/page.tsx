@@ -30,7 +30,7 @@ const Page = () => {
     <PageContainer title="Görüşler" description="this is Görüşler">
       <Breadcrumb title="Görüşler" items={BCrumb} />
       <Grid container spacing={3}>
-        <Grid item xs={12} lg={12}>
+        <Grid size={{ xs: 12, lg: 12 }}>
           <CustomSelect
             labelId="denetimTuru"
             id="denetimTuru"
@@ -51,7 +51,7 @@ const Page = () => {
             </MenuItem>
           </CustomSelect>
         </Grid>
-        <Grid item xs={12} lg={12}>
+        <Grid size={{ xs: 12, lg: 12 }}>
           <RaporGorus denetimTuru={denetimTuru} />
         </Grid>
       </Grid>

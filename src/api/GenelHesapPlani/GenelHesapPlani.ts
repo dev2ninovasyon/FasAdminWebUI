@@ -1,18 +1,35 @@
 import { url } from "@/api/apiBase";
 
-export const getDosyaBilgileri = async (token: string) => {
+export const getDosyaBilgileri = async (
+  token: string,
+  denetciId: number,
+  yil: number,
+  denetlenenId: number,
+  tip: string
+) => {
   try {
-    const response = await fetch(`${url}`, {
-      method: "GET",
-      headers: {
-        accept: "application/json",
-        Authorization: `Bearer ${token}`,
-      },
-    });
+    const response = await fetch(
+      `${url}/Veri/DosyaBilgileri?denetciId=${denetciId}&yil=${yil}&denetlenenId=${denetlenenId}&tip=${tip}`,
+      {
+        method: "GET",
+        headers: {
+          accept: "application/json",
+          Authorization: `Bearer ${token}`,
+        },
+      }
+    );
     if (response.ok) {
       return response.json();
     } else {
-      console.error("Dosya Bilgileri getirilemedi");
+      console.error(
+        `Dosya Bilgileri getirilemedi. Status: ${response.status} ${response.statusText}`
+      );
+      try {
+        const errorBody = await response.text();
+        console.error("Error body:", errorBody);
+      } catch (e) {
+        console.error("Could not read error body");
+      }
     }
   } catch (error) {
     console.error("Bir hata oluştu:", error);

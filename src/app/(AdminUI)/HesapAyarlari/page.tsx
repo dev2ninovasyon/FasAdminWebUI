@@ -63,7 +63,7 @@ const Page = () => {
             {pAvatars.map((avatar) => {
               const isSelected = customizer.avatarSrc === avatar.src;
               return (
-                <Grid item xs={2.4} key={avatar.id}>
+                <Grid size={{ xs: 2.4 }} key={avatar.id}>
                   <StyledBox
                     onClick={() => dispatch(setAvatar(avatar.src))}
                     sx={{
@@ -73,11 +73,10 @@ const Page = () => {
                           : theme.palette.primary.main
                         : "rgba(145, 158, 171, 0.12)",
                       boxShadow: isSelected
-                        ? `0 0 8px ${
-                            customizer.activeMode == "dark"
-                              ? theme.palette.primary.dark
-                              : theme.palette.primary.main
-                          }`
+                        ? `0 0 8px ${customizer.activeMode == "dark"
+                          ? theme.palette.primary.dark
+                          : theme.palette.primary.main
+                        }`
                         : "none",
                     }}
                   >

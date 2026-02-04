@@ -21,8 +21,8 @@ import CustomTextField from "@/app/components/Forms/ThemeElements/CustomTextFiel
 
 interface loginType {
   title?: string;
-  subtitle?: JSX.Element | JSX.Element[];
-  subtext?: JSX.Element | JSX.Element[];
+  subtitle?: React.ReactNode;
+  subtext?: React.ReactNode;
 }
 
 const AuthLogin: React.FC<loginType> = ({ title, subtitle, subtext }) => {

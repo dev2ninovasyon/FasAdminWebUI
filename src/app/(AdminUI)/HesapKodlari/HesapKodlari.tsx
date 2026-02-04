@@ -124,9 +124,10 @@ const HesapKodlari = () => {
     <>
       <Grid container spacing={2} mb={1}>
         <Grid
-          item
-          xs={12}
-          sm={12}
+          size={{
+            xs: 12,
+            sm: 12
+          }}
           display={"flex"}
           alignItems={"center"}
           justifyContent={"start"}
@@ -140,7 +141,7 @@ const HesapKodlari = () => {
             </Typography>
           </CustomFormLabel>
         </Grid>
-        <Grid item xs={12} sm={12} display={"flex"}>
+        <Grid size={{ xs: 12, sm: 12 }} display={"flex"}>
           <CustomTextAreaAutoSize
             id="BorcBakiyesiVermesiGereken12Grubu"
             fullWidth
@@ -151,9 +152,10 @@ const HesapKodlari = () => {
           />
         </Grid>
         <Grid
-          item
-          xs={12}
-          sm={12}
+          size={{
+            xs: 12,
+            sm: 12
+          }}
           display={"flex"}
           alignItems={"center"}
           justifyContent={"start"}
@@ -179,9 +181,10 @@ const HesapKodlari = () => {
       </Grid>
       <Grid container spacing={2} mb={1}>
         <Grid
-          item
-          xs={12}
-          sm={12}
+          size={{
+            xs: 12,
+            sm: 12
+          }}
           display={"flex"}
           alignItems={"center"}
           justifyContent={"start"}
@@ -195,7 +198,7 @@ const HesapKodlari = () => {
             </Typography>
           </CustomFormLabel>
         </Grid>
-        <Grid item xs={12} sm={12} display={"flex"}>
+        <Grid size={{ xs: 12, sm: 12 }} display={"flex"}>
           <CustomTextAreaAutoSize
             id="AlacakBakiyesiVermesiGereken12Grubu"
             fullWidth
@@ -206,9 +209,10 @@ const HesapKodlari = () => {
           />
         </Grid>
         <Grid
-          item
-          xs={12}
-          sm={12}
+          size={{
+            xs: 12,
+            sm: 12
+          }}
           display={"flex"}
           alignItems={"center"}
           justifyContent={"start"}
@@ -234,9 +238,10 @@ const HesapKodlari = () => {
       </Grid>
       <Grid container spacing={2} mb={1}>
         <Grid
-          item
-          xs={12}
-          sm={12}
+          size={{
+            xs: 12,
+            sm: 12
+          }}
           display={"flex"}
           alignItems={"center"}
           justifyContent={"start"}
@@ -250,7 +255,7 @@ const HesapKodlari = () => {
             </Typography>
           </CustomFormLabel>
         </Grid>
-        <Grid item xs={12} sm={12} display={"flex"}>
+        <Grid size={{ xs: 12, sm: 12 }} display={"flex"}>
           <CustomTextAreaAutoSize
             id="BorcBakiyesiVermesiGereken345Grubu"
             fullWidth
@@ -261,9 +266,10 @@ const HesapKodlari = () => {
           />
         </Grid>
         <Grid
-          item
-          xs={12}
-          sm={12}
+          size={{
+            xs: 12,
+            sm: 12
+          }}
           display={"flex"}
           alignItems={"center"}
           justifyContent={"start"}
@@ -289,9 +295,10 @@ const HesapKodlari = () => {
       </Grid>
       <Grid container spacing={2} mb={1}>
         <Grid
-          item
-          xs={12}
-          sm={12}
+          size={{
+            xs: 12,
+            sm: 12
+          }}
           display={"flex"}
           alignItems={"center"}
           justifyContent={"start"}
@@ -305,7 +312,7 @@ const HesapKodlari = () => {
             </Typography>
           </CustomFormLabel>
         </Grid>
-        <Grid item xs={12} sm={12} display={"flex"}>
+        <Grid size={{ xs: 12, sm: 12 }} display={"flex"}>
           <CustomTextAreaAutoSize
             id="AlacakBakiyesiVermesiGereken345Grubu"
             fullWidth
@@ -316,9 +323,10 @@ const HesapKodlari = () => {
           />
         </Grid>
         <Grid
-          item
-          xs={12}
-          sm={12}
+          size={{
+            xs: 12,
+            sm: 12
+          }}
           display={"flex"}
           alignItems={"center"}
           justifyContent={"start"}
@@ -344,9 +352,10 @@ const HesapKodlari = () => {
       </Grid>
       <Grid container spacing={2} mb={1}>
         <Grid
-          item
-          xs={12}
-          sm={12}
+          size={{
+            xs: 12,
+            sm: 12
+          }}
           display={"flex"}
           alignItems={"center"}
           justifyContent={"start"}
@@ -360,7 +369,7 @@ const HesapKodlari = () => {
             </Typography>
           </CustomFormLabel>
         </Grid>
-        <Grid item xs={12} sm={12} display={"flex"}>
+        <Grid size={{ xs: 12, sm: 12 }} display={"flex"}>
           <CustomTextAreaAutoSize
             id="BorcBakiyesiVermesiGereken6Grubu"
             fullWidth
@@ -371,9 +380,10 @@ const HesapKodlari = () => {
           />
         </Grid>
         <Grid
-          item
-          xs={12}
-          sm={12}
+          size={{
+            xs: 12,
+            sm: 12
+          }}
           display={"flex"}
           alignItems={"center"}
           justifyContent={"start"}
@@ -399,9 +409,10 @@ const HesapKodlari = () => {
       </Grid>
       <Grid container spacing={2} mb={1}>
         <Grid
-          item
-          xs={12}
-          sm={12}
+          size={{
+            xs: 12,
+            sm: 12
+          }}
           display={"flex"}
           alignItems={"center"}
           justifyContent={"start"}
@@ -415,7 +426,7 @@ const HesapKodlari = () => {
             </Typography>
           </CustomFormLabel>
         </Grid>
-        <Grid item xs={12} sm={12} display={"flex"}>
+        <Grid size={{ xs: 12, sm: 12 }} display={"flex"}>
           <CustomTextAreaAutoSize
             id="AlacakBakiyesiVermesiGereken6Grubu"
             fullWidth
@@ -426,9 +437,10 @@ const HesapKodlari = () => {
           />
         </Grid>
         <Grid
-          item
-          xs={12}
-          sm={12}
+          size={{
+            xs: 12,
+            sm: 12
+          }}
           display={"flex"}
           alignItems={"center"}
           justifyContent={"start"}
@@ -454,9 +466,10 @@ const HesapKodlari = () => {
       </Grid>
       <Grid container spacing={2} mb={1}>
         <Grid
-          item
-          xs={12}
-          sm={12}
+          size={{
+            xs: 12,
+            sm: 12
+          }}
           display={"flex"}
           alignItems={"center"}
           justifyContent={"start"}
@@ -470,7 +483,7 @@ const HesapKodlari = () => {
             </Typography>
           </CustomFormLabel>
         </Grid>
-        <Grid item xs={12} sm={12} display={"flex"}>
+        <Grid size={{ xs: 12, sm: 12 }} display={"flex"}>
           <CustomTextAreaAutoSize
             id="YildizliHesaplar"
             fullWidth
@@ -479,9 +492,10 @@ const HesapKodlari = () => {
           />
         </Grid>
         <Grid
-          item
-          xs={12}
-          sm={12}
+          size={{
+            xs: 12,
+            sm: 12
+          }}
           display={"flex"}
           alignItems={"center"}
           justifyContent={"start"}

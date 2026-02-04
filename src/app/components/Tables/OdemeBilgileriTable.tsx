@@ -210,10 +210,9 @@ function Row(props: { row: ReturnType<typeof createData> }) {
                       : theme.palette.grey.A200,
                   p: "5px 15px",
                   color: (theme) =>
-                    `${
-                      theme.palette.mode === "dark"
-                        ? theme.palette.primary.dark
-                        : "rgba(0, 0, 0, 0.87)"
+                    `${theme.palette.mode === "dark"
+                      ? theme.palette.primary.dark
+                      : "rgba(0, 0, 0, 0.87)"
                     }`,
                 }}
               >
@@ -462,14 +461,12 @@ const OdemeBilgileriTable = () => {
         </TableContainer>
         {rows.map((row) => (
           <Grid container rowSpacing={3} key={row.denetciFirmaAdi}>
-            <Grid item xs={12} sm={3} display="flex" alignItems="center">
-              <Typography variant="h6">Modüller: {}</Typography>
+            <Grid size={{ xs: 12, sm: 3 }} display="flex" alignItems="center">
+              <Typography variant="h6">Modüller: { }</Typography>
             </Grid>
 
             <Grid
-              item
-              xs={1.5}
-              sm={9}
+              size={{ xs: 1.5, sm: 9 }}
               display="flex"
               alignItems="center"
               justifyContent={"space-between"}
@@ -556,39 +553,33 @@ const OdemeBilgileriTable = () => {
               />
             </Grid>
 
-            <Grid item xs={12} sm={3} display="flex" alignItems="center">
+            <Grid size={{ xs: 12, sm: 3 }} display="flex" alignItems="center">
               <Typography variant="h6">Mevcut Firma Sayısı:</Typography>
             </Grid>
             <Grid
-              item
-              xs={12}
-              sm={9}
+              size={{ xs: 12, sm: 9 }}
               pl={1.5}
               display="flex"
               alignItems="center"
             >
               <Typography variant="h6">{row.mevcutFirmaSayisi}</Typography>
             </Grid>
-            <Grid item xs={12} sm={3} display="flex" alignItems="center">
+            <Grid size={{ xs: 12, sm: 3 }} display="flex" alignItems="center">
               <Typography variant="h6">Solo Firma Sayısı:</Typography>
             </Grid>
             <Grid
-              item
-              xs={12}
-              sm={9}
+              size={{ xs: 12, sm: 9 }}
               pl={1.5}
               display="flex"
               alignItems="center"
             >
               <Typography variant="h6">{row.soloFirmaSayisi}</Typography>
             </Grid>
-            <Grid item xs={12} sm={3} display="flex" alignItems="center">
+            <Grid size={{ xs: 12, sm: 3 }} display="flex" alignItems="center">
               <Typography variant="h6">Konsolide Ana Şirket Sayısı:</Typography>
             </Grid>
             <Grid
-              item
-              xs={12}
-              sm={9}
+              size={{ xs: 12, sm: 9 }}
               pl={1.5}
               display="flex"
               alignItems="center"
@@ -597,15 +588,13 @@ const OdemeBilgileriTable = () => {
                 {row.konsolideAnaFirmaSayisi}
               </Typography>
             </Grid>
-            <Grid item xs={12} sm={3} display="flex" alignItems="center">
+            <Grid size={{ xs: 12, sm: 3 }} display="flex" alignItems="center">
               <Typography variant="h6">
                 Konsolide Yavru Şirket Firma Sayısı:
               </Typography>
             </Grid>
             <Grid
-              item
-              xs={12}
-              sm={9}
+              size={{ xs: 12, sm: 9 }}
               pl={1.5}
               display="flex"
               alignItems="center"

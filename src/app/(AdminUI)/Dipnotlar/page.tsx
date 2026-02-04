@@ -42,7 +42,7 @@ const Page: React.FC = () => {
     <PageContainer title="Dipnotlar" description="Dipnotlar">
       <Breadcrumb title="Dipnotlar" items={BCrumb} />
       <Grid container spacing={3}>
-        <Grid item xs={12} lg={12}>
+        <Grid size={{ xs: 12, lg: 12 }}>
           <TabContext value={tip}>
             <TabList onChange={handleChange} aria-label="lab API tabs example">
               <Tab
@@ -58,9 +58,10 @@ const Page: React.FC = () => {
             <TabPanel value="BagimsizDenetciRaporu" sx={{ paddingX: 0 }}>
               <Grid container>
                 <Grid
-                  item
-                  xs={12}
-                  lg={12}
+                  size={{
+                    xs: 12,
+                    lg: 12
+                  }}
                   sx={{
                     display: "flex",
                     alignItems: "center",
@@ -88,7 +89,7 @@ const Page: React.FC = () => {
                     </MenuItem>
                   </CustomSelect>
                 </Grid>
-                <Grid item xs={12} lg={12}>
+                <Grid size={{ xs: 12, lg: 12 }}>
                   <RaporDipnot tip={tip} denetimTuru={denetimTuru} />
                 </Grid>
               </Grid>
@@ -99,9 +100,10 @@ const Page: React.FC = () => {
             >
               <Grid container>
                 <Grid
-                  item
-                  xs={12}
-                  lg={12}
+                  size={{
+                    xs: 12,
+                    lg: 12
+                  }}
                   sx={{
                     display: "flex",
                     alignItems: "center",
@@ -129,7 +131,7 @@ const Page: React.FC = () => {
                     </MenuItem>
                   </CustomSelect>
                 </Grid>
-                <Grid item xs={12} lg={12}>
+                <Grid size={{ xs: 12, lg: 12 }}>
                   <RaporDipnot tip={tip} denetimTuru={denetimTuru} />
                 </Grid>
               </Grid>

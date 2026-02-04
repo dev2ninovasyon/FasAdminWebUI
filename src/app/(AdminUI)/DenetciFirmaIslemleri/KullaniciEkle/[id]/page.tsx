@@ -22,10 +22,10 @@ const Page = () => {
     <PageContainer title="Kullanıcı Ekle" description="this is Kullanıcı Ekle">
       <ParentCard title="Kullanıcı Ekle">
         <Grid container spacing={3}>
-          <Grid item xs={12}>
+          <Grid size={{ xs: 12 }}>
             <Breadcrumb title="Kullanıcı Ekle" items={BCrumb} />
             <Grid container spacing={3}>
-              <Grid item xs={12}>
+              <Grid size={{ xs: 12 }}>
                 <ParentCard title="Yeni Kullanıcı">
                   <KullaniciEkleForm />
                 </ParentCard>

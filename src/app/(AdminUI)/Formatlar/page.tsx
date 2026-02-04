@@ -23,7 +23,7 @@ const Page = () => {
       <Breadcrumb title="Formatlar" items={BCrumb} />
       <ParentCard title="Formatlar">
         <Grid container spacing={3}>
-          <Grid item xs={12}>
+          <Grid size={{ xs: 12 }}>
             <FormatEkleButton />
             <Box>
               <FormatTable />

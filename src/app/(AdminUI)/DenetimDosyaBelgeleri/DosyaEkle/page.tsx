@@ -26,7 +26,7 @@ const Page = () => {
     <PageContainer title="Dosya Ekle" description="this is Dosya Ekle">
       <Breadcrumb title="Dosya Ekle" items={BCrumb} />
       <Grid container spacing={3}>
-        <Grid item xs={12}>
+        <Grid size={{ xs: 12 }}>
           <ParentCard title="Yeni Dosya">
             <DosyaEkleForm />
           </ParentCard>

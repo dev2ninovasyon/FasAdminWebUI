@@ -57,7 +57,7 @@ const DenetciDetay = () => {
 
   return (
     <Grid container spacing={3}>
-      <Grid item xs={12} sm={3} display="flex" alignItems="center">
+      <Grid size={{ xs: 12, sm: 3 }} display="flex" alignItems="center">
         <CustomFormLabel
           htmlFor="firmaAdi"
           sx={{ mt: 0, mb: { xs: "-10px", sm: 0 } }}
@@ -65,12 +65,12 @@ const DenetciDetay = () => {
           Firma Adı
         </CustomFormLabel>
       </Grid>
-      <Grid item xs={12} sm={9}>
+      <Grid size={{ xs: 12, sm: 9 }}>
         <Typography textAlign="left" variant="h6">
           {firmaAdi}
         </Typography>
       </Grid>
-      <Grid item xs={12} sm={3} display="flex" alignItems="center">
+      <Grid size={{ xs: 12, sm: 3 }} display="flex" alignItems="center">
         <CustomFormLabel
           htmlFor="firmaUnvani"
           sx={{ mt: 0, mb: { xs: "-10px", sm: 0 } }}
@@ -78,12 +78,12 @@ const DenetciDetay = () => {
           Firma Ünvanı
         </CustomFormLabel>
       </Grid>
-      <Grid item xs={12} sm={9}>
+      <Grid size={{ xs: 12, sm: 9 }}>
         <Typography textAlign="left" variant="h6">
           {firmaUnvani}
         </Typography>
       </Grid>
-      <Grid item xs={12} sm={3} display="flex" alignItems="center">
+      <Grid size={{ xs: 12, sm: 3 }} display="flex" alignItems="center">
         <CustomFormLabel
           htmlFor="adres"
           sx={{ mt: 0, mb: { xs: "-10px", sm: 0 } }}
@@ -91,12 +91,12 @@ const DenetciDetay = () => {
           Adres
         </CustomFormLabel>
       </Grid>
-      <Grid item xs={12} sm={9}>
+      <Grid size={{ xs: 12, sm: 9 }}>
         <Typography textAlign="left" variant="h6">
           {adres}
         </Typography>
       </Grid>
-      <Grid item xs={12} sm={3} display="flex" alignItems="center">
+      <Grid size={{ xs: 12, sm: 3 }} display="flex" alignItems="center">
         <CustomFormLabel
           htmlFor="il"
           sx={{ mt: 0, mb: { xs: "-10px", sm: 0 } }}
@@ -104,12 +104,12 @@ const DenetciDetay = () => {
           İl
         </CustomFormLabel>
       </Grid>
-      <Grid item xs={12} sm={9}>
+      <Grid size={{ xs: 12, sm: 9 }}>
         <Typography textAlign="left" variant="h6">
           {il}
         </Typography>
       </Grid>
-      <Grid item xs={12} sm={3} display="flex" alignItems="center">
+      <Grid size={{ xs: 12, sm: 3 }} display="flex" alignItems="center">
         <CustomFormLabel
           htmlFor="tel"
           sx={{ mt: 0, mb: { xs: "-10px", sm: 0 } }}
@@ -117,12 +117,12 @@ const DenetciDetay = () => {
           Tel
         </CustomFormLabel>
       </Grid>
-      <Grid item xs={12} sm={9}>
+      <Grid size={{ xs: 12, sm: 9 }}>
         <Typography textAlign="left" variant="h6">
           {tel}
         </Typography>
       </Grid>
-      <Grid item xs={12} sm={3} display="flex" alignItems="center">
+      <Grid size={{ xs: 12, sm: 3 }} display="flex" alignItems="center">
         <CustomFormLabel
           htmlFor="fax"
           sx={{ mt: 0, mb: { xs: "-10px", sm: 0 } }}
@@ -130,12 +130,12 @@ const DenetciDetay = () => {
           Fax
         </CustomFormLabel>
       </Grid>
-      <Grid item xs={12} sm={9}>
+      <Grid size={{ xs: 12, sm: 9 }}>
         <Typography textAlign="left" variant="h6">
           {fax}
         </Typography>
       </Grid>
-      <Grid item xs={12} sm={3} display="flex" alignItems="center">
+      <Grid size={{ xs: 12, sm: 3 }} display="flex" alignItems="center">
         <CustomFormLabel
           htmlFor="email"
           sx={{ mt: 0, mb: { xs: "-10px", sm: 0 } }}
@@ -143,12 +143,12 @@ const DenetciDetay = () => {
           Email
         </CustomFormLabel>
       </Grid>
-      <Grid item xs={12} sm={9}>
+      <Grid size={{ xs: 12, sm: 9 }}>
         <Typography textAlign="left" variant="h6">
           {email}
         </Typography>
       </Grid>
-      <Grid item xs={12} sm={3} display="flex" alignItems="center">
+      <Grid size={{ xs: 12, sm: 3 }} display="flex" alignItems="center">
         <CustomFormLabel
           htmlFor="web"
           sx={{ mt: 0, mb: { xs: "-10px", sm: 0 } }}
@@ -156,12 +156,12 @@ const DenetciDetay = () => {
           Web Sitesi
         </CustomFormLabel>
       </Grid>
-      <Grid item xs={12} sm={9}>
+      <Grid size={{ xs: 12, sm: 9 }}>
         <Typography textAlign="left" variant="h6">
           {web}
         </Typography>
       </Grid>
-      <Grid item xs={12} sm={3} display="flex" alignItems="center">
+      <Grid size={{ xs: 12, sm: 3 }} display="flex" alignItems="center">
         <CustomFormLabel
           htmlFor="vergiNo"
           sx={{ mt: 0, mb: { xs: "-10px", sm: 0 } }}
@@ -169,13 +169,13 @@ const DenetciDetay = () => {
           Vergi Numarası
         </CustomFormLabel>
       </Grid>
-      <Grid item xs={12} sm={9}>
+      <Grid size={{ xs: 12, sm: 9 }}>
         <Typography textAlign="left" variant="h6">
           {vergiNo}
         </Typography>
       </Grid>
 
-      <Grid item xs={12} sm={3} display="flex" alignItems="center">
+      <Grid size={{ xs: 12, sm: 3 }} display="flex" alignItems="center">
         <CustomFormLabel
           htmlFor="vergiDairesi"
           sx={{ mt: 0, mb: { xs: "-10px", sm: 0 } }}
@@ -183,12 +183,12 @@ const DenetciDetay = () => {
           Vergi Dairesi
         </CustomFormLabel>
       </Grid>
-      <Grid item xs={12} sm={9}>
+      <Grid size={{ xs: 12, sm: 9 }}>
         <Typography textAlign="left" variant="h6">
           {vergiDairesi}
         </Typography>
       </Grid>
-      <Grid item xs={12} sm={3} display="flex" alignItems="center">
+      <Grid size={{ xs: 12, sm: 3 }} display="flex" alignItems="center">
         <CustomFormLabel
           htmlFor="ticaretSicilNo"
           sx={{ mt: 0, mb: { xs: "-10px", sm: 0 } }}
@@ -196,13 +196,13 @@ const DenetciDetay = () => {
           Ticaret Sicil Numarası
         </CustomFormLabel>
       </Grid>
-      <Grid item xs={12} sm={9}>
+      <Grid size={{ xs: 12, sm: 9 }}>
         <Typography textAlign="left" variant="h6">
           {ticaretSicilNo}
         </Typography>
       </Grid>
 
-      <Grid item xs={12} sm={3}></Grid>
+      <Grid size={{ xs: 12, sm: 3 }}></Grid>
     </Grid>
   );
 };

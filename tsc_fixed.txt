@@ -1,0 +1,60 @@
+﻿src/app/auth/authForms/AuthLogin.tsx(24,18): error TS2694: Namespace 'global.JSX' has no exported member 'Element'.
+src/app/auth/authForms/AuthLogin.tsx(24,32): error TS2694: Namespace 'global.JSX' has no exported member 'Element'.
+src/app/auth/authForms/AuthLogin.tsx(25,17): error TS2694: Namespace 'global.JSX' has no exported member 'Element'.
+src/app/auth/authForms/AuthLogin.tsx(25,31): error TS2694: Namespace 'global.JSX' has no exported member 'Element'.
+src/app/components/Container/PageContainer.tsx(7,17): error TS2694: Namespace 'global.JSX' has no exported member 'Element'.
+src/app/components/Container/PageContainer.tsx(7,31): error TS2694: Namespace 'global.JSX' has no exported member 'Element'.
+src/app/components/Editor/LexicalEditor.tsx(55,33): error TS2307: Cannot find module '@lexical/react/LexicalComposer' or its corresponding type declarations.
+src/app/components/Editor/LexicalEditor.tsx(56,32): error TS2307: Cannot find module '@lexical/react/LexicalRichTextPlugin' or its corresponding type declarations.
+src/app/components/Editor/LexicalEditor.tsx(57,33): error TS2307: Cannot find module '@lexical/react/LexicalContentEditable' or its corresponding type declarations.
+src/app/components/Editor/LexicalEditor.tsx(58,31): error TS2307: Cannot find module '@lexical/react/LexicalHistoryPlugin' or its corresponding type declarations.
+src/app/components/Editor/LexicalEditor.tsx(59,28): error TS2307: Cannot find module '@lexical/react/LexicalListPlugin' or its corresponding type declarations.
+src/app/components/Editor/LexicalEditor.tsx(60,28): error TS2307: Cannot find module '@lexical/react/LexicalLinkPlugin' or its corresponding type declarations.
+src/app/components/Editor/LexicalEditor.tsx(61,33): error TS2307: Cannot find module '@lexical/react/LexicalCheckListPlugin' or its corresponding type declarations.
+src/app/components/Editor/LexicalEditor.tsx(62,29): error TS2307: Cannot find module '@lexical/react/LexicalTablePlugin' or its corresponding type declarations.
+src/app/components/Editor/LexicalEditor.tsx(63,38): error TS2307: Cannot find module '@lexical/react/LexicalTabIndentationPlugin' or its corresponding type declarations.
+src/app/components/Editor/LexicalEditor.tsx(64,40): error TS2307: Cannot find module '@lexical/react/LexicalMarkdownShortcutPlugin' or its corresponding type declarations.
+src/app/components/Editor/LexicalEditor.tsx(65,32): error TS2307: Cannot find module '@lexical/react/LexicalOnChangePlugin' or its corresponding type declarations.
+src/app/components/Editor/LexicalEditor.tsx(66,38): error TS2307: Cannot find module '@lexical/react/LexicalErrorBoundary' or its corresponding type declarations.
+src/app/components/Editor/LexicalEditor.tsx(67,43): error TS2307: Cannot find module '@lexical/react/LexicalComposerContext' or its corresponding type declarations.
+src/app/components/Editor/LexicalEditor.tsx(68,63): error TS2307: Cannot find module '@lexical/html' or its corresponding type declarations.
+src/app/components/Editor/LexicalEditor.tsx(84,8): error TS2307: Cannot find module 'lexical' or its corresponding type declarations.
+src/app/components/Editor/LexicalEditor.tsx(90,8): error TS2307: Cannot find module '@lexical/rich-text' or its corresponding type declarations.
+src/app/components/Editor/LexicalEditor.tsx(97,8): error TS2307: Cannot find module '@lexical/list' or its corresponding type declarations.
+src/app/components/Editor/LexicalEditor.tsx(98,61): error TS2307: Cannot find module '@lexical/link' or its corresponding type declarations.
+src/app/components/Editor/LexicalEditor.tsx(99,62): error TS2307: Cannot find module '@lexical/code' or its corresponding type declarations.
+src/app/components/Editor/LexicalEditor.tsx(105,8): error TS2307: Cannot find module '@lexical/table' or its corresponding type declarations.
+src/app/components/Editor/LexicalEditor.tsx(109,8): error TS2307: Cannot find module '@lexical/react/LexicalHorizontalRuleNode' or its corresponding type declarations.
+src/app/components/Editor/LexicalEditor.tsx(110,32): error TS2307: Cannot find module '@lexical/selection' or its corresponding type declarations.
+src/app/components/Editor/LexicalEditor.tsx(111,39): error TS2307: Cannot find module '@lexical/utils' or its corresponding type declarations.
+src/app/components/Editor/LexicalEditor.tsx(112,33): error TS2307: Cannot find module '@lexical/selection' or its corresponding type declarations.
+src/app/components/Editor/LexicalEditor.tsx(262,49): error TS7031: Binding element 'editorState' implicitly has an 'any' type.
+src/app/components/Editor/LexicalEditor.tsx(1071,63): error TS7006: Parameter 'node' implicitly has an 'any' type.
+src/app/components/Editor/LexicalEditor.tsx(1123,49): error TS7031: Binding element 'editorState' implicitly has an 'any' type.
+src/app/components/Layout/Horizontal/Navbar/NavCollapse/NavCollapse.tsx(159,22): error TS2322: Type '{ children: any; component: string; className: string; }' is not assignable to type 'IntrinsicAttributes & BoxOwnProps<Theme> & Omit<DetailedHTMLProps<HTMLAttributes<HTMLDivElement>, HTMLDivElement>, keyof BoxOwnProps<...>> & MUIStyledCommonProps<...>'.
+  Property 'component' does not exist on type 'IntrinsicAttributes & BoxOwnProps<Theme> & Omit<DetailedHTMLProps<HTMLAttributes<HTMLDivElement>, HTMLDivElement>, keyof BoxOwnProps<...>> & MUIStyledCommonProps<...>'.
+src/app/components/Layout/Shared/Breadcrumb/Breadcrumb.tsx(13,18): error TS2694: Namespace 'global.JSX' has no exported member 'Element'.
+src/app/components/Layout/Shared/Breadcrumb/Breadcrumb.tsx(21,39): error TS2362: The left-hand side of an arithmetic operation must be of type 'any', 'number', 'bigint' or an enum type.
+src/app/components/Shared/AppCard.tsx(6,17): error TS2694: Namespace 'global.JSX' has no exported member 'Element'.
+src/app/components/Shared/AppCard.tsx(6,31): error TS2694: Namespace 'global.JSX' has no exported member 'Element'.
+src/app/components/Shared/BaseCard.tsx(10,17): error TS2694: Namespace 'global.JSX' has no exported member 'Element'.
+src/app/components/Shared/BaseCard.tsx(10,31): error TS2694: Namespace 'global.JSX' has no exported member 'Element'.
+src/app/components/Shared/BlankCard.tsx(8,17): error TS2694: Namespace 'global.JSX' has no exported member 'Element'.
+src/app/components/Shared/BlankCard.tsx(8,31): error TS2694: Namespace 'global.JSX' has no exported member 'Element'.
+src/app/components/Shared/ChildCard.tsx(7,17): error TS2694: Namespace 'global.JSX' has no exported member 'Element'.
+src/app/components/Shared/ChildCard.tsx(7,31): error TS2694: Namespace 'global.JSX' has no exported member 'Element'.
+src/app/components/Shared/DashboardCard.tsx(9,16): error TS2694: Namespace 'global.JSX' has no exported member 'Element'.
+src/app/components/Shared/DashboardCard.tsx(10,16): error TS2694: Namespace 'global.JSX' has no exported member 'Element'.
+src/app/components/Shared/DashboardCard.tsx(11,30): error TS2694: Namespace 'global.JSX' has no exported member 'Element'.
+src/app/components/Shared/DashboardCard.tsx(12,28): error TS2694: Namespace 'global.JSX' has no exported member 'Element'.
+src/app/components/Shared/DashboardCard.tsx(13,31): error TS2694: Namespace 'global.JSX' has no exported member 'Element'.
+src/app/components/Shared/DashboardCard.tsx(14,18): error TS2694: Namespace 'global.JSX' has no exported member 'Element'.
+src/app/components/Shared/DashboardCard.tsx(15,32): error TS2694: Namespace 'global.JSX' has no exported member 'Element'.
+src/app/components/Shared/DashboardWidgetCard.tsx(14,17): error TS2694: Namespace 'global.JSX' has no exported member 'Element'.
+src/app/components/Shared/InlineItemCard.tsx(4,17): error TS2694: Namespace 'global.JSX' has no exported member 'Element'.
+src/app/components/Shared/InlineItemCard.tsx(4,29): error TS2694: Namespace 'global.JSX' has no exported member 'Element'.
+src/app/components/Shared/ParentCard.tsx(9,25): error TS2694: Namespace 'global.JSX' has no exported member 'Element'.
+src/app/components/Shared/ParentCard.tsx(10,17): error TS2694: Namespace 'global.JSX' has no exported member 'Element'.
+src/app/components/Shared/ThreeColumn.tsx(9,20): error TS2694: Namespace 'global.JSX' has no exported member 'Element'.
+src/app/components/Shared/ThreeColumn.tsx(10,18): error TS2694: Namespace 'global.JSX' has no exported member 'Element'.
+src/app/components/Shared/ThreeColumn.tsx(11,19): error TS2694: Namespace 'global.JSX' has no exported member 'Element'.

@@ -300,14 +300,14 @@ const DovizKurlariOtuzBirAralik: React.FC<Props> = ({
       const diff = customizer.isCollapse
         ? 0
         : customizer.SidebarWidth && customizer.MiniSidebarWidth
-        ? customizer.SidebarWidth - customizer.MiniSidebarWidth
-        : 0;
+          ? customizer.SidebarWidth - customizer.MiniSidebarWidth
+          : 0;
 
       hotTableComponent.current.hotInstance.updateSettings({
         width: customizer.isCollapse
           ? "100%"
           : hotTableComponent.current.hotInstance.rootElement.clientWidth -
-            diff,
+          diff,
       });
     }
   }, [customizer.isCollapse]);
@@ -349,11 +349,9 @@ const DovizKurlariOtuzBirAralik: React.FC<Props> = ({
         contextMenu={["alignment", "copy"]}
       />
       <Grid container marginTop={2} marginBottom={1}>
-        <Grid item xs={12} lg={10}></Grid>
+        <Grid size={{ xs: 12, lg: 10 }}></Grid>
         <Grid
-          item
-          xs={12}
-          lg={2}
+          size={{ xs: 12, lg: 2 }}
           sx={{
             display: "flex",
             justifyContent: "flex-end",

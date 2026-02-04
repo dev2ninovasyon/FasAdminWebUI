@@ -42,9 +42,10 @@ const Page = () => {
       <Breadcrumb title="Formüller" items={BCrumb} />
       <Grid container spacing={3}>
         <Grid
-          item
-          xs={12}
-          lg={12}
+          size={{
+            xs: 12,
+            lg: 12
+          }}
           sx={{
             display: "flex",
             flexDirection: smDown ? "column" : "row",
@@ -131,7 +132,7 @@ const Page = () => {
             </Button>
           </Box>
         </Grid>
-        <Grid item xs={12} lg={12}>
+        <Grid size={{ xs: 12, lg: 12 }}>
           {finansalTabloAdi == "ozkaynak" ? (
             <FormullerOzkaynak
               denetimTuru={denetimTuru}

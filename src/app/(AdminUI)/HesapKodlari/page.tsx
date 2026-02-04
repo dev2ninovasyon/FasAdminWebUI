@@ -19,7 +19,7 @@ const Page = () => {
     <PageContainer title="Hesap Kodları" description="this is Hesap Kodları">
       <Breadcrumb title="Hesap Kodları" items={BCrumb} />
       <Grid container spacing={3}>
-        <Grid item xs={12}>
+        <Grid size={{ xs: 12 }}>
           <HesapKodlari />
         </Grid>
       </Grid>

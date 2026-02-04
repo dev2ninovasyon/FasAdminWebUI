@@ -26,10 +26,10 @@ const Page = () => {
     <PageContainer title="Format Ekle" description="this is Format Ekle">
       <ParentCard title="Format Ekle">
         <Grid container spacing={3}>
-          <Grid item xs={12}>
+          <Grid size={{ xs: 12 }}>
             <Breadcrumb title="Format Ekle" items={BCrumb} />
             <Grid container spacing={3}>
-              <Grid item xs={12}>
+              <Grid size={{ xs: 12 }}>
                 <ParentCard title="Yeni Format">
                   <FormatEkleForm />
                 </ParentCard>

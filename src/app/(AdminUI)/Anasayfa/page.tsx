@@ -17,32 +17,32 @@ export default function Dashboard() {
       <Box mt={3}>
         <Grid container spacing={3}>
           {/* column */}
-          <Grid item xs={12} lg={12}></Grid>
+          <Grid size={{ xs: 12, lg: 12 }}></Grid>
           {/* column */}
-          <Grid item xs={12} lg={8}></Grid>
+          <Grid size={{ xs: 12, lg: 8 }}></Grid>
           {/* column */}
-          <Grid item xs={12} lg={4}>
+          <Grid size={{ xs: 12, lg: 4 }}>
             <Grid container spacing={3}>
-              <Grid item xs={12} sm={6} lg={12}></Grid>
-              <Grid item xs={12} sm={6} lg={12}></Grid>
+              <Grid size={{ xs: 12, sm: 6, lg: 12 }}></Grid>
+              <Grid size={{ xs: 12, sm: 6, lg: 12 }}></Grid>
             </Grid>
           </Grid>
           {/* column */}
-          <Grid item xs={12} lg={4}></Grid>
+          <Grid size={{ xs: 12, lg: 4 }}></Grid>
           {/* column */}
-          <Grid item xs={12} lg={4}>
+          <Grid size={{ xs: 12, lg: 4 }}>
             <Grid container spacing={3}>
-              <Grid item xs={12} sm={6}></Grid>
-              <Grid item xs={12} sm={6}></Grid>
-              <Grid item xs={12}></Grid>
+              <Grid size={{ xs: 12, sm: 6 }}></Grid>
+              <Grid size={{ xs: 12, sm: 6 }}></Grid>
+              <Grid size={{ xs: 12 }}></Grid>
             </Grid>
           </Grid>
           {/* column */}
-          <Grid item xs={12} lg={4}></Grid>
+          <Grid size={{ xs: 12, lg: 4 }}></Grid>
           {/* column */}
-          <Grid item xs={12} lg={4}></Grid>
+          <Grid size={{ xs: 12, lg: 4 }}></Grid>
           {/* column */}
-          <Grid item xs={12} lg={8}></Grid>
+          <Grid size={{ xs: 12, lg: 8 }}></Grid>
         </Grid>
       </Box>
     </PageContainer>

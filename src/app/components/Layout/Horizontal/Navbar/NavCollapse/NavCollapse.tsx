@@ -156,7 +156,7 @@ const NavCollapse = ({
           {menu.title}
         </ListItemText>
         <IconChevronDown size="1rem" />
-        <ListSubMenu component={"ul"} className="SubNav">
+        <ListSubMenu as="ul" className="SubNav">
           {submenus}
         </ListSubMenu>
       </ListItemStyled>
