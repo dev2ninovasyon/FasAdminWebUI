@@ -1,11 +1,11 @@
-export const url = "https://betaapi.fasmart.app/api";
-//export const url = "https://localhost:5001/api";
+//export const url = "https://betaapi.fasmart.app/api";
+export const url = "https://localhost:5001/api";
 
 export async function apiFetch(
     path: string,
-    options: RequestInit & { timeout?: number; ignoreCustomHeaders?: boolean; token?: string } = {}
+    options: RequestInit & { timeout?: number; ignoreCustomHeaders?: boolean; token?: string; includeCredentials?: boolean } = {}
 ) {
-    const { headers, timeout = 30000, ignoreCustomHeaders = false, token, ...rest } = options;
+    const { headers, timeout = 30000, ignoreCustomHeaders = false, token, includeCredentials = true, ...rest } = options;
 
     const clientUrl =
         typeof window !== "undefined"
@@ -34,6 +34,7 @@ export async function apiFetch(
         const requestStartTime = Date.now();
         console.log(`🌐 [%cAPI İstek %c] %c${fullUrl}`, 'color: #3b82f6; font-weight: bold;', 'color: inherit;', 'color: #10b981;', {
             method: rest.method || 'GET',
+            credentials: includeCredentials ? 'include' : 'omit',
             headers: mergedHeaders,
             body: rest.body
         });
@@ -42,11 +43,13 @@ export async function apiFetch(
             ...rest,
             headers: mergedHeaders,
             signal: controller.signal,
-            credentials: 'include', // Backend HttpOnly cookie'leri (fas_token vb.) için gerekli
+            credentials: includeCredentials ? 'include' : 'omit',
         });
 
         const duration = Date.now() - requestStartTime;
-        console.log(`✅ [%cAPI Yanıt %c] %c${fullUrl} %c(${duration}ms)`, 'color: #10b981; font-weight: bold;', 'color: inherit;', 'color: #3b82f6;', 'color: #6b7280;', {
+        const logColor = response.ok ? '#10b981' : '#ef4444';
+        const logIcon = response.ok ? '✅' : '⚠️';
+        console.log(`${logIcon} [%cAPI Yanıt %c] %c${fullUrl} %c(${duration}ms)`, `color: ${logColor}; font-weight: bold;`, 'color: inherit;', 'color: #3b82f6;', 'color: #6b7280;', {
             status: response.status,
             statusText: response.statusText
         });

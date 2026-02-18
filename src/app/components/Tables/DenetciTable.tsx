@@ -88,7 +88,9 @@ const DenetciTable = () => {
 
   const fetchData = async () => {
     try {
+      console.log("DenetciTable: fetching denetciler with token ->", user.token);
       const denetciVerileri = await getDenetciler(user.token || "");
+      console.log("DenetciTable: getDenetciler ->", denetciVerileri);
       if (denetciVerileri && Array.isArray(denetciVerileri)) {
         const newRows = denetciVerileri.map((denetci: any) => ({
           id: denetci.id,
@@ -115,8 +117,12 @@ const DenetciTable = () => {
   };
 
   useEffect(() => {
-    fetchData();
-  }, []);
+    if (user.token) {
+      fetchData();
+    } else {
+      console.warn("DenetciTable: user.token yok, fetch atılmadı");
+    }
+  }, [user.token]);
 
   return (
     <BlankCard>
