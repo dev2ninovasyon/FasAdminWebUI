@@ -53,11 +53,20 @@ export async function apiFetch(
 
         return response;
     } catch (error: any) {
-        if (error.name === 'AbortError') {
+        if (error?.name === 'AbortError') {
             const isTimeout = controller.signal.reason === "timeout";
-            console.warn(`🛑 [%cAPI Hata   %c] ${path} -> ${isTimeout ? 'TIMED OUT' : 'CANCELLED'}.`, 'color: #ef4444; font-weight: bold;', 'color: inherit;');
+            console.warn(
+                `🛑 [%cAPI Hata   %c] ${fullUrl} -> ${isTimeout ? "TIMED OUT" : "CANCELLED"}.`,
+                "color: #ef4444; font-weight: bold;",
+                "color: inherit;"
+            );
         } else {
-            console.error(`❌ [%cAPI Hata   %c] (${path}):`, 'color: #ef4444; font-weight: bold;', 'color: inherit;', error);
+            console.error(
+                `❌ [%cAPI Hata   %c] (${fullUrl}):`,
+                "color: #ef4444; font-weight: bold;",
+                "color: inherit;",
+                error
+            );
         }
         throw error;
     } finally {

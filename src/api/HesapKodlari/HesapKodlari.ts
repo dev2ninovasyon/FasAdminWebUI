@@ -1,4 +1,5 @@
 import { apiFetch } from "@/api/apiBase";
+import { apiFetch } from "@/api/apiBase";
 
 export const getHesapKodlari = async (token: string) => {
   try {
@@ -10,9 +11,10 @@ export const getHesapKodlari = async (token: string) => {
       return response.json();
     } else {
       console.error("Hesap Kodları getirilemedi");
+      return [];
     }
   } catch (error) {
-    console.error("Bir hata oluştu:", error);
+    return [];
   }
 };
 
@@ -27,6 +29,7 @@ export const updateHesapKodlari = async (
       body: JSON.stringify(updatedHesapKodlari),
     });
 
+    return response.ok;
     return response.ok;
   } catch (error) {
     console.error("Bir hata oluştu:", error);

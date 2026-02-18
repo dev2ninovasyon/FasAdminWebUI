@@ -10,14 +10,16 @@ export const getDenetciler = async (token: string) => {
       return response.json();
     } else {
       console.error("Denetciler getirilemedi");
+      return [];
     }
   } catch (error) {
-    console.error("Bir hata oluştu:", error);
+    return [];
   }
 };
 
 export const getDenetciById = async (token: string, id: any) => {
   try {
+    const response = await apiFetch(`/Denetci/${id}`, {
     const response = await apiFetch(`/Denetci/${id}`, {
       method: "GET",
       token: token
@@ -26,9 +28,10 @@ export const getDenetciById = async (token: string, id: any) => {
       return response.json();
     } else {
       console.error("Denetci getirilemedi");
+      return {};
     }
   } catch (error) {
-    console.error("Bir hata oluştu:", error);
+    return {};
   }
 };
 
@@ -108,9 +111,10 @@ export const getDenetciOdemeBilgileri = async (
       return response.json();
     } else {
       console.error("Denetci Ödeme Bilgileri getirilemedi");
+      return {};
     }
   } catch (error) {
-    console.error("Bir hata oluştu:", error);
+    return {};
   }
 };
 
@@ -143,8 +147,9 @@ export const getDenetciKotaGecmisi = async (token: string, denetciId: any) => {
       return response.json();
     } else {
       console.error("Denetci Kota Geçmişi getirilemedi");
+      return [];
     }
   } catch (error) {
-    console.error("Bir hata oluştu:", error);
+    return [];
   }
 };

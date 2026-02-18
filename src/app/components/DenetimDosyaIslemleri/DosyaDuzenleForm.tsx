@@ -10,13 +10,10 @@ import {
 import { useSelector } from "@/store/hooks";
 import { AppState } from "@/store/store";
 
-const DosyaDuzenleForm = () => {
+const DosyaDuzenleForm = ({ id }: { id?: string }) => {
   const user = useSelector((state: AppState) => state.userReducer);
 
-  const pathname = usePathname();
-  const segments = pathname.split("/");
-  const idIndex = segments.indexOf("DosyaDuzenle") + 1;
-  const pathId = segments[idIndex];
+  const pathId = id;
 
   const router = useRouter();
 

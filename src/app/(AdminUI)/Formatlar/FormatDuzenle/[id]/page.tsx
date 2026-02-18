@@ -17,14 +17,19 @@ const BCrumb = [
   },
 ];
 
-const Page = () => {
+import { use } from "react";
+
+const Page = (props: { params: Promise<{ id: string }> }) => {
+  const params = use(props.params);
+  const id = params.id;
+
   return (
     <PageContainer title="Format Düzenle" description="this is Format Düzenle">
       <Breadcrumb title="Format Düzenle" items={BCrumb} />
       <Grid container spacing={3}>
         <Grid size={{ xs: 12 }}>
           <ParentCard title="Format">
-            <FormatDuzenleForm />
+            <FormatDuzenleForm id={id} />
           </ParentCard>
         </Grid>
       </Grid>

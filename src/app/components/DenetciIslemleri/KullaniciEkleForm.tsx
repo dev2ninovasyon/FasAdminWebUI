@@ -7,13 +7,10 @@ import { createKullanici } from "@/api/DenetciIslemleri/DenetciIslemleri";
 import { useSelector } from "@/store/hooks";
 import { AppState } from "@/store/store";
 
-const KullaniciEkleForm = () => {
+const KullaniciEkleForm = ({ id }: { id?: string }) => {
   const user = useSelector((state: AppState) => state.userReducer);
 
-  const pathname = usePathname();
-  const segments = pathname.split("/");
-  const idIndex = segments.indexOf("KullaniciEkle") + 1;
-  const pathId = segments[idIndex];
+  const pathId = id;
 
   const router = useRouter();
 

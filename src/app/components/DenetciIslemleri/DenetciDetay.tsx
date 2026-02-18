@@ -6,13 +6,10 @@ import { getDenetciById } from "@/api/DenetciIslemleri/DenetciIslemleri";
 import { useSelector } from "@/store/hooks";
 import { AppState } from "@/store/store";
 
-const DenetciDetay = () => {
+const DenetciDetay = ({ id }: { id?: string }) => {
   const user = useSelector((state: AppState) => state.userReducer);
 
-  const pathname = usePathname();
-  const segments = pathname.split("/");
-  const idIndex = segments.indexOf("DenetciDetay") + 1;
-  const pathId = segments[idIndex];
+  const pathId = id;
 
   const [firmaAdi, setFirmaAdi] = useState(0);
   const [firmaUnvani, setFirmaUnvani] = useState("");

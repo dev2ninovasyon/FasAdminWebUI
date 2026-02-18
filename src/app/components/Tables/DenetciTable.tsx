@@ -84,29 +84,31 @@ const DenetciTable = () => {
     }
   };
 
-  const [rows, setRows] = useState([]);
+  const [rows, setRows] = useState<any[]>([]);
 
   const fetchData = async () => {
     try {
       const denetciVerileri = await getDenetciler(user.token || "");
-      const newRows = denetciVerileri.map((denetci: any) => ({
-        id: denetci.id,
-        firmaAdi: denetci.firmaAdi,
-        firmaUnvani: denetci.firmaUnvani,
-        adres: denetci.adres,
-        il: denetci.il,
-        tel: denetci.tel,
-        fax: denetci.fax,
-        email: denetci.email,
-        web: denetci.web,
-        vergiNo: denetci.vergiNo,
-        vergiDairesi: denetci.vergiDairesi,
-        ticaretSicilNo: denetci.ticaretSicilNo,
-        kayitTarihi: denetci.kayitTarihi,
-        arsivId: denetci.arsivId,
-        aktifmi: denetci.aktifmi,
-      }));
-      setRows(newRows);
+      if (denetciVerileri && Array.isArray(denetciVerileri)) {
+        const newRows = denetciVerileri.map((denetci: any) => ({
+          id: denetci.id,
+          firmaAdi: denetci.firmaAdi,
+          firmaUnvani: denetci.firmaUnvani,
+          adres: denetci.adres,
+          il: denetci.il,
+          tel: denetci.tel,
+          fax: denetci.fax,
+          email: denetci.email,
+          web: denetci.web,
+          vergiNo: denetci.vergiNo,
+          vergiDairesi: denetci.vergiDairesi,
+          ticaretSicilNo: denetci.ticaretSicilNo,
+          kayitTarihi: denetci.kayitTarihi,
+          arsivId: denetci.arsivId,
+          aktifmi: denetci.aktifmi,
+        }));
+        setRows(newRows);
+      }
     } catch (error) {
       console.error("Bir hata oluştu:", error);
     }

@@ -22,7 +22,7 @@ import { SnackbarProvider } from "notistack";
 import RTL from "./components/Layout/Shared/Customizer/RTL";
 import useAutoLogout from "@/utils/useAutoLogOut";
 
-export const MyApp = ({ children }: { children: React.ReactNode }) => {
+const MyApp = ({ children }: { children: React.ReactNode }) => {
   useAutoLogout(45 * 60 * 1000, 40 * 60 * 1000); // 45 dakika idle süresi, 40 dakika refresh süresi
 
   const theme = ThemeSettings();

@@ -93,24 +93,25 @@ const HesapKodlari = () => {
   const fetchData = async () => {
     try {
       const hesapKodlari = await getHesapKodlari(user.token || "");
-
-      hesapKodlari.forEach((veri: HesapKodlari) => {
-        if (veri.gruplar == "BorcBakiyesiVermesiGereken12Grubu") {
-          setBorcBakiyesiVermesiGereken12Grubu(veri.hesaplar);
-        } else if (veri.gruplar == "AlacakBakiyesiVermesiGereken12Grubu") {
-          setAlacakBakiyesiVermesiGereken12Grubu(veri.hesaplar);
-        } else if (veri.gruplar == "BorcBakiyesiVermesiGereken345Grubu") {
-          setBorcBakiyesiVermesiGereken345Grubu(veri.hesaplar);
-        } else if (veri.gruplar == "AlacakBakiyesiVermesiGereken345Grubu") {
-          setAlacakBakiyesiVermesiGereken345Grubu(veri.hesaplar);
-        } else if (veri.gruplar == "BorcBakiyesiVermesiGereken6Grubu") {
-          setBorcBakiyesiVermesiGereken6Grubu(veri.hesaplar);
-        } else if (veri.gruplar == "AlacakBakiyesiVermesiGereken6Grubu") {
-          setAlacakBakiyesiVermesiGereken6Grubu(veri.hesaplar);
-        } else if (veri.gruplar == "YildizliHesaplar") {
-          setYildizliHesaplar(veri.hesaplar);
-        }
-      });
+      if (hesapKodlari && Array.isArray(hesapKodlari)) {
+        hesapKodlari.forEach((veri: HesapKodlari) => {
+          if (veri.gruplar == "BorcBakiyesiVermesiGereken12Grubu") {
+            setBorcBakiyesiVermesiGereken12Grubu(veri.hesaplar);
+          } else if (veri.gruplar == "AlacakBakiyesiVermesiGereken12Grubu") {
+            setAlacakBakiyesiVermesiGereken12Grubu(veri.hesaplar);
+          } else if (veri.gruplar == "BorcBakiyesiVermesiGereken345Grubu") {
+            setBorcBakiyesiVermesiGereken345Grubu(veri.hesaplar);
+          } else if (veri.gruplar == "AlacakBakiyesiVermesiGereken345Grubu") {
+            setAlacakBakiyesiVermesiGereken345Grubu(veri.hesaplar);
+          } else if (veri.gruplar == "BorcBakiyesiVermesiGereken6Grubu") {
+            setBorcBakiyesiVermesiGereken6Grubu(veri.hesaplar);
+          } else if (veri.gruplar == "AlacakBakiyesiVermesiGereken6Grubu") {
+            setAlacakBakiyesiVermesiGereken6Grubu(veri.hesaplar);
+          } else if (veri.gruplar == "YildizliHesaplar") {
+            setYildizliHesaplar(veri.hesaplar);
+          }
+        });
+      }
     } catch (error) {
       console.error("Bir hata oluştu:", error);
     }
