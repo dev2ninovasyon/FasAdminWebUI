@@ -51,6 +51,8 @@ const MyApp = ({ children }: { children: React.ReactNode }) => {
   );
 };
 
+import Script from "next/script";
+
 export default function RootLayout({
   children,
 }: {
@@ -62,7 +64,15 @@ export default function RootLayout({
   }, []);
   return (
     <html suppressHydrationWarning>
+      <head>
+        <link rel="preconnect" href="https://www.google.com" />
+        <link rel="preconnect" href="https://www.gstatic.com" crossOrigin="anonymous" />
+      </head>
       <body>
+        <Script
+          src="https://www.google.com/recaptcha/api.js?render=6Ld2CyEsAAAAALNU5rSOM_Q2RAWkQ2RADbsS5NQW"
+          strategy="afterInteractive"
+        />
         <Provider store={store}>
           <PersistGate loading={null} persistor={persistor}>
             {loading ? (
