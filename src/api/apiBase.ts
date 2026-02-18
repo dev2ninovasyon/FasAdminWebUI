@@ -1,5 +1,5 @@
 //export const url = "https://betaapi.fasmart.app/api";
-export const url = "https://localhost:5001/api";
+export const url = "https://127.0.0.1:5001/api";
 
 export async function apiFetch(
     path: string,
@@ -12,10 +12,12 @@ export async function apiFetch(
             ? window.location.pathname + window.location.search
             : "";
 
-    const mergedHeaders: HeadersInit = {
-        ...(headers || {}),
-        "X-Client-Url": clientUrl,
-    };
+    const mergedHeaders: HeadersInit = ignoreCustomHeaders
+        ? (headers || {})
+        : {
+            ...(headers || {}),
+            "X-Client-Url": clientUrl,
+        };
 
     const normalizedPath = path.startsWith("/") ? path : `/${path}`;
     const fullUrl = `${url.endsWith('/') ? url.slice(0, -1) : url}${normalizedPath}`;
@@ -49,11 +51,20 @@ export async function apiFetch(
 
         return response;
     } catch (error: any) {
-        if (error.name === 'AbortError') {
+        if (error?.name === 'AbortError') {
             const isTimeout = controller.signal.reason === "timeout";
-            console.warn(`🛑 [%cAPI Hata   %c] ${path} -> ${isTimeout ? 'TIMED OUT' : 'CANCELLED'}.`, 'color: #ef4444; font-weight: bold;', 'color: inherit;');
+            console.warn(
+                `🛑 [%cAPI Hata   %c] ${fullUrl} -> ${isTimeout ? "TIMED OUT" : "CANCELLED"}.`,
+                "color: #ef4444; font-weight: bold;",
+                "color: inherit;"
+            );
         } else {
-            console.error(`❌ [%cAPI Hata   %c] (${path}):`, 'color: #ef4444; font-weight: bold;', 'color: inherit;', error);
+            console.error(
+                `❌ [%cAPI Hata   %c] (${fullUrl}):`,
+                "color: #ef4444; font-weight: bold;",
+                "color: inherit;",
+                error
+            );
         }
         throw error;
     } finally {

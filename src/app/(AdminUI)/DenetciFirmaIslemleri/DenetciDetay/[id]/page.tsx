@@ -16,7 +16,12 @@ const BCrumb = [
   },
 ];
 
-const Page = () => {
+import { use } from "react";
+
+const Page = (props: { params: Promise<{ id: string }> }) => {
+  const params = use(props.params);
+  const id = params.id;
+
   return (
     <PageContainer title="Denetçi Detay" description="this is Denetçi Detay">
       <Breadcrumb title="Denetçi Detay" items={BCrumb} />
@@ -24,7 +29,7 @@ const Page = () => {
         <Grid container spacing={3}>
           <Grid size={{ xs: 12 }}>
             <Box>
-              <DenetciDetay />
+              <DenetciDetay id={id} />
             </Box>
           </Grid>
         </Grid>

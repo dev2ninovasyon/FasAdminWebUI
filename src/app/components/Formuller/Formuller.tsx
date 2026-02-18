@@ -365,17 +365,19 @@ const Formuller: React.FC<Props> = ({
       );
 
       const rowsAll: any = [];
-      FormulVerileri.forEach((veri: any) => {
-        const newRow: any = [
-          veri.formulId,
-          veri.kalemAdi,
-          veri.formul,
-          veri.dipnot,
-          veri.kirilim,
-          veri.kgkExcelSatirNo,
-        ];
-        rowsAll.push(newRow);
-      });
+      if (FormulVerileri && Array.isArray(FormulVerileri)) {
+        FormulVerileri.forEach((veri: any) => {
+          const newRow: any = [
+            veri.formulId,
+            veri.kalemAdi,
+            veri.formul,
+            veri.dipnot,
+            veri.kirilim,
+            veri.kgkExcelSatirNo,
+          ];
+          rowsAll.push(newRow);
+        });
+      }
       rowsAll.sort((a: any, b: any) => (a[5] > b[5] ? 1 : -1));
 
       setRowCount(rowsAll.length);

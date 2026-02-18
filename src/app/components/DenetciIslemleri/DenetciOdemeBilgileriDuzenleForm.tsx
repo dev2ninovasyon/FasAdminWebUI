@@ -11,13 +11,10 @@ import CustomSwitch from "@/app/components/Forms/ThemeElements/CustomSwitch";
 import { useSelector } from "@/store/hooks";
 import { AppState } from "@/store/store";
 
-const DenetciOdemeBilgileriDuzenleForm = () => {
+const DenetciOdemeBilgileriDuzenleForm = ({ id }: { id?: string }) => {
   const user = useSelector((state: AppState) => state.userReducer);
 
-  const pathname = usePathname();
-  const segments = pathname.split("/");
-  const idIndex = segments.indexOf("DenetciOdemeBilgileriDuzenle") + 1;
-  const pathId = segments[idIndex];
+  const pathId = id;
 
   const router = useRouter();
 

@@ -10,15 +10,10 @@ import {
 import { useSelector } from "@/store/hooks";
 import { AppState } from "@/store/store";
 
-const DenetciDuzenleForm = () => {
+const DenetciDuzenleForm = ({ id }: { id?: string }) => {
   const user = useSelector((state: AppState) => state.userReducer);
 
-  const pathname = usePathname();
-  const segments = pathname.split("/");
-  const idIndex = segments.indexOf("DenetciDuzenle") + 1;
-  const pathId = segments[idIndex];
-
-  const id = pathId;
+  const pathId = id;
   const [firmaAdi, setFirmaAdi] = useState(0);
   const [firmaUnvani, setFirmaUnvani] = useState("");
   const [adres, setAdres] = useState("");

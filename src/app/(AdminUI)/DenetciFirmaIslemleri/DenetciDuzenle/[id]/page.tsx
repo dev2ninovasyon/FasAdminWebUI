@@ -17,7 +17,12 @@ const BCrumb = [
   },
 ];
 
-const Page = () => {
+import { use } from "react";
+
+const Page = (props: { params: Promise<{ id: string }> }) => {
+  const params = use(props.params);
+  const id = params.id;
+
   return (
     <PageContainer
       title="Denetçi Düzenle"
@@ -27,7 +32,7 @@ const Page = () => {
       <Grid container spacing={3}>
         <Grid size={{ xs: 12 }}>
           <ParentCard title="Denetçi">
-            <DenetciDuzenleForm />
+            <DenetciDuzenleForm id={id} />
           </ParentCard>
         </Grid>
       </Grid>

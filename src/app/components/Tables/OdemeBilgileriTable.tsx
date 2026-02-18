@@ -86,7 +86,7 @@ function createData(
   };
 }
 
-function Row(props: { row: ReturnType<typeof createData> }) {
+const Row = (props: { row: ReturnType<typeof createData>, id?: string }) => {
   const [anchorEl, setAnchorEl] = React.useState<null | HTMLElement>(null);
   const isAnchorOpen = Boolean(anchorEl);
 
@@ -98,14 +98,9 @@ function Row(props: { row: ReturnType<typeof createData> }) {
     setAnchorEl(null);
   };
 
-  const { row } = props;
+  const { row, id: pathId } = props;
 
   const [open, setOpen] = React.useState(false);
-
-  const pathname = usePathname();
-  const segments = pathname.split("/");
-  const idIndex = segments.indexOf("DenetciOdemeBilgileri") + 1;
-  const pathId = segments[idIndex];
 
   const router = useRouter();
 
@@ -322,15 +317,12 @@ function Row(props: { row: ReturnType<typeof createData> }) {
   );
 }
 
-const OdemeBilgileriTable = () => {
+const OdemeBilgileriTable = ({ id }: { id?: string }) => {
   const user = useSelector((state: AppState) => state.userReducer);
 
   const theme = useTheme();
 
-  const pathname = usePathname();
-  const segments = pathname.split("/");
-  const idIndex = segments.indexOf("DenetciOdemeBilgileri") + 1;
-  const pathId = segments[idIndex];
+  const pathId = id;
 
   const [rows, setRows] = React.useState<ReturnType<typeof createData>[]>([]);
 
@@ -454,7 +446,7 @@ const OdemeBilgileriTable = () => {
             </TableHead>
             <TableBody>
               {rows.map((row) => (
-                <Row key={row.denetciFirmaAdi} row={row} />
+                <Row key={row.denetciFirmaAdi} row={row} id={pathId} />
               ))}
             </TableBody>
           </Table>

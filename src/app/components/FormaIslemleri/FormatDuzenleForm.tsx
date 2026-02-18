@@ -10,17 +10,13 @@ import {
 import { useSelector } from "@/store/hooks";
 import { AppState } from "@/store/store";
 
-const FormatDuzenleForm = () => {
+const FormatDuzenleForm = ({ id }: { id?: string }) => {
   const user = useSelector((state: AppState) => state.userReducer);
 
-  const pathname = usePathname();
-  const segments = pathname.split("/");
-  const idIndex = segments.indexOf("FormatDuzenle") + 1;
-  const pathId = segments[idIndex];
+  const pathId = id;
 
   const router = useRouter();
 
-  const id = pathId;
   const [adi, setAdi] = useState("");
   const [satirSayisi, setSatirSayisi] = useState(0);
 
