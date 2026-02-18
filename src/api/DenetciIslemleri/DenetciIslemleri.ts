@@ -19,7 +19,7 @@ export const getDenetciler = async (token: string) => {
 
 export const getDenetciById = async (token: string, id: any) => {
   try {
-    const response = await apiFetch(`/Denetci/${id}`, {
+  
     const response = await apiFetch(`/Denetci/${id}`, {
       method: "GET",
       token: token
