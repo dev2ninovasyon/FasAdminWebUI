@@ -1,13 +1,10 @@
-import { url } from "@/api/apiBase";
+import { apiFetch } from "@/api/apiBase";
 
 export const getFormatlar = async (token: string) => {
   try {
-    const response = await fetch(`${url}/Format/Hepsi`, {
+    const response = await apiFetch(`/Format/Hepsi`, {
       method: "GET",
-      headers: {
-        accept: "application/json",
-        Authorization: `Bearer ${token}`,
-      },
+      token: token
     });
     if (response.ok) {
       return response.json();
@@ -21,12 +18,9 @@ export const getFormatlar = async (token: string) => {
 
 export const getFormatById = async (token: string, id: any) => {
   try {
-    const response = await fetch(`${url}/Format/${id}`, {
+    const response = await apiFetch(`/Format/${id}`, {
       method: "GET",
-      headers: {
-        accept: "application/json",
-        Authorization: `Bearer ${token}`,
-      },
+      token: token
     });
     if (response.ok) {
       return response.json();
@@ -40,23 +34,16 @@ export const getFormatById = async (token: string, id: any) => {
 
 export const createFormat = async (token: string, createdFormat: any) => {
   try {
-    const response = await fetch(`${url}/Format`, {
+    const response = await apiFetch(`/Format`, {
       method: "POST",
-      headers: {
-        accept: "*/*",
-        "Content-Type": "application/json",
-        Authorization: `Bearer ${token}`,
-      },
+      token: token,
       body: JSON.stringify(createdFormat),
     });
 
-    if (response.ok) {
-      return true;
-    } else {
-      return false;
-    }
+    return response.ok;
   } catch (error) {
     console.error("Bir hata oluştu:", error);
+    return false;
   }
 };
 
@@ -66,42 +53,29 @@ export const updateFormat = async (
   updatedFormat: any
 ) => {
   try {
-    const response = await fetch(`${url}/Format/${id}`, {
+    const response = await apiFetch(`/Format/${id}`, {
       method: "PUT",
-      headers: {
-        accept: "*/*",
-        "Content-Type": "application/json",
-        Authorization: `Bearer ${token}`,
-      },
+      token: token,
       body: JSON.stringify(updatedFormat),
     });
 
-    if (response.ok) {
-      return true;
-    } else {
-      return false;
-    }
+    return response.ok;
   } catch (error) {
     console.error("Bir hata oluştu:", error);
+    return false;
   }
 };
 
 export const deleteFormatById = async (token: string, id: number) => {
   try {
-    const response = await fetch(`${url}/Format/${id}`, {
+    const response = await apiFetch(`/Format/${id}`, {
       method: "DELETE",
-      headers: {
-        accept: "application/json",
-        Authorization: `Bearer ${token}`,
-      },
+      token: token
     });
 
-    if (response.ok) {
-      return true;
-    } else {
-      return false;
-    }
+    return response.ok;
   } catch (error) {
     console.error("Bir hata oluştu:", error);
+    return false;
   }
 };

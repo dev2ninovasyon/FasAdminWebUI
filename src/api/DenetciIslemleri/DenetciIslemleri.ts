@@ -1,13 +1,10 @@
-import { url } from "@/api/apiBase";
+import { apiFetch } from "@/api/apiBase";
 
 export const getDenetciler = async (token: string) => {
   try {
-    const response = await fetch(`${url}/Denetci/Hepsi`, {
+    const response = await apiFetch(`/Denetci/Hepsi`, {
       method: "GET",
-      headers: {
-        accept: "application/json",
-        Authorization: `Bearer ${token}`,
-      },
+      token: token
     });
     if (response.ok) {
       return response.json();
@@ -21,12 +18,9 @@ export const getDenetciler = async (token: string) => {
 
 export const getDenetciById = async (token: string, id: any) => {
   try {
-    const response = await fetch(`${url}/Denetci/${id}`, {
+    const response = await apiFetch(`/Denetci/${id}`, {
       method: "GET",
-      headers: {
-        accept: "application/json",
-        Authorization: `Bearer ${token}`,
-      },
+      token: token
     });
     if (response.ok) {
       return response.json();
@@ -40,45 +34,31 @@ export const getDenetciById = async (token: string, id: any) => {
 
 export const createDenetci = async (token: string, createdDenetci: any) => {
   try {
-    const response = await fetch(`${url}/Denetci`, {
+    const response = await apiFetch(`/Denetci`, {
       method: "POST",
-      headers: {
-        accept: "*/*",
-        "Content-Type": "application/json",
-        Authorization: `Bearer ${token}`,
-      },
+      token: token,
       body: JSON.stringify(createdDenetci),
     });
 
-    if (response.ok) {
-      return true;
-    } else {
-      return false;
-    }
+    return response.ok;
   } catch (error) {
     console.error("Bir hata oluştu:", error);
+    return false;
   }
 };
 
 export const createKullanici = async (token: string, createdKullanici: any) => {
   try {
-    const response = await fetch(`${url}/Kullanici/AnaKullanici`, {
+    const response = await apiFetch(`/Kullanici/AnaKullanici`, {
       method: "POST",
-      headers: {
-        accept: "*/*",
-        "Content-Type": "application/json",
-        Authorization: `Bearer ${token}`,
-      },
+      token: token,
       body: JSON.stringify(createdKullanici),
     });
 
-    if (response.ok) {
-      return true;
-    } else {
-      return false;
-    }
+    return response.ok;
   } catch (error) {
     console.error("Bir hata oluştu:", error);
+    return false;
   }
 };
 
@@ -88,43 +68,30 @@ export const updateDenetci = async (
   updatedDenetci: any
 ) => {
   try {
-    const response = await fetch(`${url}/Denetci/${id}`, {
+    const response = await apiFetch(`/Denetci/${id}`, {
       method: "PUT",
-      headers: {
-        accept: "*/*",
-        "Content-Type": "application/json",
-        Authorization: `Bearer ${token}`,
-      },
+      token: token,
       body: JSON.stringify(updatedDenetci),
     });
 
-    if (response.ok) {
-      return true;
-    } else {
-      return false;
-    }
+    return response.ok;
   } catch (error) {
     console.error("Bir hata oluştu:", error);
+    return false;
   }
 };
 
 export const deleteDenetciById = async (token: string, id: number) => {
   try {
-    const response = await fetch(`${url}/Denetci/${id}`, {
+    const response = await apiFetch(`/Denetci/${id}`, {
       method: "DELETE",
-      headers: {
-        accept: "application/json",
-        Authorization: `Bearer ${token}`,
-      },
+      token: token
     });
 
-    if (response.ok) {
-      return true;
-    } else {
-      return false;
-    }
+    return response.ok;
   } catch (error) {
     console.error("Bir hata oluştu:", error);
+    return false;
   }
 };
 
@@ -133,12 +100,9 @@ export const getDenetciOdemeBilgileri = async (
   denetciId: any
 ) => {
   try {
-    const response = await fetch(`${url}/Denetci/OdemeBilgileri/${denetciId}`, {
+    const response = await apiFetch(`/Denetci/OdemeBilgileri/${denetciId}`, {
       method: "GET",
-      headers: {
-        accept: "application/json",
-        Authorization: `Bearer ${token}`,
-      },
+      token: token
     });
     if (response.ok) {
       return response.json();
@@ -156,34 +120,24 @@ export const updateDenetciOdemeBilgileri = async (
   updatedDenetciOdemeBilgileri: any
 ) => {
   try {
-    const response = await fetch(`${url}/Denetci/OdemeBilgileri/${denetciId}`, {
+    const response = await apiFetch(`/Denetci/OdemeBilgileri/${denetciId}`, {
       method: "PUT",
-      headers: {
-        accept: "*/*",
-        "Content-Type": "application/json",
-        Authorization: `Bearer ${token}`,
-      },
+      token: token,
       body: JSON.stringify(updatedDenetciOdemeBilgileri),
     });
 
-    if (response.ok) {
-      return true;
-    } else {
-      return false;
-    }
+    return response.ok;
   } catch (error) {
     console.error("Bir hata oluştu:", error);
+    return false;
   }
 };
 
 export const getDenetciKotaGecmisi = async (token: string, denetciId: any) => {
   try {
-    const response = await fetch(`${url}/Denetci/KotaGecmisi/${denetciId}`, {
+    const response = await apiFetch(`/Denetci/KotaGecmisi/${denetciId}`, {
       method: "GET",
-      headers: {
-        accept: "application/json",
-        Authorization: `Bearer ${token}`,
-      },
+      token: token
     });
     if (response.ok) {
       return response.json();

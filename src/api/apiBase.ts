@@ -1,11 +1,11 @@
-//export const url = "https://betaapi.fasmart.app/api";
-export const url = "https://localhost:5001/api";
+export const url = "https://betaapi.fasmart.app/api";
+//export const url = "https://localhost:5001/api";
 
 export async function apiFetch(
     path: string,
-    options: RequestInit & { timeout?: number; ignoreCustomHeaders?: boolean } = {}
+    options: RequestInit & { timeout?: number; ignoreCustomHeaders?: boolean; token?: string } = {}
 ) {
-    const { headers, timeout = 30000, ignoreCustomHeaders = false, ...rest } = options;
+    const { headers, timeout = 30000, ignoreCustomHeaders = false, token, ...rest } = options;
 
     const clientUrl =
         typeof window !== "undefined"
@@ -13,8 +13,11 @@ export async function apiFetch(
             : "";
 
     const mergedHeaders: HeadersInit = {
-        ...(headers || {}),
+        "accept": "application/json",
+        "Content-Type": "application/json",
+        ...(token ? { "Authorization": `Bearer ${token}` } : {}),
         "X-Client-Url": clientUrl,
+        ...(headers || {}),
     };
 
     const normalizedPath = path.startsWith("/") ? path : `/${path}`;
@@ -39,6 +42,7 @@ export async function apiFetch(
             ...rest,
             headers: mergedHeaders,
             signal: controller.signal,
+            credentials: 'include', // Backend HttpOnly cookie'leri (fas_token vb.) için gerekli
         });
 
         const duration = Date.now() - requestStartTime;

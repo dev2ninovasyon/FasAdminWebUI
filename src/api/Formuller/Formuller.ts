@@ -1,4 +1,4 @@
-import { url } from "@/api/apiBase";
+import { apiFetch } from "@/api/apiBase";
 
 export const getFormuller = async (
   token: string,
@@ -6,14 +6,11 @@ export const getFormuller = async (
   finansalTabloAdi: string
 ) => {
   try {
-    const response = await fetch(
-      `${url}/FinansalTablolar/FormullerByDenetimTuruFinansalTabloAdi?denetimTuru=${denetimTuru}&finansalTabloAdi=${finansalTabloAdi}`,
+    const response = await apiFetch(
+      `/FinansalTablolar/FormullerByDenetimTuruFinansalTabloAdi?denetimTuru=${denetimTuru}&finansalTabloAdi=${finansalTabloAdi}`,
       {
         method: "GET",
-        headers: {
-          accept: "application/json",
-          Authorization: `Bearer ${token}`,
-        },
+        token: token
       }
     );
     if (response.ok) {
@@ -31,22 +28,15 @@ export const updateFormuller = async (
   updatedFormulVerileri: any
 ) => {
   try {
-    const response = await fetch(`${url}/FinansalTablolar/Formuller`, {
+    const response = await apiFetch(`/FinansalTablolar/Formuller`, {
       method: "PUT",
-      headers: {
-        accept: "*/*",
-        "Content-Type": "application/json",
-        Authorization: `Bearer ${token}`,
-      },
+      token: token,
       body: JSON.stringify(updatedFormulVerileri),
     });
 
-    if (response.ok) {
-      return true;
-    } else {
-      return false;
-    }
+    return response.ok;
   } catch (error) {
     console.error("Bir hata oluştu:", error);
+    return false;
   }
 };

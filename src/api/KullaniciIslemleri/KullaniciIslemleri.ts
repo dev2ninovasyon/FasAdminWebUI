@@ -1,13 +1,10 @@
-import { url } from "@/api/apiBase";
+import { apiFetch } from "@/api/apiBase";
 
 export const getKullanicilarByDenetciId = async (token: string, denetciId: any) => {
     try {
-        const response = await fetch(`${url}/Kullanici/Hepsi/${denetciId}`, {
+        const response = await apiFetch(`/Kullanici/Hepsi/${denetciId}`, {
             method: "GET",
-            headers: {
-                accept: "application/json",
-                Authorization: `Bearer ${token}`,
-            },
+            token: token
         });
         if (response.ok) {
             return response.json();
@@ -25,23 +22,16 @@ export const updateKullanici = async (
     updatedKullanici: any
 ) => {
     try {
-        const response = await fetch(`${url}/Kullanici/${id}`, {
+        const response = await apiFetch(`/Kullanici/${id}`, {
             method: "PUT",
-            headers: {
-                accept: "*/*",
-                "Content-Type": "application/json",
-                Authorization: `Bearer ${token}`,
-            },
+            token: token,
             body: JSON.stringify(updatedKullanici),
         });
 
-        if (response.ok) {
-            return true;
-        } else {
-            return false;
-        }
+        return response.ok;
     } catch (error) {
         console.error("Bir hata oluştu:", error);
+        return false;
     }
 };
 
@@ -51,23 +41,16 @@ export const updateKullaniciSifre = async (
     passwordData: any
 ) => {
     try {
-        const response = await fetch(`${url}/Kullanici/Sifre/${id}`, {
+        const response = await apiFetch(`/Kullanici/Sifre/${id}`, {
             method: "PUT",
-            headers: {
-                accept: "*/*",
-                "Content-Type": "application/json",
-                Authorization: `Bearer ${token}`,
-            },
+            token: token,
             body: JSON.stringify(passwordData),
         });
 
-        if (response.ok) {
-            return true;
-        } else {
-            return false;
-        }
+        return response.ok;
     } catch (error) {
         console.error("Bir hata oluştu:", error);
+        return false;
     }
 };
 
@@ -77,22 +60,15 @@ export const updateKullaniciSifreAdmin = async (
     passwordData: any
 ) => {
     try {
-        const response = await fetch(`${url}/Kullanici/AdminSifre/${id}`, {
+        const response = await apiFetch(`/Kullanici/AdminSifre/${id}`, {
             method: "PUT",
-            headers: {
-                accept: "*/*",
-                "Content-Type": "application/json",
-                Authorization: `Bearer ${token}`,
-            },
+            token: token,
             body: JSON.stringify(passwordData),
         });
 
-        if (response.ok) {
-            return true;
-        } else {
-            return false;
-        }
+        return response.ok;
     } catch (error) {
         console.error("Bir hata oluştu:", error);
+        return false;
     }
 };

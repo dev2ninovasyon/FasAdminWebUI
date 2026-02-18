@@ -1,17 +1,11 @@
-import { url } from "@/api/apiBase";
+import { apiFetch } from "@/api/apiBase";
 
 export const getRaporDipnot = async (token: string, denetimTuru: string) => {
   try {
-    const response = await fetch(
-      `${url}/Rapor/RaporDipnotStandart?tur=${denetimTuru}`,
-      {
-        method: "GET",
-        headers: {
-          accept: "application/json",
-          Authorization: `Bearer ${token}`,
-        },
-      }
-    );
+    const response = await apiFetch(`/Rapor/RaporDipnotStandart?tur=${denetimTuru}`, {
+      method: "GET",
+      token: token
+    });
     if (response.ok) {
       return response.json();
     } else {
@@ -27,16 +21,10 @@ export const getFaaliyetRaporDipnot = async (
   denetimTuru: string
 ) => {
   try {
-    const response = await fetch(
-      `${url}/Rapor/FaaliyetRaporDipnotStandart?tur=${denetimTuru}`,
-      {
-        method: "GET",
-        headers: {
-          accept: "application/json",
-          Authorization: `Bearer ${token}`,
-        },
-      }
-    );
+    const response = await apiFetch(`/Rapor/FaaliyetRaporDipnotStandart?tur=${denetimTuru}`, {
+      method: "GET",
+      token: token
+    });
     if (response.ok) {
       return response.json();
     } else {
@@ -52,23 +40,16 @@ export const updateRaporDipnot = async (
   updatedRaporDipnot: any
 ) => {
   try {
-    const response = await fetch(`${url}/Rapor/RaporDipnot`, {
+    const response = await apiFetch(`/Rapor/RaporDipnot`, {
       method: "PUT",
-      headers: {
-        accept: "*/*",
-        "Content-Type": "application/json",
-        Authorization: `Bearer ${token}`,
-      },
+      token: token,
       body: JSON.stringify(updatedRaporDipnot),
     });
 
-    if (response.ok) {
-      return true;
-    } else {
-      return false;
-    }
+    return response.ok;
   } catch (error) {
     console.error("Bir hata oluştu:", error);
+    return false;
   }
 };
 
@@ -77,16 +58,10 @@ export const getRaporGorusStandart = async (
   denetimTuru: string
 ) => {
   try {
-    const response = await fetch(
-      `${url}/Rapor/RaporGorusStandart?tur=${denetimTuru}`,
-      {
-        method: "GET",
-        headers: {
-          accept: "application/json",
-          Authorization: `Bearer ${token}`,
-        },
-      }
-    );
+    const response = await apiFetch(`/Rapor/RaporGorusStandart?tur=${denetimTuru}`, {
+      method: "GET",
+      token: token
+    });
     if (response.ok) {
       return response.json();
     } else {
@@ -102,22 +77,15 @@ export const updateRaporGorus = async (
   updatedRaporGorus: any
 ) => {
   try {
-    const response = await fetch(`${url}/Rapor/RaporGorus`, {
+    const response = await apiFetch(`/Rapor/RaporGorus`, {
       method: "PUT",
-      headers: {
-        accept: "*/*",
-        "Content-Type": "application/json",
-        Authorization: `Bearer ${token}`,
-      },
+      token: token,
       body: JSON.stringify(updatedRaporGorus),
     });
 
-    if (response.ok) {
-      return true;
-    } else {
-      return false;
-    }
+    return response.ok;
   } catch (error) {
     console.error("Bir hata oluştu:", error);
+    return false;
   }
 };
