@@ -1,5 +1,4 @@
 import { apiFetch } from "@/api/apiBase";
-import { apiFetch } from "@/api/apiBase";
 
 export const getFormuller = async (
   token: string,
@@ -7,8 +6,6 @@ export const getFormuller = async (
   finansalTabloAdi: string
 ) => {
   try {
-    const response = await apiFetch(
-      `/FinansalTablolar/FormullerByDenetimTuruFinansalTabloAdi?denetimTuru=${denetimTuru}&finansalTabloAdi=${finansalTabloAdi}`,
     const response = await apiFetch(
       `/FinansalTablolar/FormullerByDenetimTuruFinansalTabloAdi?denetimTuru=${denetimTuru}&finansalTabloAdi=${finansalTabloAdi}`,
       {
@@ -39,9 +36,9 @@ export const updateFormuller = async (
     });
 
     return response.ok;
-    return response.ok;
   } catch (error) {
     console.error("Bir hata oluştu:", error);
     return false;
   }
 };
+
