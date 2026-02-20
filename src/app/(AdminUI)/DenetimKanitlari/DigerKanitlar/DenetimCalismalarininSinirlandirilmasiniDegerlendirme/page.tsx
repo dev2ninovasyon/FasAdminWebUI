@@ -139,23 +139,7 @@ const Page = () => {
                 </Button>
               </Grid>
             )}
-            <Grid
-              sx={{
-                display: "flex",
-                alignItems: "center",
-                justifyContent: "center",
-              }}
-              size={{
-                xs: 5.8,
-                md: grupluMu ? 2.8 : 3.8,
-                lg: grupluMu ? 2.8 : 3.8
-              }}>
-              <EkBelgeYukleButton
-                formKodu={controller}
-                fullWidth={false}           // sağda küçük buton
-                text="Belge Yükle"
-              />
-            </Grid>
+
             <Grid
               sx={{
                 display: "flex",

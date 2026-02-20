@@ -82,28 +82,7 @@ const Page = () => {
               justifyContent: "space-between",
             }}
           >
-            <Grid
-              sx={{
-                display: "flex",
-                alignItems: "center",
-                justifyContent: "flex-end",
-              }}
-              size={{
-                xs: 12,
-                md: grupluMu ? 3 : 4,
-                lg: grupluMu ? 3 : 4
-              }}>
-              <Typography
-                variant="body1"
-                sx={{
-                  overflowWrap: "break-word",
-                  wordWrap: "break-word",
-                  textAlign: "center",
-                }}
-              >
-                {tamamlanan}/{toplam} Tamamlandı
-              </Typography>
-            </Grid>
+
             {grupluMu && (
               <Grid
                 sx={{
@@ -135,50 +114,8 @@ const Page = () => {
                 </Button>
               </Grid>
             )}
-            <Grid
-              sx={{
-                display: "flex",
-                alignItems: "center",
-                justifyContent: "center",
-              }}
-              size={{
-                xs: 5.8,
-                md: grupluMu ? 2.8 : 3.8,
-                lg: grupluMu ? 2.8 : 3.8
-              }}>
-              <EkBelgeYukleButton
-                formKodu={controller}
-                fullWidth={false}           // sağda küçük buton
-                text="Belge Yükle"
-              />
-            </Grid>
-            <Grid
-              sx={{
-                display: "flex",
-                alignItems: "center",
-                justifyContent: "center",
-              }}
-              size={{
-                xs: 5.8,
-                md: grupluMu ? 2.8 : 3.8,
-                lg: grupluMu ? 2.8 : 3.8
-              }}>
-              <Button
-                size="medium"
-                variant="outlined"
-                color="primary"
-                disabled={isClickedVarsayilanaDon}
-                onClick={() => setIsClickedVarsayilanaDon(true)}
-                sx={{ width: "100%" }}
-              >
-                <Typography
-                  variant="body1"
-                  sx={{ overflowWrap: "break-word", wordWrap: "break-word" }}
-                >
-                  Varsayılana Dön
-                </Typography>
-              </Button>
-            </Grid>
+
+
           </Grid>
           {isCreatePopUpOpen && (
             <CreateGroupPopUp
