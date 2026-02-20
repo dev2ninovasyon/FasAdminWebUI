@@ -30,7 +30,7 @@ export const ConfirmPopUpComponent: React.FC<ConfirmPopUpProps> = ({
               alignItems="center"
             >
               <Typography variant="h5">
-                Silmek istediğinize emin misiniz?
+                Silmek istediÄŸinize emin misiniz?
               </Typography>
             </Stack>
           </DialogContent>
@@ -53,7 +53,7 @@ export const ConfirmPopUpComponent: React.FC<ConfirmPopUpProps> = ({
                 onClick={() => handleClose()}
                 sx={{ width: "100%" }}
               >
-                Hayır, İptal Et
+                HayÄ±r, Ä°ptal Et
               </Button>
             </Box>
           </DialogContent>

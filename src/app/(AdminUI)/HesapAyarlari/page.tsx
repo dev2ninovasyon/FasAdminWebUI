@@ -49,15 +49,15 @@ const Page = () => {
   return (
     <HesapAyarlariLayout>
       <PageContainer
-        title="Hesap Ayarları"
-        description="this is Hesap Ayarları"
+        title="Hesap AyarlarÄ±"
+        description="this is Hesap AyarlarÄ±"
       >
         <Box p={3}>
           {/* ------------------------------------------- */}
           {/* ------------ Avatar setting ------------- */}
           {/* ------------------------------------------- */}
           <Typography variant="h5" gutterBottom>
-            Avatar Seçenekleri
+            Avatar SeÃ§enekleri
           </Typography>
           <Grid container spacing={2}>
             {pAvatars.map((avatar) => {
@@ -97,3 +97,4 @@ const Page = () => {
 };
 
 export default Page;
+

@@ -9,11 +9,11 @@ import RaporGorus from "@/app/components/Gorusler/RaporGorus";
 const BCrumb = [
   {
     to: "/Anasayfa",
-    title: "Admin Menü",
+    title: "Admin MenÃ¼",
   },
   {
     to: "/Gorusler",
-    title: "Görüşler",
+    title: "GÃ¶rÃ¼ÅŸler",
   },
 ];
 
@@ -27,8 +27,8 @@ const Page = () => {
   };
 
   return (
-    <PageContainer title="Görüşler" description="this is Görüşler">
-      <Breadcrumb title="Görüşler" items={BCrumb} />
+    <PageContainer title="GÃ¶rÃ¼ÅŸler" description="this is GÃ¶rÃ¼ÅŸler">
+      <Breadcrumb title="GÃ¶rÃ¼ÅŸler" items={BCrumb} />
       <Grid container spacing={3}>
         <Grid size={{ xs: 12, lg: 12 }}>
           <CustomSelect
@@ -40,14 +40,14 @@ const Page = () => {
             value={denetimTuru}
             onChange={handleChangeDenetimTuru}
           >
-            <MenuItem value={"Bobi"}>Denetim Türü: Bobi</MenuItem>
-            <MenuItem value={"Tfrs"}>Denetim Türü: Tfrs</MenuItem>
-            <MenuItem value={"Kumi"}>Denetim Türü: Kümi</MenuItem>
+            <MenuItem value={"Bobi"}>Denetim TÃ¼rÃ¼: Bobi</MenuItem>
+            <MenuItem value={"Tfrs"}>Denetim TÃ¼rÃ¼: Tfrs</MenuItem>
+            <MenuItem value={"Kumi"}>Denetim TÃ¼rÃ¼: KÃ¼mi</MenuItem>
             <MenuItem value={"BobiKonsolide"}>
-              Denetim Türü: Konsolide Bobi
+              Denetim TÃ¼rÃ¼: Konsolide Bobi
             </MenuItem>
             <MenuItem value={"TfrsKonsolide"}>
-              Denetim Türü: Konsolide Tfrs
+              Denetim TÃ¼rÃ¼: Konsolide Tfrs
             </MenuItem>
           </CustomSelect>
         </Grid>
@@ -60,3 +60,4 @@ const Page = () => {
 };
 
 export default Page;
+

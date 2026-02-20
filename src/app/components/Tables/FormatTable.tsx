@@ -65,7 +65,7 @@ const FormatTable = () => {
         console.error("Format silinemedi");
       }
     } catch (error) {
-      console.error("Bir hata oluştu:", error);
+      console.error("Bir hata oluÅŸtu:", error);
     }
   };
 
@@ -83,7 +83,7 @@ const FormatTable = () => {
         setRows(newRows);
       }
     } catch (error) {
-      console.error("Bir hata oluştu:", error);
+      console.error("Bir hata oluÅŸtu:", error);
     }
   };
 
@@ -98,11 +98,11 @@ const FormatTable = () => {
           <TableHead>
             <TableRow>
               <TableCell>
-                <Typography variant="h6">Format Adı</Typography>
+                <Typography variant="h6">Format AdÄ±</Typography>
               </TableCell>
               <TableCell>
                 <Typography textAlign="center" variant="h6">
-                  Satır Sayısı
+                  SatÄ±r SayÄ±sÄ±
                 </Typography>
               </TableCell>
 
@@ -151,7 +151,7 @@ const FormatTable = () => {
                       <ListItemIcon>
                         <IconEdit width={18} />
                       </ListItemIcon>
-                      Düzenle
+                      DÃ¼zenle
                     </MenuItem>
                     <MenuItem onClick={() => handleDelete()}>
                       <ListItemIcon>

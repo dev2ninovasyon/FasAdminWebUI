@@ -27,7 +27,7 @@ const DenetciEkleButton = () => {
           startIcon={<IconPlus width={18} />}
           variant="contained"
         >
-          Denetçi Firma Ekle
+          DenetÃ§i Firma Ekle
         </Button>
         <Button
           color="secondary"
@@ -35,7 +35,7 @@ const DenetciEkleButton = () => {
           startIcon={<IconSearch width={18} />}
           variant="contained"
         >
-          Denetçi Getir
+          DenetÃ§i Getir
         </Button>
       </Stack>
     </>

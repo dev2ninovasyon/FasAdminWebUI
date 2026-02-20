@@ -9,7 +9,7 @@ import FormatTable from "@/app/components/Tables/FormatTable";
 const BCrumb = [
   {
     to: "/Anasayfa",
-    title: "Admin Menü",
+    title: "Admin MenÃ¼",
   },
   {
     to: "/Formatlar",
@@ -36,3 +36,4 @@ const Page = () => {
 };
 
 export default Page;
+

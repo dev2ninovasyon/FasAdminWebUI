@@ -63,10 +63,10 @@ const DosyaEkleForm: React.FC = () => {
       if (result) {
         router.push("/DenetciFirmaIslemleri");
       } else {
-        console.error("Denetçi ekleme başarısız");
+        console.error("DenetÃ§i ekleme baÅŸarÄ±sÄ±z");
       }
     } catch (error) {
-      console.error("Bir hata oluştu:", error);
+      console.error("Bir hata oluÅŸtu:", error);
     }
   };
 
@@ -86,7 +86,7 @@ const DosyaEkleForm: React.FC = () => {
       }));
       setRows(newRows);
     } catch (error) {
-      console.error("Bir hata oluştu:", error);
+      console.error("Bir hata oluÅŸtu:", error);
     }
   };
 
@@ -102,7 +102,7 @@ const DosyaEkleForm: React.FC = () => {
           htmlFor="bagliOlduguDosya"
           sx={{ mt: 0, mb: { xs: "-10px", sm: 0 } }}
         >
-          Bağlı Olduğu Dosya
+          BaÄŸlÄ± OlduÄŸu Dosya
         </CustomFormLabel>
       </Grid>
       <Grid size={{ xs: 12, sm: 9 }}>
@@ -125,7 +125,7 @@ const DosyaEkleForm: React.FC = () => {
           }}
         >
           <MenuItem value={0}>
-            <em>Seçiniz</em>
+            <em>SeÃ§iniz</em>
           </MenuItem>
           {rows.map((dosya: RowData) => (
             <MenuItem key={dosya.id} value={dosya.id}>
@@ -154,13 +154,13 @@ const DosyaEkleForm: React.FC = () => {
           }
         />
       </Grid>
-      {/* Belge Adı */}
+      {/* Belge AdÄ± */}
       <Grid size={{ xs: 12, sm: 3 }} display="flex" alignItems="center">
         <CustomFormLabel
           htmlFor="belgeAdi"
           sx={{ mt: 0, mb: { xs: "-10px", sm: 0 } }}
         >
-          Belge Adı
+          Belge AdÄ±
         </CustomFormLabel>
       </Grid>
       <Grid size={{ xs: 12, sm: 9 }}>
@@ -179,7 +179,7 @@ const DosyaEkleForm: React.FC = () => {
           htmlFor="belgeAdi"
           sx={{ mt: 0, mb: { xs: "-10px", sm: 0 } }}
         >
-          İlgili BDS
+          Ä°lgili BDS
         </CustomFormLabel>
       </Grid>
       <Grid size={{ xs: 12, sm: 9 }}>
@@ -249,13 +249,13 @@ const DosyaEkleForm: React.FC = () => {
           }
         />
       </Grid>
-      {/* Arşiv Klasör Adı */}
+      {/* ArÅŸiv KlasÃ¶r AdÄ± */}
       <Grid size={{ xs: 12, sm: 3 }} display="flex" alignItems="center">
         <CustomFormLabel
           htmlFor="arsivKlasorAdi"
           sx={{ mt: 0, mb: { xs: "-10px", sm: 0 } }}
         >
-          Arşiv Klasör Adı
+          ArÅŸiv KlasÃ¶r AdÄ±
         </CustomFormLabel>
       </Grid>
       <Grid size={{ xs: 12, sm: 9 }}>
@@ -305,7 +305,7 @@ const DosyaEkleForm: React.FC = () => {
       <Grid size={{ xs: 12, sm: 3 }}></Grid>
       <Grid size={{ xs: 12, sm: 9 }}>
         <Button variant="contained" color="primary" onClick={handleButtonClick}>
-          Dosyayı Oluştur
+          DosyayÄ± OluÅŸtur
         </Button>
       </Grid>
     </Grid>

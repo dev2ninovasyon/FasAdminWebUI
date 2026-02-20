@@ -67,7 +67,7 @@ const RaporDipnot: React.FC<RaporDipnotProps> = ({ tip, denetimTuru }) => {
 
       handleClosePopUp();
     } catch (error) {
-      console.error("Bir hata oluştu:", error);
+      console.error("Bir hata oluÅŸtu:", error);
     }
   };
 
@@ -114,7 +114,7 @@ const RaporDipnot: React.FC<RaporDipnotProps> = ({ tip, denetimTuru }) => {
         setVeriler(rowsAll);
       }
     } catch (error) {
-      console.error("Bir hata oluştu:", error);
+      console.error("Bir hata oluÅŸtu:", error);
     }
   };
 
@@ -248,7 +248,7 @@ const PopUpComponent: React.FC<PopUpProps> = ({
                     fullWidth
                     value={veri.text}
                     InputProps={{
-                      style: { padding: 0 }, // Padding değerini sıfırla
+                      style: { padding: 0 }, // Padding deÄŸerini sÄ±fÄ±rla
                     }}
                     onChange={(e: any) => {
                       setDipnotKoduVeriler(
@@ -289,7 +289,7 @@ const PopUpComponent: React.FC<PopUpProps> = ({
               onClick={handleClose}
               sx={{ width: "20%" }}
             >
-              Vazgeç
+              VazgeÃ§
             </Button>
           </DialogActions>
         </>

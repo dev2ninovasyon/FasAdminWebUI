@@ -1,0 +1,59 @@
+﻿
+> modernize-next-main@2.1.0 build
+> next build
+
+Ôû▓ Next.js 16.1.6 (Turbopack)
+- Experiments (use with caution):
+  ┬À optimizePackageImports
+
+  Creating an optimized production build ...
+Ô£ô Compiled successfully in 6.0s
+  Running TypeScript ...
+  Collecting page data using 31 workers ...
+  Generating static pages using 31 workers (0/28) ...
+  Generating static pages using 31 workers (7/28) 
+  Generating static pages using 31 workers (14/28) 
+  Generating static pages using 31 workers (21/28) 
+Ô£ô Generating static pages using 31 workers (28/28) in 336.9ms
+  Finalizing page optimization ...
+
+Route (app)
+Ôöî Ôùï /
+Ôö£ Ôùï /_not-found
+Ôö£ Ôùï /Anasayfa
+Ôö£ Ôùï /DenetciFirmaIslemleri
+Ôö£ ãÆ /DenetciFirmaIslemleri/DenetciDetay/[id]
+Ôö£ ãÆ /DenetciFirmaIslemleri/DenetciDuzenle/[id]
+Ôö£ Ôùï /DenetciFirmaIslemleri/DenetciEkle
+Ôö£ ãÆ /DenetciFirmaIslemleri/DenetciOdemeBilgileri/[id]
+Ôö£ ãÆ /DenetciFirmaIslemleri/DenetciOdemeBilgileriDuzenle/[id]
+Ôö£ Ôùï /DenetciFirmaIslemleri/DenetciSecimi
+Ôö£ ãÆ /DenetciFirmaIslemleri/KullaniciEkle/[id]
+Ôö£ Ôùï /DenetimDosyaBelgeleri
+Ôö£ ãÆ /DenetimDosyaBelgeleri/DosyaDuzenle/[id]
+Ôö£ Ôùï /DenetimDosyaBelgeleri/DosyaEkle
+Ôö£ Ôùï /Dipnotlar
+Ôö£ Ôùï /DovizKurlari
+Ôö£ Ôùï /ForbiddenPage
+Ôö£ Ôùï /Formatlar
+Ôö£ ãÆ /Formatlar/FormatDuzenle/[id]
+Ôö£ Ôùï /Formatlar/FormatEkle
+Ôö£ Ôùï /Formuller
+Ôö£ Ôùï /GenelHesapPlani
+Ôö£ Ôùï /Gorusler
+Ôö£ Ôùï /HesapAyarlari
+Ôö£ Ôùï /HesapKodlari
+Ôö£ Ôùï /KullaniciIslemleri
+Ôö£ Ôùï /StandartCalismaKagitlari/DenetimKanitlariDegerlendirme
+Ôö£ Ôùï /StandartCalismaKagitlari/DenetimPlani
+Ôö£ Ôùï /StandartCalismaKagitlari/DenetimStratejiKilavuzu
+Ôö£ Ôùï /StandartCalismaKagitlari/DenetimStratejisiBelirleme
+Ôö£ Ôùï /StandartCalismaKagitlari/FisBuyukluguAnalizi
+Ôö£ Ôùï /StandartCalismaKagitlari/HabersizIsletmeZiyareti
+Ôö£ Ôùï /StandartCalismaKagitlari/TespitEdilenHususlarinYonetimeBildirimi
+Ôöö Ôùï /TemaAyarlari
+
+
+Ôùï  (Static)   prerendered as static content
+ãÆ  (Dynamic)  server-rendered on demand
+

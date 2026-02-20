@@ -61,7 +61,7 @@ const HesapKodlari = () => {
     try {
       const result = await updateHesapKodlari(user.token || "", updatedGrup);
       if (result) {
-        enqueueSnackbar("Hesap Kodları Güncellendi", {
+        enqueueSnackbar("Hesap KodlarÄ± GÃ¼ncellendi", {
           variant: "success",
           autoHideDuration: 5000,
           style: {
@@ -73,7 +73,7 @@ const HesapKodlari = () => {
           },
         });
       } else {
-        enqueueSnackbar("Hesap Kodları Güncellenemedi", {
+        enqueueSnackbar("Hesap KodlarÄ± GÃ¼ncellenemedi", {
           variant: "error",
           autoHideDuration: 5000,
           style: {
@@ -86,7 +86,7 @@ const HesapKodlari = () => {
         });
       }
     } catch (error) {
-      console.error("Bir hata oluştu:", error);
+      console.error("Bir hata oluÅŸtu:", error);
     }
   };
 
@@ -113,7 +113,7 @@ const HesapKodlari = () => {
         });
       }
     } catch (error) {
-      console.error("Bir hata oluştu:", error);
+      console.error("Bir hata oluÅŸtu:", error);
     }
   };
 
@@ -138,7 +138,7 @@ const HesapKodlari = () => {
             sx={{ mb: { xs: "-10px", sm: 0 } }}
           >
             <Typography variant="h6" textAlign={"left"}>
-              Borç Bakiyesi Vermesi Gereken 1-2 Grubu:
+              BorÃ§ Bakiyesi Vermesi Gereken 1-2 Grubu:
             </Typography>
           </CustomFormLabel>
         </Grid>
@@ -252,7 +252,7 @@ const HesapKodlari = () => {
             sx={{ mb: { xs: "-10px", sm: 0 } }}
           >
             <Typography variant="h6" textAlign={"left"}>
-              Borç Bakiyesi Vermesi Gereken 3-4-5 Grubu:
+              BorÃ§ Bakiyesi Vermesi Gereken 3-4-5 Grubu:
             </Typography>
           </CustomFormLabel>
         </Grid>
@@ -366,7 +366,7 @@ const HesapKodlari = () => {
             sx={{ mb: { xs: "-10px", sm: 0 } }}
           >
             <Typography variant="h6" textAlign={"left"}>
-              Borç Bakiyesi Vermesi Gereken 6 Grubu:
+              BorÃ§ Bakiyesi Vermesi Gereken 6 Grubu:
             </Typography>
           </CustomFormLabel>
         </Grid>
@@ -480,7 +480,7 @@ const HesapKodlari = () => {
             sx={{ mb: { xs: "-10px", sm: 0 } }}
           >
             <Typography variant="h6" textAlign={"left"}>
-              Yıldızlı Hesaplar:
+              YÄ±ldÄ±zlÄ± Hesaplar:
             </Typography>
           </CustomFormLabel>
         </Grid>
@@ -522,3 +522,4 @@ const HesapKodlari = () => {
 };
 
 export default HesapKodlari;
+

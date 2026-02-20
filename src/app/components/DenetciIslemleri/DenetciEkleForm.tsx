@@ -49,10 +49,10 @@ const DenetciEkleForm = () => {
       if (result) {
         router.push("/DenetciFirmaIslemleri");
       } else {
-        console.error("Denetçi ekleme başarısız");
+        console.error("DenetÃ§i ekleme baÅŸarÄ±sÄ±z");
       }
     } catch (error) {
-      console.error("Bir hata oluştu:", error);
+      console.error("Bir hata oluÅŸtu:", error);
     }
   };
   return (
@@ -62,7 +62,7 @@ const DenetciEkleForm = () => {
           htmlFor="firmaAdi"
           sx={{ mt: 0, mb: { xs: "-10px", sm: 0 } }}
         >
-          Firma Adı
+          Firma AdÄ±
         </CustomFormLabel>
       </Grid>
       <Grid size={{ xs: 12, sm: 9 }}>
@@ -77,7 +77,7 @@ const DenetciEkleForm = () => {
           htmlFor="firmaUnvani"
           sx={{ mt: 0, mb: { xs: "-10px", sm: 0 } }}
         >
-          Firma Ünvanı
+          Firma ÃœnvanÄ±
         </CustomFormLabel>
       </Grid>
       <Grid size={{ xs: 12, sm: 9 }}>
@@ -107,7 +107,7 @@ const DenetciEkleForm = () => {
           htmlFor="il"
           sx={{ mt: 0, mb: { xs: "-10px", sm: 0 } }}
         >
-          İl
+          Ä°l
         </CustomFormLabel>
       </Grid>
       <Grid size={{ xs: 12, sm: 9 }}>
@@ -182,7 +182,7 @@ const DenetciEkleForm = () => {
           htmlFor="vergiNo"
           sx={{ mt: 0, mb: { xs: "-10px", sm: 0 } }}
         >
-          Vergi Numarası
+          Vergi NumarasÄ±
         </CustomFormLabel>
       </Grid>
       <Grid size={{ xs: 12, sm: 9 }}>
@@ -213,7 +213,7 @@ const DenetciEkleForm = () => {
           htmlFor="ticaretSicilNo"
           sx={{ mt: 0, mb: { xs: "-10px", sm: 0 } }}
         >
-          Ticaret Sicil Numarası
+          Ticaret Sicil NumarasÄ±
         </CustomFormLabel>
       </Grid>
       <Grid size={{ xs: 12, sm: 9 }}>
@@ -227,7 +227,7 @@ const DenetciEkleForm = () => {
       <Grid size={{ xs: 12, sm: 3 }}></Grid>
       <Grid size={{ xs: 12, sm: 9 }}>
         <Button variant="contained" color="primary" onClick={handleButtonClick}>
-          Denetçi Ekle
+          DenetÃ§i Ekle
         </Button>
       </Grid>
     </Grid>

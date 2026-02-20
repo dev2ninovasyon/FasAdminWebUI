@@ -20,6 +20,7 @@ import {
   IconEdit,
   IconPlus,
   IconTrash,
+  IconFileText,
 } from "@tabler/icons-react";
 import { getDosya } from "@/api/DenetimDosyaBelgeleri/DenetimDosyaIslemleri";
 import { useRouter } from "next/navigation";
@@ -33,6 +34,7 @@ interface RowData {
   formKodu: string;
   referansNo: string;
   arsivKlasorAdi: string;
+  formUrl?: string;
 }
 
 const DenetimDosyaTable = () => {
@@ -65,6 +67,13 @@ const DenetimDosyaTable = () => {
     handleClose();
     router.push(`/DenetimDosyaBelgeleri/DosyaDuzenle/${selectedId}`);
   };
+
+  const handleOpenForm = (formUrl?: string) => {
+    if (formUrl) {
+      router.push(formUrl);
+    }
+  };
+
   /*
   const handleDelete = async () => {
     handleClose();
@@ -78,7 +87,7 @@ const DenetimDosyaTable = () => {
         console.error("Denetci silinemedi");
       }
     } catch (error) {
-      console.error("Bir hata oluştu:", error);
+      console.error("Bir hata oluÅŸtu:", error);
     }
   };
 */
@@ -98,7 +107,7 @@ const DenetimDosyaTable = () => {
       }));
       setRows(newRows);
     } catch (error) {
-      console.error("Bir hata oluştu:", error);
+      console.error("Bir hata oluÅŸtu:", error);
     }
   };
 
@@ -136,12 +145,12 @@ const DenetimDosyaTable = () => {
             <TableRow>
               <TableCell>
                 <Typography textAlign="left" variant="h6">
-                  Belge Adı
+                  Belge AdÄ±
                 </Typography>
               </TableCell>
               <TableCell>
                 <Typography textAlign="center" variant="h6">
-                  İlgili BDS
+                  Ä°lgili BDS
                 </Typography>
               </TableCell>
               <TableCell>
@@ -156,7 +165,12 @@ const DenetimDosyaTable = () => {
               </TableCell>
               <TableCell>
                 <Typography textAlign="center" variant="h6">
-                  Arşiv Klasör Adı
+                  ArÅŸiv KlasÃ¶r AdÄ±
+                </Typography>
+              </TableCell>
+              <TableCell>
+                <Typography textAlign="center" variant="h6">
+                  Form
                 </Typography>
               </TableCell>
               <TableCell></TableCell>
@@ -217,6 +231,18 @@ const DenetimDosyaTable = () => {
                   </TableCell>
                   <TableCell>
                     <IconButton
+                      onClick={(event) => {
+                        event.stopPropagation();
+                        handleOpenForm(row.formUrl);
+                      }}
+                      title="Formu Aç"
+                      disabled={!row.formUrl}
+                    >
+                      <IconFileText width={18} />
+                    </IconButton>
+                  </TableCell>
+                  <TableCell>
+                    <IconButton
                       id="basic-button"
                       aria-controls={open ? "basic-menu" : undefined}
                       aria-haspopup="true"
@@ -238,7 +264,7 @@ const DenetimDosyaTable = () => {
                         <ListItemIcon>
                           <IconEdit width={18} />
                         </ListItemIcon>
-                        Düzenle
+                        DÃ¼zenle
                       </MenuItem>
                       <MenuItem>
                         <ListItemIcon>

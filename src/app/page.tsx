@@ -17,28 +17,28 @@ import { GoogleReCaptchaProvider } from "react-google-recaptcha-v3";
 const slides = [
   {
     image: "/login-assets/login-bg-2.png",
-    title: "Kapsamlı Denetim Yönetimi",
-    description: "Tüm finansal denetim süreçlerinizi tek bir platformda yönetin. Kalite standartlarına uygun, izlenebilir denetim raporları oluşturun."
+    title: "KapsamlÄ± Denetim YÃ¶netimi",
+    description: "TÃ¼m finansal denetim sÃ¼reÃ§lerinizi tek bir platformda yÃ¶netin. Kalite standartlarÄ±na uygun, izlenebilir denetim raporlarÄ± oluÅŸturun."
   },
   {
     image: "/login-assets/login-bg-3.png",
-    title: "Gelişmiş Veri Analizi",
-    description: "Güçlü analitik araçlar ile finansal verilerinizi derinlemesine inceleyin. Akıllı raporlama sistemi ile anlamlı içgörüler elde edin."
+    title: "GeliÅŸmiÅŸ Veri Analizi",
+    description: "GÃ¼Ã§lÃ¼ analitik araÃ§lar ile finansal verilerinizi derinlemesine inceleyin. AkÄ±llÄ± raporlama sistemi ile anlamlÄ± iÃ§gÃ¶rÃ¼ler elde edin."
   },
   {
     image: "/login-assets/login-bg-4.png",
-    title: "Ekip İşbirliği ve Görev Yönetimi",
-    description: "Denetim ekibinizle gerçek zamanlı işbirliği yapın. Görev atama, ilerleme takibi ve dokümantasyon yönetimi tek bir arayüzde."
+    title: "Ekip Ä°ÅŸbirliÄŸi ve GÃ¶rev YÃ¶netimi",
+    description: "Denetim ekibinizle gerÃ§ek zamanlÄ± iÅŸbirliÄŸi yapÄ±n. GÃ¶rev atama, ilerleme takibi ve dokÃ¼mantasyon yÃ¶netimi tek bir arayÃ¼zde."
   },
   {
     image: "/login-assets/login-bg-5.png",
-    title: "Kalite Yönetim Sistemi (KYS)",
-    description: "ISO standartlarına uygun kalite yönetim süreçlerinizi dijitalleştirin. Belge yönetimi, risk analizi ve sürekli iyileştirme."
+    title: "Kalite YÃ¶netim Sistemi (KYS)",
+    description: "ISO standartlarÄ±na uygun kalite yÃ¶netim sÃ¼reÃ§lerinizi dijitalleÅŸtirin. Belge yÃ¶netimi, risk analizi ve sÃ¼rekli iyileÅŸtirme."
   },
   {
     image: "/login-assets/login-bg-no-person-1.png",
-    title: "Sürdürülebilirlik Raporlaması",
-    description: "Çevresel, sosyal ve kurumsal yönetim (ESG) metriklerinizi izleyin. Sürdürülebilirlik hedeflerinizi raporlayın ve değerlendirin."
+    title: "SÃ¼rdÃ¼rÃ¼lebilirlik RaporlamasÄ±",
+    description: "Ã‡evresel, sosyal ve kurumsal yÃ¶netim (ESG) metriklerinizi izleyin. SÃ¼rdÃ¼rÃ¼lebilirlik hedeflerinizi raporlayÄ±n ve deÄŸerlendirin."
   }
 ];
 
@@ -51,7 +51,7 @@ export default function Page() {
   // Random start slide
   const [currentSlide, setCurrentSlide] = useState(() => Math.floor(Math.random() * slides.length));
 
-  // Eğer kullanıcı zaten giriş yapmışsa (token varsa), ana sayfaya yönlendir
+  // EÄŸer kullanÄ±cÄ± zaten giriÅŸ yapmÄ±ÅŸsa (token varsa), ana sayfaya yÃ¶nlendir
   useEffect(() => {
     if (user?.token) {
       router.push("/Anasayfa");
@@ -90,7 +90,7 @@ export default function Page() {
           right: "auto !important",
         },
       }} />
-      <PageContainer title="Giriş" description="Giriş Yap">
+      <PageContainer title="GiriÅŸ" description="GiriÅŸ Yap">
         <Box
           sx={{
             display: "flex",
@@ -135,7 +135,7 @@ export default function Page() {
                     mb: 1
                   }}
                 >
-                  Hoş Geldiniz
+                  HoÅŸ Geldiniz
                 </Typography>
                 <Typography
                   variant="body1"
@@ -144,7 +144,7 @@ export default function Page() {
                     fontSize: "16px"
                   }}
                 >
-                  Devam etmek için lütfen giriş yapın. Admin
+                  Devam etmek iÃ§in lÃ¼tfen giriÅŸ yapÄ±n. Admin
                 </Typography>
               </Box>
 

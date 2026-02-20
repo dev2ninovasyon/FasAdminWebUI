@@ -80,11 +80,11 @@ const FormullerOzkaynak: React.FC<Props> = ({
 
   const colHeaders = [
     "FormulId",
-    "Dikey Kalem Adı",
-    "Yatay Kalem Adı",
-    "Formül",
+    "Dikey Kalem AdÄ±",
+    "Yatay Kalem AdÄ±",
+    "FormÃ¼l",
     "Dipnot",
-    "Kgk Excel Satır Numarası",
+    "Kgk Excel SatÄ±r NumarasÄ±",
   ];
 
   const columns = [
@@ -101,20 +101,20 @@ const FormullerOzkaynak: React.FC<Props> = ({
       readOnly: true,
       editor: false,
       className: "htLeft",
-    }, // Dikey Kalem Adı
+    }, // Dikey Kalem AdÄ±
     {
       type: "text",
       columnSorting: true,
       readOnly: true,
       editor: false,
       className: "htLeft",
-    }, // Yatay Kalem Adı
+    }, // Yatay Kalem AdÄ±
     {
       type: "text",
       columnSorting: true,
       className: "htLeft",
       allowInvalid: false,
-    }, // Formül
+    }, // FormÃ¼l
     {
       type: "text",
       columnSorting: true,
@@ -127,7 +127,7 @@ const FormullerOzkaynak: React.FC<Props> = ({
       className: "htLeft",
       validator: integerValidator,
       allowInvalid: false,
-    }, // Kgk Excel Satır Numarası
+    }, // Kgk Excel SatÄ±r NumarasÄ±
   ];
 
   const afterGetColHeader = (col: any, TH: any) => {
@@ -245,7 +245,7 @@ const FormullerOzkaynak: React.FC<Props> = ({
     if (hotTableComponent.current) {
       const hotInstance = hotTableComponent.current.hotInstance;
       const cellMeta = hotInstance.getDataAtRow(row);
-      console.log("Satır Verileri:", cellMeta);
+      console.log("SatÄ±r Verileri:", cellMeta);
       return cellMeta;
     }
   };
@@ -352,7 +352,7 @@ const FormullerOzkaynak: React.FC<Props> = ({
         });
       }
     } catch (error) {
-      console.error("Bir hata oluştu:", error);
+      console.error("Bir hata oluÅŸtu:", error);
     }
   };
 
@@ -380,7 +380,7 @@ const FormullerOzkaynak: React.FC<Props> = ({
       setRowCount(rowsAll.length);
       setFetchedData(rowsAll);
     } catch (error) {
-      console.error("Bir hata oluştu:", error);
+      console.error("Bir hata oluÅŸtu:", error);
     }
   };
 
@@ -441,9 +441,9 @@ const FormullerOzkaynak: React.FC<Props> = ({
           type: "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
         });
         saveAs(blob, `Formuller${denetimTuru}Ozkaynak.xlsx`);
-        console.log("Excel dosyası başarıyla oluşturuldu");
+        console.log("Excel dosyasÄ± baÅŸarÄ±yla oluÅŸturuldu");
       } catch (error) {
-        console.error("Excel dosyası oluşturulurken bir hata oluştu:", error);
+        console.error("Excel dosyasÄ± oluÅŸturulurken bir hata oluÅŸtu:", error);
       }
     }
     createExcelFile();

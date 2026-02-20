@@ -37,11 +37,11 @@ const KullaniciSifreDegistirModal = ({ open, onClose, kullaniciId }: Props) => {
 
     const handleSubmit = async () => {
         if (!formData.newPassword) {
-            alert("Yeni şifre boş olamaz.");
+            alert("Yeni ÅŸifre boÅŸ olamaz.");
             return;
         }
         if (formData.newPassword !== formData.confirmPassword) {
-            alert("Yeni şifreler eşleşmiyor.");
+            alert("Yeni ÅŸifreler eÅŸleÅŸmiyor.");
             return;
         }
 
@@ -52,27 +52,27 @@ const KullaniciSifreDegistirModal = ({ open, onClose, kullaniciId }: Props) => {
                 formData
             );
             if (result) {
-                alert("Şifre başarıyla güncellendi.");
+                alert("Åifre baÅŸarÄ±yla gÃ¼ncellendi.");
                 setFormData({ newPassword: "", confirmPassword: "" });
                 onClose();
             } else {
-                alert("Şifre güncellenirken bir hata oluştu.");
+                alert("Åifre gÃ¼ncellenirken bir hata oluÅŸtu.");
             }
         } catch (error) {
             console.error("Hata:", error);
-            alert("Bir hata oluştu.");
+            alert("Bir hata oluÅŸtu.");
         }
     };
 
     return (
         <Dialog open={open} onClose={onClose} fullWidth maxWidth="xs">
-            <DialogTitle>Şifre Değiştir (Admin)</DialogTitle>
+            <DialogTitle>Åifre DeÄŸiÅŸtir (Admin)</DialogTitle>
             <DialogContent dividers>
                 <Grid container spacing={2} sx={{ mt: 1 }}>
                     <Grid size={{ xs: 12 }}>
                         <TextField
                             fullWidth
-                            label="Yeni Şifre"
+                            label="Yeni Åifre"
                             name="newPassword"
                             type={showNewPassword ? "text" : "password"}
                             value={formData.newPassword}
@@ -91,7 +91,7 @@ const KullaniciSifreDegistirModal = ({ open, onClose, kullaniciId }: Props) => {
                     <Grid size={{ xs: 12 }}>
                         <TextField
                             fullWidth
-                            label="Yeni Şifre (Tekrar)"
+                            label="Yeni Åifre (Tekrar)"
                             name="confirmPassword"
                             type={showConfirmPassword ? "text" : "password"}
                             value={formData.confirmPassword}
@@ -110,9 +110,9 @@ const KullaniciSifreDegistirModal = ({ open, onClose, kullaniciId }: Props) => {
                 </Grid>
             </DialogContent>
             <DialogActions>
-                <Button onClick={onClose}>İptal</Button>
+                <Button onClick={onClose}>Ä°ptal</Button>
                 <Button variant="contained" color="primary" onClick={handleSubmit}>
-                    Güncelle
+                    GÃ¼ncelle
                 </Button>
             </DialogActions>
         </Dialog>

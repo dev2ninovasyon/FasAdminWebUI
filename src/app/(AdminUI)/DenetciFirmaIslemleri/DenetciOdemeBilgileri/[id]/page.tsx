@@ -7,11 +7,11 @@ import OdemeBilgileriTable from "@/app/components/Tables/OdemeBilgileriTable";
 const BCrumb = [
   {
     to: "/Anasayfa",
-    title: "Admin Menü",
+    title: "Admin MenÃ¼",
   },
   {
     to: "/DenetciFirmaIslemleri",
-    title: "Denetçi Firma İşlemleri",
+    title: "DenetÃ§i Firma Ä°ÅŸlemleri",
   },
 ];
 
@@ -23,10 +23,10 @@ const Page = (props: { params: Promise<{ id: string }> }) => {
 
   return (
     <PageContainer
-      title="Denetçi Ödeme Bilgileri"
-      description="this is Denetçi Ödeme Bilgileri"
+      title="DenetÃ§i Ã–deme Bilgileri"
+      description="this is DenetÃ§i Ã–deme Bilgileri"
     >
-      <Breadcrumb title="Denetçi Ödeme Bilgileri" items={BCrumb} />
+      <Breadcrumb title="DenetÃ§i Ã–deme Bilgileri" items={BCrumb} />
       <Grid container spacing={3}>
         <Grid size={{ xs: 12 }}>
           <OdemeBilgileriTable id={id} />

@@ -185,7 +185,7 @@ const Row = (props: { row: ReturnType<typeof createData>, id?: string }) => {
               <ListItemIcon>
                 <IconEdit width={18} />
               </ListItemIcon>
-              Düzenle
+              DÃ¼zenle
             </MenuItem>
           </Menu>
         </TableCell>
@@ -211,7 +211,7 @@ const Row = (props: { row: ReturnType<typeof createData>, id?: string }) => {
                     }`,
                 }}
               >
-                Geçmiş Kota Bilgileri
+                GeÃ§miÅŸ Kota Bilgileri
               </Typography>
               <Table size="small" aria-label="purchases">
                 <TableHead>
@@ -223,27 +223,27 @@ const Row = (props: { row: ReturnType<typeof createData>, id?: string }) => {
                     </TableCell>
                     <TableCell>
                       <Typography textAlign="center" variant="h6">
-                        Önceki Şirket Kotası
+                        Ã–nceki Åirket KotasÄ±
                       </Typography>
                     </TableCell>
                     <TableCell>
                       <Typography textAlign="center" variant="h6">
-                        Önceki Disk Kotası
+                        Ã–nceki Disk KotasÄ±
                       </Typography>
                     </TableCell>
                     <TableCell>
                       <Typography textAlign="center" variant="h6">
-                        Önceki Enflasyon Kotası
+                        Ã–nceki Enflasyon KotasÄ±
                       </Typography>
                     </TableCell>
                     <TableCell>
                       <Typography textAlign="center" variant="h6">
-                        Önceki Ek Kota
+                        Ã–nceki Ek Kota
                       </Typography>
                     </TableCell>
                     <TableCell>
                       <Typography textAlign="center" variant="h6">
-                        Açıklama
+                        AÃ§Ä±klama
                       </Typography>
                     </TableCell>
                   </TableRow>
@@ -382,7 +382,7 @@ const OdemeBilgileriTable = ({ id }: { id?: string }) => {
 
       setRows([row]);
     } catch (error) {
-      console.error("Bir hata oluştu:", error);
+      console.error("Bir hata oluÅŸtu:", error);
     }
   };
 
@@ -391,7 +391,7 @@ const OdemeBilgileriTable = ({ id }: { id?: string }) => {
   }, []);
 
   return (
-    <ParentCard title={rows?.[0]?.denetciFirmaAdi ?? "Yükleniyor..."}>
+    <ParentCard title={rows?.[0]?.denetciFirmaAdi ?? "YÃ¼kleniyor..."}>
       <>
         <TableContainer component={Paper} sx={{ marginBottom: 3 }}>
           <Table
@@ -408,7 +408,7 @@ const OdemeBilgileriTable = ({ id }: { id?: string }) => {
                 <TableCell />
                 <TableCell>
                   <Typography textAlign="center" variant="h6">
-                    Baş. Tarihi
+                    BaÅŸ. Tarihi
                   </Typography>
                 </TableCell>
                 <TableCell>
@@ -418,22 +418,22 @@ const OdemeBilgileriTable = ({ id }: { id?: string }) => {
                 </TableCell>
                 <TableCell>
                   <Typography textAlign="center" variant="h6">
-                    Satış Tarihi
+                    SatÄ±ÅŸ Tarihi
                   </Typography>
                 </TableCell>
                 <TableCell>
                   <Typography textAlign="center" variant="h6">
-                    Şirket Kotası
+                    Åirket KotasÄ±
                   </Typography>
                 </TableCell>
                 <TableCell>
                   <Typography textAlign="center" variant="h6">
-                    Disk Kotası
+                    Disk KotasÄ±
                   </Typography>
                 </TableCell>
                 <TableCell>
                   <Typography textAlign="center" variant="h6">
-                    Enflasyon Kotası
+                    Enflasyon KotasÄ±
                   </Typography>
                 </TableCell>
                 <TableCell>
@@ -454,7 +454,7 @@ const OdemeBilgileriTable = ({ id }: { id?: string }) => {
         {rows.map((row) => (
           <Grid container rowSpacing={3} key={row.denetciFirmaAdi}>
             <Grid size={{ xs: 12, sm: 3 }} display="flex" alignItems="center">
-              <Typography variant="h6">Modüller: { }</Typography>
+              <Typography variant="h6">ModÃ¼ller: { }</Typography>
             </Grid>
 
             <Grid
@@ -486,7 +486,7 @@ const OdemeBilgileriTable = ({ id }: { id?: string }) => {
                 }}
               />
               <Chip
-                label={"Kümi"}
+                label={"KÃ¼mi"}
                 sx={{
                   backgroundColor: row.kumi
                     ? (theme) => theme.palette.success.light
@@ -497,7 +497,7 @@ const OdemeBilgileriTable = ({ id }: { id?: string }) => {
                 }}
               />
               <Chip
-                label={"Çalışma Kağıdı"}
+                label={"Ã‡alÄ±ÅŸma KaÄŸÄ±dÄ±"}
                 sx={{
                   backgroundColor: theme.palette.success.light,
                   color: theme.palette.success.main,
@@ -546,7 +546,7 @@ const OdemeBilgileriTable = ({ id }: { id?: string }) => {
             </Grid>
 
             <Grid size={{ xs: 12, sm: 3 }} display="flex" alignItems="center">
-              <Typography variant="h6">Mevcut Firma Sayısı:</Typography>
+              <Typography variant="h6">Mevcut Firma SayÄ±sÄ±:</Typography>
             </Grid>
             <Grid
               size={{ xs: 12, sm: 9 }}
@@ -557,7 +557,7 @@ const OdemeBilgileriTable = ({ id }: { id?: string }) => {
               <Typography variant="h6">{row.mevcutFirmaSayisi}</Typography>
             </Grid>
             <Grid size={{ xs: 12, sm: 3 }} display="flex" alignItems="center">
-              <Typography variant="h6">Solo Firma Sayısı:</Typography>
+              <Typography variant="h6">Solo Firma SayÄ±sÄ±:</Typography>
             </Grid>
             <Grid
               size={{ xs: 12, sm: 9 }}
@@ -568,7 +568,7 @@ const OdemeBilgileriTable = ({ id }: { id?: string }) => {
               <Typography variant="h6">{row.soloFirmaSayisi}</Typography>
             </Grid>
             <Grid size={{ xs: 12, sm: 3 }} display="flex" alignItems="center">
-              <Typography variant="h6">Konsolide Ana Şirket Sayısı:</Typography>
+              <Typography variant="h6">Konsolide Ana Åirket SayÄ±sÄ±:</Typography>
             </Grid>
             <Grid
               size={{ xs: 12, sm: 9 }}
@@ -582,7 +582,7 @@ const OdemeBilgileriTable = ({ id }: { id?: string }) => {
             </Grid>
             <Grid size={{ xs: 12, sm: 3 }} display="flex" alignItems="center">
               <Typography variant="h6">
-                Konsolide Yavru Şirket Firma Sayısı:
+                Konsolide Yavru Åirket Firma SayÄ±sÄ±:
               </Typography>
             </Grid>
             <Grid

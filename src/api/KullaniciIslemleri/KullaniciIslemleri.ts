@@ -72,3 +72,30 @@ export const updateKullaniciSifreAdmin = async (
         return false;
     }
 };
+
+export const getKullaniciByDenetlenenYilRol = async (
+    denetlenenId: number,
+    yil: number,
+    rol: string
+) => {
+    try {
+        const response = await apiFetch(
+            `/Kullanici/ByDenetlenenYilRol?denetlenenId=${denetlenenId}&yil=${yil}&rol=${rol}`,
+            {
+                method: "GET",
+                headers: {
+                    accept: "application/json",
+                },
+            }
+        );
+        if (response.ok) {
+            return await response.json();
+        } else {
+            console.log("Kullanıcı verileri getirilemedi");
+            return [];
+        }
+    } catch (error) {
+        console.log("Bir hata oluştu:", error);
+        return [];
+    }
+};

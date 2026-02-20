@@ -5,7 +5,7 @@ import Breadcrumb from "@/app/components/Layout/Shared/Breadcrumb/Breadcrumb";
 const BCrumb = [
   {
     to: "/HesapAyarlari",
-    title: "Hesap Ayarları",
+    title: "Hesap AyarlarÄ±",
   },
 ];
 
@@ -16,8 +16,9 @@ export default function HesapAyarlariLayout({
 }) {
   return (
     <div>
-      <Breadcrumb title="Hesap Ayarları" items={BCrumb} />
+      <Breadcrumb title="Hesap AyarlarÄ±" items={BCrumb} />
       {children}
     </div>
   );
 }
+

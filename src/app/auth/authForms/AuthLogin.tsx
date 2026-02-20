@@ -40,11 +40,11 @@ const AuthLogin: React.FC<loginType> = ({ title, subtitle, subtext }) => {
   const { executeRecaptcha } = useGoogleReCaptcha();
 
   const handleLogin = async () => {
-    console.log("HandleLogin başlatıldı...");
-    console.time("Giriş İşlemi Toplam Süre");
+    console.log("HandleLogin baÅŸlatÄ±ldÄ±...");
+    console.time("GiriÅŸ Ä°ÅŸlemi Toplam SÃ¼re");
     if (!executeRecaptcha) {
-      console.error("executeRecaptcha nesnesi bulunamadı!");
-      enqueueSnackbar("Recaptcha yüklenemedi, lütfen sayfayı yenileyin.", {
+      console.error("executeRecaptcha nesnesi bulunamadÄ±!");
+      enqueueSnackbar("Recaptcha yÃ¼klenemedi, lÃ¼tfen sayfayÄ± yenileyin.", {
         variant: "warning",
         autoHideDuration: 3000,
       });
@@ -55,17 +55,17 @@ const AuthLogin: React.FC<loginType> = ({ title, subtitle, subtext }) => {
     setIsVerifyingCaptcha(true);
     let token = "";
     try {
-      console.log("ReCAPTCHA doğrulaması başlıyor...");
-      console.time("ReCAPTCHA Doğrulaması");
+      console.log("ReCAPTCHA doÄŸrulamasÄ± baÅŸlÄ±yor...");
+      console.time("ReCAPTCHA DoÄŸrulamasÄ±");
       token = await executeRecaptcha("login");
-      console.timeEnd("ReCAPTCHA Doğrulaması");
-      console.log("ReCAPTCHA token'ı alındı:", token ? "Başarılı" : "Boş");
+      console.timeEnd("ReCAPTCHA DoÄŸrulamasÄ±");
+      console.log("ReCAPTCHA token'Ä± alÄ±ndÄ±:", token ? "BaÅŸarÄ±lÄ±" : "BoÅŸ");
     } catch (error: any) {
-      console.error("Recaptcha hatası:", error);
-      let errorMessage = "Güvenlik doğrulaması sırasında bir hata oluştu.";
+      console.error("Recaptcha hatasÄ±:", error);
+      let errorMessage = "GÃ¼venlik doÄŸrulamasÄ± sÄ±rasÄ±nda bir hata oluÅŸtu.";
 
       if (error?.message?.includes("message channel closed")) {
-        errorMessage = "Tarayıcı eklentileriniz güvenlik doğrulamasını engelliyor olabilir. Lütfen reklam engelleyici veya benzeri eklentileri kapatıp tekrar deneyin.";
+        errorMessage = "TarayÄ±cÄ± eklentileriniz gÃ¼venlik doÄŸrulamasÄ±nÄ± engelliyor olabilir. LÃ¼tfen reklam engelleyici veya benzeri eklentileri kapatÄ±p tekrar deneyin.";
       }
 
       enqueueSnackbar(errorMessage, {
@@ -79,8 +79,8 @@ const AuthLogin: React.FC<loginType> = ({ title, subtitle, subtext }) => {
     setIsVerifyingCaptcha(false);
 
     if (!token) {
-      console.warn("ReCAPTCHA token alınamadı!");
-      enqueueSnackbar("Recaptcha doğrulaması başarısız.", {
+      console.warn("ReCAPTCHA token alÄ±namadÄ±!");
+      enqueueSnackbar("Recaptcha doÄŸrulamasÄ± baÅŸarÄ±sÄ±z.", {
         variant: "warning",
         autoHideDuration: 3000,
       });
@@ -89,8 +89,8 @@ const AuthLogin: React.FC<loginType> = ({ title, subtitle, subtext }) => {
     }
 
     try {
-      console.log("API isteği gönderiliyor...");
-      console.time("Login API İsteği");
+      console.log("API isteÄŸi gÃ¶nderiliyor...");
+      console.time("Login API Ä°steÄŸi");
       // FasAdminWebUI uses AdminLogin
       const response = await apiFetch(`/Auth/AdminLogin`, {
         method: "POST",
@@ -100,10 +100,10 @@ const AuthLogin: React.FC<loginType> = ({ title, subtitle, subtext }) => {
         },
         body: JSON.stringify({ email, password, captchaToken: token }),
       });
-      console.timeEnd("Login API İsteği");
+      console.timeEnd("Login API Ä°steÄŸi");
 
       if (response.ok) {
-        console.time("Veri İşleme ve Yönlendirme");
+        console.time("Veri Ä°ÅŸleme ve YÃ¶nlendirme");
         const data = await response.json();
         const userToken = data.token;
         const userRefreshToken = data.refreshToken;
@@ -177,7 +177,7 @@ const AuthLogin: React.FC<loginType> = ({ title, subtitle, subtext }) => {
         dispatch(setUserData(userData));
 
         if (bddkmi === undefined) {
-          console.time("Ek Bilgi API İsteği (bddkmi)");
+          console.time("Ek Bilgi API Ä°steÄŸi (bddkmi)");
           const data2 = await getDenetciOdemeBilgileri(
             userToken,
             userDenetciId
@@ -185,7 +185,7 @@ const AuthLogin: React.FC<loginType> = ({ title, subtitle, subtext }) => {
           if (data2 && data2.bddkmi !== undefined) {
             dispatch(setBddkmi(data2.bddkmi));
           }
-          console.timeEnd("Ek Bilgi API İsteği (bddkmi)");
+          console.timeEnd("Ek Bilgi API Ä°steÄŸi (bddkmi)");
         }
 
         if (!sonSecilenDenetlenenId || !sonSecilenDenetlenenFirmaAdi) {
@@ -193,21 +193,21 @@ const AuthLogin: React.FC<loginType> = ({ title, subtitle, subtext }) => {
           localStorage.removeItem("fas_yil");
         }
 
-        console.timeEnd("Veri İşleme ve Yönlendirme");
-        console.timeEnd("Giriş İşlemi Toplam Süre");
+        console.timeEnd("Veri Ä°ÅŸleme ve YÃ¶nlendirme");
+        console.timeEnd("GiriÅŸ Ä°ÅŸlemi Toplam SÃ¼re");
         router.push("/Anasayfa");
       } else {
-        console.timeEnd("Giriş İşlemi Toplam Süre");
+        console.timeEnd("GiriÅŸ Ä°ÅŸlemi Toplam SÃ¼re");
         setIsLoggedIn(false);
 
-        let errorMsg = "Giriş Başarısız";
+        let errorMsg = "GiriÅŸ BaÅŸarÄ±sÄ±z";
         try {
           const errorData = await response.json();
           if (errorData.message) {
             errorMsg = errorData.message;
           }
         } catch (e) {
-          // JSON değilse statusText kullan
+          // JSON deÄŸilse statusText kullan
           if (response.statusText) {
             errorMsg = `${response.status} - ${response.statusText}`;
           }
@@ -226,10 +226,10 @@ const AuthLogin: React.FC<loginType> = ({ title, subtitle, subtext }) => {
         });
       }
     } catch (error) {
-      console.timeEnd("Giriş İşlemi Toplam Süre");
-      console.error("Bir hata oluştu:", error);
+      console.timeEnd("GiriÅŸ Ä°ÅŸlemi Toplam SÃ¼re");
+      console.error("Bir hata oluÅŸtu:", error);
       setIsLoggedIn(false);
-      enqueueSnackbar("Sunucuyla bağlantı kurulamadı.", {
+      enqueueSnackbar("Sunucuyla baÄŸlantÄ± kurulamadÄ±.", {
         variant: "error",
       });
     }
@@ -271,13 +271,13 @@ const AuthLogin: React.FC<loginType> = ({ title, subtitle, subtext }) => {
             />
           </Box>
           <Box>
-            <CustomFormLabel htmlFor="password">Şifre</CustomFormLabel>
+            <CustomFormLabel htmlFor="password">Åifre</CustomFormLabel>
             <CustomTextField
               id="password"
               type="password"
               variant="outlined"
               fullWidth
-              placeholder="Şifreniz"
+              placeholder="Åifreniz"
               onChange={(e: any) => setPassword(e.target.value)}
               InputProps={{
                 startAdornment: (
@@ -313,7 +313,7 @@ const AuthLogin: React.FC<loginType> = ({ title, subtitle, subtext }) => {
               borderRadius: "10px"
             }}
           >
-            {isVerifyingCaptcha ? "Güvenlik Doğrulaması..." : isLoggedIn ? "Giriş Yapılıyor..." : "Giriş Yap"}
+            {isVerifyingCaptcha ? "GÃ¼venlik DoÄŸrulamasÄ±..." : isLoggedIn ? "GiriÅŸ YapÄ±lÄ±yor..." : "GiriÅŸ Yap"}
           </LoadingButton>
         </Box>
       </form>

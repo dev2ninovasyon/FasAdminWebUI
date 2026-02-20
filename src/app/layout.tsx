@@ -3,11 +3,9 @@ import React from "react";
 import { ThemeProvider } from "@mui/material/styles";
 import CssBaseline from "@mui/material/CssBaseline";
 import { ThemeSettings } from "@/utils/theme/Theme";
-//import { store } from "@/store/store";
 import { useSelector } from "@/store/hooks";
 import { AppState } from "@/store/store";
 import { Provider } from "react-redux";
-
 import CircularProgress from "@mui/material/CircularProgress";
 import Box from "@mui/material/Box";
 import "@/app/api/index";
@@ -21,12 +19,17 @@ import { store, persistor } from "@/store/storeConfig";
 import { SnackbarProvider } from "notistack";
 import RTL from "./components/Layout/Shared/Customizer/RTL";
 import useAutoLogout from "@/utils/useAutoLogOut";
+import { LoadingProvider } from "@/contexts/LoadingContext";
+import { ensureUTF8Encoding } from "@/utils/utf8Support";
+import Script from "next/script";
+
+// Ensure UTF-8 encoding
+ensureUTF8Encoding();
 
 const MyApp = ({ children }: { children: React.ReactNode }) => {
-  useAutoLogout(45 * 60 * 1000, 40 * 60 * 1000); // 45 dakika idle süresi, 40 dakika refresh süresi
+  useAutoLogout(45 * 60 * 1000, 40 * 60 * 1000);
 
   const theme = ThemeSettings();
-
   const customizer = useSelector((state: AppState) => state.customizer);
 
   return (
@@ -34,7 +37,6 @@ const MyApp = ({ children }: { children: React.ReactNode }) => {
       <NextAppDirEmotionCacheProvider options={{ key: "modernize" }}>
         <ThemeProvider theme={theme}>
           <RTL direction={customizer.activeDir}>
-            {/* CssBaseline kickstart an elegant, consistent, and simple baseline to build upon. */}
             <CssBaseline />
             <SnackbarProvider
               anchorOrigin={{
@@ -42,7 +44,9 @@ const MyApp = ({ children }: { children: React.ReactNode }) => {
                 horizontal: "right",
               }}
             >
-              {children}
+              <LoadingProvider>
+                {children}
+              </LoadingProvider>
             </SnackbarProvider>
           </RTL>
         </ThemeProvider>
@@ -51,20 +55,24 @@ const MyApp = ({ children }: { children: React.ReactNode }) => {
   );
 };
 
-import Script from "next/script";
-
 export default function RootLayout({
   children,
 }: {
   children: React.ReactNode;
 }) {
   const [loading, setLoading] = React.useState(false);
+  
   React.useEffect(() => {
     setTimeout(() => setLoading(true), 3000);
   }, []);
+
   return (
-    <html suppressHydrationWarning>
+    <html suppressHydrationWarning lang="tr">
       <head>
+        <meta charSet="utf-8" />
+        <meta httpEquiv="Content-Type" content="text/html; charset=utf-8" />
+        <meta httpEquiv="Accept-CH" content="DPR, Viewport-Width, Width" />
+        <meta name="viewport" content="width=device-width, initial-scale=1.0, charset=utf-8" />
         <link rel="preconnect" href="https://www.google.com" />
         <link rel="preconnect" href="https://www.gstatic.com" crossOrigin="anonymous" />
       </head>
@@ -76,8 +84,7 @@ export default function RootLayout({
         <Provider store={store}>
           <PersistGate loading={null} persistor={persistor}>
             {loading ? (
-              // eslint-disable-next-line react/no-children-prop
-              <MyApp children={children} />
+              <MyApp>{children}</MyApp>
             ) : (
               <Box
                 sx={{

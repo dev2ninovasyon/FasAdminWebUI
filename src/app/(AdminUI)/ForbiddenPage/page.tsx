@@ -25,7 +25,7 @@ export default function Forbidden() {
           Hay Aksi!!!
         </Typography>
         <Typography align="center" variant="h4" mb={4}>
-          Bu Sayfaya Giriş İzniniz Bulunmamaktadır.
+          Bu Sayfaya GiriÅŸ Ä°zniniz BulunmamaktadÄ±r.
         </Typography>
         <Button
           color="primary"
@@ -34,9 +34,10 @@ export default function Forbidden() {
           href="/"
           disableElevation
         >
-          Giriş Ekranına Dön
+          GiriÅŸ EkranÄ±na DÃ¶n
         </Button>
       </Container>
     </Box>
   );
 }
+

@@ -9,11 +9,11 @@ import KullaniciEkleForm from "@/app/components/DenetciIslemleri/KullaniciEkleFo
 const BCrumb = [
   {
     to: "/Anasayfa",
-    title: "Admin Menü",
+    title: "Admin MenÃ¼",
   },
   {
     to: "/DenetciFirmaIslemleri",
-    title: "Denetçi Firma İşlemleri",
+    title: "DenetÃ§i Firma Ä°ÅŸlemleri",
   },
 ];
 
@@ -24,14 +24,14 @@ const Page = (props: { params: Promise<{ id: string }> }) => {
   const id = params.id;
 
   return (
-    <PageContainer title="Kullanıcı Ekle" description="this is Kullanıcı Ekle">
-      <ParentCard title="Kullanıcı Ekle">
+    <PageContainer title="KullanÄ±cÄ± Ekle" description="this is KullanÄ±cÄ± Ekle">
+      <ParentCard title="KullanÄ±cÄ± Ekle">
         <Grid container spacing={3}>
           <Grid size={{ xs: 12 }}>
-            <Breadcrumb title="Kullanıcı Ekle" items={BCrumb} />
+            <Breadcrumb title="KullanÄ±cÄ± Ekle" items={BCrumb} />
             <Grid container spacing={3}>
               <Grid size={{ xs: 12 }}>
-                <ParentCard title="Yeni Kullanıcı">
+                <ParentCard title="Yeni KullanÄ±cÄ±">
                   <KullaniciEkleForm id={id} />
                 </ParentCard>
               </Grid>

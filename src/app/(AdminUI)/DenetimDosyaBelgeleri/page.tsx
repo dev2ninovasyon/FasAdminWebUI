@@ -12,8 +12,12 @@ const BCrumb = [
     title: "Admin Menü",
   },
   {
-    to: "/DenetciFirmaIslemleri",
-    title: "Denetçi Firma İşlemleri",
+    to: "/PlanVeProgram",
+    title: "Plan Ve Program",
+  },
+  {
+    to: "/DenetimDosyaBelgeleri",
+    title: "Denetim Dosya Belgeleri",
   },
 ];
 
@@ -39,3 +43,4 @@ const Page = () => {
 };
 
 export default Page;
+

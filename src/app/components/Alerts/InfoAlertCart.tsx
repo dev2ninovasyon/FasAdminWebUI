@@ -33,7 +33,7 @@ const InfoAlertCart = ({ setOpenCartAlert, openCartAlert }: Props) => {
                 : theme.palette.info.main,
           }}
         >
-          İşlem Gerçekleştiriliyor...
+          Ä°ÅŸlem GerÃ§ekleÅŸtiriliyor...
         </Alert>
       </Snackbar>
     </React.Fragment>

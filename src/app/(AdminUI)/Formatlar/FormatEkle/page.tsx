@@ -9,7 +9,7 @@ import FormatEkleForm from "@/app/components/FormaIslemleri/FormatEkleForm";
 const BCrumb = [
   {
     to: "/Anasayfa",
-    title: "Admin Menü",
+    title: "Admin MenÃ¼",
   },
   {
     to: "/Formatlar",
@@ -43,3 +43,4 @@ const Page = () => {
 };
 
 export default Page;
+

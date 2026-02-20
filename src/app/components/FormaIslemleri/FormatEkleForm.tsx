@@ -25,10 +25,10 @@ const FormatEkleForm = () => {
       if (result) {
         router.push("/Formatlar");
       } else {
-        console.error("Format ekleme başarısız");
+        console.error("Format ekleme baÅŸarÄ±sÄ±z");
       }
     } catch (error) {
-      console.error("Bir hata oluştu:", error);
+      console.error("Bir hata oluÅŸtu:", error);
     }
   };
   return (
@@ -38,7 +38,7 @@ const FormatEkleForm = () => {
           htmlFor="formatAdi"
           sx={{ mt: 0, mb: { xs: "-10px", sm: 0 } }}
         >
-          Format Adı
+          Format AdÄ±
         </CustomFormLabel>
       </Grid>
       <Grid size={{ xs: 12, sm: 9 }}>
@@ -53,7 +53,7 @@ const FormatEkleForm = () => {
           htmlFor="satirSayisi"
           sx={{ mt: 0, mb: { xs: "-10px", sm: 0 } }}
         >
-          Satır Sayısı
+          SatÄ±r SayÄ±sÄ±
         </CustomFormLabel>
       </Grid>
       <Grid size={{ xs: 12, sm: 9 }}>

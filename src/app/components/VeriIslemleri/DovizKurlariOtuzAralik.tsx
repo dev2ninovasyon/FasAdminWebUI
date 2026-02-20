@@ -53,7 +53,7 @@ const DovizKurlariOtuzAralik: React.FC<Props> = ({ verileriCekTiklandimi }) => {
     loadStyles();
   }, [customizer.activeMode]);
 
-  const colHeaders = ["Tarih", "Kodu", "Adı", "Döviz Alış", "Döviz Satış"];
+  const colHeaders = ["Tarih", "Kodu", "AdÄ±", "DÃ¶viz AlÄ±ÅŸ", "DÃ¶viz SatÄ±ÅŸ"];
 
   const columns = [
     {
@@ -79,7 +79,7 @@ const DovizKurlariOtuzAralik: React.FC<Props> = ({ verileriCekTiklandimi }) => {
       allowInvalid: false,
       readOnly: true,
       editor: false,
-    }, // Adı
+    }, // AdÄ±
     {
       type: "numeric",
       numericFormat: { pattern: "0,0.0000", columnSorting: true },
@@ -87,7 +87,7 @@ const DovizKurlariOtuzAralik: React.FC<Props> = ({ verileriCekTiklandimi }) => {
       allowInvalid: false,
       readOnly: true,
       editor: false,
-    }, // Döviz Alış
+    }, // DÃ¶viz AlÄ±ÅŸ
     {
       type: "numeric",
       numericFormat: { pattern: "0,0.0000", columnSorting: true },
@@ -95,7 +95,7 @@ const DovizKurlariOtuzAralik: React.FC<Props> = ({ verileriCekTiklandimi }) => {
       allowInvalid: false,
       readOnly: true,
       editor: false,
-    }, // Döviz Satış
+    }, // DÃ¶viz SatÄ±ÅŸ
   ];
 
   const afterGetColHeader = (col: any, TH: any) => {
@@ -226,7 +226,7 @@ const DovizKurlariOtuzAralik: React.FC<Props> = ({ verileriCekTiklandimi }) => {
       setRowCount(rowsAll.length);
       setFetchedData(rowsAll);
     } catch (error) {
-      console.error("Bir hata oluştu:", error);
+      console.error("Bir hata oluÅŸtu:", error);
     }
   };
 
@@ -285,9 +285,9 @@ const DovizKurlariOtuzAralik: React.FC<Props> = ({ verileriCekTiklandimi }) => {
           type: "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
         });
         saveAs(blob, "DovizKurlariOtuzAralik.xlsx");
-        console.log("Excel dosyası başarıyla oluşturuldu");
+        console.log("Excel dosyasÄ± baÅŸarÄ±yla oluÅŸturuldu");
       } catch (error) {
-        console.error("Excel dosyası oluşturulurken bir hata oluştu:", error);
+        console.error("Excel dosyasÄ± oluÅŸturulurken bir hata oluÅŸtu:", error);
       }
     }
     createExcelFile();

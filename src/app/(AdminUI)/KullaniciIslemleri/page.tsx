@@ -12,11 +12,11 @@ import KullaniciTable from "@/app/components/KullaniciIslemleri/KullaniciTable";
 const BCrumb = [
     {
         to: "/Anasayfa",
-        title: "Admin Menü",
+        title: "Admin MenÃ¼",
     },
     {
         to: "/KullaniciIslemleri",
-        title: "Kullanıcı İşlemleri",
+        title: "KullanÄ±cÄ± Ä°ÅŸlemleri",
     },
 ];
 
@@ -31,31 +31,31 @@ const UserOperationsPage = () => {
                 const firms = await getDenetciler(user.token || "");
                 setDenetciFirmalar(firms || []);
             } catch (error) {
-                console.error("Denetçi firmalar getirilemedi", error);
+                console.error("DenetÃ§i firmalar getirilemedi", error);
             }
         };
         fetchDenetciler();
     }, [user.token]);
 
     return (
-        <PageContainer title="Kullanıcı İşlemleri" description="Kullanıcı İşlemleri">
-            <Breadcrumb title="Kullanıcı İşlemleri" items={BCrumb} />
-            <ParentCard title="Firma Bazlı Kullanıcı Listesi">
+        <PageContainer title="KullanÄ±cÄ± Ä°ÅŸlemleri" description="KullanÄ±cÄ± Ä°ÅŸlemleri">
+            <Breadcrumb title="KullanÄ±cÄ± Ä°ÅŸlemleri" items={BCrumb} />
+            <ParentCard title="Firma BazlÄ± KullanÄ±cÄ± Listesi">
                 <Grid container spacing={3}>
                     <Grid size={{ xs: 12, md: 6 }}>
                         <Box mb={3}>
                             <Typography variant="subtitle1" fontWeight={600} gutterBottom>
-                                Denetçi Firma Seçin
+                                DenetÃ§i Firma SeÃ§in
                             </Typography>
                             <TextField
                                 select
                                 fullWidth
                                 value={selectedDenetciId}
                                 onChange={(e) => setSelectedDenetciId(Number(e.target.value))}
-                                placeholder="Firma Seçiniz"
+                                placeholder="Firma SeÃ§iniz"
                             >
                                 <MenuItem value="">
-                                    <em>Firma Seçiniz</em>
+                                    <em>Firma SeÃ§iniz</em>
                                 </MenuItem>
                                 {denetciFirmalar.map((firma) => (
                                     <MenuItem key={firma.id} value={firma.id}>
@@ -75,3 +75,4 @@ const UserOperationsPage = () => {
 };
 
 export default UserOperationsPage;
+

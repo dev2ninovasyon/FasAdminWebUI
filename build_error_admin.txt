@@ -1,0 +1,187 @@
+﻿
+> modernize-next-main@2.1.0 build
+> next build
+
+Ôû▓ Next.js 16.1.6 (Turbopack)
+- Experiments (use with caution):
+  ┬À optimizePackageImports
+
+  Creating an optimized production build ...
+node.exe : 
+At line:1 char:1
++ & "C:\Program Files\nod
+ejs/node.exe" "C:\Program
+ Files\nodejs/node_mo ...
++ ~~~~~~~~~~~~~~~~~~~~~~~
+~~~~~~~~~~~~~~~~~~~~~~~~~
+~~~~~~~~~~~~~~~~~~~~~
+    + CategoryInfo       
+       : NotSpeci    fied
+: (:String) [    ], Remot
+eExceptio    n
+    + FullyQualifiedE    
+rrorId : NativeCo    mman
+dError
+ 
+> Build error occurred
+Error: Turbopack build fa
+iled with 1 errors:
+./src/app/components/Layo
+ut/Vertical/Header/Person
+elBoxAutoComplete.tsx:5:1
+Module not found: Can't r
+esolve '@/api/Kullanici/K
+ullaniciIslemleri'
+[0m [90m 3 |[39m [36m
+import[39m { useSelector
+ } [36mfrom[39m [32m"@
+/store/hooks"[39m[33m;
+[39m
+ [90m 4 |[39m [36mimpo
+rt[39m { [33mAppState[
+39m } [36mfrom[39m [32
+m"@/store/store"[39m[33
+m;[39m
+[31m[1m>[22m[39m[90m
+ 5 |[39m [36mimport[39
+m { getKullaniciByDenetle
+nenYilRol } [36mfrom[39
+m [32m"@/api/Kullanici/K
+ullaniciIslemleri"[39m[
+33m;[39m
+ [90m   |[39m [31m[1m
+^[22m[39m[31m[1m^[22
+m[39m[31m[1m^[22m[39
+m[31m[1m^[22m[39m[31
+m[1m^[22m[39m[31m[1m
+^[22m[39m[31m[1m^[22
+m[39m[31m[1m^[22m[39
+m[31m[1m^[22m[39m[31
+m[1m^[22m[39m[31m[1m
+^[22m[39m[31m[1m^[22
+m[39m[31m[1m^[22m[39
+m[31m[1m^[22m[39m[31
+m[1m^[22m[39m[31m[1m
+^[22m[39m[31m[1m^[22
+m[39m[31m[1m^[22m[39
+m[31m[1m^[22m[39m[31
+m[1m^[22m[39m[31m[1m
+^[22m[39m[31m[1m^[22
+m[39m[31m[1m^[22m[39
+m[31m[1m^[22m[39m[31
+m[1m^[22m[39m[31m[1m
+^[22m[39m[31m[1m^[22
+m[39m[31m[1m^[22m[39
+m[31m[1m^[22m[39m[31
+m[1m^[22m[39m[31m[1m
+^[22m[39m[31m[1m^[22
+m[39m[31m[1m^[22m[39
+m[31m[1m^[22m[39m[31
+m[1m^[22m[39m[31m[1m
+^[22m[39m[31m[1m^[22
+m[39m[31m[1m^[22m[39
+m[31m[1m^[22m[39m[31
+m[1m^[22m[39m[31m[1m
+^[22m[39m[31m[1m^[22
+m[39m[31m[1m^[22m[39
+m[31m[1m^[22m[39m[31
+m[1m^[22m[39m[31m[1m
+^[22m[39m[31m[1m^[22
+m[39m[31m[1m^[22m[39
+m[31m[1m^[22m[39m[31
+m[1m^[22m[39m[31m[1m
+^[22m[39m[31m[1m^[22
+m[39m[31m[1m^[22m[39
+m[31m[1m^[22m[39m[31
+m[1m^[22m[39m[31m[1m
+^[22m[39m[31m[1m^[22
+m[39m[31m[1m^[22m[39
+m[31m[1m^[22m[39m[31
+m[1m^[22m[39m[31m[1m
+^[22m[39m[31m[1m^[22
+m[39m[31m[1m^[22m[39
+m[31m[1m^[22m[39m[31
+m[1m^[22m[39m[31m[1m
+^[22m[39m[31m[1m^[22
+m[39m[31m[1m^[22m[39
+m[31m[1m^[22m[39m[31
+m[1m^[22m[39m[31m[1m
+^[22m[39m[31m[1m^[22
+m[39m[31m[1m^[22m[39
+m[31m[1m^[22m[39m[31
+m[1m^[22m[39m[31m[1m
+^[22m[39m[31m[1m^[22
+m[39m[31m[1m^[22m[39
+m[31m[1m^[22m[39m[31
+m[1m^[22m[39m[31m[1m
+^[22m[39m[31m[1m^[22
+m[39m[31m[1m^[22m[39
+m[31m[1m^[22m[39m
+ [90m 6 |[39m [36mimpo
+rt[39m [33mCustomTextFi
+eld[39m [36mfrom[39m 
+[32m"@/app/components/For
+ms/ThemeElements/CustomTe
+xtField"[39m[33m;[39m
+ [90m 7 |[39m
+ [90m 8 |[39m [36minte
+rface[39m [33mPerosnelB
+oxProps[39m {[0m
+
+Import map: aliased to re
+lative './src/api/Kullani
+ci/KullaniciIslemleri' in
+side of [project]/
+
+
+Import traces:
+  Client Component Browse
+r:
+    ./src/app/components/
+Layout/Vertical/Header/Pe
+rsonelBoxAutoComplete.tsx
+ [Client Component Browse
+r]
+    ./src/app/components/
+CalismaKagitlari/Cards/Be
+lgeKontrolCard.tsx [Clien
+t Component Browser]
+    ./src/app/((AdminUI)/S
+tandartCalismaKagitlari/F
+isBuyukluguAnalizi/page.t
+sx [Client Component Brow
+ser]
+    ./src/app/((AdminUI)/S
+tandartCalismaKagitlari/F
+isBuyukluguAnalizi/page.t
+sx [Server Component]
+
+  Client Component SSR:
+    ./src/app/components/
+Layout/Vertical/Header/Pe
+rsonelBoxAutoComplete.tsx
+ [Client Component SSR]
+    ./src/app/components/
+CalismaKagitlari/Cards/Be
+lgeKontrolCard.tsx [Clien
+t Component SSR]
+    ./src/app/((AdminUI)/S
+tandartCalismaKagitlari/F
+isBuyukluguAnalizi/page.t
+sx [Client Component SSR]
+    ./src/app/((AdminUI)/S
+tandartCalismaKagitlari/F
+isBuyukluguAnalizi/page.t
+sx [Server Component]
+
+https://nextjs.org/docs/m
+essages/module-not-found
+
+
+    at <unknown> (./src/a
+pp/components/Layout/Vert
+ical/Header/PersonelBoxAu
+toComplete.tsx:5:1)
+    at <unknown> (https:/
+/nextjs.org/docs/messages
+/module-not-found)

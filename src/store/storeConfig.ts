@@ -1,4 +1,4 @@
-"use client";
+﻿"use client";
 import { configureStore } from "@reduxjs/toolkit";
 //import AsyncStorage from "@react-native-async-storage/async-storage";
 //import storage from "redux-persist/lib/storage";
@@ -55,3 +55,4 @@ export const store = configureStore({
 });
 
 export const persistor = persistStore(store);
+

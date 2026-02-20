@@ -9,11 +9,11 @@ import DenetciDuzenleForm from "@/app/components/DenetciIslemleri/DenetciDuzenle
 const BCrumb = [
   {
     to: "/Anasayfa",
-    title: "Admin Menü",
+    title: "Admin MenÃ¼",
   },
   {
     to: "/DenetciFirmaIslemleri",
-    title: "Denetçi Firma İşlemleri",
+    title: "DenetÃ§i Firma Ä°ÅŸlemleri",
   },
 ];
 
@@ -25,13 +25,13 @@ const Page = (props: { params: Promise<{ id: string }> }) => {
 
   return (
     <PageContainer
-      title="Denetçi Düzenle"
-      description="this is Denetçi Düzenle"
+      title="DenetÃ§i DÃ¼zenle"
+      description="this is DenetÃ§i DÃ¼zenle"
     >
-      <Breadcrumb title="Denetçi Düzenle" items={BCrumb} />
+      <Breadcrumb title="DenetÃ§i DÃ¼zenle" items={BCrumb} />
       <Grid container spacing={3}>
         <Grid size={{ xs: 12 }}>
-          <ParentCard title="Denetçi">
+          <ParentCard title="DenetÃ§i">
             <DenetciDuzenleForm id={id} />
           </ParentCard>
         </Grid>

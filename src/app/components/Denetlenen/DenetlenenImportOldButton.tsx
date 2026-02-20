@@ -14,7 +14,7 @@ const DenetlenenImportOldButton = () => {
     <>
       <Stack spacing={1} direction="row" justifyContent="start" marginBottom={4}>
         <Button color="secondary" onClick={() => handleRouteClick()} startIcon={<IconDatabase width={18} />}>
-          Müşteri Taşı
+          MÃ¼ÅŸteri TaÅŸÄ±
         </Button>
       </Stack>
     </>

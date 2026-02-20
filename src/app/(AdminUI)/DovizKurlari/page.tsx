@@ -14,11 +14,11 @@ import InfoAlertCart from "@/app/components/Alerts/InfoAlertCart";
 const BCrumb = [
   {
     to: "/Anasayfa",
-    title: "Admin Menü",
+    title: "Admin MenÃ¼",
   },
   {
     to: "/DovizKurlari",
-    title: "Döviz Kurları",
+    title: "DÃ¶viz KurlarÄ±",
   },
 ];
 
@@ -36,7 +36,7 @@ const Page = () => {
       const result = await createDovizKurlari(user.token || "");
       if (result) {
         setVerileriCekTiklandimi(false);
-        enqueueSnackbar("Döviz Kurları Çekildi", {
+        enqueueSnackbar("DÃ¶viz KurlarÄ± Ã‡ekildi", {
           variant: "success",
           autoHideDuration: 5000,
           style: {
@@ -47,7 +47,7 @@ const Page = () => {
           },
         });
       } else {
-        enqueueSnackbar("Döviz Kurları Çekilemedi", {
+        enqueueSnackbar("DÃ¶viz KurlarÄ± Ã‡ekilemedi", {
           variant: "error",
           autoHideDuration: 5000,
           style: {
@@ -60,7 +60,7 @@ const Page = () => {
         });
       }
     } catch (error) {
-      console.error("Bir hata oluştu:", error);
+      console.error("Bir hata oluÅŸtu:", error);
     }
   };
 
@@ -73,8 +73,8 @@ const Page = () => {
   }, [verileriCekTiklandimi]);
 
   return (
-    <PageContainer title="Döviz Kurları" description="this is Döviz Kurları">
-      <Breadcrumb title="Döviz Kurları" items={BCrumb} />
+    <PageContainer title="DÃ¶viz KurlarÄ±" description="this is DÃ¶viz KurlarÄ±">
+      <Breadcrumb title="DÃ¶viz KurlarÄ±" items={BCrumb} />
       <Grid container>
         <Grid
           size={{
@@ -100,7 +100,7 @@ const Page = () => {
               handleVerileriCek();
             }}
           >
-            Verileri Çek
+            Verileri Ã‡ek
           </Button>
         </Grid>
         <Grid size={{ xs: 12 }} marginBottom={3}>
@@ -125,3 +125,4 @@ const Page = () => {
 };
 
 export default Page;
+

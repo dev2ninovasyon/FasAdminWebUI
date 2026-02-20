@@ -1,0 +1,59 @@
+"use client";
+
+import React, { useEffect, useState } from "react";
+import { useSearchParams, useRouter } from "next/navigation";
+import {
+    Box,
+    Button,
+    Paper,
+    Table,
+    TableBody,
+    TableCell,
+    TableContainer,
+    TableHead,
+    TableRow,
+    Typography,
+    Stepper,
+    Step,
+    StepLabel,
+    Grid,
+    Breadcrumbs,
+    Link,
+    IconButton,
+    useTheme,
+    Menu,
+    MenuItem,
+    ListItemIcon,
+    ListItemText,
+    Card,
+    CardContent,
+    Divider,
+    Stack
+} from "@mui/material";
+import { LoadingButton } from "@mui/lab";
+import ArrowBackIcon from "@mui/icons-material/ArrowBack";
+import { IconLayoutGrid, IconFileTypeDocx, IconFileTypePdf, IconArchive, IconEye, IconDownload, IconChevronDown } from "@tabler/icons-react";
+import Breadcrumb from "@/app/(AdminUI)/components/Layout/Shared/Breadcrumb/Breadcrumb";
+import { useSelector } from "@/store/hooks";
+import { AppState } from "@/store/store";
+import { getMaddiDogrulama, getUygulananDenetimProsedurleri } from "@/api/MaddiDogrulama/MaddiDogrulama";
+import {
+    getMutabakatByDipnot,
+    getOnemlilikByDipnot,
+    getOrneklemByDipnot,
+} from "@/api/DenetimKanitlari/DenetimKanitlari";
+import { getCalismaKagidiVerileriByDenetciDenetlenenYil, getCalismaKagidiVerileriByDenetciDenetlenenYilDipnotNo } from "@/api/CalismaKagitlari/CalismaKagitlari";
+import PrintIcon from "@mui/icons-material/Print";
+import ReportHeader from "./header";
+import ReportFooter from "./footer";
+import FormOnayBolumu from "@/app/(AdminUI)/components/CalismaKagitlari/Cards/FormOnayBolumu";
+import { getFormHazirlayanOnaylayanByDenetciDenetlenenYilFormKodu } from "@/api/CalismaKagitlari/CalismaKagitlari";
+import { getKullaniciById, getKullaniciByDenetlenenYilRol } from "@/api/KullaniciIslemleri/KullaniciIslemleri";
+import { getHareketsizTicariAlacaklarByDenetlenen } from "@/api/CalismaKagitlari/HareketsizTicariAlacaklar"
+
+import axios from "axios";
+import { enqueueSnackbar } from "notistack";
+import jsPDF from "jspdf";
+import Script from "next/script";
+import { base64FontBold, base64FontRegular } from "@/app/(AdminUI)/components/Rapor/BagimsizDenetciRaporu/Roboto";
+import { url } from "@/api/apiBase";

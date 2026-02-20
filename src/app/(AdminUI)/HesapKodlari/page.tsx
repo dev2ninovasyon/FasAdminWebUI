@@ -6,18 +6,18 @@ import HesapKodlari from "./HesapKodlari";
 const BCrumb = [
   {
     to: "/Anasayfa",
-    title: "Admin Menü",
+    title: "Admin MenÃ¼",
   },
   {
     to: "/HesapKodlari",
-    title: "Hesap Kodları",
+    title: "Hesap KodlarÄ±",
   },
 ];
 
 const Page = () => {
   return (
-    <PageContainer title="Hesap Kodları" description="this is Hesap Kodları">
-      <Breadcrumb title="Hesap Kodları" items={BCrumb} />
+    <PageContainer title="Hesap KodlarÄ±" description="this is Hesap KodlarÄ±">
+      <Breadcrumb title="Hesap KodlarÄ±" items={BCrumb} />
       <Grid container spacing={3}>
         <Grid size={{ xs: 12 }}>
           <HesapKodlari />
@@ -28,3 +28,4 @@ const Page = () => {
 };
 
 export default Page;
+

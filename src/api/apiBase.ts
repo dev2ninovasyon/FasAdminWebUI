@@ -1,11 +1,42 @@
 export const url = "https://betaapi.fasmart.app/api";
 //export const url = "https://localhost:5001/api";
 
+// UTF-8 text decoder cache
+const textDecoder = new TextDecoder("utf-8");
+
+/**
+ * Recursively decode UTF-8 encoded strings in objects
+ */
+function decodeUTF8Deep(obj: any): any {
+    if (typeof obj === "string") {
+        // Check if string appears to be UTF-8 encoded
+        if (/[\u00C3-\u00FF]/g.test(obj)) {
+            try {
+                return decodeURIComponent(escape(obj));
+            } catch {
+                return obj;
+            }
+        }
+        return obj;
+    } else if (Array.isArray(obj)) {
+        return obj.map(decodeUTF8Deep);
+    } else if (obj !== null && typeof obj === "object") {
+        const decoded: any = {};
+        for (const key in obj) {
+            if (Object.prototype.hasOwnProperty.call(obj, key)) {
+                decoded[key] = decodeUTF8Deep(obj[key]);
+            }
+        }
+        return decoded;
+    }
+    return obj;
+}
+
 export async function apiFetch(
     path: string,
-    options: RequestInit & { timeout?: number; ignoreCustomHeaders?: boolean; token?: string; includeCredentials?: boolean } = {}
+    options: RequestInit & { timeout?: number; ignoreCustomHeaders?: boolean; token?: string; includeCredentials?: boolean; suppressErrorLog?: boolean } = {}
 ) {
-    const { headers, timeout = 30000, ignoreCustomHeaders = false, token, includeCredentials = true, ...rest } = options;
+    const { headers, timeout = 30000, ignoreCustomHeaders = false, token, includeCredentials = true, suppressErrorLog = false, ...rest } = options;
 
     const clientUrl =
         typeof window !== "undefined"
@@ -13,8 +44,10 @@ export async function apiFetch(
             : "";
 
     const mergedHeaders: HeadersInit = {
-        "accept": "application/json",
-        "Content-Type": "application/json",
+        "accept": "application/json; charset=utf-8",
+        "Content-Type": "application/json; charset=utf-8",
+        "Accept-Charset": "utf-8",
+        "Accept-Language": "tr-TR,tr;q=0.9",
         ...(token ? { "Authorization": `Bearer ${token}` } : {}),
         "X-Client-Url": clientUrl,
         ...(headers || {}),
@@ -46,6 +79,13 @@ export async function apiFetch(
             credentials: includeCredentials ? 'include' : 'omit',
         });
 
+        // Wrap response to add UTF-8 decoding to json() method
+        const originalJson = response.json.bind(response);
+        (response as any).json = async function () {
+            const data = await originalJson();
+            return decodeUTF8Deep(data);
+        };
+
         const duration = Date.now() - requestStartTime;
         const logColor = response.ok ? '#10b981' : '#ef4444';
         const logIcon = response.ok ? '✅' : '⚠️';
@@ -58,18 +98,22 @@ export async function apiFetch(
     } catch (error: any) {
         if (error?.name === 'AbortError') {
             const isTimeout = controller.signal.reason === "timeout";
-            console.warn(
-                `🛑 [%cAPI Hata   %c] ${fullUrl} -> ${isTimeout ? "TIMED OUT" : "CANCELLED"}.`,
-                "color: #ef4444; font-weight: bold;",
-                "color: inherit;"
-            );
+            if (!suppressErrorLog) {
+                console.warn(
+                    `🛑 [%cAPI Hata   %c] ${fullUrl} -> ${isTimeout ? "TIMED OUT" : "CANCELLED"}.`,
+                    "color: #ef4444; font-weight: bold;",
+                    "color: inherit;"
+                );
+            }
         } else {
-            console.error(
-                `❌ [%cAPI Hata   %c] (${fullUrl}):`,
-                "color: #ef4444; font-weight: bold;",
-                "color: inherit;",
-                error
-            );
+            if (!suppressErrorLog) {
+                console.error(
+                    `❌ [%cAPI Hata   %c] (${fullUrl}):`,
+                    "color: #ef4444; font-weight: bold;",
+                    "color: inherit;",
+                    error
+                );
+            }
         }
         throw error;
     } finally {

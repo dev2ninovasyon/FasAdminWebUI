@@ -87,7 +87,7 @@ const DosyaTable: React.FC<Props> = ({
       }));
       setRows(newRows);
     } catch (error) {
-      console.error("Bir hata oluştu:", error);
+      console.error("Bir hata oluÅŸtu:", error);
     }
   };
 
@@ -169,7 +169,7 @@ const DosyaTable: React.FC<Props> = ({
         console.error("Dosya Bilgileri silinemedi");
       }
     } catch (error) {
-      console.error("Bir hata oluştu:", error);
+      console.error("Bir hata oluÅŸtu:", error);
     }
   };
 
@@ -177,7 +177,7 @@ const DosyaTable: React.FC<Props> = ({
     <>
       <Stack direction="row" alignItems="center">
         <Box padding={"16px"} width={"100%"}>
-          <Typography variant="h5">Yüklenmiş Dosya Bilgileri</Typography>
+          <Typography variant="h5">YÃ¼klenmiÅŸ Dosya Bilgileri</Typography>
         </Box>
 
         <TextField
@@ -213,7 +213,7 @@ const DosyaTable: React.FC<Props> = ({
                 />
               </TableCell>
               <TableCell>
-                <Typography variant="h5">Dosya Adı</Typography>
+                <Typography variant="h5">Dosya AdÄ±</Typography>
               </TableCell>
               <TableCell>
                 <Typography textAlign={"center"} variant="h5">
@@ -276,19 +276,19 @@ const DosyaTable: React.FC<Props> = ({
                       label={row.durum}
                       sx={{
                         backgroundColor:
-                          row.durum === "Tamamlandı"
+                          row.durum === "TamamlandÄ±"
                             ? (theme) => theme.palette.success.light
-                            : row.durum === "İşleniyor"
+                            : row.durum === "Ä°ÅŸleniyor"
                               ? (theme) => theme.palette.info.light
-                              : row.durum === "Sıraya Alındı."
+                              : row.durum === "SÄ±raya AlÄ±ndÄ±."
                                 ? (theme) => theme.palette.warning.light
                                 : (theme) => theme.palette.error.light,
                         color:
-                          row.durum === "Tamamlandı"
+                          row.durum === "TamamlandÄ±"
                             ? (theme) => theme.palette.success.main
-                            : row.durum === "İşleniyor"
+                            : row.durum === "Ä°ÅŸleniyor"
                               ? (theme) => theme.palette.info.main
-                              : row.durum === "Sıraya Alındı."
+                              : row.durum === "SÄ±raya AlÄ±ndÄ±."
                                 ? (theme) => theme.palette.warning.main
                                 : (theme) => theme.palette.error.main,
                       }}
@@ -320,7 +320,7 @@ const DosyaTable: React.FC<Props> = ({
             marginY: smDown ? "8px" : "12px",
           }}
         >
-          {selected.length} Kayıt Sil
+          {selected.length} KayÄ±t Sil
         </Button>
       )}
       <Table>
@@ -344,10 +344,10 @@ const DosyaTable: React.FC<Props> = ({
               onPageChange={handleChangePage}
               onRowsPerPageChange={handleChangeRowsPerPage}
               ActionsComponent={TablePaginationActions}
-              labelRowsPerPage="Sayfa başına satır sayısı:"
+              labelRowsPerPage="Sayfa baÅŸÄ±na satÄ±r sayÄ±sÄ±:"
               labelDisplayedRows={({ from, to, count }) =>
-                `${from}-${to} arası / ${count !== -1 ? count : `daha fazla`
-                } satır`
+                `${from}-${to} arasÄ± / ${count !== -1 ? count : `daha fazla`
+                } satÄ±r`
               }
               sx={{ mt: 0.5, mr: "2px", border: 0 }}
             />

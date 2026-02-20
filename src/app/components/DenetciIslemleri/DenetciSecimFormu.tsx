@@ -31,25 +31,25 @@ const DenetciSecimFormu = () => {
     useEffect(() => {
         const fetchDenetciler = async () => {
             try {
-                console.log("🔄 DenetciSecimFormu: Denetçiler yükleniyor...");
-                // ✅ Fetch from public DataTransfer endpoint (no token required)
+                console.log("ğŸ”„ DenetciSecimFormu: DenetÃ§iler yÃ¼kleniyor...");
+                // âœ… Fetch from public DataTransfer endpoint (no token required)
                 const data = await getOldDbDenetciler();
-                console.log("✅ DenetciSecimFormu: getOldDbDenetciler sonuç ->", data);
+                console.log("âœ… DenetciSecimFormu: getOldDbDenetciler sonuÃ§ ->", data);
                 
                 if (Array.isArray(data)) {
-                    console.log("📊 DenetciSecimFormu: Denetçi sayısı:", data.length);
+                    console.log("ğŸ“Š DenetciSecimFormu: DenetÃ§i sayÄ±sÄ±:", data.length);
                     setDenetciler(data);
                 } else {
-                    console.warn("⚠️ DenetciSecimFormu: Beklenmeyen veri formatı (array değil):", data);
+                    console.warn("âš ï¸ DenetciSecimFormu: Beklenmeyen veri formatÄ± (array deÄŸil):", data);
                     setDenetciler([]);
                 }
             } catch (err) {
-                console.error("❌ DenetciSecimFormu: fetchDenetciler hata:", err);
+                console.error("âŒ DenetciSecimFormu: fetchDenetciler hata:", err);
                 setDenetciler([]);
             }
         };
-        // ✅ Public endpoint - fetch on component mount
-        console.log("🚀 DenetciSecimFormu: Component mounted, fetching data...");
+        // âœ… Public endpoint - fetch on component mount
+        console.log("ğŸš€ DenetciSecimFormu: Component mounted, fetching data...");
         fetchDenetciler();
     }, []);
 
@@ -81,7 +81,7 @@ const DenetciSecimFormu = () => {
                     renderInput={(params) => (
                         <TextField
                             {...params}
-                            label="Denetçi Seçiniz"
+                            label="DenetÃ§i SeÃ§iniz"
                             variant="outlined"
                             fullWidth
                         />
@@ -91,7 +91,7 @@ const DenetciSecimFormu = () => {
 
             <Grid size={{ xs: 12, sm: 3 }} display="flex" alignItems="center">
                 <CustomFormLabel htmlFor="firmaAdi" sx={{ mt: 0, mb: { xs: "-10px", sm: 0 } }}>
-                    Firma Adı
+                    Firma AdÄ±
                 </CustomFormLabel>
             </Grid>
             <Grid size={{ xs: 12, sm: 9 }}>
@@ -104,7 +104,7 @@ const DenetciSecimFormu = () => {
 
             <Grid size={{ xs: 12, sm: 3 }} display="flex" alignItems="center">
                 <CustomFormLabel htmlFor="firmaUnvani" sx={{ mt: 0, mb: { xs: "-10px", sm: 0 } }}>
-                    Firma Ünvanı
+                    Firma ÃœnvanÄ±
                 </CustomFormLabel>
             </Grid>
             <Grid size={{ xs: 12, sm: 9 }}>
@@ -130,7 +130,7 @@ const DenetciSecimFormu = () => {
 
             <Grid size={{ xs: 12, sm: 3 }} display="flex" alignItems="center">
                 <CustomFormLabel htmlFor="il" sx={{ mt: 0, mb: { xs: "-10px", sm: 0 } }}>
-                    İl
+                    Ä°l
                 </CustomFormLabel>
             </Grid>
             <Grid size={{ xs: 12, sm: 9 }}>
@@ -195,7 +195,7 @@ const DenetciSecimFormu = () => {
 
             <Grid size={{ xs: 12, sm: 3 }} display="flex" alignItems="center">
                 <CustomFormLabel htmlFor="vergiNo" sx={{ mt: 0, mb: { xs: "-10px", sm: 0 } }}>
-                    Vergi Numarası
+                    Vergi NumarasÄ±
                 </CustomFormLabel>
             </Grid>
             <Grid size={{ xs: 12, sm: 9 }}>
@@ -221,7 +221,7 @@ const DenetciSecimFormu = () => {
 
             <Grid size={{ xs: 12, sm: 3 }} display="flex" alignItems="center">
                 <CustomFormLabel htmlFor="ticaretSicilNo" sx={{ mt: 0, mb: { xs: "-10px", sm: 0 } }}>
-                    Ticaret Sicil Numarası
+                    Ticaret Sicil NumarasÄ±
                 </CustomFormLabel>
             </Grid>
             <Grid size={{ xs: 12, sm: 9 }}>
@@ -239,7 +239,7 @@ const DenetciSecimFormu = () => {
                     color="primary"
                     onClick={async () => {
                         if (!selectedDenetci) {
-                            console.warn("❗ Kaydet: Lütfen kaydetmek için önce bir denetçi seçin.");
+                            console.warn("â— Kaydet: LÃ¼tfen kaydetmek iÃ§in Ã¶nce bir denetÃ§i seÃ§in.");
                             return;
                         }
                         try {
@@ -269,14 +269,14 @@ const DenetciSecimFormu = () => {
                             const token = user?.token || "";
                             const ok = await importDenetci(token, payload);
                             if (ok) {
-                                console.log("✅ Kaydet: Denetçi başarıyla yeni DB'ye eklendi (aynı Id ile)");
+                                console.log("âœ… Kaydet: DenetÃ§i baÅŸarÄ±yla yeni DB'ye eklendi (aynÄ± Id ile)");
                                 // Optionally navigate back or show notification
                                 router.push("/DenetciFirmaIslemleri");
                             } else {
-                                console.error("❌ Kaydet: Denetçi içe aktarma başarısız oldu.");
+                                console.error("âŒ Kaydet: DenetÃ§i iÃ§e aktarma baÅŸarÄ±sÄ±z oldu.");
                             }
                         } catch (err) {
-                            console.error("❌ Kaydet: Hata oluştu:", err);
+                            console.error("âŒ Kaydet: Hata oluÅŸtu:", err);
                         } finally {
                             setIsSaving(false);
                         }

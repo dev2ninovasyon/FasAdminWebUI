@@ -77,13 +77,13 @@ const Page = () => {
 
   return (
     <TemaAyarlariLayout>
-      <PageContainer title="Tema Ayarları" description="this is Tema Ayarları">
+      <PageContainer title="Tema AyarlarÄ±" description="this is Tema AyarlarÄ±">
         <Box p={3}>
           {/* ------------------------------------------- */}
           {/* ------------ Dark light theme setting ------------- */}
           {/* ------------------------------------------- */}
           <Typography variant="h5" gutterBottom>
-            Tema Seçenekleri
+            Tema SeÃ§enekleri
           </Typography>
           <Stack direction={"row"} gap={2} my={2}>
             <StyledBox
@@ -96,7 +96,7 @@ const Page = () => {
                   customizer.activeMode === "light" ? "primary" : "inherit"
                 }
               />
-              Açık Mod
+              AÃ§Ä±k Mod
             </StyledBox>
             <StyledBox
               onClick={() => dispatch(setDarkMode("dark"))}
@@ -153,3 +153,4 @@ const Page = () => {
 };
 
 export default Page;
+
