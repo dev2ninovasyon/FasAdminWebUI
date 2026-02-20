@@ -18,7 +18,7 @@ import {
 import { Stack } from "@mui/system";
 import { useSelector } from "@/store/hooks";
 import { AppState } from "@/store/store";
-import TablePaginationActions from "@/app/components/shared/TablePaginationActions";
+import TablePaginationActions from "@/app/components/Shared/TablePaginationActions";
 import { ConfirmPopUpComponent } from "@/app/(AdminUI)/components/CalismaKagitlari/ConfirmPopUp";
 import {
   deleteMizanBilgisiMultiple,
