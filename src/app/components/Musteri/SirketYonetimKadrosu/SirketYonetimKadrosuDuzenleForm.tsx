@@ -32,10 +32,10 @@ const SirketYonetimKadrosuDuzenleForm = () => {
             if (result) {
                 router.push("/StandartCalismaKagitlari/Musteri/SirketYonetimKadrosu");
             } else {
-                console.log("Åirket YÃ¶netim Kadrosu dÃ¼zenleme baÅŸarÄ±sÄ±z");
+                console.log("Åirket Yönetim Kadrosu düzenleme başarısız");
             }
         } catch (error) {
-            console.log("Bir hata oluÅŸtu:", error);
+            console.log("Bir hata oluştu:", error);
         }
     };
 
@@ -47,7 +47,7 @@ const SirketYonetimKadrosuDuzenleForm = () => {
                 setUnvani(sirketYonetimKadrosuVerileri.uyeUnvani);
             }
         } catch (error) {
-            console.log("Bir hata oluÅŸtu:", error);
+            console.log("Bir hata oluştu:", error);
         }
     };
 
@@ -69,7 +69,7 @@ const SirketYonetimKadrosuDuzenleForm = () => {
                         htmlFor="uyeAdiSoyadi"
                         sx={{ mt: 0, mb: { xs: "-10px", sm: 0 } }}
                     >
-                        Ãœye AdÄ± SoyadÄ±
+                        Üye Adı Soyadı
                     </CustomFormLabel>
                 </Grid>
                 <Grid
@@ -95,7 +95,7 @@ const SirketYonetimKadrosuDuzenleForm = () => {
                         htmlFor="uyeUnvani"
                         sx={{ mt: 0, mb: { xs: "-10px", sm: 0 } }}
                     >
-                        Ãœye ÃœnvanÄ±
+                        Üye Ünvanı
                     </CustomFormLabel>
                 </Grid>
                 <Grid
@@ -125,7 +125,7 @@ const SirketYonetimKadrosuDuzenleForm = () => {
                         color="primary"
                         onClick={handleButtonClick}
                     >
-                        Åirket YÃ¶netim Kadrosu DÃ¼zenle
+                        Åirket Yönetim Kadrosu Düzenle
                     </Button>
                 </Grid>
             </Grid>

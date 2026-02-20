@@ -36,10 +36,10 @@ const HissedarDuzenleForm = () => {
             if (result) {
                 router.push("/StandartCalismaKagitlari/Musteri/Hissedarlar");
             } else {
-                console.log("Hissedar dÃ¼zenleme baÅŸarÄ±sÄ±z");
+                console.log("Hissedar düzenleme başarısız");
             }
         } catch (error) {
-            console.log("Bir hata oluÅŸtu:", error);
+            console.log("Bir hata oluştu:", error);
         }
     };
 
@@ -53,7 +53,7 @@ const HissedarDuzenleForm = () => {
                 setHisseOrani(hissedarlarVerileri.hisseOrani);
             }
         } catch (error) {
-            console.log("Bir hata oluÅŸtu:", error);
+            console.log("Bir hata oluştu:", error);
         }
     };
 
@@ -75,7 +75,7 @@ const HissedarDuzenleForm = () => {
                         htmlFor="hissedarAdi"
                         sx={{ mt: 0, mb: { xs: "-10px", sm: 0 } }}
                     >
-                        Hissedar AdÄ±
+                        Hissedar Adı
                     </CustomFormLabel>
                 </Grid>
                 <Grid
@@ -101,7 +101,7 @@ const HissedarDuzenleForm = () => {
                         htmlFor="hisseTutari"
                         sx={{ mt: 0, mb: { xs: "-10px", sm: 0 } }}
                     >
-                        Hisse TutarÄ±
+                        Hisse Tutarı
                     </CustomFormLabel>
                 </Grid>
                 <Grid
@@ -128,7 +128,7 @@ const HissedarDuzenleForm = () => {
                         htmlFor="paySayisi"
                         sx={{ mt: 0, mb: { xs: "-10px", sm: 0 } }}
                     >
-                        Pay SayÄ±sÄ±
+                        Pay Sayısı
                     </CustomFormLabel>
                 </Grid>
                 <Grid
@@ -155,7 +155,7 @@ const HissedarDuzenleForm = () => {
                         htmlFor="hisseOrani"
                         sx={{ mt: 0, mb: { xs: "-10px", sm: 0 } }}
                     >
-                        Hisse OranÄ±
+                        Hisse Oranı
                     </CustomFormLabel>
                 </Grid>
                 <Grid
@@ -186,7 +186,7 @@ const HissedarDuzenleForm = () => {
                         color="primary"
                         onClick={handleButtonClick}
                     >
-                        Hissedar DÃ¼zenle
+                        Hissedar Düzenle
                     </Button>
                 </Grid>
             </Grid>

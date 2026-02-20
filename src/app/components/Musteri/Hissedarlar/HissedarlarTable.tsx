@@ -72,7 +72,7 @@ const HissedarlarTable: React.FC<Props> = ({
                 console.log("Hissedar silinemedi");
             }
         } catch (error) {
-            console.log("Bir hata oluÅŸtu:", error);
+            console.log("Bir hata oluştu:", error);
         }
     };
 
@@ -92,7 +92,7 @@ const HissedarlarTable: React.FC<Props> = ({
                 setRows(newRows);
             }
         } catch (error) {
-            console.log("Bir hata oluÅŸtu:", error);
+            console.log("Bir hata oluştu:", error);
         }
     };
 
@@ -114,21 +114,21 @@ const HissedarlarTable: React.FC<Props> = ({
                     <TableHead>
                         <TableRow>
                             <TableCell>
-                                <Typography variant="h6">Hissedar AdÄ±</Typography>
+                                <Typography variant="h6">Hissedar Adı</Typography>
                             </TableCell>
                             <TableCell>
                                 <Typography textAlign="center" variant="h6">
-                                    Hisste TutarÄ±
+                                    Hisste Tutarı
                                 </Typography>
                             </TableCell>
                             <TableCell>
                                 <Typography textAlign="center" variant="h6">
-                                    Pay SayÄ±sÄ±
+                                    Pay Sayısı
                                 </Typography>
                             </TableCell>
                             <TableCell>
                                 <Typography textAlign="center" variant="h6">
-                                    Hisse OranÄ± (%)
+                                    Hisse Oranı (%)
                                 </Typography>
                             </TableCell>
                             <TableCell></TableCell>
@@ -193,7 +193,7 @@ const HissedarlarTable: React.FC<Props> = ({
                                             <ListItemIcon>
                                                 <IconEdit width={18} />
                                             </ListItemIcon>
-                                            DÃ¼zenle
+                                            Düzenle
                                         </MenuItem>
                                         <MenuItem onClick={() => handleDelete()}>
                                             <ListItemIcon>

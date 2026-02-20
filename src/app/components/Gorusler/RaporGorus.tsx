@@ -59,7 +59,7 @@ const RaporGorus: React.FC<RaporDipnotProps> = ({ denetimTuru }) => {
 
       handleClosePopUp();
     } catch (error) {
-      console.error("Bir hata oluÅŸtu:", error);
+      console.error("Bir hata oluştu:", error);
     }
   };
 
@@ -83,7 +83,7 @@ const RaporGorus: React.FC<RaporDipnotProps> = ({ denetimTuru }) => {
 
       setVeriler(rowsAll);
     } catch (error) {
-      console.error("Bir hata oluÅŸtu:", error);
+      console.error("Bir hata oluştu:", error);
     }
   };
 
@@ -211,7 +211,7 @@ const PopUpComponent: React.FC<PopUpProps> = ({
               onClick={handleClose}
               sx={{ width: "20%" }}
             >
-              VazgeÃ§
+              Vazgeç
             </Button>
           </DialogActions>
         </>

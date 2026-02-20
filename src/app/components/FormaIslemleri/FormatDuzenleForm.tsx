@@ -30,10 +30,10 @@ const FormatDuzenleForm = ({ id }: { id?: string }) => {
       if (result) {
         router.push("/Formatlar");
       } else {
-        console.error("Format dÃ¼zenleme baÅŸarÄ±sÄ±z");
+        console.error("Format düzenleme başarısız");
       }
     } catch (error) {
-      console.error("Bir hata oluÅŸtu:", error);
+      console.error("Bir hata oluştu:", error);
     }
   };
 
@@ -43,7 +43,7 @@ const FormatDuzenleForm = ({ id }: { id?: string }) => {
       setAdi(formatVerileri.adi);
       setSatirSayisi(formatVerileri.satirSayisi);
     } catch (error) {
-      console.error("Bir hata oluÅŸtu:", error);
+      console.error("Bir hata oluştu:", error);
     }
   };
 
@@ -58,7 +58,7 @@ const FormatDuzenleForm = ({ id }: { id?: string }) => {
           htmlFor="formatAdi"
           sx={{ mt: 0, mb: { xs: "-10px", sm: 0 } }}
         >
-          Format AdÄ±
+          Format Adı
         </CustomFormLabel>
       </Grid>
       <Grid size={{ xs: 12, sm: 9 }}>
@@ -74,7 +74,7 @@ const FormatDuzenleForm = ({ id }: { id?: string }) => {
           htmlFor="satirSayisi"
           sx={{ mt: 0, mb: { xs: "-10px", sm: 0 } }}
         >
-          SatÄ±r SayÄ±sÄ±
+          Satır Sayısı
         </CustomFormLabel>
       </Grid>
       <Grid size={{ xs: 12, sm: 9 }}>
@@ -89,7 +89,7 @@ const FormatDuzenleForm = ({ id }: { id?: string }) => {
       <Grid size={{ xs: 12, sm: 3 }}></Grid>
       <Grid size={{ xs: 12, sm: 9 }}>
         <Button variant="contained" color="primary" onClick={handleButtonClick}>
-          Format DÃ¼zenle
+          Format Düzenle
         </Button>
       </Grid>
     </Grid>

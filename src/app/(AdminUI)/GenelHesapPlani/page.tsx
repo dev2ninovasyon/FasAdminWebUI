@@ -24,11 +24,11 @@ import GenelHesapPlani from "@/app/components/GenelHesapPlani/GenelHesapPlani";
 const BCrumb = [
   {
     to: "/Anasayfa",
-    title: "Admin MenÃ¼",
+    title: "Admin Menü",
   },
   {
     to: "/GenelHesapPlani",
-    title: "Genel Hesap PlanÄ±",
+    title: "Genel Hesap Planı",
   },
 ];
 
@@ -89,7 +89,7 @@ const Page = () => {
           setDosyaYuklendiMi(true);
         }
       } catch (error: any) {
-        console.error("Dosya yÃ¼klenirken hata oluÅŸtu:", error);
+        console.error("Dosya yüklenirken hata oluştu:", error);
       } finally {
         setUploading(false);
       }
@@ -105,10 +105,10 @@ const Page = () => {
   });
   return (
     <PageContainer
-      title="Genel Hesap PlanÄ±"
-      description="this is Genel Hesap PlanÄ±"
+      title="Genel Hesap Planı"
+      description="this is Genel Hesap Planı"
     >
-      <Breadcrumb title="Genel Hesap PlanÄ±" items={BCrumb} />
+      <Breadcrumb title="Genel Hesap Planı" items={BCrumb} />
       <Grid container spacing={3}>
         <Grid size={{ xs: 12, lg: 5 }}>
           <Box
@@ -124,7 +124,7 @@ const Page = () => {
               justifyContent={"space-between"}
             >
               <Typography variant="h5" padding={"16px"}>
-                Dosya YÃ¼kle
+                Dosya Yükle
               </Typography>
               <CustomSelect
                 labelId="dosya"
@@ -138,8 +138,8 @@ const Page = () => {
                   marginRight: "16px",
                 }}
               >
-                <MenuItem value={"Bobi"}>Bobi Hesap PlanÄ±</MenuItem>
-                <MenuItem value={"Tfrs"}>Tfrs Hesap PlanÄ±</MenuItem>
+                <MenuItem value={"Bobi"}>Bobi Hesap Planı</MenuItem>
+                <MenuItem value={"Tfrs"}>Tfrs Hesap Planı</MenuItem>
               </CustomSelect>
             </Stack>
             <Box
@@ -164,7 +164,7 @@ const Page = () => {
                   justifyContent="center"
                 >
                   <Grid size={{ sm: 12, lg: 12 }} style={{ textAlign: "center" }}>
-                    <Typography>DosyalarÄ± buraya bÄ±rakÄ±n...</Typography>
+                    <Typography>Dosyaları buraya bırakın...</Typography>
                   </Grid>
                 </Grid>
               ) : (
@@ -197,10 +197,10 @@ const Page = () => {
                     ) : (
                       <>
                         <Typography variant="h6" mb={3}>
-                          DosyayÄ± buraya sÃ¼rÃ¼kleyin veya tÄ±klayÄ±p seÃ§in.
+                          Dosyayı buraya sürükleyin veya tıklayıp seçin.
                         </Typography>
                         <Typography variant="body2">
-                          Sadece XLSX dosyasÄ± yÃ¼kleyebilirsiniz.
+                          Sadece XLSX dosyası yükleyebilirsiniz.
                         </Typography>
                       </>
                     )}

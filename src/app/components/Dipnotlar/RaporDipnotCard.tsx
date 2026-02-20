@@ -13,7 +13,7 @@ const RaporDipnotCard: React.FC<CardProps> = ({ dipnotKodu, title }) => {
     <Card
       sx={{
         bgcolor: "primary.light",
-        transition: "box-shadow 0.3s ease", // GeÃ§iÅŸ efekti iÃ§in
+        transition: "box-shadow 0.3s ease", // Geçiş efekti için
         "&:hover": {
           boxShadow:
             "0 1px 1px 1px rgba(80, 80, 80, 0.1),0 2px 2px 2px rgba(80, 80, 80, 0.1),0 4px 4px 4px rgba(80, 80, 80, 0.1),0 8px 8px 4px rgba(80, 80, 80, 0.1),0 16px 16px 4px rgba(80, 80, 80, 0.1)",

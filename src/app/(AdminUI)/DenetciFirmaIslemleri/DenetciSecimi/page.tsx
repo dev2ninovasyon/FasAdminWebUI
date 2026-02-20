@@ -8,28 +8,28 @@ import DenetciSecimFormu from "@/app/components/DenetciIslemleri/DenetciSecimFor
 const BCrumb = [
     {
         to: "/Anasayfa",
-        title: "Admin MenÃ¼",
+        title: "Admin Menü",
     },
     {
         to: "/DenetciFirmaIslemleri",
-        title: "DenetÃ§i Firma Ä°ÅŸlemleri",
+        title: "Denetçi Firma İşlemleri",
     },
     {
         to: "/DenetciFirmaIslemleri/DenetciSecimi",
-        title: "DenetÃ§i SeÃ§imi",
+        title: "Denetçi Seçimi",
     },
 ];
 
 const Page = () => {
     return (
         <PageContainer
-            title="DenetÃ§i SeÃ§imi"
-            description="DenetÃ§i SeÃ§im SayfasÄ±"
+            title="Denetçi Seçimi"
+            description="Denetçi Seçim Sayfası"
         >
-            <Breadcrumb title="DenetÃ§i SeÃ§imi" items={BCrumb} />
+            <Breadcrumb title="Denetçi Seçimi" items={BCrumb} />
             <Grid container spacing={3}>
                 <Grid size={{ xs: 12 }}>
-                    <ParentCard title="DenetÃ§i SeÃ§imi">
+                    <ParentCard title="Denetçi Seçimi">
                         <DenetciSecimFormu />
                     </ParentCard>
                 </Grid>

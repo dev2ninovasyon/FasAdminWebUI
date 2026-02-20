@@ -9,11 +9,11 @@ import DosyaDuzenleForm from "@/app/components/DenetimDosyaIslemleri/DosyaDuzenl
 const BCrumb = [
   {
     to: "/Anasayfa",
-    title: "Admin MenÃ¼",
+    title: "Admin Menü",
   },
   {
     to: "/DenetimDosyaBelgeleri",
-    title: "Dosya Firma Ä°ÅŸlemleri",
+    title: "Dosya Firma İşlemleri",
   },
 ];
 
@@ -24,8 +24,8 @@ const Page = (props: { params: Promise<{ id: string }> }) => {
   const id = params.id;
 
   return (
-    <PageContainer title="Dosya DÃ¼zenle" description="this is Dosya DÃ¼zenle">
-      <Breadcrumb title="Dosya DÃ¼zenle" items={BCrumb} />
+    <PageContainer title="Dosya Düzenle" description="this is Dosya Düzenle">
+      <Breadcrumb title="Dosya Düzenle" items={BCrumb} />
       <Grid container spacing={3}>
         <Grid size={{ xs: 12 }}>
           <ParentCard title="Dosya">

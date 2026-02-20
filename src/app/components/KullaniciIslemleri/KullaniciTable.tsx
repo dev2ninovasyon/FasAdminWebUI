@@ -87,7 +87,7 @@ const KullaniciTable = ({ denetciId }: Props) => {
                                 <TableRow>
                                     <TableCell colSpan={6} align="center">
                                         <Typography variant="subtitle1" color="textSecondary">
-                                            {denetciId ? "KullanÄ±cÄ± bulunamadÄ±." : "LÃ¼tfen bir firma seÃ§iniz."}
+                                            {denetciId ? "Kullanıcı bulunamadı." : "Lütfen bir firma seçiniz."}
                                         </Typography>
                                     </TableCell>
                                 </TableRow>
@@ -116,10 +116,10 @@ const KullaniciTable = ({ denetciId }: Props) => {
                                             />
                                         </TableCell>
                                         <TableCell align="right">
-                                            <IconButton onClick={() => handlePasswordChange(row)} title="Åifre DeÄŸiÅŸtir">
+                                            <IconButton onClick={() => handlePasswordChange(row)} title="Åifre Değiştir">
                                                 <IconLock width={18} />
                                             </IconButton>
-                                            <IconButton onClick={() => handleEdit(row)} title="DÃ¼zenle">
+                                            <IconButton onClick={() => handleEdit(row)} title="Düzenle">
                                                 <IconEdit width={18} />
                                             </IconButton>
                                         </TableCell>

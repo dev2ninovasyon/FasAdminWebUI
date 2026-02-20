@@ -87,7 +87,7 @@ const DenetimDosyaTable = () => {
         console.error("Denetci silinemedi");
       }
     } catch (error) {
-      console.error("Bir hata oluÅŸtu:", error);
+      console.error("Bir hata oluştu:", error);
     }
   };
 */
@@ -107,7 +107,7 @@ const DenetimDosyaTable = () => {
       }));
       setRows(newRows);
     } catch (error) {
-      console.error("Bir hata oluÅŸtu:", error);
+      console.error("Bir hata oluştu:", error);
     }
   };
 
@@ -145,12 +145,12 @@ const DenetimDosyaTable = () => {
             <TableRow>
               <TableCell>
                 <Typography textAlign="left" variant="h6">
-                  Belge AdÄ±
+                  Belge Adı
                 </Typography>
               </TableCell>
               <TableCell>
                 <Typography textAlign="center" variant="h6">
-                  Ä°lgili BDS
+                  İlgili BDS
                 </Typography>
               </TableCell>
               <TableCell>
@@ -165,7 +165,7 @@ const DenetimDosyaTable = () => {
               </TableCell>
               <TableCell>
                 <Typography textAlign="center" variant="h6">
-                  ArÅŸiv KlasÃ¶r AdÄ±
+                  Arşiv Klasör Adı
                 </Typography>
               </TableCell>
               <TableCell>
@@ -264,7 +264,7 @@ const DenetimDosyaTable = () => {
                         <ListItemIcon>
                           <IconEdit width={18} />
                         </ListItemIcon>
-                        DÃ¼zenle
+                        Düzenle
                       </MenuItem>
                       <MenuItem>
                         <ListItemIcon>

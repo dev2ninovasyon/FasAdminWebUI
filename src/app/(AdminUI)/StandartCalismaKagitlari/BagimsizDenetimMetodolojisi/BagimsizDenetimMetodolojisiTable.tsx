@@ -77,7 +77,7 @@ const BagimsizDenetimMetodolojisiTable = () => {
     const [dialogTitle, setDialogTitle] = useState("");
     const [downloadingId, setDownloadingId] = useState<number | null>(null);
 
-    // AÃ§ilir/kapanir state: kapali olan parent id'leri
+    // Açilir/kapanir state: kapali olan parent id'leri
     const [collapsedIds, setCollapsedIds] = useState<Set<number>>(new Set());
 
     function normalizeString(str: string): string {
@@ -105,7 +105,7 @@ const BagimsizDenetimMetodolojisiTable = () => {
         return normalized.toLowerCase();
     }
 
-    // AÃ§ilir/kapanir toggle
+    // Açilir/kapanir toggle
     const toggleCollapse = (id: number) => {
         setCollapsedIds((prev) => {
             const next = new Set(prev);
@@ -118,7 +118,7 @@ const BagimsizDenetimMetodolojisiTable = () => {
         });
     };
 
-    // recursive sekilde children'lari dÃ¼z liste haline getirelim
+    // recursive sekilde children'lari düz liste haline getirelim
     // collapsedIds'deki parent'larin children'larini atla
     const flattenData = (
         data: Veri[],
@@ -142,7 +142,7 @@ const BagimsizDenetimMetodolojisiTable = () => {
         });
     };
 
-    // TÃ¼m formKodu'lari topla (recursive)
+    // Tüm formKodu'lari topla (recursive)
     const collectFormKodlari = useCallback((data: Veri[]): string[] => {
         const kodlar: string[] = [];
         const traverse = (items: Veri[]) => {
@@ -236,7 +236,7 @@ const BagimsizDenetimMetodolojisiTable = () => {
             document.body.removeChild(link);
             window.URL.revokeObjectURL(url);
         } catch (error) {
-            console.log("Ä°ndirme hatasi:", error);
+            console.log("İndirme hatasi:", error);
         } finally {
             setDownloadingId(null);
         }
@@ -259,7 +259,7 @@ const BagimsizDenetimMetodolojisiTable = () => {
                     variant={denetimTuru === "Bobi" ? "contained" : "outlined"}
                     onClick={() => setDenetimTuru("Bobi")}
                 >
-                    BOBÄ°
+                    BOBİ
                 </Button>
             </Stack>
             <Stack direction="row" alignItems="center" marginBottom={2}>
@@ -324,7 +324,7 @@ const BagimsizDenetimMetodolojisiTable = () => {
                                 }}
                             >
                                 <Typography variant="subtitle2" fontWeight="700" textAlign="center">
-                                    ArÅŸiv
+                                    Arşiv
                                 </Typography>
                             </TableCell>
                             <TableCell
@@ -360,7 +360,7 @@ const BagimsizDenetimMetodolojisiTable = () => {
                                 >
                                     <CircularProgress size={40} thickness={4} />
                                     <Typography variant="body2" sx={{ mt: 2 }}>
-                                        Veriler yÃ¼kleniyor...
+                                        Veriler yükleniyor...
                                     </Typography>
                                 </TableCell>
                             </TableRow>
@@ -374,7 +374,7 @@ const BagimsizDenetimMetodolojisiTable = () => {
                                 const isCollapsible = (isParent || hasChildren) && !row.isForcedLeaf;
                                 const isCollapsed = collapsedIds.has(row.id);
 
-                                // Durum kontrolÃ¼
+                                // Durum kontrolü
                                 const ekBelgeler = row.code
                                     ? ekBelgeDurumMap[row.code] || []
                                     : [];
@@ -514,7 +514,7 @@ const BagimsizDenetimMetodolojisiTable = () => {
                                                     {durumLoading ? (
                                                         <CircularProgress size={16} />
                                                     ) : hasEkBelge ? (
-                                                        <Tooltip title="YÃ¼klenmis belgeleri gÃ¶rÃ¼ntÃ¼le">
+                                                        <Tooltip title="Yüklenmis belgeleri görüntüle">
                                                             <IconButton
                                                                 size="small"
                                                                 onClick={(e) => {
@@ -532,7 +532,7 @@ const BagimsizDenetimMetodolojisiTable = () => {
                                                             </IconButton>
                                                         </Tooltip>
                                                     ) : (
-                                                        <Tooltip title="Belge yÃ¼klenmemis">
+                                                        <Tooltip title="Belge yüklenmemis">
                                                             <IconButton
                                                                 size="small"
                                                                 disabled
@@ -572,7 +572,7 @@ const BagimsizDenetimMetodolojisiTable = () => {
                 </Table>
             </TableContainer>
 
-            {/* YÃ¼klenen Belgeler Dialog */}
+            {/* Yüklenen Belgeler Dialog */}
             <Dialog
                 open={dialogOpen}
                 onClose={() => setDialogOpen(false)}
@@ -580,7 +580,7 @@ const BagimsizDenetimMetodolojisiTable = () => {
                 fullWidth
             >
                 <DialogTitle>
-                    <Typography variant="h5">YÃ¼klenen Belgeler</Typography>
+                    <Typography variant="h5">Yüklenen Belgeler</Typography>
                     <Typography variant="body2" color="textSecondary">
                         {dialogTitle}
                     </Typography>
@@ -589,7 +589,7 @@ const BagimsizDenetimMetodolojisiTable = () => {
                     {dialogBelgeler.length === 0 ? (
                         <Box p={3}>
                             <Typography variant="body2" color="textSecondary">
-                                YÃ¼klenmis belge bulunamadi.
+                                Yüklenmis belge bulunamadi.
                             </Typography>
                         </Box>
                     ) : (
@@ -598,8 +598,8 @@ const BagimsizDenetimMetodolojisiTable = () => {
                                 <TableHead>
                                     <TableRow>
                                         <TableCell sx={{ fontWeight: 'bold' }}>Dosya Adi</TableCell>
-                                        <TableCell sx={{ fontWeight: 'bold' }} width={150}>YÃ¼kleme Tarihi</TableCell>
-                                        <TableCell sx={{ fontWeight: 'bold' }} width={80} align="center">Ä°slem</TableCell>
+                                        <TableCell sx={{ fontWeight: 'bold' }} width={150}>Yükleme Tarihi</TableCell>
+                                        <TableCell sx={{ fontWeight: 'bold' }} width={80} align="center">İslem</TableCell>
                                     </TableRow>
                                 </TableHead>
                                 <TableBody>
@@ -621,7 +621,7 @@ const BagimsizDenetimMetodolojisiTable = () => {
                                                 </Typography>
                                             </TableCell>
                                             <TableCell align="center">
-                                                <Tooltip title="Ä°ndir">
+                                                <Tooltip title="İndir">
                                                     <IconButton
                                                         size="small"
                                                         onClick={() => handleDownload(belge)}

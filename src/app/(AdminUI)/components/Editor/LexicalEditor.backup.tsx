@@ -136,13 +136,13 @@ const COLORS = [
 
 const BLOCK_TYPES = [
     { label: "Normal", value: "paragraph" },
-    { label: "BaÅŸlÄ±k 1", value: "h1" },
-    { label: "BaÅŸlÄ±k 2", value: "h2" },
-    { label: "BaÅŸlÄ±k 3", value: "h3" },
-    { label: "BaÅŸlÄ±k 4", value: "h4" },
-    { label: "BaÅŸlÄ±k 5", value: "h5" },
-    { label: "BaÅŸlÄ±k 6", value: "h6" },
-    { label: "AlÄ±ntÄ±", value: "quote" },
+    { label: "Başlık 1", value: "h1" },
+    { label: "Başlık 2", value: "h2" },
+    { label: "Başlık 3", value: "h3" },
+    { label: "Başlık 4", value: "h4" },
+    { label: "Başlık 5", value: "h5" },
+    { label: "Başlık 6", value: "h6" },
+    { label: "Alıntı", value: "quote" },
     { label: "Kod", value: "code" },
 ];
 
@@ -323,7 +323,7 @@ const ToolbarPlugin = () => {
                     <Undo fontSize="small" />
                 </IconButton>
             </Tooltip>
-            <Tooltip title="Ä°leri Al (Ctrl+Y)">
+            <Tooltip title="İleri Al (Ctrl+Y)">
                 <IconButton
                     disabled={!canRedo}
                     onClick={() => editor.dispatchCommand(REDO_COMMAND, undefined)}
@@ -361,7 +361,7 @@ const ToolbarPlugin = () => {
 
             <div className="lexical-toolbar-divider" />
 
-            <Tooltip title="KalÄ±n (Ctrl+B)">
+            <Tooltip title="Kalın (Ctrl+B)">
                 <IconButton
                     onClick={() => editor.dispatchCommand(FORMAT_TEXT_COMMAND, "bold")}
                     className={isBold ? "active" : ""}
@@ -370,7 +370,7 @@ const ToolbarPlugin = () => {
                     <FormatBold fontSize="small" />
                 </IconButton>
             </Tooltip>
-            <Tooltip title="Ä°talik (Ctrl+I)">
+            <Tooltip title="İtalik (Ctrl+I)">
                 <IconButton
                     onClick={() => editor.dispatchCommand(FORMAT_TEXT_COMMAND, "italic")}
                     className={isItalic ? "active" : ""}
@@ -379,7 +379,7 @@ const ToolbarPlugin = () => {
                     <FormatItalic fontSize="small" />
                 </IconButton>
             </Tooltip>
-            <Tooltip title="AltÄ± Ã‡izili (Ctrl+U)">
+            <Tooltip title="Altı Çizili (Ctrl+U)">
                 <IconButton
                     onClick={() => editor.dispatchCommand(FORMAT_TEXT_COMMAND, "underline")}
                     className={isUnderline ? "active" : ""}
@@ -388,7 +388,7 @@ const ToolbarPlugin = () => {
                     <FormatUnderlined fontSize="small" />
                 </IconButton>
             </Tooltip>
-            <Tooltip title="ÃœstÃ¼ Ã‡izili">
+            <Tooltip title="Üstü Çizili">
                 <IconButton
                     onClick={() => editor.dispatchCommand(FORMAT_TEXT_COMMAND, "strikethrough")}
                     className={isStrikethrough ? "active" : ""}
@@ -452,12 +452,12 @@ const ToolbarPlugin = () => {
 
             <div className="lexical-toolbar-divider" />
 
-            <Tooltip title="Madde Ä°ÅŸaretli Liste">
+            <Tooltip title="Madde İşaretli Liste">
                 <IconButton onClick={() => editor.dispatchCommand(INSERT_UNORDERED_LIST_COMMAND, undefined)} size="small">
                     <FormatListBulleted fontSize="small" />
                 </IconButton>
             </Tooltip>
-            <Tooltip title="NumaralÄ± Liste">
+            <Tooltip title="Numaralı Liste">
                 <IconButton onClick={() => editor.dispatchCommand(INSERT_ORDERED_LIST_COMMAND, undefined)} size="small">
                     <FormatListNumbered fontSize="small" />
                 </IconButton>
@@ -480,12 +480,12 @@ const ToolbarPlugin = () => {
                     <FormatAlignCenter fontSize="small" />
                 </IconButton>
             </Tooltip>
-            <Tooltip title="SaÄŸa Hizala">
+            <Tooltip title="Sağa Hizala">
                 <IconButton onClick={() => editor.dispatchCommand(FORMAT_ELEMENT_COMMAND, "right")} size="small">
                     <FormatAlignRight fontSize="small" />
                 </IconButton>
             </Tooltip>
-            <Tooltip title="Ä°ki Yana Yasla">
+            <Tooltip title="İki Yana Yasla">
                 <IconButton onClick={() => editor.dispatchCommand(FORMAT_ELEMENT_COMMAND, "justify")} size="small">
                     <FormatAlignJustify fontSize="small" />
                 </IconButton>
@@ -493,7 +493,7 @@ const ToolbarPlugin = () => {
 
             <div className="lexical-toolbar-divider" />
 
-            <Tooltip title="Girintiyi ArtÄ±r">
+            <Tooltip title="Girintiyi Artır">
                 <IconButton onClick={() => editor.dispatchCommand(INDENT_CONTENT_COMMAND, undefined)} size="small">
                     <FormatIndentIncrease fontSize="small" />
                 </IconButton>
@@ -525,7 +525,7 @@ const ToolbarPlugin = () => {
                     });
                     setInsertAnchorEl(null);
                 }}>
-                    <HorizontalRule fontSize="small" sx={{ mr: 1 }} /> Yatay Ã‡izgi
+                    <HorizontalRule fontSize="small" sx={{ mr: 1 }} /> Yatay Çizgi
                 </MenuItem>
                 <MenuItem onClick={() => {
                     editor.dispatchCommand(INSERT_TABLE_COMMAND, { columns: "3", rows: "3" });
@@ -538,11 +538,11 @@ const ToolbarPlugin = () => {
                     if (url) editor.dispatchCommand(TOGGLE_LINK_COMMAND, url);
                     setInsertAnchorEl(null);
                 }}>
-                    <LinkIcon fontSize="small" sx={{ mr: 1 }} /> BaÄŸlantÄ±
+                    <LinkIcon fontSize="small" sx={{ mr: 1 }} /> Bağlantı
                 </MenuItem>
             </Menu>
 
-            <Tooltip title="BiÃ§imlendirmeyi Temizle">
+            <Tooltip title="Biçimlendirmeyi Temizle">
                 <IconButton
                     onClick={() => {
                         editor.update(() => {
@@ -596,7 +596,7 @@ const HtmlPlugin = ({ initialValue, onChange }: { initialValue?: string; onChang
 const LexicalEditor: React.FC<LexicalEditorProps> = ({
     initialValue = "",
     onChange,
-    placeholder = "Ä°Ã§eriÄŸinizi buraya yazÄ±n...",
+    placeholder = "İçeriğinizi buraya yazın...",
     mode = "light",
 }) => {
     const initialConfig = {

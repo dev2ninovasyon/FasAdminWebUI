@@ -29,10 +29,10 @@ const HissedarEkleForm = () => {
             if (result) {
                 router.push("/StandartCalismaKagitlari/Musteri/Hissedarlar");
             } else {
-                console.log("Hissedar ekleme baÅŸarÄ±sÄ±z");
+                console.log("Hissedar ekleme başarısız");
             }
         } catch (error) {
-            console.log("Bir hata oluÅŸtu:", error);
+            console.log("Bir hata oluştu:", error);
         }
     };
 
@@ -50,7 +50,7 @@ const HissedarEkleForm = () => {
                         htmlFor="hissedarAdi"
                         sx={{ mt: 0, mb: { xs: "-10px", sm: 0 } }}
                     >
-                        Hissedar AdÄ±
+                        Hissedar Adı
                     </CustomFormLabel>
                 </Grid>
                 <Grid
@@ -76,7 +76,7 @@ const HissedarEkleForm = () => {
                         htmlFor="hisseTutari"
                         sx={{ mt: 0, mb: { xs: "-10px", sm: 0 } }}
                     >
-                        Hisse TutarÄ±
+                        Hisse Tutarı
                     </CustomFormLabel>
                 </Grid>
                 <Grid
@@ -103,7 +103,7 @@ const HissedarEkleForm = () => {
                         htmlFor="paySayisi"
                         sx={{ mt: 0, mb: { xs: "-10px", sm: 0 } }}
                     >
-                        Pay SayÄ±sÄ±
+                        Pay Sayısı
                     </CustomFormLabel>
                 </Grid>
                 <Grid
@@ -130,7 +130,7 @@ const HissedarEkleForm = () => {
                         htmlFor="hisseOrani"
                         sx={{ mt: 0, mb: { xs: "-10px", sm: 0 } }}
                     >
-                        Hisse OranÄ±
+                        Hisse Oranı
                     </CustomFormLabel>
                 </Grid>
                 <Grid

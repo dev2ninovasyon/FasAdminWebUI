@@ -113,7 +113,7 @@ describe('Header Component', () => {
         const menuButton = screen.getByLabelText('menu')
         fireEvent.click(menuButton)
 
-        expect(enqueueSnackbar).toHaveBeenCalledWith("Åirket seÃ§ilmedi", { variant: "warning" })
+        expect(enqueueSnackbar).toHaveBeenCalledWith("Åirket seçilmedi", { variant: "warning" })
     })
 })
 

@@ -19,7 +19,7 @@ const MizandanHissedarEkleButton: React.FC<Props> = ({
                 setIsClickedMizandanHissedarEkle(true);
             }
         } catch (error) {
-            console.log("Bir hata oluÅŸtu:", error);
+            console.log("Bir hata oluştu:", error);
         }
     };
 

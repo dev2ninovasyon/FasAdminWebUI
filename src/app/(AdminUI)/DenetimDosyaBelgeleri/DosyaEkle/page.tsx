@@ -9,7 +9,7 @@ import DosyaEkleForm from "@/app/components/DenetimDosyaIslemleri/DosyaEkleForm"
 const BCrumb = [
   {
     to: "/Anasayfa",
-    title: "Admin MenÃ¼",
+    title: "Admin Menü",
   },
   {
     to: "/DenetimDosyaBelgeleri",

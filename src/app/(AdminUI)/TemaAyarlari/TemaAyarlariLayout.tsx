@@ -5,7 +5,7 @@ import Breadcrumb from "@/app/components/Layout/Shared/Breadcrumb/Breadcrumb";
 const BCrumb = [
   {
     to: "/TemaAyarlari",
-    title: "Tema AyarlarÄ±",
+    title: "Tema Ayarları",
   },
 ];
 
@@ -16,7 +16,7 @@ export default function TemaAyarlariLayout({
 }) {
   return (
     <div>
-      <Breadcrumb title="Tema AyarlarÄ±" items={BCrumb} />
+      <Breadcrumb title="Tema Ayarları" items={BCrumb} />
       {children}
     </div>
   );

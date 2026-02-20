@@ -26,10 +26,10 @@ const SubeEkleForm = () => {
             if (result) {
                 router.push("/StandartCalismaKagitlari/Musteri/Subeler");
             } else {
-                console.log("Åube ekleme baÅŸarÄ±sÄ±z");
+                console.log("Åube ekleme başarısız");
             }
         } catch (error) {
-            console.log("Bir hata oluÅŸtu:", error);
+            console.log("Bir hata oluştu:", error);
         }
     };
 
@@ -47,7 +47,7 @@ const SubeEkleForm = () => {
                         htmlFor="unvan"
                         sx={{ mt: 0, mb: { xs: "-10px", sm: 0 } }}
                     >
-                        Ãœnvan
+                        Ünvan
                     </CustomFormLabel>
                 </Grid>
                 <Grid
@@ -72,7 +72,7 @@ const SubeEkleForm = () => {
                         htmlFor="subeAdi"
                         sx={{ mt: 0, mb: { xs: "-10px", sm: 0 } }}
                     >
-                        Åube AdÄ±
+                        Åube Adı
                     </CustomFormLabel>
                 </Grid>
                 <Grid

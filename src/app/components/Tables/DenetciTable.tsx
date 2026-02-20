@@ -80,7 +80,7 @@ const DenetciTable = () => {
         console.error("Denetci silinemedi");
       }
     } catch (error) {
-      console.error("Bir hata oluÅŸtu:", error);
+      console.error("Bir hata oluştu:", error);
     }
   };
 
@@ -112,7 +112,7 @@ const DenetciTable = () => {
         setRows(newRows);
       }
     } catch (error) {
-      console.error("Bir hata oluÅŸtu:", error);
+      console.error("Bir hata oluştu:", error);
     }
   };
 
@@ -120,7 +120,7 @@ const DenetciTable = () => {
     if (user.token) {
       fetchData();
     } else {
-      console.warn("DenetciTable: user.token yok, fetch atÄ±lmadÄ±");
+      console.warn("DenetciTable: user.token yok, fetch atılmadı");
     }
   }, [user.token]);
 
@@ -131,7 +131,7 @@ const DenetciTable = () => {
           <TableHead>
             <TableRow>
               <TableCell>
-                <Typography variant="h6">Firma AdÄ±</Typography>
+                <Typography variant="h6">Firma Adı</Typography>
               </TableCell>
               <TableCell>
                 <Typography textAlign="center" variant="h6">
@@ -140,12 +140,12 @@ const DenetciTable = () => {
               </TableCell>
               <TableCell>
                 <Typography textAlign="center" variant="h6">
-                  ArÅŸivID
+                  ArşivID
                 </Typography>
               </TableCell>
               <TableCell>
                 <Typography textAlign="center" variant="h6">
-                  KayÄ±t Tarihi
+                  Kayıt Tarihi
                 </Typography>
               </TableCell>
               <TableCell>
@@ -230,19 +230,19 @@ const DenetciTable = () => {
                       <ListItemIcon>
                         <IconCash width={18} />
                       </ListItemIcon>
-                      Ã–deme Bilgileri
+                      Ödeme Bilgileri
                     </MenuItem>
                     <MenuItem onClick={() => handleKullaniciEkle()}>
                       <ListItemIcon>
                         <IconPlus width={18} />
                       </ListItemIcon>
-                      KullanÄ±cÄ± Ekle
+                      Kullanıcı Ekle
                     </MenuItem>
                     <MenuItem onClick={() => handleDuzenle()}>
                       <ListItemIcon>
                         <IconEdit width={18} />
                       </ListItemIcon>
-                      DÃ¼zenle
+                      Düzenle
                     </MenuItem>
 
                     <MenuItem onClick={() => handleDetay()}>

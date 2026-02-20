@@ -13,11 +13,11 @@ import EkBelgeYukleButton from "@/app/(AdminUI)/components/CalismaKagitlari/Card
 const BCrumb = [
   {
     to: "/DenetimKanitlari",
-    title: "Denetim KanÄ±tlarÄ±",
+    title: "Denetim Kanıtları",
   },
   {
     to: "/DenetimKanitlari/DigerKanitlar",
-    title: "DiÄŸer KanÄ±tlar",
+    title: "Diğer Kanıtlar",
   },
   {
     to: "/DenetimKanitlari/DigerKanitlar/DenetimKontrolTestleri",
@@ -38,7 +38,7 @@ const Page = () => {
   const user = useSelector((state: AppState) => state.userReducer);
   const controller = "DenetimKontrolTestleri";
   const grupluMu = false;
-  const alanAdi1 = "Ä°ÅŸlem";
+  const alanAdi1 = "İşlem";
   const alanAdi2 = "Tespit";
 
   const handleOpen = () => {
@@ -64,10 +64,10 @@ const Page = () => {
         setIsCreatePopUpOpen(false);
         setIsClickedYeniGrupEkle(false);
       } else {
-        console.log("Ã‡alÄ±ÅŸma KaÄŸÄ±dÄ± Verisi ekleme baÅŸarÄ±sÄ±z");
+        console.log("Çalışma Kağıdı Verisi ekleme başarısız");
       }
     } catch (error) {
-      console.log("Bir hata oluÅŸtu:", error);
+      console.log("Bir hata oluştu:", error);
     }
   };
   return (
@@ -102,7 +102,7 @@ const Page = () => {
                   textAlign: "center",
                 }}
               >
-                {tamamlanan}/{toplam} TamamlandÄ±
+                {tamamlanan}/{toplam} Tamamlandı
               </Typography>
             </Grid>
             {grupluMu && (
@@ -149,8 +149,8 @@ const Page = () => {
               }}>
               <EkBelgeYukleButton
                 formKodu={controller}
-                fullWidth={false}           // saÄŸda kÃ¼Ã§Ã¼k buton
-                text="Belge YÃ¼kle"
+                fullWidth={false}           // sağda küçük buton
+                text="Belge Yükle"
               />
             </Grid>
             <Grid
@@ -176,7 +176,7 @@ const Page = () => {
                   variant="body1"
                   sx={{ overflowWrap: "break-word", wordWrap: "break-word" }}
                 >
-                  VarsayÄ±lana DÃ¶n
+                  Varsayılana Dön
                 </Typography>
               </Button>
             </Grid>

@@ -10,11 +10,11 @@ import FormullerOzkaynak from "@/app/components/Formuller/FormullerOzkaynak";
 const BCrumb = [
   {
     to: "/Anasayfa",
-    title: "Admin MenÃ¼",
+    title: "Admin Menü",
   },
   {
     to: "/Formuller",
-    title: "FormÃ¼ller",
+    title: "Formüller",
   },
 ];
 
@@ -38,8 +38,8 @@ const Page = () => {
   const [kaydetTiklandimi, setKaydetTiklandimi] = useState(false);
 
   return (
-    <PageContainer title="FormÃ¼ller" description="this is FormÃ¼ller">
-      <Breadcrumb title="FormÃ¼ller" items={BCrumb} />
+    <PageContainer title="Formüller" description="this is Formüller">
+      <Breadcrumb title="Formüller" items={BCrumb} />
       <Grid container spacing={3}>
         <Grid
           size={{
@@ -63,29 +63,29 @@ const Page = () => {
             sx={{ width: smDown ? "100%" : "auto" }}
             onChange={handleChangeDenetimTuru}
           >
-            <MenuItem value={"Bobi"}>Denetim TÃ¼rÃ¼: Bobi</MenuItem>
+            <MenuItem value={"Bobi"}>Denetim Türü: Bobi</MenuItem>
             <MenuItem value={"BobiEnflasyon"}>
-              Denetim TÃ¼rÃ¼: Bobi Enflasyon
+              Denetim Türü: Bobi Enflasyon
             </MenuItem>
-            <MenuItem value={"Tfrs"}>Denetim TÃ¼rÃ¼: Tfrs</MenuItem>
+            <MenuItem value={"Tfrs"}>Denetim Türü: Tfrs</MenuItem>
             <MenuItem value={"TfrsEnflasyon"}>
-              Denetim TÃ¼rÃ¼: Tfrs Enflasyon
+              Denetim Türü: Tfrs Enflasyon
             </MenuItem>
-            <MenuItem value={"Kumi"}>Denetim TÃ¼rÃ¼: KÃ¼mi</MenuItem>
+            <MenuItem value={"Kumi"}>Denetim Türü: Kümi</MenuItem>
             <MenuItem value={"KumiEnflasyon"}>
-              Denetim TÃ¼rÃ¼: KÃ¼mi Enflasyon
+              Denetim Türü: Kümi Enflasyon
             </MenuItem>
             <MenuItem value={"BobiKonsolide"}>
-              Denetim TÃ¼rÃ¼: Konsolide Bobi
+              Denetim Türü: Konsolide Bobi
             </MenuItem>
             <MenuItem value={"BobiKonsolideEnflasyon"}>
-              Denetim TÃ¼rÃ¼: Konsolide Bobi Enflasyon
+              Denetim Türü: Konsolide Bobi Enflasyon
             </MenuItem>
             <MenuItem value={"TfrsKonsolide"}>
-              Denetim TÃ¼rÃ¼: Konsolide Tfrs
+              Denetim Türü: Konsolide Tfrs
             </MenuItem>
             <MenuItem value={"TfrsKonsolideEnflasyon"}>
-              Denetim TÃ¼rÃ¼: Konsolide Tfrs Enflasyon
+              Denetim Türü: Konsolide Tfrs Enflasyon
             </MenuItem>
           </CustomSelect>
           <CustomSelect
@@ -98,16 +98,16 @@ const Page = () => {
             height={"36px"}
           >
             <MenuItem value={"finansaldurum"}>
-              Tablo AdÄ±: Finansal Durum
+              Tablo Adı: Finansal Durum
             </MenuItem>
-            <MenuItem value={"karzarar"}>Tablo AdÄ±: Kar Zarar</MenuItem>
+            <MenuItem value={"karzarar"}>Tablo Adı: Kar Zarar</MenuItem>
             <MenuItem value={"nakitakisdogrudan"}>
-              Tablo AdÄ±: Nakit AkÄ±ÅŸ DoÄŸrudan YÃ¶ntem
+              Tablo Adı: Nakit Akış Doğrudan Yöntem
             </MenuItem>
             <MenuItem value={"nakitakisdolayli"}>
-              Tablo AdÄ±: Nakit AkÄ±ÅŸ DolaylÄ± YÃ¶ntem
+              Tablo Adı: Nakit Akış Dolaylı Yöntem
             </MenuItem>
-            <MenuItem value={"ozkaynak"}>Tablo AdÄ±: Ã–zkaynak</MenuItem>
+            <MenuItem value={"ozkaynak"}>Tablo Adı: Özkaynak</MenuItem>
           </CustomSelect>
           <Box flex={1}></Box>
           <Box

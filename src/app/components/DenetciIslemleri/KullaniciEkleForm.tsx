@@ -42,10 +42,10 @@ const KullaniciEkleForm = ({ id }: { id?: string }) => {
       if (result) {
         router.push("/DenetciFirmaIslemleri");
       } else {
-        console.error("KullanÄ±cÄ± ekleme baÅŸarÄ±sÄ±z");
+        console.error("Kullanıcı ekleme başarısız");
       }
     } catch (error) {
-      console.error("Bir hata oluÅŸtu:", error);
+      console.error("Bir hata oluştu:", error);
     }
   };
 
@@ -71,7 +71,7 @@ const KullaniciEkleForm = ({ id }: { id?: string }) => {
           htmlFor="personelAdi"
           sx={{ mt: 0, mb: { xs: "-10px", sm: 0 } }}
         >
-          Personel AdÄ±
+          Personel Adı
         </CustomFormLabel>
       </Grid>
       <Grid size={{ xs: 12, sm: 9 }}>
@@ -86,7 +86,7 @@ const KullaniciEkleForm = ({ id }: { id?: string }) => {
           htmlFor="unvani"
           sx={{ mt: 0, mb: { xs: "-10px", sm: 0 } }}
         >
-          ÃœnvanÄ±
+          Ünvanı
         </CustomFormLabel>
       </Grid>
       <Grid size={{ xs: 12, sm: 9 }}>
@@ -160,7 +160,7 @@ const KullaniciEkleForm = ({ id }: { id?: string }) => {
       <Grid size={{ xs: 12, sm: 3 }}></Grid>
       <Grid size={{ xs: 12, sm: 9 }}>
         <Button variant="contained" color="primary" onClick={handleButtonClick}>
-          KullanÄ±cÄ± Ekle
+          Kullanıcı Ekle
         </Button>
       </Grid>
     </Grid>

@@ -79,11 +79,11 @@ const Formuller: React.FC<Props> = ({
 
   const colHeaders = [
     "FormulId",
-    "Kalem AdÄ±",
-    "FormÃ¼l",
+    "Kalem Adı",
+    "Formül",
     "Dipnot",
-    "KÄ±rÄ±lÄ±m",
-    "Kgk Excel SatÄ±r NumarasÄ±",
+    "Kırılım",
+    "Kgk Excel Satır Numarası",
   ];
 
   const columns = [
@@ -100,13 +100,13 @@ const Formuller: React.FC<Props> = ({
       readOnly: true,
       editor: false,
       className: "htLeft",
-    }, // Kalem AdÄ±
+    }, // Kalem Adı
     {
       type: "text",
       columnSorting: true,
       className: "htLeft",
       allowInvalid: false,
-    }, // FormÃ¼l
+    }, // Formül
     {
       type: "text",
       columnSorting: true,
@@ -119,14 +119,14 @@ const Formuller: React.FC<Props> = ({
       className: "htLeft",
       validator: integerValidator,
       allowInvalid: false,
-    }, // KÄ±rÄ±lÄ±m
+    }, // Kırılım
     {
       type: "numeric",
       columnSorting: true,
       className: "htLeft",
       validator: integerValidator,
       allowInvalid: false,
-    }, // Kgk Excel SatÄ±r NumarasÄ±
+    }, // Kgk Excel Satır Numarası
   ];
 
   const afterGetColHeader = (col: any, TH: any) => {
@@ -244,7 +244,7 @@ const Formuller: React.FC<Props> = ({
     if (hotTableComponent.current) {
       const hotInstance = hotTableComponent.current.hotInstance;
       const cellMeta = hotInstance.getDataAtRow(row);
-      console.log("SatÄ±r Verileri:", cellMeta);
+      console.log("Satır Verileri:", cellMeta);
       return cellMeta;
     }
   };
@@ -351,7 +351,7 @@ const Formuller: React.FC<Props> = ({
         });
       }
     } catch (error) {
-      console.error("Bir hata oluÅŸtu:", error);
+      console.error("Bir hata oluştu:", error);
     }
   };
 
@@ -383,7 +383,7 @@ const Formuller: React.FC<Props> = ({
       setRowCount(rowsAll.length);
       setFetchedData(rowsAll);
     } catch (error) {
-      console.error("Bir hata oluÅŸtu:", error);
+      console.error("Bir hata oluştu:", error);
     }
   };
 
@@ -444,9 +444,9 @@ const Formuller: React.FC<Props> = ({
           type: "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
         });
         saveAs(blob, `Formuller${denetimTuru}${finansalTabloAdi}.xlsx`);
-        console.log("Excel dosyasÄ± baÅŸarÄ±yla oluÅŸturuldu");
+        console.log("Excel dosyası başarıyla oluşturuldu");
       } catch (error) {
-        console.error("Excel dosyasÄ± oluÅŸturulurken bir hata oluÅŸtu:", error);
+        console.error("Excel dosyası oluşturulurken bir hata oluştu:", error);
       }
     }
     createExcelFile();

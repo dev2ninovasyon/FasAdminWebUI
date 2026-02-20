@@ -66,23 +66,23 @@ const KullaniciDuzenleModal = ({ open, onClose, onSuccess, kullanici }: Props) =
                 onSuccess();
                 onClose();
             } else {
-                alert("GÃ¼ncelleme sÄ±rasÄ±nda bir hata oluÅŸtu.");
+                alert("Güncelleme sırasında bir hata oluştu.");
             }
         } catch (error) {
             console.error("Hata:", error);
-            alert("Bir hata oluÅŸtu.");
+            alert("Bir hata oluştu.");
         }
     };
 
     return (
         <Dialog open={open} onClose={onClose} fullWidth maxWidth="sm">
-            <DialogTitle>KullanÄ±cÄ± DÃ¼zenle</DialogTitle>
+            <DialogTitle>Kullanıcı Düzenle</DialogTitle>
             <DialogContent dividers>
                 <Grid container spacing={2} sx={{ mt: 1 }}>
                     <Grid size={{ xs: 12 }}>
                         <TextField
                             fullWidth
-                            label="Personel AdÄ±"
+                            label="Personel Adı"
                             name="personelAdi"
                             value={formData.personelAdi}
                             onChange={handleChange}
@@ -91,7 +91,7 @@ const KullaniciDuzenleModal = ({ open, onClose, onSuccess, kullanici }: Props) =
                     <Grid size={{ xs: 12, sm: 6 }}>
                         <TextField
                             fullWidth
-                            label="UnvanÄ±"
+                            label="Unvanı"
                             name="unvani"
                             value={formData.unvani}
                             onChange={handleChange}
@@ -148,7 +148,7 @@ const KullaniciDuzenleModal = ({ open, onClose, onSuccess, kullanici }: Props) =
                 </Grid>
             </DialogContent>
             <DialogActions>
-                <Button onClick={onClose}>Ä°ptal</Button>
+                <Button onClick={onClose}>İptal</Button>
                 <Button variant="contained" color="primary" onClick={handleSubmit}>
                     Kaydet
                 </Button>

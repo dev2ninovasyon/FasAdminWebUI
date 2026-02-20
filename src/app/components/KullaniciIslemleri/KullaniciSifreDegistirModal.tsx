@@ -37,11 +37,11 @@ const KullaniciSifreDegistirModal = ({ open, onClose, kullaniciId }: Props) => {
 
     const handleSubmit = async () => {
         if (!formData.newPassword) {
-            alert("Yeni ÅŸifre boÅŸ olamaz.");
+            alert("Yeni şifre boş olamaz.");
             return;
         }
         if (formData.newPassword !== formData.confirmPassword) {
-            alert("Yeni ÅŸifreler eÅŸleÅŸmiyor.");
+            alert("Yeni şifreler eşleşmiyor.");
             return;
         }
 
@@ -52,21 +52,21 @@ const KullaniciSifreDegistirModal = ({ open, onClose, kullaniciId }: Props) => {
                 formData
             );
             if (result) {
-                alert("Åifre baÅŸarÄ±yla gÃ¼ncellendi.");
+                alert("Åifre başarıyla güncellendi.");
                 setFormData({ newPassword: "", confirmPassword: "" });
                 onClose();
             } else {
-                alert("Åifre gÃ¼ncellenirken bir hata oluÅŸtu.");
+                alert("Åifre güncellenirken bir hata oluştu.");
             }
         } catch (error) {
             console.error("Hata:", error);
-            alert("Bir hata oluÅŸtu.");
+            alert("Bir hata oluştu.");
         }
     };
 
     return (
         <Dialog open={open} onClose={onClose} fullWidth maxWidth="xs">
-            <DialogTitle>Åifre DeÄŸiÅŸtir (Admin)</DialogTitle>
+            <DialogTitle>Åifre Değiştir (Admin)</DialogTitle>
             <DialogContent dividers>
                 <Grid container spacing={2} sx={{ mt: 1 }}>
                     <Grid size={{ xs: 12 }}>
@@ -110,9 +110,9 @@ const KullaniciSifreDegistirModal = ({ open, onClose, kullaniciId }: Props) => {
                 </Grid>
             </DialogContent>
             <DialogActions>
-                <Button onClick={onClose}>Ä°ptal</Button>
+                <Button onClick={onClose}>İptal</Button>
                 <Button variant="contained" color="primary" onClick={handleSubmit}>
-                    GÃ¼ncelle
+                    Güncelle
                 </Button>
             </DialogActions>
         </Dialog>

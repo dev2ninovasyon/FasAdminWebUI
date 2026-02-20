@@ -122,7 +122,7 @@ describe('SirketPopup Component', () => {
         const chipButton = screen.getByRole('button', { name: /show 4 new mails/i })
         fireEvent.click(chipButton)
 
-        expect(screen.getByText('Åirket ve YÄ±l DeÄŸiÅŸtir')).toBeInTheDocument()
+        expect(screen.getByText('Åirket ve Yıl Değiştir')).toBeInTheDocument()
         expect(screen.getByTestId('company-box-mock')).toBeInTheDocument()
         expect(screen.getByTestId('year-box-mock')).toBeInTheDocument()
     })
@@ -162,7 +162,7 @@ describe('SirketPopup Component', () => {
         fireEvent.click(selectYearBtn)
 
         // Submit
-        const submitBtn = screen.getByRole('button', { name: /Åirket SeÃ§/i })
+        const submitBtn = screen.getByRole('button', { name: /Åirket Seç/i })
         fireEvent.click(submitBtn)
 
         await waitFor(() => {
@@ -197,7 +197,7 @@ describe('SirketPopup Component', () => {
         fireEvent.click(screen.getByRole('button', { name: /show 4 new mails/i }))
         fireEvent.click(screen.getByTestId('select-company-btn'))
         fireEvent.click(screen.getByTestId('select-year-btn'))
-        fireEvent.click(screen.getByRole('button', { name: /Åirket SeÃ§/i }))
+        fireEvent.click(screen.getByRole('button', { name: /Åirket Seç/i }))
 
         await waitFor(() => {
             expect(userSettingsApi.updateSonSecilenAyarlari).toHaveBeenCalled()

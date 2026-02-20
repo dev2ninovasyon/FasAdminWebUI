@@ -100,10 +100,10 @@ const AuthLogin: React.FC<loginType> = ({ title, subtitle, subtext }) => {
         },
         body: JSON.stringify({ email, password, captchaToken: token }),
       });
-      console.timeEnd("Login API Ä°steÄŸi");
+      console.timeEnd("Login API İsteği");
 
       if (response.ok) {
-        console.time("Veri Ä°ÅŸleme ve YÃ¶nlendirme");
+        console.time("Veri İşleme ve Yönlendirme");
         const data = await response.json();
         const userToken = data.token;
         const userRefreshToken = data.refreshToken;
@@ -177,7 +177,7 @@ const AuthLogin: React.FC<loginType> = ({ title, subtitle, subtext }) => {
         dispatch(setUserData(userData));
 
         if (bddkmi === undefined) {
-          console.time("Ek Bilgi API Ä°steÄŸi (bddkmi)");
+          console.time("Ek Bilgi API İsteği (bddkmi)");
           const data2 = await getDenetciOdemeBilgileri(
             userToken,
             userDenetciId
@@ -185,7 +185,7 @@ const AuthLogin: React.FC<loginType> = ({ title, subtitle, subtext }) => {
           if (data2 && data2.bddkmi !== undefined) {
             dispatch(setBddkmi(data2.bddkmi));
           }
-          console.timeEnd("Ek Bilgi API Ä°steÄŸi (bddkmi)");
+          console.timeEnd("Ek Bilgi API İsteği (bddkmi)");
         }
 
         if (!sonSecilenDenetlenenId || !sonSecilenDenetlenenFirmaAdi) {
@@ -313,7 +313,7 @@ const AuthLogin: React.FC<loginType> = ({ title, subtitle, subtext }) => {
               borderRadius: "10px"
             }}
           >
-            {isVerifyingCaptcha ? "GÃ¼venlik DoÄŸrulamasÄ±..." : isLoggedIn ? "GiriÅŸ YapÄ±lÄ±yor..." : "GiriÅŸ Yap"}
+            {isVerifyingCaptcha ? "Güvenlik Doğrulaması..." : isLoggedIn ? "Giriş Yapılıyor..." : "Giriş Yap"}
           </LoadingButton>
         </Box>
       </form>

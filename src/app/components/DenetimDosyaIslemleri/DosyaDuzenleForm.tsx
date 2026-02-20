@@ -40,10 +40,10 @@ const DosyaDuzenleForm = ({ id }: { id?: string }) => {
       if (result) {
         router.push("/DenetimDosyaBelgeleri");
       } else {
-        console.error("Dosya dÃ¼zenleme baÅŸarÄ±sÄ±z");
+        console.error("Dosya düzenleme başarısız");
       }
     } catch (error) {
-      console.error("Bir hata oluÅŸtu:", error);
+      console.error("Bir hata oluştu:", error);
     }
   };
 
@@ -58,7 +58,7 @@ const DosyaDuzenleForm = ({ id }: { id?: string }) => {
       setReferansNo(dosyaVerileri.referansNo || "");
       setArsivKlasorAdi(dosyaVerileri.arsivKlasorAdi || "");
     } catch (error) {
-      console.error("Bir hata oluÅŸtu:", error);
+      console.error("Bir hata oluştu:", error);
     }
   };
 
@@ -87,7 +87,7 @@ const DosyaDuzenleForm = ({ id }: { id?: string }) => {
           htmlFor="belgeAdi"
           sx={{ mt: 0, mb: { xs: "-10px", sm: 0 } }}
         >
-          Belge AdÄ±
+          Belge Adı
         </CustomFormLabel>
         <CustomTextField
           id="belgeAdi"
@@ -101,7 +101,7 @@ const DosyaDuzenleForm = ({ id }: { id?: string }) => {
           htmlFor="belgeAdi"
           sx={{ mt: 0, mb: { xs: "-10px", sm: 0 } }}
         >
-          Ä°lgili BDS
+          İlgili BDS
         </CustomFormLabel>
         <CustomTextField
           id="bds"
@@ -157,7 +157,7 @@ const DosyaDuzenleForm = ({ id }: { id?: string }) => {
           htmlFor="arsivKlasorAdi"
           sx={{ mt: 0, mb: { xs: "-10px", sm: 0 } }}
         >
-          ArÅŸiv KlasÃ¶r AdÄ±
+          Arşiv Klasör Adı
         </CustomFormLabel>
         <CustomTextField
           id="arsivKlasorAdi"
@@ -169,7 +169,7 @@ const DosyaDuzenleForm = ({ id }: { id?: string }) => {
       <Grid size={{ xs: 12, sm: 3 }}></Grid>
       <Grid size={{ xs: 12, sm: 9 }}>
         <Button variant="contained" color="primary" onClick={handleButtonClick}>
-          GÃ¼ncelle
+          Güncelle
         </Button>
       </Grid>
     </Grid>

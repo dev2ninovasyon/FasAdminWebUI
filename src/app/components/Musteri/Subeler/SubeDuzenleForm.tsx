@@ -31,10 +31,10 @@ const SubeDuzenleForm = () => {
             if (result) {
                 router.push("/StandartCalismaKagitlari/Musteri/Subeler");
             } else {
-                console.log("Åube dÃ¼zenleme baÅŸarÄ±sÄ±z");
+                console.log("Åube düzenleme başarısız");
             }
         } catch (error) {
-            console.log("Bir hata oluÅŸtu:", error);
+            console.log("Bir hata oluştu:", error);
         }
     };
 
@@ -47,7 +47,7 @@ const SubeDuzenleForm = () => {
                 setAdres(subelerVerileri.adres);
             }
         } catch (error) {
-            console.log("Bir hata oluÅŸtu:", error);
+            console.log("Bir hata oluştu:", error);
         }
     };
 
@@ -69,7 +69,7 @@ const SubeDuzenleForm = () => {
                         htmlFor="unvan"
                         sx={{ mt: 0, mb: { xs: "-10px", sm: 0 } }}
                     >
-                        Ãœnvan
+                        Ünvan
                     </CustomFormLabel>
                 </Grid>
                 <Grid
@@ -95,7 +95,7 @@ const SubeDuzenleForm = () => {
                         htmlFor="subeAdi"
                         sx={{ mt: 0, mb: { xs: "-10px", sm: 0 } }}
                     >
-                        Åube AdÄ±
+                        Åube Adı
                     </CustomFormLabel>
                 </Grid>
                 <Grid
@@ -151,7 +151,7 @@ const SubeDuzenleForm = () => {
                         color="primary"
                         onClick={handleButtonClick}
                     >
-                        Åube DÃ¼zenle
+                        Åube Düzenle
                     </Button>
                 </Grid>
             </Grid>

@@ -31,16 +31,16 @@ const DenetciSecimFormu = () => {
     useEffect(() => {
         const fetchDenetciler = async () => {
             try {
-                console.log("ğŸ”„ DenetciSecimFormu: DenetÃ§iler yÃ¼kleniyor...");
+                console.log("ğŸ”„ DenetciSecimFormu: Denetçiler yükleniyor...");
                 // âœ… Fetch from public DataTransfer endpoint (no token required)
                 const data = await getOldDbDenetciler();
-                console.log("âœ… DenetciSecimFormu: getOldDbDenetciler sonuÃ§ ->", data);
+                console.log("âœ… DenetciSecimFormu: getOldDbDenetciler sonuç ->", data);
                 
                 if (Array.isArray(data)) {
-                    console.log("ğŸ“Š DenetciSecimFormu: DenetÃ§i sayÄ±sÄ±:", data.length);
+                    console.log("ğŸ“Š DenetciSecimFormu: Denetçi sayısı:", data.length);
                     setDenetciler(data);
                 } else {
-                    console.warn("âš ï¸ DenetciSecimFormu: Beklenmeyen veri formatÄ± (array deÄŸil):", data);
+                    console.warn("âš ï¸ DenetciSecimFormu: Beklenmeyen veri formatı (array değil):", data);
                     setDenetciler([]);
                 }
             } catch (err) {
@@ -81,7 +81,7 @@ const DenetciSecimFormu = () => {
                     renderInput={(params) => (
                         <TextField
                             {...params}
-                            label="DenetÃ§i SeÃ§iniz"
+                            label="Denetçi Seçiniz"
                             variant="outlined"
                             fullWidth
                         />
@@ -91,7 +91,7 @@ const DenetciSecimFormu = () => {
 
             <Grid size={{ xs: 12, sm: 3 }} display="flex" alignItems="center">
                 <CustomFormLabel htmlFor="firmaAdi" sx={{ mt: 0, mb: { xs: "-10px", sm: 0 } }}>
-                    Firma AdÄ±
+                    Firma Adı
                 </CustomFormLabel>
             </Grid>
             <Grid size={{ xs: 12, sm: 9 }}>
@@ -104,7 +104,7 @@ const DenetciSecimFormu = () => {
 
             <Grid size={{ xs: 12, sm: 3 }} display="flex" alignItems="center">
                 <CustomFormLabel htmlFor="firmaUnvani" sx={{ mt: 0, mb: { xs: "-10px", sm: 0 } }}>
-                    Firma ÃœnvanÄ±
+                    Firma Ünvanı
                 </CustomFormLabel>
             </Grid>
             <Grid size={{ xs: 12, sm: 9 }}>
@@ -130,7 +130,7 @@ const DenetciSecimFormu = () => {
 
             <Grid size={{ xs: 12, sm: 3 }} display="flex" alignItems="center">
                 <CustomFormLabel htmlFor="il" sx={{ mt: 0, mb: { xs: "-10px", sm: 0 } }}>
-                    Ä°l
+                    İl
                 </CustomFormLabel>
             </Grid>
             <Grid size={{ xs: 12, sm: 9 }}>
@@ -195,7 +195,7 @@ const DenetciSecimFormu = () => {
 
             <Grid size={{ xs: 12, sm: 3 }} display="flex" alignItems="center">
                 <CustomFormLabel htmlFor="vergiNo" sx={{ mt: 0, mb: { xs: "-10px", sm: 0 } }}>
-                    Vergi NumarasÄ±
+                    Vergi Numarası
                 </CustomFormLabel>
             </Grid>
             <Grid size={{ xs: 12, sm: 9 }}>
@@ -221,7 +221,7 @@ const DenetciSecimFormu = () => {
 
             <Grid size={{ xs: 12, sm: 3 }} display="flex" alignItems="center">
                 <CustomFormLabel htmlFor="ticaretSicilNo" sx={{ mt: 0, mb: { xs: "-10px", sm: 0 } }}>
-                    Ticaret Sicil NumarasÄ±
+                    Ticaret Sicil Numarası
                 </CustomFormLabel>
             </Grid>
             <Grid size={{ xs: 12, sm: 9 }}>
@@ -239,7 +239,7 @@ const DenetciSecimFormu = () => {
                     color="primary"
                     onClick={async () => {
                         if (!selectedDenetci) {
-                            console.warn("â— Kaydet: LÃ¼tfen kaydetmek iÃ§in Ã¶nce bir denetÃ§i seÃ§in.");
+                            console.warn("â— Kaydet: Lütfen kaydetmek için önce bir denetçi seçin.");
                             return;
                         }
                         try {
@@ -269,14 +269,14 @@ const DenetciSecimFormu = () => {
                             const token = user?.token || "";
                             const ok = await importDenetci(token, payload);
                             if (ok) {
-                                console.log("âœ… Kaydet: DenetÃ§i baÅŸarÄ±yla yeni DB'ye eklendi (aynÄ± Id ile)");
+                                console.log("âœ… Kaydet: Denetçi başarıyla yeni DB'ye eklendi (aynı Id ile)");
                                 // Optionally navigate back or show notification
                                 router.push("/DenetciFirmaIslemleri");
                             } else {
-                                console.error("âŒ Kaydet: DenetÃ§i iÃ§e aktarma baÅŸarÄ±sÄ±z oldu.");
+                                console.error("âŒ Kaydet: Denetçi içe aktarma başarısız oldu.");
                             }
                         } catch (err) {
-                            console.error("âŒ Kaydet: Hata oluÅŸtu:", err);
+                            console.error("âŒ Kaydet: Hata oluştu:", err);
                         } finally {
                             setIsSaving(false);
                         }

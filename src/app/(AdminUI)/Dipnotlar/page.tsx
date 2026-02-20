@@ -13,7 +13,7 @@ import RaporDipnot from "@/app/components/Dipnotlar/RaporDipnot";
 const BCrumb = [
   {
     to: "/Anasayfa",
-    title: "Admin MenÃ¼",
+    title: "Admin Menü",
   },
   {
     to: "/Dipnotlar",
@@ -46,11 +46,11 @@ const Page: React.FC = () => {
           <TabContext value={tip}>
             <TabList onChange={handleChange} aria-label="lab API tabs example">
               <Tab
-                label="BaÄŸÄ±msÄ±z DenetÃ§i Raporu"
+                label="Bağımsız Denetçi Raporu"
                 value="BagimsizDenetciRaporu"
               />
               <Tab
-                label="Faaliyet Raporuna Ä°liÅŸkin BaÄŸÄ±msÄ±z DenetÃ§i Raporu"
+                label="Faaliyet Raporuna İlişkin Bağımsız Denetçi Raporu"
                 value="FaaliyetRaporunaIliskinBagimsizDenetciRaporu"
               />
             </TabList>
@@ -78,14 +78,14 @@ const Page: React.FC = () => {
                     value={denetimTuru}
                     onChange={handleChangeDenetimTuru}
                   >
-                    <MenuItem value={"Bobi"}>Denetim TÃ¼rÃ¼: Bobi</MenuItem>
-                    <MenuItem value={"Tfrs"}>Denetim TÃ¼rÃ¼: Tfrs</MenuItem>
-                    <MenuItem value={"Kumi"}>Denetim TÃ¼rÃ¼: KÃ¼mi</MenuItem>
+                    <MenuItem value={"Bobi"}>Denetim Türü: Bobi</MenuItem>
+                    <MenuItem value={"Tfrs"}>Denetim Türü: Tfrs</MenuItem>
+                    <MenuItem value={"Kumi"}>Denetim Türü: Kümi</MenuItem>
                     <MenuItem value={"BobiKonsolide"}>
-                      Denetim TÃ¼rÃ¼: Konsolide Bobi
+                      Denetim Türü: Konsolide Bobi
                     </MenuItem>
                     <MenuItem value={"TfrsKonsolide"}>
-                      Denetim TÃ¼rÃ¼: Konsolide Tfrs
+                      Denetim Türü: Konsolide Tfrs
                     </MenuItem>
                   </CustomSelect>
                 </Grid>
@@ -120,14 +120,14 @@ const Page: React.FC = () => {
                     value={denetimTuru}
                     onChange={handleChangeDenetimTuru}
                   >
-                    <MenuItem value={"Bobi"}>Denetim TÃ¼rÃ¼: Bobi</MenuItem>
-                    <MenuItem value={"Tfrs"}>Denetim TÃ¼rÃ¼: Tfrs</MenuItem>
-                    <MenuItem value={"Kumi"}>Denetim TÃ¼rÃ¼: KÃ¼mi</MenuItem>
+                    <MenuItem value={"Bobi"}>Denetim Türü: Bobi</MenuItem>
+                    <MenuItem value={"Tfrs"}>Denetim Türü: Tfrs</MenuItem>
+                    <MenuItem value={"Kumi"}>Denetim Türü: Kümi</MenuItem>
                     <MenuItem value={"BobiKonsolide"}>
-                      Denetim TÃ¼rÃ¼: Konsolide Bobi
+                      Denetim Türü: Konsolide Bobi
                     </MenuItem>
                     <MenuItem value={"TfrsKonsolide"}>
-                      Denetim TÃ¼rÃ¼: Konsolide Tfrs
+                      Denetim Türü: Konsolide Tfrs
                     </MenuItem>
                   </CustomSelect>
                 </Grid>

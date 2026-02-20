@@ -20,17 +20,17 @@ interface ProfileType {
 const profile: ProfileType[] = [
   {
     id: uniqueId(),
-    title: "Hesap AyarlarÄ±",
+    title: "Hesap Ayarları",
     icon: "/images/svgs/icon-settings.png",
     href: "/HesapAyarlari",
-    subtitle: "Hesap kiÅŸiselleÅŸtirme",
+    subtitle: "Hesap kişiselleştirme",
   },
   {
     id: uniqueId(),
-    title: "Tema AyarlarÄ±",
+    title: "Tema Ayarları",
     icon: "/images/svgs/icon-settings2.png",
     href: "/TemaAyarlari",
-    subtitle: "Tema kiÅŸiselleÅŸtirme",
+    subtitle: "Tema kişiselleştirme",
   },
 ];
 

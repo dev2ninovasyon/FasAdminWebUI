@@ -24,10 +24,10 @@ const SirketYonetimKadrosuEkleForm = () => {
             if (result) {
                 router.push("/StandartCalismaKagitlari/Musteri/SirketYonetimKadrosu");
             } else {
-                console.log("Åirket YÃ¶netim Kadrosu ekleme baÅŸarÄ±sÄ±z");
+                console.log("Åirket Yönetim Kadrosu ekleme başarısız");
             }
         } catch (error) {
-            console.log("Bir hata oluÅŸtu:", error);
+            console.log("Bir hata oluştu:", error);
         }
     };
 
@@ -45,7 +45,7 @@ const SirketYonetimKadrosuEkleForm = () => {
                         htmlFor="uyeAdiSoyadi"
                         sx={{ mt: 0, mb: { xs: "-10px", sm: 0 } }}
                     >
-                        Ãœye AdÄ± SoyadÄ±
+                        Üye Adı Soyadı
                     </CustomFormLabel>
                 </Grid>
                 <Grid
@@ -70,7 +70,7 @@ const SirketYonetimKadrosuEkleForm = () => {
                         htmlFor="uyeUnvani"
                         sx={{ mt: 0, mb: { xs: "-10px", sm: 0 } }}
                     >
-                        Ãœye ÃœnvanÄ±
+                        Üye Ünvanı
                     </CustomFormLabel>
                 </Grid>
                 <Grid
@@ -99,7 +99,7 @@ const SirketYonetimKadrosuEkleForm = () => {
                         color="primary"
                         onClick={handleButtonClick}
                     >
-                        Åirket YÃ¶netim Kadrosu Ekle
+                        Åirket Yönetim Kadrosu Ekle
                     </Button>
                 </Grid>
             </Grid>

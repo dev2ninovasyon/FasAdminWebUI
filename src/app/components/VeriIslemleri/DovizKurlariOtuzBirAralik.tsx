@@ -55,7 +55,7 @@ const DovizKurlariOtuzBirAralik: React.FC<Props> = ({
     loadStyles();
   }, [customizer.activeMode]);
 
-  const colHeaders = ["Tarih", "Kodu", "AdÄ±", "DÃ¶viz AlÄ±ÅŸ", "DÃ¶viz SatÄ±ÅŸ"];
+  const colHeaders = ["Tarih", "Kodu", "Adı", "Döviz Alış", "Döviz Satış"];
 
   const columns = [
     {
@@ -81,7 +81,7 @@ const DovizKurlariOtuzBirAralik: React.FC<Props> = ({
       allowInvalid: false,
       readOnly: true,
       editor: false,
-    }, // AdÄ±
+    }, // Adı
     {
       type: "numeric",
       numericFormat: { pattern: "0,0.0000", columnSorting: true },
@@ -89,7 +89,7 @@ const DovizKurlariOtuzBirAralik: React.FC<Props> = ({
       allowInvalid: false,
       readOnly: true,
       editor: false,
-    }, // DÃ¶viz AlÄ±ÅŸ
+    }, // Döviz Alış
     {
       type: "numeric",
       numericFormat: { pattern: "0,0.0000", columnSorting: true },
@@ -97,7 +97,7 @@ const DovizKurlariOtuzBirAralik: React.FC<Props> = ({
       allowInvalid: false,
       readOnly: true,
       editor: false,
-    }, // DÃ¶viz SatÄ±ÅŸ
+    }, // Döviz Satış
   ];
 
   const afterGetColHeader = (col: any, TH: any) => {
@@ -228,7 +228,7 @@ const DovizKurlariOtuzBirAralik: React.FC<Props> = ({
       setRowCount(rowsAll.length);
       setFetchedData(rowsAll);
     } catch (error) {
-      console.error("Bir hata oluÅŸtu:", error);
+      console.error("Bir hata oluştu:", error);
     }
   };
 
@@ -287,9 +287,9 @@ const DovizKurlariOtuzBirAralik: React.FC<Props> = ({
           type: "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
         });
         saveAs(blob, "DovizKurlariOtuzBirAralik.xlsx");
-        console.log("Excel dosyasÄ± baÅŸarÄ±yla oluÅŸturuldu");
+        console.log("Excel dosyası başarıyla oluşturuldu");
       } catch (error) {
-        console.error("Excel dosyasÄ± oluÅŸturulurken bir hata oluÅŸtu:", error);
+        console.error("Excel dosyası oluşturulurken bir hata oluştu:", error);
       }
     }
     createExcelFile();

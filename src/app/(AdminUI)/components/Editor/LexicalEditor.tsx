@@ -378,7 +378,7 @@ const ToolbarPlugin = () => {
   };
 
   const clearEditor = () => {
-    if (confirm("EditÃ¶rÃ¼n tÃ¼m iÃ§eriÄŸini silmek istiyor musunuz?")) {
+    if (confirm("Editörün tüm içeriğini silmek istiyor musunuz?")) {
       editor.update(() => {
         $getRoot().clear();
       });
@@ -446,7 +446,7 @@ const ToolbarPlugin = () => {
   return (
     <Box className="lexical-toolbar">
       {/* Block Type Selector */}
-      <Tooltip title="Blok tÃ¼rÃ¼">
+      <Tooltip title="Blok türü">
         <FormControl size="small" sx={{ minWidth: 130, mr: 0.5 }}>
           <Select
             value={blockType}
@@ -465,14 +465,14 @@ const ToolbarPlugin = () => {
             className="lexical-toolbar-select"
           >
             <MenuItem value="paragraph">Normal</MenuItem>
-            <MenuItem value="h1">BaÅŸlÄ±k 1</MenuItem>
-            <MenuItem value="h2">BaÅŸlÄ±k 2</MenuItem>
-            <MenuItem value="h3">BaÅŸlÄ±k 3</MenuItem>
-            <MenuItem value="h4">BaÅŸlÄ±k 4</MenuItem>
-            <MenuItem value="h5">BaÅŸlÄ±k 5</MenuItem>
-            <MenuItem value="h6">BaÅŸlÄ±k 6</MenuItem>
-            <MenuItem value="quote">AlÄ±ntÄ±</MenuItem>
-            <MenuItem value="code">Kod BloÄŸu</MenuItem>
+            <MenuItem value="h1">Başlık 1</MenuItem>
+            <MenuItem value="h2">Başlık 2</MenuItem>
+            <MenuItem value="h3">Başlık 3</MenuItem>
+            <MenuItem value="h4">Başlık 4</MenuItem>
+            <MenuItem value="h5">Başlık 5</MenuItem>
+            <MenuItem value="h6">Başlık 6</MenuItem>
+            <MenuItem value="quote">Alıntı</MenuItem>
+            <MenuItem value="code">Kod Bloğu</MenuItem>
           </Select>
         </FormControl>
       </Tooltip>
@@ -534,7 +534,7 @@ const ToolbarPlugin = () => {
           <FormatIndentDecrease fontSize="small" />
         </button>
       </Tooltip>
-      <Tooltip title="Font boyutunu artÄ±r">
+      <Tooltip title="Font boyutunu artır">
         <button
           onClick={() => {
             const currentSize = parseInt(fontSize) + 2;
@@ -563,7 +563,7 @@ const ToolbarPlugin = () => {
           <Undo fontSize="small" />
         </button>
       </Tooltip>
-      <Tooltip title="Ä°leri Al (Ctrl+Y)">
+      <Tooltip title="İleri Al (Ctrl+Y)">
         <button
           onClick={() => editor.dispatchCommand(REDO_COMMAND, undefined)}
           className="lexical-toolbar-button"
@@ -575,7 +575,7 @@ const ToolbarPlugin = () => {
       <div className="lexical-toolbar-divider" />
 
       {/* Text Formatting */}
-      <Tooltip title="KalÄ±n (Ctrl+B)">
+      <Tooltip title="Kalın (Ctrl+B)">
         <button
           onClick={() => editor.dispatchCommand(FORMAT_TEXT_COMMAND, "bold")}
           className={`lexical-toolbar-button ${isBold ? "active" : ""}`}
@@ -583,7 +583,7 @@ const ToolbarPlugin = () => {
           <FormatBold fontSize="small" />
         </button>
       </Tooltip>
-      <Tooltip title="Ä°talik (Ctrl+I)">
+      <Tooltip title="İtalik (Ctrl+I)">
         <button
           onClick={() => editor.dispatchCommand(FORMAT_TEXT_COMMAND, "italic")}
           className={`lexical-toolbar-button ${isItalic ? "active" : ""}`}
@@ -591,7 +591,7 @@ const ToolbarPlugin = () => {
           <FormatItalic fontSize="small" />
         </button>
       </Tooltip>
-      <Tooltip title="AltÄ± Ã‡izili (Ctrl+U)">
+      <Tooltip title="Altı Çizili (Ctrl+U)">
         <button
           onClick={() => editor.dispatchCommand(FORMAT_TEXT_COMMAND, "underline")}
           className={`lexical-toolbar-button ${isUnderline ? "active" : ""}`}
@@ -599,7 +599,7 @@ const ToolbarPlugin = () => {
           <FormatUnderlined fontSize="small" />
         </button>
       </Tooltip>
-      <Tooltip title="ÃœstÃ¼ Ã‡izili">
+      <Tooltip title="Üstü Çizili">
         <button
           onClick={() => editor.dispatchCommand(FORMAT_TEXT_COMMAND, "strikethrough")}
           className={`lexical-toolbar-button ${isStrikethrough ? "active" : ""}`}
@@ -617,7 +617,7 @@ const ToolbarPlugin = () => {
       </Tooltip>
 
       {/* Additional Text Styles Dropdown */}
-      <Tooltip title="DiÄŸer metin stilleri">
+      <Tooltip title="Diğer metin stilleri">
         <button
           onClick={(e) => setStylesAnchorEl(e.currentTarget)}
           className="lexical-toolbar-button"
@@ -648,7 +648,7 @@ const ToolbarPlugin = () => {
           className={isSuperscript ? "active" : ""}
         >
           <Superscript fontSize="small" sx={{ mr: 1 }} />
-          Ãœst Simge
+          Üst Simge
         </MenuItem>
       </Menu>
       <Tooltip title="Alt Simge">
@@ -659,7 +659,7 @@ const ToolbarPlugin = () => {
           <Subscript fontSize="small" />
         </button>
       </Tooltip>
-      <Tooltip title="Ãœst Simge">
+      <Tooltip title="Üst Simge">
         <button
           onClick={() => editor.dispatchCommand(FORMAT_TEXT_COMMAND, "superscript")}
           className={`lexical-toolbar-button ${isSuperscript ? "active" : ""}`}
@@ -755,7 +755,7 @@ const ToolbarPlugin = () => {
           <FormatAlignCenter fontSize="small" />
         </button>
       </Tooltip>
-      <Tooltip title="SaÄŸa hizala">
+      <Tooltip title="Sağa hizala">
         <button
           onClick={() => editor.dispatchCommand(FORMAT_ELEMENT_COMMAND, "right")}
           className="lexical-toolbar-button"
@@ -763,7 +763,7 @@ const ToolbarPlugin = () => {
           <FormatAlignRight fontSize="small" />
         </button>
       </Tooltip>
-      <Tooltip title="Ä°ki yana yasla">
+      <Tooltip title="İki yana yasla">
         <button
           onClick={() => editor.dispatchCommand(FORMAT_ELEMENT_COMMAND, "justify")}
           className="lexical-toolbar-button"
@@ -775,7 +775,7 @@ const ToolbarPlugin = () => {
       <div className="lexical-toolbar-divider" />
 
       {/* Lists */}
-      <Tooltip title="Madde iÅŸaretli liste">
+      <Tooltip title="Madde işaretli liste">
         <button
           onClick={() => editor.dispatchCommand(INSERT_UNORDERED_LIST_COMMAND, undefined)}
           className="lexical-toolbar-button"
@@ -783,7 +783,7 @@ const ToolbarPlugin = () => {
           <FormatListBulleted fontSize="small" />
         </button>
       </Tooltip>
-      <Tooltip title="NumaralÄ± liste">
+      <Tooltip title="Numaralı liste">
         <button
           onClick={() => editor.dispatchCommand(INSERT_ORDERED_LIST_COMMAND, undefined)}
           className="lexical-toolbar-button"
@@ -803,7 +803,7 @@ const ToolbarPlugin = () => {
       <div className="lexical-toolbar-divider" />
 
       {/* Indentation */}
-      <Tooltip title="Girintiyi artÄ±r">
+      <Tooltip title="Girintiyi artır">
         <button
           onClick={() => editor.dispatchCommand(INDENT_CONTENT_COMMAND, undefined)}
           className="lexical-toolbar-button"
@@ -823,7 +823,7 @@ const ToolbarPlugin = () => {
       <div className="lexical-toolbar-divider" />
 
       {/* Quote */}
-      <Tooltip title="AlÄ±ntÄ±">
+      <Tooltip title="Alıntı">
         <button
           onClick={formatQuote}
           className="lexical-toolbar-button"
@@ -833,7 +833,7 @@ const ToolbarPlugin = () => {
       </Tooltip>
 
       {/* Link */}
-      <Tooltip title="BaÄŸlantÄ± ekle">
+      <Tooltip title="Bağlantı ekle">
         <button
           onClick={insertLink}
           className="lexical-toolbar-button"
@@ -860,7 +860,7 @@ const ToolbarPlugin = () => {
         {/* Basic Elements */}
         <MenuItem onClick={insertHorizontalRule}>
           <HorizontalRule fontSize="small" sx={{ mr: 1 }} />
-          Yatay Ã‡izgi
+          Yatay Çizgi
         </MenuItem>
 
         <MenuItem onClick={(e) => setTableAnchorEl(e.currentTarget)}>
@@ -892,7 +892,7 @@ const ToolbarPlugin = () => {
         </MenuItem>
 
         <MenuItem onClick={() => {
-          const videoId = prompt("YouTube Video ID girin (Ã¶rn: dQw4w9WgXcQ):");
+          const videoId = prompt("YouTube Video ID girin (örn: dQw4w9WgXcQ):");
           if (videoId) {
             const html = `<iframe width="100%" height="400" src="https://www.youtube.com/embed/${videoId}" title="YouTube video" frameborder="0" allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture" allowfullscreen style="max-width: 100%;"></iframe>`;
             insertIframe(html);
@@ -938,7 +938,7 @@ const ToolbarPlugin = () => {
 
         {/* Equation */}
         <MenuItem onClick={() => {
-          const equation = prompt("LaTeX denklemi girin (Ã¶rn: E = mc^2):");
+          const equation = prompt("LaTeX denklemi girin (örn: E = mc^2):");
           if (equation) {
             const html = `<span style="background: #f0f0f0; padding: 8px; border-radius: 4px; font-family: 'Courier New'; font-size: 14px;" title="Denklem: ${equation}">${equation}</span>`;
             insertIframe(html);
@@ -951,7 +951,7 @@ const ToolbarPlugin = () => {
 
         {/* Sticky Note */}
         <MenuItem onClick={() => {
-          const note = prompt("Not yazÄ±nÄ±z:");
+          const note = prompt("Not yazınız:");
           if (note) {
             const html = `<div style="background: #ffeb3b; padding: 16px; border-radius: 4px; box-shadow: 0 2px 4px rgba(0,0,0,0.2); max-width: 250px; font-family: Arial; font-size: 14px; color: #333;">${note}</div>`;
             insertIframe(html);
@@ -959,7 +959,7 @@ const ToolbarPlugin = () => {
           setInsertAnchorEl(null);
         }}>
           <Note fontSize="small" sx={{ mr: 1 }} />
-          YapÄ±ÅŸkan Not
+          Yapışkan Not
         </MenuItem>
 
         {/* Poll */}
@@ -968,9 +968,9 @@ const ToolbarPlugin = () => {
           if (question) {
             const html = `<div style="border: 2px solid #2196F3; padding: 16px; border-radius: 8px; background: #f5f5f5;">
               <div style="font-weight: bold; margin-bottom: 12px;">${question}</div>
-              <label style="display: block; margin: 8px 0;"><input type="radio" name="poll"> SeÃ§enek 1</label>
-              <label style="display: block; margin: 8px 0;"><input type="radio" name="poll"> SeÃ§enek 2</label>
-              <label style="display: block; margin: 8px 0;"><input type="radio" name="poll"> SeÃ§enek 3</label>
+              <label style="display: block; margin: 8px 0;"><input type="radio" name="poll"> Seçenek 1</label>
+              <label style="display: block; margin: 8px 0;"><input type="radio" name="poll"> Seçenek 2</label>
+              <label style="display: block; margin: 8px 0;"><input type="radio" name="poll"> Seçenek 3</label>
             </div>`;
             insertIframe(html);
           }
@@ -982,8 +982,8 @@ const ToolbarPlugin = () => {
 
         {/* Collapsible */}
         <MenuItem onClick={() => {
-          const title = prompt("BaÅŸlÄ±k girin:");
-          const content = prompt("Ä°Ã§erik girin:");
+          const title = prompt("Başlık girin:");
+          const content = prompt("İçerik girin:");
           if (title && content) {
             const html = `<details style="border: 1px solid #ddd; padding: 10px; margin: 10px 0; border-radius: 4px;">
               <summary style="cursor: pointer; font-weight: bold;">${title}</summary>
@@ -994,20 +994,20 @@ const ToolbarPlugin = () => {
           setInsertAnchorEl(null);
         }}>
           <Add fontSize="small" sx={{ mr: 1 }} />
-          Katlanan Ä°Ã§erik
+          Katlanan İçerik
         </MenuItem>
 
         {/* Columns Layout */}
         <MenuItem onClick={() => {
           const html = `<div style="display: grid; grid-template-columns: 1fr 1fr; gap: 20px;">
-            <div style="border: 1px solid #ddd; padding: 16px;"><strong>SÃ¼tun 1</strong><br>Ä°Ã§eriÄŸinizi buraya yazÄ±n...</div>
-            <div style="border: 1px solid #ddd; padding: 16px;"><strong>SÃ¼tun 2</strong><br>Ä°Ã§eriÄŸinizi buraya yazÄ±n...</div>
+            <div style="border: 1px solid #ddd; padding: 16px;"><strong>Sütun 1</strong><br>İçeriğinizi buraya yazın...</div>
+            <div style="border: 1px solid #ddd; padding: 16px;"><strong>Sütun 2</strong><br>İçeriğinizi buraya yazın...</div>
           </div>`;
           insertIframe(html);
           setInsertAnchorEl(null);
         }}>
           <Apps fontSize="small" sx={{ mr: 1 }} />
-          Ä°ki SÃ¼tun DÃ¼zeni
+          İki Sütun Düzeni
         </MenuItem>
 
         {/* Date */}
@@ -1035,15 +1035,15 @@ const ToolbarPlugin = () => {
           const html = `<div style="border: 2px dashed #ccc; padding: 20px; text-align: center; border-radius: 8px; background: #fafafa; min-height: 300px; display: flex; align-items: center; justify-content: center;">
             <div>
               <div style="font-size: 32px; margin-bottom: 10px;">âœï¸</div>
-              <div style="font-weight: bold;">Excalidraw DiyagramÄ±</div>
-              <div style="font-size: 12px; color: #666; margin-top: 5px;">Buraya Ã§izim ekleyebilirsiniz</div>
+              <div style="font-weight: bold;">Excalidraw Diyagramı</div>
+              <div style="font-size: 12px; color: #666; margin-top: 5px;">Buraya çizim ekleyebilirsiniz</div>
             </div>
           </div>`;
           insertIframe(html);
           setInsertAnchorEl(null);
         }}>
           <Add fontSize="small" sx={{ mr: 1 }} />
-          Excalidraw Ã‡izimi
+          Excalidraw Çizimi
         </MenuItem>
       </Menu>
 
@@ -1062,7 +1062,7 @@ const ToolbarPlugin = () => {
       <div className="lexical-toolbar-divider" />
 
       {/* Clear Formatting */}
-      <Tooltip title="BiÃ§imlendirmeyi temizle">
+      <Tooltip title="Biçimlendirmeyi temizle">
         <button
           onClick={() => {
             editor.update(() => {
@@ -1083,7 +1083,7 @@ const ToolbarPlugin = () => {
       </Tooltip>
 
       {/* Clear Editor */}
-      <Tooltip title="EditÃ¶rÃ¼ temizle">
+      <Tooltip title="Editörü temizle">
         <button
           onClick={clearEditor}
           className="lexical-toolbar-button"
@@ -1137,7 +1137,7 @@ const HtmlPlugin = ({
 const LexicalEditor: React.FC<LexicalEditorProps> = ({
   initialValue = "",
   onChange,
-  placeholder = "Ä°Ã§eriÄŸinizi buraya yazÄ±n...",
+  placeholder = "İçeriğinizi buraya yazın...",
   mode = "light",
   readOnly = false,
 }) => {

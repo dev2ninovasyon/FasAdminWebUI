@@ -9,7 +9,7 @@ import FormatDuzenleForm from "@/app/components/FormaIslemleri/FormatDuzenleForm
 const BCrumb = [
   {
     to: "/Anasayfa",
-    title: "Admin MenÃ¼",
+    title: "Admin Menü",
   },
   {
     to: "/Formatlar",
@@ -24,8 +24,8 @@ const Page = (props: { params: Promise<{ id: string }> }) => {
   const id = params.id;
 
   return (
-    <PageContainer title="Format DÃ¼zenle" description="this is Format DÃ¼zenle">
-      <Breadcrumb title="Format DÃ¼zenle" items={BCrumb} />
+    <PageContainer title="Format Düzenle" description="this is Format Düzenle">
+      <Breadcrumb title="Format Düzenle" items={BCrumb} />
       <Grid container spacing={3}>
         <Grid size={{ xs: 12 }}>
           <ParentCard title="Format">

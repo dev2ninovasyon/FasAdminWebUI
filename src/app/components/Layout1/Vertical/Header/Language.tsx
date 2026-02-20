@@ -9,7 +9,7 @@ import { AppState } from "@/store/store";
 
 const Languages = [
   {
-    flagname: "TÃ¼rkÃ§e (Turkish)",
+    flagname: "Türkçe (Turkish)",
     icon: "/images/flag/icon-flag-tr.png",
     value: "tr",
   },
@@ -24,7 +24,7 @@ const Languages = [
     value: "ch",
   },
   {
-    flagname: "franÃ§ais (French)",
+    flagname: "français (French)",
     icon: "/images/flag/icon-flag-fr.svg",
     value: "fr",
   },

@@ -8,21 +8,21 @@ import BagimsizDenetimMetodolojisiTable from "./BagimsizDenetimMetodolojisiTable
 const BCrumb = [
     {
         to: "/StandartCalismaKagitlari",
-        title: "Standart Ã‡alÄ±ÅŸma KaÄŸÄ±tlarÄ±",
+        title: "Standart Çalışma Kağıtları",
     },
     {
         to: "/StandartCalismaKagitlari/BagimsizDenetimMetodolojisi",
-        title: "BaÄŸÄ±msÄ±z Denetim Metodolojisi",
+        title: "Bağımsız Denetim Metodolojisi",
     },
 ];
 
 const Page = () => {
     return (
         <PageContainer
-            title="BaÄŸÄ±msÄ±z Denetim Metodolojisi"
-            description="this is BaÄŸÄ±msÄ±z Denetim Metodolojisi"
+            title="Bağımsız Denetim Metodolojisi"
+            description="this is Bağımsız Denetim Metodolojisi"
         >
-            <Breadcrumb title="BaÄŸÄ±msÄ±z Denetim Metodolojisi" items={BCrumb} />
+            <Breadcrumb title="Bağımsız Denetim Metodolojisi" items={BCrumb} />
             <Grid container>
                 <Grid
                     mb={3}

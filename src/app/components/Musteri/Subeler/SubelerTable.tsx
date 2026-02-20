@@ -57,7 +57,7 @@ const SubelerTable = () => {
                 console.log("Åube silinemedi");
             }
         } catch (error) {
-            console.log("Bir hata oluÅŸtu:", error);
+            console.log("Bir hata oluştu:", error);
         }
     };
 
@@ -76,7 +76,7 @@ const SubelerTable = () => {
                 setRows(newRows);
             }
         } catch (error) {
-            console.log("Bir hata oluÅŸtu:", error);
+            console.log("Bir hata oluştu:", error);
         }
     };
 
@@ -91,11 +91,11 @@ const SubelerTable = () => {
                     <TableHead>
                         <TableRow>
                             <TableCell>
-                                <Typography variant="h6">Ãœnvan</Typography>
+                                <Typography variant="h6">Ünvan</Typography>
                             </TableCell>
                             <TableCell>
                                 <Typography textAlign="center" variant="h6">
-                                    Åube AdÄ±
+                                    Åube Adı
                                 </Typography>
                             </TableCell>
                             <TableCell>
@@ -156,7 +156,7 @@ const SubelerTable = () => {
                                             <ListItemIcon>
                                                 <IconEdit width={18} />
                                             </ListItemIcon>
-                                            DÃ¼zenle
+                                            Düzenle
                                         </MenuItem>
                                         <MenuItem onClick={() => handleDelete()}>
                                             <ListItemIcon>

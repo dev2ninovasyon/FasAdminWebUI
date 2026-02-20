@@ -44,9 +44,9 @@ export default function RootLayout({
   const user = useSelector((state: AppState) => state.userReducer);
   const [control, setControl] = useState(false);
   useEffect(() => {
-    // Sadece client-side'da Ã§alÄ±ÅŸmasÄ±nÄ± saÄŸla
+    // Sadece client-side'da çalışmasını sağla
     if (typeof window !== "undefined") {
-      // EÄŸer token yoksa kullanÄ±cÄ±yÄ± login sayfasÄ±na yÃ¶nlendir
+      // Eğer token yoksa kullanıcıyı login sayfasına yönlendir
       if (!user.token) {
         router.push("/");
       } else {

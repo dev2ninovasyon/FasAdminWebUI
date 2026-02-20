@@ -34,7 +34,7 @@ type Props = {
 };
 
 const FisBuyukluguAnaliziChart: React.FC<Props> = ({
-    title = "FiÅŸ BÃ¼yÃ¼klÃ¼ÄŸÃ¼",
+    title = "Fiş Büyüklüğü",
     aylar,
     onNotChange,
     onSaveNote,
@@ -82,15 +82,15 @@ const FisBuyukluguAnaliziChart: React.FC<Props> = ({
         xaxis: {
             categories: [],
             labels: { rotate: -45, style: { fontSize: "11px" } },
-            title: { text: "GÃ¼nler" },
+            title: { text: "Günler" },
         },
-        yaxis: { title: { text: "FiÅŸ SayÄ±sÄ±" } },
+        yaxis: { title: { text: "Fiş Sayısı" } },
         legend: { show: false },
         tooltip: {
             theme: theme.palette.mode === "dark" ? "dark" : "light",
             y: {
                 formatter: (val: number): string =>
-                    `${Intl.NumberFormat("tr-TR").format(val)} fiÅŸ`,
+                    `${Intl.NumberFormat("tr-TR").format(val)} fiş`,
             },
         },
     };
@@ -107,11 +107,11 @@ const FisBuyukluguAnaliziChart: React.FC<Props> = ({
                     xaxis: { ...(baseOptions.xaxis as ApexOptions["xaxis"]), categories: item.gunler },
                 };
 
-                const series = [{ name: "GÃ¼nlÃ¼k FiÅŸ SayÄ±sÄ±", data: gunlukData }];
+                const series = [{ name: "Günlük Fiş Sayısı", data: gunlukData }];
 
                 return (
                     <Card key={item.ay} variant="outlined">
-                        <CardHeader title={`${item.ay} AyÄ± FiÅŸleri`} sx={{ pb: 0 }} />
+                        <CardHeader title={`${item.ay} Ayı Fişleri`} sx={{ pb: 0 }} />
                         <CardContent sx={{ pt: 1 }}>
                             <div id={`chart-wrap-${item.ay}`} ref={(el) => registerChartDom?.(item.ay, el)}>
                                 <Chart options={options} series={series} type="bar" height={300} width="100%" />

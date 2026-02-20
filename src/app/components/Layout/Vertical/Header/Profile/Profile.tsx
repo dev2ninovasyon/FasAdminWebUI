@@ -37,7 +37,7 @@ const Profile = () => {
         });
       }
     } catch (error) {
-      console.error("Ã‡Ä±kÄ±ÅŸ yapÄ±lÄ±rken hata oluÅŸtu:", error);
+      console.error("Çıkış yapılırken hata oluştu:", error);
     } finally {
       dispatch(resetToNull(""));
     }
@@ -140,7 +140,7 @@ const Profile = () => {
             onClick={() => handleLogOut()}
             fullWidth
           >
-            Ã‡Ä±kÄ±ÅŸ
+            Çıkış
           </Button>
         </Box>
       </Menu>

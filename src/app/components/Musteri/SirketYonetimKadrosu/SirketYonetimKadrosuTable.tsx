@@ -57,10 +57,10 @@ const SirketYonetimKadrosuTable = () => {
             if (result) {
                 fetchData();
             } else {
-                console.log("Åirket YÃ¶netim Kadrosu silinemedi");
+                console.log("Åirket Yönetim Kadrosu silinemedi");
             }
         } catch (error) {
-            console.log("Bir hata oluÅŸtu:", error);
+            console.log("Bir hata oluştu:", error);
         }
     };
 
@@ -82,7 +82,7 @@ const SirketYonetimKadrosuTable = () => {
                 setRows(newRows);
             }
         } catch (error) {
-            console.log("Bir hata oluÅŸtu:", error);
+            console.log("Bir hata oluştu:", error);
         }
     };
 
@@ -97,11 +97,11 @@ const SirketYonetimKadrosuTable = () => {
                     <TableHead>
                         <TableRow>
                             <TableCell>
-                                <Typography variant="h6">Ãœye AdÄ± SoyadÄ±</Typography>
+                                <Typography variant="h6">Üye Adı Soyadı</Typography>
                             </TableCell>
                             <TableCell>
                                 <Typography textAlign="center" variant="h6">
-                                    Ãœye ÃœnvanÄ±
+                                    Üye Ünvanı
                                 </Typography>
                             </TableCell>
                             <TableCell></TableCell>
@@ -148,7 +148,7 @@ const SirketYonetimKadrosuTable = () => {
                                             <ListItemIcon>
                                                 <IconEdit width={18} />
                                             </ListItemIcon>
-                                            DÃ¼zenle
+                                            Düzenle
                                         </MenuItem>
                                         <MenuItem onClick={() => handleDelete()}>
                                             <ListItemIcon>

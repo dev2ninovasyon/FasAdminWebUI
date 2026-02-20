@@ -9,25 +9,25 @@ import DenetciEkleForm from "@/app/components/DenetciIslemleri/DenetciEkleForm";
 const BCrumb = [
   {
     to: "/Anasayfa",
-    title: "Admin MenÃ¼",
+    title: "Admin Menü",
   },
   {
     to: "/DenetciFirmaIslemleri",
-    title: "DenetÃ§i Firma Ä°ÅŸlemleri",
+    title: "Denetçi Firma İşlemleri",
   },
   {
     to: "/DenetciFirmaIslemleri/DenetciEkle",
-    title: "DenetÃ§i Ekle",
+    title: "Denetçi Ekle",
   },
 ];
 
 const Page = () => {
   return (
-    <PageContainer title="DenetÃ§i Ekle" description="this is DenetÃ§i Ekle">
-      <Breadcrumb title="DenetÃ§i Ekle" items={BCrumb} />
+    <PageContainer title="Denetçi Ekle" description="this is Denetçi Ekle">
+      <Breadcrumb title="Denetçi Ekle" items={BCrumb} />
       <Grid container spacing={3}>
         <Grid size={{ xs: 12 }}>
-          <ParentCard title="Yeni DenetÃ§i">
+          <ParentCard title="Yeni Denetçi">
             <DenetciEkleForm />
           </ParentCard>
         </Grid>

@@ -49,10 +49,10 @@ const DenetciDuzenleForm = ({ id }: { id?: string }) => {
       if (result) {
         router.push("/DenetciFirmaIslemleri");
       } else {
-        console.error("DenetÃ§i dÃ¼zenleme baÅŸarÄ±sÄ±z");
+        console.error("Denetçi düzenleme başarısız");
       }
     } catch (error) {
-      console.error("Bir hata oluÅŸtu:", error);
+      console.error("Bir hata oluştu:", error);
     }
   };
 
@@ -72,7 +72,7 @@ const DenetciDuzenleForm = ({ id }: { id?: string }) => {
       setTicaretSicilNo(denetciVerileri.ticaretSicilNo);
       setAktifmi(denetciVerileri.aktifmi);
     } catch (error) {
-      console.error("Bir hata oluÅŸtu:", error);
+      console.error("Bir hata oluştu:", error);
     }
   };
 
@@ -87,7 +87,7 @@ const DenetciDuzenleForm = ({ id }: { id?: string }) => {
           htmlFor="firmaAdi"
           sx={{ mt: 0, mb: { xs: "-10px", sm: 0 } }}
         >
-          Firma AdÄ±
+          Firma Adı
         </CustomFormLabel>
       </Grid>
       <Grid size={{ xs: 12, sm: 9 }}>
@@ -103,7 +103,7 @@ const DenetciDuzenleForm = ({ id }: { id?: string }) => {
           htmlFor="firmaUnvani"
           sx={{ mt: 0, mb: { xs: "-10px", sm: 0 } }}
         >
-          Firma ÃœnvanÄ±
+          Firma Ünvanı
         </CustomFormLabel>
       </Grid>
       <Grid size={{ xs: 12, sm: 9 }}>
@@ -135,7 +135,7 @@ const DenetciDuzenleForm = ({ id }: { id?: string }) => {
           htmlFor="il"
           sx={{ mt: 0, mb: { xs: "-10px", sm: 0 } }}
         >
-          Ä°l
+          İl
         </CustomFormLabel>
       </Grid>
       <Grid size={{ xs: 12, sm: 9 }}>
@@ -215,7 +215,7 @@ const DenetciDuzenleForm = ({ id }: { id?: string }) => {
           htmlFor="vergiNo"
           sx={{ mt: 0, mb: { xs: "-10px", sm: 0 } }}
         >
-          Vergi NumarasÄ±
+          Vergi Numarası
         </CustomFormLabel>
       </Grid>
       <Grid size={{ xs: 12, sm: 9 }}>
@@ -248,7 +248,7 @@ const DenetciDuzenleForm = ({ id }: { id?: string }) => {
           htmlFor="ticaretSicilNo"
           sx={{ mt: 0, mb: { xs: "-10px", sm: 0 } }}
         >
-          Ticaret Sicil NumarasÄ±
+          Ticaret Sicil Numarası
         </CustomFormLabel>
       </Grid>
       <Grid size={{ xs: 12, sm: 9 }}>
@@ -263,7 +263,7 @@ const DenetciDuzenleForm = ({ id }: { id?: string }) => {
       <Grid size={{ xs: 12, sm: 3 }}></Grid>
       <Grid size={{ xs: 12, sm: 9 }}>
         <Button variant="contained" color="primary" onClick={handleButtonClick}>
-          DenetÃ§i DÃ¼zenle
+          Denetçi Düzenle
         </Button>
       </Grid>
     </Grid>

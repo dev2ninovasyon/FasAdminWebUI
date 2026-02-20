@@ -59,10 +59,10 @@ const DenetciOdemeBilgileriDuzenleForm = ({ id }: { id?: string }) => {
       if (result) {
         router.push(`/DenetciFirmaIslemleri/DenetciOdemeBilgileri/${pathId}`);
       } else {
-        console.error("DenetÃ§i Ã–deme Bilgileri dÃ¼zenleme baÅŸarÄ±sÄ±z");
+        console.error("Denetçi Ödeme Bilgileri düzenleme başarısız");
       }
     } catch (error) {
-      console.error("Bir hata oluÅŸtu:", error);
+      console.error("Bir hata oluştu:", error);
     }
   };
 
@@ -86,7 +86,7 @@ const DenetciOdemeBilgileriDuzenleForm = ({ id }: { id?: string }) => {
       setKonsolideModulu(denetciOdemeBilgileri.konsolideModulu);
       setEnflasyonModulu(denetciOdemeBilgileri.enflasyonModulu);
     } catch (error) {
-      console.error("Bir hata oluÅŸtu:", error);
+      console.error("Bir hata oluştu:", error);
     }
   };
 
@@ -105,7 +105,7 @@ const DenetciOdemeBilgileriDuzenleForm = ({ id }: { id?: string }) => {
               color="primary"
             />
           }
-          label="Bobi ModÃ¼lÃ¼"
+          label="Bobi Modülü"
           labelPlacement="top"
           sx={{ ml: 0 }}
         />
@@ -119,7 +119,7 @@ const DenetciOdemeBilgileriDuzenleForm = ({ id }: { id?: string }) => {
               color="primary"
             />
           }
-          label="Tfrs ModÃ¼lÃ¼"
+          label="Tfrs Modülü"
           labelPlacement="top"
           sx={{ ml: 0 }}
         />
@@ -133,7 +133,7 @@ const DenetciOdemeBilgileriDuzenleForm = ({ id }: { id?: string }) => {
               color="primary"
             />
           }
-          label="KÃ¼mi ModÃ¼lÃ¼"
+          label="Kümi Modülü"
           labelPlacement="top"
           sx={{ ml: 0 }}
         />
@@ -147,7 +147,7 @@ const DenetciOdemeBilgileriDuzenleForm = ({ id }: { id?: string }) => {
               color="primary"
             />
           }
-          label="Bddk Analizi ModÃ¼lÃ¼"
+          label="Bddk Analizi Modülü"
           labelPlacement="top"
           sx={{ ml: 0 }}
         />
@@ -161,7 +161,7 @@ const DenetciOdemeBilgileriDuzenleForm = ({ id }: { id?: string }) => {
               color="primary"
             />
           }
-          label="Konsolidasyon ModÃ¼lÃ¼"
+          label="Konsolidasyon Modülü"
           labelPlacement="top"
           sx={{ ml: 0 }}
         />
@@ -175,7 +175,7 @@ const DenetciOdemeBilgileriDuzenleForm = ({ id }: { id?: string }) => {
               color="primary"
             />
           }
-          label="Enflasyon ModÃ¼lÃ¼"
+          label="Enflasyon Modülü"
           labelPlacement="top"
           sx={{ ml: 0 }}
         />
@@ -186,7 +186,7 @@ const DenetciOdemeBilgileriDuzenleForm = ({ id }: { id?: string }) => {
           htmlFor="baslangicTarihi"
           sx={{ mt: 0, mb: { xs: "-10px", sm: 0 } }}
         >
-          BaÅŸlangÄ±Ã§ Tarihi
+          Başlangıç Tarihi
         </CustomFormLabel>
       </Grid>
       <Grid size={{ xs: 12, sm: 9 }}>
@@ -203,7 +203,7 @@ const DenetciOdemeBilgileriDuzenleForm = ({ id }: { id?: string }) => {
           htmlFor="bitisTarihi"
           sx={{ mt: 0, mb: { xs: "-10px", sm: 0 } }}
         >
-          BitiÅŸ Tarihi
+          Bitiş Tarihi
         </CustomFormLabel>
       </Grid>
       <Grid size={{ xs: 12, sm: 9 }}>
@@ -220,7 +220,7 @@ const DenetciOdemeBilgileriDuzenleForm = ({ id }: { id?: string }) => {
           htmlFor="satisTarihi"
           sx={{ mt: 0, mb: { xs: "-10px", sm: 0 } }}
         >
-          SatÄ±ÅŸ Tarihi
+          Satış Tarihi
         </CustomFormLabel>
       </Grid>
       <Grid size={{ xs: 12, sm: 9 }}>
@@ -237,7 +237,7 @@ const DenetciOdemeBilgileriDuzenleForm = ({ id }: { id?: string }) => {
           htmlFor="sirketKota"
           sx={{ mt: 0, mb: { xs: "-10px", sm: 0 } }}
         >
-          Åirket KotasÄ±
+          Åirket Kotası
         </CustomFormLabel>
       </Grid>
       <Grid size={{ xs: 12, sm: 9 }}>
@@ -254,7 +254,7 @@ const DenetciOdemeBilgileriDuzenleForm = ({ id }: { id?: string }) => {
           htmlFor="diskKota"
           sx={{ mt: 0, mb: { xs: "-10px", sm: 0 } }}
         >
-          Disk KotasÄ±
+          Disk Kotası
         </CustomFormLabel>
       </Grid>
       <Grid size={{ xs: 12, sm: 9 }}>
@@ -271,7 +271,7 @@ const DenetciOdemeBilgileriDuzenleForm = ({ id }: { id?: string }) => {
           htmlFor="enflasyonKota"
           sx={{ mt: 0, mb: { xs: "-10px", sm: 0 } }}
         >
-          Enflasyon KotasÄ±
+          Enflasyon Kotası
         </CustomFormLabel>
       </Grid>
       <Grid size={{ xs: 12, sm: 9 }}>
@@ -305,7 +305,7 @@ const DenetciOdemeBilgileriDuzenleForm = ({ id }: { id?: string }) => {
           htmlFor="aciklama"
           sx={{ mt: 0, mb: { xs: "-10px", sm: 0 } }}
         >
-          AÃ§Ä±klama
+          Açıklama
         </CustomFormLabel>
       </Grid>
       <Grid size={{ xs: 12, sm: 9 }}>
@@ -321,7 +321,7 @@ const DenetciOdemeBilgileriDuzenleForm = ({ id }: { id?: string }) => {
       <Grid size={{ xs: 12, sm: 3 }}></Grid>
       <Grid size={{ xs: 12, sm: 9 }}>
         <Button variant="contained" color="primary" onClick={handleButtonClick}>
-          DenetÃ§i Ã–deme Bilgileri DÃ¼zenle
+          Denetçi Ödeme Bilgileri Düzenle
         </Button>
       </Grid>
     </Grid>

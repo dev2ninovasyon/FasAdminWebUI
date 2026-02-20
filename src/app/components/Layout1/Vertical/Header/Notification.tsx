@@ -24,7 +24,7 @@ interface notificationType {
 const notifications: notificationType[] = [
   {
     avatar: "/images/profile/user-1.jpg",
-    title: "Ahmet Uygulamaya KatÄ±ldÄ±!",
+    title: "Ahmet Uygulamaya Katıldı!",
     subtitle: "Tebrik et.",
   },
 ];
@@ -130,7 +130,7 @@ const Notifications = () => {
             color="primary"
             fullWidth
           >
-            TÃ¼m Bildirimler
+            Tüm Bildirimler
           </Button>
         </Box>
       </Menu>

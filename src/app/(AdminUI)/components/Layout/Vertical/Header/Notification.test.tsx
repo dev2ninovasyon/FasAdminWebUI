@@ -83,7 +83,7 @@ const mockBildirimler = [
     {
         id: 1,
         konu: 'Konu 1',
-        aciklama: 'AÃ§Ä±klama 1',
+        aciklama: 'Açıklama 1',
         okundumu: false,
         tarih: new Date().toISOString(),
         denetlenenId: 1,
@@ -155,7 +155,7 @@ describe('Notification Component', () => {
         fireEvent.click(await screen.findByLabelText('show new notifications'));
         fireEvent.click(await screen.findByText('Konu 1'));
 
-        expect(await screen.findByText(/Åirket ve YÄ±l DeÄŸiÅŸikliÄŸi/)).toBeInTheDocument();
+        expect(await screen.findByText(/Åirket ve Yıl Değişikliği/)).toBeInTheDocument();
     });
 
     it('should update state and navigate upon confirming company switch', async () => {
@@ -177,7 +177,7 @@ describe('Notification Component', () => {
         fireEvent.click(await screen.findByLabelText('show new notifications'));
         fireEvent.click(await screen.findByText('Konu 1'));
 
-        const confirmBtn = await screen.findByText(/Onayla ve DeÄŸiÅŸtir/i);
+        const confirmBtn = await screen.findByText(/Onayla ve Değiştir/i);
         fireEvent.click(confirmBtn);
 
         await waitFor(() => {
@@ -197,7 +197,7 @@ describe('Notification Component', () => {
         const newBildirim = {
             id: 3,
             konu: 'SignalR Konu',
-            aciklama: 'SignalR AÃ§Ä±klama',
+            aciklama: 'SignalR Açıklama',
             denetlenenId: 1,
             yil: 2024,
             tarih: new Date().toISOString()

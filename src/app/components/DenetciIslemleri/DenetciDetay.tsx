@@ -44,7 +44,7 @@ const DenetciDetay = ({ id }: { id?: string }) => {
       setKayitTarihi(result.kayitTarihi);
       setAktifmi(result.aktifmi);
     } catch (error) {
-      console.error("Bir hata oluÅŸtu:", error);
+      console.error("Bir hata oluştu:", error);
     }
   };
 
@@ -59,7 +59,7 @@ const DenetciDetay = ({ id }: { id?: string }) => {
           htmlFor="firmaAdi"
           sx={{ mt: 0, mb: { xs: "-10px", sm: 0 } }}
         >
-          Firma AdÄ±
+          Firma Adı
         </CustomFormLabel>
       </Grid>
       <Grid size={{ xs: 12, sm: 9 }}>
@@ -72,7 +72,7 @@ const DenetciDetay = ({ id }: { id?: string }) => {
           htmlFor="firmaUnvani"
           sx={{ mt: 0, mb: { xs: "-10px", sm: 0 } }}
         >
-          Firma ÃœnvanÄ±
+          Firma Ünvanı
         </CustomFormLabel>
       </Grid>
       <Grid size={{ xs: 12, sm: 9 }}>
@@ -98,7 +98,7 @@ const DenetciDetay = ({ id }: { id?: string }) => {
           htmlFor="il"
           sx={{ mt: 0, mb: { xs: "-10px", sm: 0 } }}
         >
-          Ä°l
+          İl
         </CustomFormLabel>
       </Grid>
       <Grid size={{ xs: 12, sm: 9 }}>
@@ -163,7 +163,7 @@ const DenetciDetay = ({ id }: { id?: string }) => {
           htmlFor="vergiNo"
           sx={{ mt: 0, mb: { xs: "-10px", sm: 0 } }}
         >
-          Vergi NumarasÄ±
+          Vergi Numarası
         </CustomFormLabel>
       </Grid>
       <Grid size={{ xs: 12, sm: 9 }}>
@@ -190,7 +190,7 @@ const DenetciDetay = ({ id }: { id?: string }) => {
           htmlFor="ticaretSicilNo"
           sx={{ mt: 0, mb: { xs: "-10px", sm: 0 } }}
         >
-          Ticaret Sicil NumarasÄ±
+          Ticaret Sicil Numarası
         </CustomFormLabel>
       </Grid>
       <Grid size={{ xs: 12, sm: 9 }}>

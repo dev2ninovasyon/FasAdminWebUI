@@ -51,7 +51,7 @@ const PersonelBoxAutocomplete: React.FC<PerosnelBoxProps> = ({
         onEmptyUsers();
       }
     } catch (error) {
-      console.log("Bir hata oluÅŸtu:", error);
+      console.log("Bir hata oluştu:", error);
     }
   };
 
@@ -85,7 +85,7 @@ const PersonelBoxAutocomplete: React.FC<PerosnelBoxProps> = ({
     <Autocomplete
       id="personel-box"
       options={rows}
-      noOptionsText="BulunamadÄ±"
+      noOptionsText="Bulunamadı"
       fullWidth
       disabled={disabled}
       value={selectedOption}
@@ -98,8 +98,8 @@ const PersonelBoxAutocomplete: React.FC<PerosnelBoxProps> = ({
       renderInput={(params) => (
         <CustomTextField
           {...params}
-          placeholder="Personel SeÃ§iniz"
-          aria-label="Personel SeÃ§iniz"
+          placeholder="Personel Seçiniz"
+          aria-label="Personel Seçiniz"
         />
       )}
     />
