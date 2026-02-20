@@ -11,7 +11,7 @@ export const getCalismaKagidiVerileriByDenetciDenetlenenYil = async (
     try {
         const token = store.getState().userReducer.token;
         const response = await apiFetch(
-            `/${controller}/Standart?denetciId=${denetciId}&yil=${yil}&denetlenenId=${denetlenenId}`,
+            `/${controller}/Standart`,
             {
                 method: "GET",
                 token,

@@ -334,9 +334,7 @@ const BagimsizDenetimMetodolojisiTable = () => {
                                     borderBottom: `2px solid ${theme.palette.divider}`,
                                 }}
                             >
-                                <Typography variant="subtitle2" fontWeight="700" textAlign="center">
-                                    Durum
-                                </Typography>
+                               
                             </TableCell>
                             <TableCell
                                 sx={{
@@ -509,51 +507,7 @@ const BagimsizDenetimMetodolojisiTable = () => {
                                             </Typography>
                                         </TableCell>
                                         <TableCell sx={{ textAlign: "center", borderBottom: `1px solid ${theme.palette.divider}`, py: 0.75, px: 0.5 }}>
-                                            {isLeaf && (
-                                                <>
-                                                    {durumLoading ? (
-                                                        <CircularProgress size={16} />
-                                                    ) : hasEkBelge ? (
-                                                        <Tooltip title="Yüklenmis belgeleri görüntüle">
-                                                            <IconButton
-                                                                size="small"
-                                                                onClick={(e) => {
-                                                                    e.stopPropagation();
-                                                                    handleDurumClick(row.code!, row.name);
-                                                                }}
-                                                                sx={{ backgroundColor: "rgba(76, 175, 80, 0.1)", "&:hover": { backgroundColor: "rgba(76, 175, 80, 0.2)" } }}
-                                                            >
-                                                                <CheckCircleIcon
-                                                                    sx={{
-                                                                        color: "#4caf50",
-                                                                        fontSize: 20,
-                                                                    }}
-                                                                />
-                                                            </IconButton>
-                                                        </Tooltip>
-                                                    ) : (
-                                                        <Tooltip title="Belge yüklenmemis">
-                                                            <IconButton
-                                                                size="small"
-                                                                disabled
-                                                                sx={{
-                                                                    backgroundColor: "rgba(244, 67, 54, 0.08)",
-                                                                    "&.Mui-disabled": {
-                                                                        backgroundColor: "rgba(244, 67, 54, 0.08)",
-                                                                    }
-                                                                }}
-                                                            >
-                                                                <CancelIcon
-                                                                    sx={{
-                                                                        color: "#f44336",
-                                                                        fontSize: 20,
-                                                                    }}
-                                                                />
-                                                            </IconButton>
-                                                        </Tooltip>
-                                                    )}
-                                                </>
-                                            )}
+                                      
                                         </TableCell>
                                         <TableCell sx={{ textAlign: "center", borderBottom: `1px solid ${theme.palette.divider}`, py: 0.75, px: 0.5 }}>
                                             {row.url && (
