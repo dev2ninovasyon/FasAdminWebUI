@@ -9,22 +9,22 @@ import DenetciEkleButton from "@/app/components/DenetciIslemleri/DenetciEkleButt
 const BCrumb = [
   {
     to: "/Anasayfa",
-    title: "Admin MenÃ¼",
+    title: "Admin Menü",
   },
   {
     to: "/DenetciFirmaIslemleri",
-    title: "DenetÃ§i Firma Ä°ÅŸlemleri",
+    title: "Denetçi Firma İşlemleri",
   },
 ];
 
 const Page = () => {
   return (
     <PageContainer
-      title="DenetÃ§i Firma Ä°ÅŸlemleri"
-      description="this is DenetÃ§i Firma Ä°ÅŸlemleri"
+      title="Denetçi Firma İşlemleri"
+      description="this is Denetçi Firma İşlemleri"
     >
-      <Breadcrumb title="DenetÃ§i Firma Ä°ÅŸlemleri" items={BCrumb} />
-      <ParentCard title="DenetÃ§iler">
+      <Breadcrumb title="Denetçi Firma İşlemleri" items={BCrumb} />
+      <ParentCard title="Denetçiler">
         <Grid container spacing={3}>
           <Grid size={{ xs: 12 }}>
             <DenetciEkleButton />

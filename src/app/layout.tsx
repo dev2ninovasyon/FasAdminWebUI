@@ -20,11 +20,8 @@ import { SnackbarProvider } from "notistack";
 import RTL from "./components/Layout/Shared/Customizer/RTL";
 import useAutoLogout from "@/utils/useAutoLogOut";
 import { LoadingProvider } from "@/contexts/LoadingContext";
-import { ensureUTF8Encoding } from "@/utils/utf8Support";
 import Script from "next/script";
-
-// Ensure UTF-8 encoding
-ensureUTF8Encoding();
+import "@/utils/utf8Support"; // Initialize UTF-8 support
 
 const MyApp = ({ children }: { children: React.ReactNode }) => {
   useAutoLogout(45 * 60 * 1000, 40 * 60 * 1000);

@@ -1,36 +1,7 @@
+import { decodeUTF8Deep } from "@/utils/utf8Support";
+
 export const url = "https://betaapi.fasmart.app/api";
 //export const url = "https://localhost:5001/api";
-
-// UTF-8 text decoder cache
-const textDecoder = new TextDecoder("utf-8");
-
-/**
- * Recursively decode UTF-8 encoded strings in objects
- */
-function decodeUTF8Deep(obj: any): any {
-    if (typeof obj === "string") {
-        // Check if string appears to be UTF-8 encoded
-        if (/[\u00C3-\u00FF]/g.test(obj)) {
-            try {
-                return decodeURIComponent(escape(obj));
-            } catch {
-                return obj;
-            }
-        }
-        return obj;
-    } else if (Array.isArray(obj)) {
-        return obj.map(decodeUTF8Deep);
-    } else if (obj !== null && typeof obj === "object") {
-        const decoded: any = {};
-        for (const key in obj) {
-            if (Object.prototype.hasOwnProperty.call(obj, key)) {
-                decoded[key] = decodeUTF8Deep(obj[key]);
-            }
-        }
-        return decoded;
-    }
-    return obj;
-}
 
 export async function apiFetch(
     path: string,

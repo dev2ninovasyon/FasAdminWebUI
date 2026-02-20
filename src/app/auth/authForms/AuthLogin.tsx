@@ -40,11 +40,11 @@ const AuthLogin: React.FC<loginType> = ({ title, subtitle, subtext }) => {
   const { executeRecaptcha } = useGoogleReCaptcha();
 
   const handleLogin = async () => {
-    console.log("HandleLogin baÅŸlatÄ±ldÄ±...");
-    console.time("GiriÅŸ Ä°ÅŸlemi Toplam SÃ¼re");
+    console.log("HandleLogin başlatıldı...");
+    console.time("Giriş İşlemi Toplam Süre");
     if (!executeRecaptcha) {
-      console.error("executeRecaptcha nesnesi bulunamadÄ±!");
-      enqueueSnackbar("Recaptcha yÃ¼klenemedi, lÃ¼tfen sayfayÄ± yenileyin.", {
+      console.error("executeRecaptcha nesnesi bulunamadı!");
+      enqueueSnackbar("Recaptcha yüklenemedi, lütfen sayfayı yenileyin.", {
         variant: "warning",
         autoHideDuration: 3000,
       });
@@ -55,17 +55,17 @@ const AuthLogin: React.FC<loginType> = ({ title, subtitle, subtext }) => {
     setIsVerifyingCaptcha(true);
     let token = "";
     try {
-      console.log("ReCAPTCHA doÄŸrulamasÄ± baÅŸlÄ±yor...");
-      console.time("ReCAPTCHA DoÄŸrulamasÄ±");
+      console.log("ReCAPTCHA doğrulaması başlıyor...");
+      console.time("ReCAPTCHA Doğrulaması");
       token = await executeRecaptcha("login");
-      console.timeEnd("ReCAPTCHA DoÄŸrulamasÄ±");
-      console.log("ReCAPTCHA token'Ä± alÄ±ndÄ±:", token ? "BaÅŸarÄ±lÄ±" : "BoÅŸ");
+      console.timeEnd("ReCAPTCHA Doğrulaması");
+      console.log("ReCAPTCHA token'ı alındı:", token ? "Başarılı" : "Boş");
     } catch (error: any) {
-      console.error("Recaptcha hatasÄ±:", error);
-      let errorMessage = "GÃ¼venlik doÄŸrulamasÄ± sÄ±rasÄ±nda bir hata oluÅŸtu.";
+      console.error("Recaptcha hatası:", error);
+      let errorMessage = "Güvenlik doğrulaması sırasında bir hata oluştu.";
 
       if (error?.message?.includes("message channel closed")) {
-        errorMessage = "TarayÄ±cÄ± eklentileriniz gÃ¼venlik doÄŸrulamasÄ±nÄ± engelliyor olabilir. LÃ¼tfen reklam engelleyici veya benzeri eklentileri kapatÄ±p tekrar deneyin.";
+        errorMessage = "Tarayıcı eklentileriniz güvenlik doğrulamasını engelliyor olabilir. Lütfen reklam engelleyici veya benzeri eklentileri kapatıp tekrar deneyin.";
       }
 
       enqueueSnackbar(errorMessage, {
@@ -79,8 +79,8 @@ const AuthLogin: React.FC<loginType> = ({ title, subtitle, subtext }) => {
     setIsVerifyingCaptcha(false);
 
     if (!token) {
-      console.warn("ReCAPTCHA token alÄ±namadÄ±!");
-      enqueueSnackbar("Recaptcha doÄŸrulamasÄ± baÅŸarÄ±sÄ±z.", {
+      console.warn("ReCAPTCHA token alınamadı!");
+      enqueueSnackbar("Recaptcha doğrulaması başarısız.", {
         variant: "warning",
         autoHideDuration: 3000,
       });
@@ -89,8 +89,8 @@ const AuthLogin: React.FC<loginType> = ({ title, subtitle, subtext }) => {
     }
 
     try {
-      console.log("API isteÄŸi gÃ¶nderiliyor...");
-      console.time("Login API Ä°steÄŸi");
+      console.log("API isteği gönderiliyor...");
+      console.time("Login API İsteği");
       // FasAdminWebUI uses AdminLogin
       const response = await apiFetch(`/Auth/AdminLogin`, {
         method: "POST",
@@ -193,21 +193,21 @@ const AuthLogin: React.FC<loginType> = ({ title, subtitle, subtext }) => {
           localStorage.removeItem("fas_yil");
         }
 
-        console.timeEnd("Veri Ä°ÅŸleme ve YÃ¶nlendirme");
-        console.timeEnd("GiriÅŸ Ä°ÅŸlemi Toplam SÃ¼re");
+        console.timeEnd("Veri İşleme ve Yönlendirme");
+        console.timeEnd("Giriş İşlemi Toplam Süre");
         router.push("/Anasayfa");
       } else {
-        console.timeEnd("GiriÅŸ Ä°ÅŸlemi Toplam SÃ¼re");
+        console.timeEnd("Giriş İşlemi Toplam Süre");
         setIsLoggedIn(false);
 
-        let errorMsg = "GiriÅŸ BaÅŸarÄ±sÄ±z";
+        let errorMsg = "Giriş Başarısız";
         try {
           const errorData = await response.json();
           if (errorData.message) {
             errorMsg = errorData.message;
           }
         } catch (e) {
-          // JSON deÄŸilse statusText kullan
+          // JSON değilse statusText kullan
           if (response.statusText) {
             errorMsg = `${response.status} - ${response.statusText}`;
           }
@@ -226,10 +226,10 @@ const AuthLogin: React.FC<loginType> = ({ title, subtitle, subtext }) => {
         });
       }
     } catch (error) {
-      console.timeEnd("GiriÅŸ Ä°ÅŸlemi Toplam SÃ¼re");
-      console.error("Bir hata oluÅŸtu:", error);
+      console.timeEnd("Giriş İşlemi Toplam Süre");
+      console.error("Bir hata oluştu:", error);
       setIsLoggedIn(false);
-      enqueueSnackbar("Sunucuyla baÄŸlantÄ± kurulamadÄ±.", {
+      enqueueSnackbar("Sunucuyla bağlantı kurulamadı.", {
         variant: "error",
       });
     }
@@ -271,13 +271,13 @@ const AuthLogin: React.FC<loginType> = ({ title, subtitle, subtext }) => {
             />
           </Box>
           <Box>
-            <CustomFormLabel htmlFor="password">Åifre</CustomFormLabel>
+            <CustomFormLabel htmlFor="password">Şifre</CustomFormLabel>
             <CustomTextField
               id="password"
               type="password"
               variant="outlined"
               fullWidth
-              placeholder="Åifreniz"
+              placeholder="Şifreniz"
               onChange={(e: any) => setPassword(e.target.value)}
               InputProps={{
                 startAdornment: (
