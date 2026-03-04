@@ -52,11 +52,11 @@ const KullaniciSifreDegistirModal = ({ open, onClose, kullaniciId }: Props) => {
                 formData
             );
             if (result) {
-                alert("Åifre başarıyla güncellendi.");
+                alert("Şifre başarıyla güncellendi.");
                 setFormData({ newPassword: "", confirmPassword: "" });
                 onClose();
             } else {
-                alert("Åifre güncellenirken bir hata oluştu.");
+                alert("Şifre güncellenirken bir hata oluştu.");
             }
         } catch (error) {
             console.error("Hata:", error);
@@ -66,13 +66,13 @@ const KullaniciSifreDegistirModal = ({ open, onClose, kullaniciId }: Props) => {
 
     return (
         <Dialog open={open} onClose={onClose} fullWidth maxWidth="xs">
-            <DialogTitle>Åifre Değiştir (Admin)</DialogTitle>
+            <DialogTitle>Şifre Değiştir (Admin)</DialogTitle>
             <DialogContent dividers>
                 <Grid container spacing={2} sx={{ mt: 1 }}>
                     <Grid size={{ xs: 12 }}>
                         <TextField
                             fullWidth
-                            label="Yeni Åifre"
+                            label="Yeni Şifre"
                             name="newPassword"
                             type={showNewPassword ? "text" : "password"}
                             value={formData.newPassword}
@@ -91,7 +91,7 @@ const KullaniciSifreDegistirModal = ({ open, onClose, kullaniciId }: Props) => {
                     <Grid size={{ xs: 12 }}>
                         <TextField
                             fullWidth
-                            label="Yeni Åifre (Tekrar)"
+                            label="Yeni Şifre (Tekrar)"
                             name="confirmPassword"
                             type={showConfirmPassword ? "text" : "password"}
                             value={formData.confirmPassword}

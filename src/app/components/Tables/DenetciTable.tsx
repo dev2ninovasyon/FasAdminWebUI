@@ -190,7 +190,7 @@ const DenetciTable = () => {
                     variant="subtitle1"
                     color="textSecondary"
                   >
-                    {row.kayitTarihi.split("T")[0]}
+                    {row.kayitTarihi?.split("T")[0] ?? "-"}
                   </Typography>
                 </TableCell>
                 <TableCell sx={{ textAlign: "center" }}>

@@ -116,7 +116,7 @@ const KullaniciTable = ({ denetciId }: Props) => {
                                             />
                                         </TableCell>
                                         <TableCell align="right">
-                                            <IconButton onClick={() => handlePasswordChange(row)} title="Åifre Değiştir">
+                                            <IconButton onClick={() => handlePasswordChange(row)} title="Şifre Değiştir">
                                                 <IconLock width={18} />
                                             </IconButton>
                                             <IconButton onClick={() => handleEdit(row)} title="Düzenle">

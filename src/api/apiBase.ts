@@ -1,7 +1,7 @@
 import { decodeUTF8Deep } from "@/utils/utf8Support";
 
-export const url = "https://betaapi.fasmart.app/api";
-//export const url = "https://localhost:5001/api";
+//export const url = "https://betaapi.fasmart.app/api";
+export const url = "https://localhost:5001/api";
 
 export async function apiFetch(
     path: string,

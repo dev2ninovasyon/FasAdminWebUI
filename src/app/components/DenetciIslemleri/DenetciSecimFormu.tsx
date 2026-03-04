@@ -27,31 +27,39 @@ const DenetciSecimFormu = () => {
     const [ticaretSicilNo, setTicaretSicilNo] = useState("");
 
     const [isSaving, setIsSaving] = useState(false);
+    const [autocompleteKey, setAutocompleteKey] = useState(0);
+
+    const resetForm = (savedId: any) => {
+        setDenetciler(prev => prev.filter(d => (d.id ?? d.Id) !== savedId));
+        setSelectedDenetci(null);
+        setFirmaAdi(""); setFirmaUnvani(""); setAdress(""); setIl("");
+        setTel(""); setFax(""); setEmail(""); setWeb("");
+        setVergiNo(""); setVergidairesi(""); setTicaretSicilNo("");
+        setAutocompleteKey(k => k + 1);
+    };
 
     useEffect(() => {
         const fetchDenetciler = async () => {
             try {
-                console.log("ğŸ”„ DenetciSecimFormu: Denetçiler yükleniyor...");
-                // âœ… Fetch from public DataTransfer endpoint (no token required)
-                const data = await getOldDbDenetciler();
-                console.log("âœ… DenetciSecimFormu: getOldDbDenetciler sonuç ->", data);
-                
-                if (Array.isArray(data)) {
-                    console.log("ğŸ“Š DenetciSecimFormu: Denetçi sayısı:", data.length);
-                    setDenetciler(data);
+                const token = user?.token || "";
+                const [oldData, newData] = await Promise.all([
+                    getOldDbDenetciler(),
+                    getDenetciler(token),
+                ]);
+                if (Array.isArray(oldData)) {
+                    const newIds = new Set(
+                        Array.isArray(newData) ? newData.map((d: any) => d.id ?? d.Id) : []
+                    );
+                    setDenetciler(oldData.filter((d: any) => !newIds.has(d.id ?? d.Id)));
                 } else {
-                    console.warn("âš ï¸ DenetciSecimFormu: Beklenmeyen veri formatı (array değil):", data);
                     setDenetciler([]);
                 }
             } catch (err) {
-                console.error("âŒ DenetciSecimFormu: fetchDenetciler hata:", err);
                 setDenetciler([]);
             }
         };
-        // âœ… Public endpoint - fetch on component mount
-        console.log("ğŸš€ DenetciSecimFormu: Component mounted, fetching data...");
         fetchDenetciler();
-    }, []);
+    }, [user]);
 
     const handleDenetciChange = (event: any, newValue: any) => {
         setSelectedDenetci(newValue);
@@ -74,6 +82,7 @@ const DenetciSecimFormu = () => {
         <Grid container spacing={3}>
             <Grid size={{ xs: 12 }}>
                 <Autocomplete
+                    key={autocompleteKey}
                     id="denetci-select"
                     options={denetciler}
                     getOptionLabel={(option) => option.firmaUnvani || option.firmaAdi || ""}
@@ -95,11 +104,7 @@ const DenetciSecimFormu = () => {
                 </CustomFormLabel>
             </Grid>
             <Grid size={{ xs: 12, sm: 9 }}>
-                <CustomTextField
-                    id="firmaAdi"
-                    fullWidth
-                    value={firmaAdi}
-                />
+                <CustomTextField id="firmaAdi" fullWidth value={firmaAdi} onChange={(e: any) => setFirmaAdi(e.target.value)} />
             </Grid>
 
             <Grid size={{ xs: 12, sm: 3 }} display="flex" alignItems="center">
@@ -108,11 +113,7 @@ const DenetciSecimFormu = () => {
                 </CustomFormLabel>
             </Grid>
             <Grid size={{ xs: 12, sm: 9 }}>
-                <CustomTextField
-                    id="firmaUnvani"
-                    fullWidth
-                    value={firmaUnvani}
-                />
+                <CustomTextField id="firmaUnvani" fullWidth value={firmaUnvani} onChange={(e: any) => setFirmaUnvani(e.target.value)} />
             </Grid>
 
             <Grid size={{ xs: 12, sm: 3 }} display="flex" alignItems="center">
@@ -121,11 +122,7 @@ const DenetciSecimFormu = () => {
                 </CustomFormLabel>
             </Grid>
             <Grid size={{ xs: 12, sm: 9 }}>
-                <CustomTextField
-                    id="adres"
-                    fullWidth
-                    value={adres}
-                />
+                <CustomTextField id="adres" fullWidth value={adres} onChange={(e: any) => setAdress(e.target.value)} />
             </Grid>
 
             <Grid size={{ xs: 12, sm: 3 }} display="flex" alignItems="center">
@@ -134,11 +131,7 @@ const DenetciSecimFormu = () => {
                 </CustomFormLabel>
             </Grid>
             <Grid size={{ xs: 12, sm: 9 }}>
-                <CustomTextField
-                    id="il"
-                    fullWidth
-                    value={il}
-                />
+                <CustomTextField id="il" fullWidth value={il} onChange={(e: any) => setIl(e.target.value)} />
             </Grid>
 
             <Grid size={{ xs: 12, sm: 3 }} display="flex" alignItems="center">
@@ -147,11 +140,7 @@ const DenetciSecimFormu = () => {
                 </CustomFormLabel>
             </Grid>
             <Grid size={{ xs: 12, sm: 9 }}>
-                <CustomTextField
-                    id="tel"
-                    fullWidth
-                    value={tel}
-                />
+                <CustomTextField id="tel" fullWidth value={tel} onChange={(e: any) => setTel(e.target.value)} />
             </Grid>
 
             <Grid size={{ xs: 12, sm: 3 }} display="flex" alignItems="center">
@@ -160,11 +149,7 @@ const DenetciSecimFormu = () => {
                 </CustomFormLabel>
             </Grid>
             <Grid size={{ xs: 12, sm: 9 }}>
-                <CustomTextField
-                    id="fax"
-                    fullWidth
-                    value={fax}
-                />
+                <CustomTextField id="fax" fullWidth value={fax} onChange={(e: any) => setFax(e.target.value)} />
             </Grid>
 
             <Grid size={{ xs: 12, sm: 3 }} display="flex" alignItems="center">
@@ -173,11 +158,7 @@ const DenetciSecimFormu = () => {
                 </CustomFormLabel>
             </Grid>
             <Grid size={{ xs: 12, sm: 9 }}>
-                <CustomTextField
-                    id="email"
-                    fullWidth
-                    value={email}
-                />
+                <CustomTextField id="email" fullWidth value={email} onChange={(e: any) => setEmail(e.target.value)} />
             </Grid>
 
             <Grid size={{ xs: 12, sm: 3 }} display="flex" alignItems="center">
@@ -186,11 +167,7 @@ const DenetciSecimFormu = () => {
                 </CustomFormLabel>
             </Grid>
             <Grid size={{ xs: 12, sm: 9 }}>
-                <CustomTextField
-                    id="web"
-                    fullWidth
-                    value={web}
-                />
+                <CustomTextField id="web" fullWidth value={web} onChange={(e: any) => setWeb(e.target.value)} />
             </Grid>
 
             <Grid size={{ xs: 12, sm: 3 }} display="flex" alignItems="center">
@@ -199,11 +176,7 @@ const DenetciSecimFormu = () => {
                 </CustomFormLabel>
             </Grid>
             <Grid size={{ xs: 12, sm: 9 }}>
-                <CustomTextField
-                    id="vergiNo"
-                    fullWidth
-                    value={vergiNo}
-                />
+                <CustomTextField id="vergiNo" fullWidth value={vergiNo} onChange={(e: any) => setVergiNo(e.target.value)} />
             </Grid>
 
             <Grid size={{ xs: 12, sm: 3 }} display="flex" alignItems="center">
@@ -212,11 +185,7 @@ const DenetciSecimFormu = () => {
                 </CustomFormLabel>
             </Grid>
             <Grid size={{ xs: 12, sm: 9 }}>
-                <CustomTextField
-                    id="vergiDairesi"
-                    fullWidth
-                    value={vergiDairesi}
-                />
+                <CustomTextField id="vergiDairesi" fullWidth value={vergiDairesi} onChange={(e: any) => setVergidairesi(e.target.value)} />
             </Grid>
 
             <Grid size={{ xs: 12, sm: 3 }} display="flex" alignItems="center">
@@ -225,11 +194,7 @@ const DenetciSecimFormu = () => {
                 </CustomFormLabel>
             </Grid>
             <Grid size={{ xs: 12, sm: 9 }}>
-                <CustomTextField
-                    id="ticaretSicilNo"
-                    fullWidth
-                    value={ticaretSicilNo}
-                />
+                <CustomTextField id="ticaretSicilNo" fullWidth value={ticaretSicilNo} onChange={(e: any) => setTicaretSicilNo(e.target.value)} />
             </Grid>
 
             <Grid size={{ xs: 12, sm: 3 }}></Grid>
@@ -239,44 +204,39 @@ const DenetciSecimFormu = () => {
                     color="primary"
                     onClick={async () => {
                         if (!selectedDenetci) {
-                            console.warn("â— Kaydet: Lütfen kaydetmek için önce bir denetçi seçin.");
                             return;
                         }
                         try {
                             setIsSaving(true);
 
-                            // Map frontend object to backend DTO (PascalCase keys)
                             const payload: any = {
                                 Id: selectedDenetci.id ?? selectedDenetci.Id,
-                                FirmaAdi: selectedDenetci.firmaAdi || selectedDenetci.FirmaAdi || "",
-                                FirmaUnvani: selectedDenetci.firmaUnvani || selectedDenetci.FirmaUnvani || null,
-                                Adres: selectedDenetci.adres || selectedDenetci.Adres || null,
-                                Il: selectedDenetci.il || selectedDenetci.Il || null,
-                                Tel: selectedDenetci.tel || selectedDenetci.Tel || null,
-                                Fax: selectedDenetci.fax || selectedDenetci.Fax || null,
-                                Email: selectedDenetci.email || selectedDenetci.Email || null,
-                                Web: selectedDenetci.web || selectedDenetci.Web || null,
-                                VergiNo: selectedDenetci.vergiNo || selectedDenetci.VergiNo || null,
-                                VergiDairesi: selectedDenetci.vergiDairesi || selectedDenetci.VergiDairesi || null,
-                                TicaretSicilNo: selectedDenetci.ticaretSicilNo || selectedDenetci.TicaretSicilNo || null,
+                                FirmaAdi: firmaAdi || null,
+                                FirmaUnvani: firmaUnvani || null,
+                                Adres: adres || null,
+                                Il: il || null,
+                                Tel: tel || null,
+                                Fax: fax || null,
+                                Email: email || null,
+                                Web: web || null,
+                                VergiNo: vergiNo || null,
+                                VergiDairesi: vergiDairesi || null,
+                                TicaretSicilNo: ticaretSicilNo || null,
                                 KayitTarihi: selectedDenetci.kayitTarihi || selectedDenetci.KayitTarihi || null,
                                 ArsivId: selectedDenetci.arsivId || selectedDenetci.ArsivId || null,
                                 Aktifmi: selectedDenetci.aktifmi ?? selectedDenetci.Aktifmi ?? true,
                                 Aciklama: selectedDenetci.aciklama || selectedDenetci.Aciklama || null,
                             };
 
-                            // token from store (if required for protected endpoint)
                             const token = user?.token || "";
-                            const ok = await importDenetci(token, payload);
-                            if (ok) {
-                                console.log("âœ… Kaydet: Denetçi başarıyla yeni DB'ye eklendi (aynı Id ile)");
-                                // Optionally navigate back or show notification
-                                router.push("/DenetciFirmaIslemleri");
+                            const result = await importDenetci(token, payload);
+                            if (result === "ok" || result === "already_exists") {
+                                resetForm(payload.Id);
                             } else {
-                                console.error("âŒ Kaydet: Denetçi içe aktarma başarısız oldu.");
+                                console.error("Denetçi içe aktarma başarısız oldu.");
                             }
                         } catch (err) {
-                            console.error("âŒ Kaydet: Hata oluştu:", err);
+                            console.error("Kaydet hatası:", err);
                         } finally {
                             setIsSaving(false);
                         }
