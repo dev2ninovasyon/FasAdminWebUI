@@ -24,7 +24,7 @@ const SirketYonetimKadrosuEkleButton = () => {
                     onClick={() => handleRouteClick()}
                     startIcon={<IconPlus width={18} />}
                 >
-                    Åirket Yönetim Kadrosu Ekle
+                    Şirket Yönetim Kadrosu Ekle
                 </Button>
             </Stack>
         </>

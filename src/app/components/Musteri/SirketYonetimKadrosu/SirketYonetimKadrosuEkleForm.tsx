@@ -24,7 +24,7 @@ const SirketYonetimKadrosuEkleForm = () => {
             if (result) {
                 router.push("/StandartCalismaKagitlari/Musteri/SirketYonetimKadrosu");
             } else {
-                console.log("Åirket Yönetim Kadrosu ekleme başarısız");
+                console.log("Şirket Yönetim Kadrosu ekleme başarısız");
             }
         } catch (error) {
             console.log("Bir hata oluştu:", error);
@@ -99,7 +99,7 @@ const SirketYonetimKadrosuEkleForm = () => {
                         color="primary"
                         onClick={handleButtonClick}
                     >
-                        Åirket Yönetim Kadrosu Ekle
+                        Şirket Yönetim Kadrosu Ekle
                     </Button>
                 </Grid>
             </Grid>

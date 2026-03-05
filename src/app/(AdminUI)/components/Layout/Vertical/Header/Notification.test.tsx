@@ -155,7 +155,7 @@ describe('Notification Component', () => {
         fireEvent.click(await screen.findByLabelText('show new notifications'));
         fireEvent.click(await screen.findByText('Konu 1'));
 
-        expect(await screen.findByText(/Åirket ve Yıl Değişikliği/)).toBeInTheDocument();
+        expect(await screen.findByText(/Şirket ve Yıl Değişikliği/)).toBeInTheDocument();
     });
 
     it('should update state and navigate upon confirming company switch', async () => {

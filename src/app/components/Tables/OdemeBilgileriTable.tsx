@@ -223,7 +223,7 @@ const Row = (props: { row: ReturnType<typeof createData>, id?: string }) => {
                     </TableCell>
                     <TableCell>
                       <Typography textAlign="center" variant="h6">
-                        Önceki Åirket Kotası
+                        Önceki Şirket Kotası
                       </Typography>
                     </TableCell>
                     <TableCell>
@@ -423,7 +423,7 @@ const OdemeBilgileriTable = ({ id }: { id?: string }) => {
                 </TableCell>
                 <TableCell>
                   <Typography textAlign="center" variant="h6">
-                    Åirket Kotası
+                    Şirket Kotası
                   </Typography>
                 </TableCell>
                 <TableCell>
@@ -568,7 +568,7 @@ const OdemeBilgileriTable = ({ id }: { id?: string }) => {
               <Typography variant="h6">{row.soloFirmaSayisi}</Typography>
             </Grid>
             <Grid size={{ xs: 12, sm: 3 }} display="flex" alignItems="center">
-              <Typography variant="h6">Konsolide Ana Åirket Sayısı:</Typography>
+              <Typography variant="h6">Konsolide Ana Şirket Sayısı:</Typography>
             </Grid>
             <Grid
               size={{ xs: 12, sm: 9 }}
@@ -582,7 +582,7 @@ const OdemeBilgileriTable = ({ id }: { id?: string }) => {
             </Grid>
             <Grid size={{ xs: 12, sm: 3 }} display="flex" alignItems="center">
               <Typography variant="h6">
-                Konsolide Yavru Åirket Firma Sayısı:
+                Konsolide Yavru Şirket Firma Sayısı:
               </Typography>
             </Grid>
             <Grid
