@@ -338,47 +338,55 @@ const OdemeBilgileriTable = ({ id }: { id?: string }) => {
       );
 
       const row = createData(
-        denetciOdemeBilgileri.denetci.firmaAdi,
-        denetciOdemeBilgileri.baslangicTarihi
-          .split("T")[0]
-          .split("-")
-          .reverse()
-          .join("."),
-        denetciOdemeBilgileri.bitisTarihi
-          .split("T")[0]
-          .split("-")
-          .reverse()
-          .join("."),
-        denetciOdemeBilgileri.satisTarihi
-          .split("T")[0]
-          .split("-")
-          .reverse()
-          .join("."),
-        denetciOdemeBilgileri.sirketKota,
-        denetciOdemeBilgileri.diskKota,
-        denetciOdemeBilgileri.enflasyonKota,
-        denetciOdemeBilgileri.ekKota,
-        denetciOdemeBilgileri.bobiModulu,
-        denetciOdemeBilgileri.tfrsModulu,
-        denetciOdemeBilgileri.kumiModulu,
-        denetciOdemeBilgileri.konsolideModulu,
-        denetciOdemeBilgileri.bddkModulu,
-        denetciOdemeBilgileri.enflasyonModulu,
-        denetciOdemeBilgileri.mevcutFirmaSayisi,
-        denetciOdemeBilgileri.soloFirmaSayisi,
-        denetciOdemeBilgileri.konsolideAnaFirmaSayisi,
-        denetciOdemeBilgileri.konsolideYavruFirmaSayisi
+        denetciOdemeBilgileri?.denetci?.firmaAdi || "Bilinmiyor",
+        denetciOdemeBilgileri?.baslangicTarihi
+          ? denetciOdemeBilgileri.baslangicTarihi
+            .split("T")[0]
+            .split("-")
+            .reverse()
+            .join(".")
+          : "-",
+        denetciOdemeBilgileri?.bitisTarihi
+          ? denetciOdemeBilgileri.bitisTarihi
+            .split("T")[0]
+            .split("-")
+            .reverse()
+            .join(".")
+          : "-",
+        denetciOdemeBilgileri?.satisTarihi
+          ? denetciOdemeBilgileri.satisTarihi
+            .split("T")[0]
+            .split("-")
+            .reverse()
+            .join(".")
+          : "-",
+        denetciOdemeBilgileri?.sirketKota || 0,
+        denetciOdemeBilgileri?.diskKota || 0,
+        denetciOdemeBilgileri?.enflasyonKota || 0,
+        denetciOdemeBilgileri?.ekKota || 0,
+        denetciOdemeBilgileri?.bobiModulu || false,
+        denetciOdemeBilgileri?.tfrsModulu || false,
+        denetciOdemeBilgileri?.kumiModulu || false,
+        denetciOdemeBilgileri?.konsolideModulu || false,
+        denetciOdemeBilgileri?.bddkModulu || false,
+        denetciOdemeBilgileri?.enflasyonModulu || false,
+        denetciOdemeBilgileri?.mevcutFirmaSayisi || 0,
+        denetciOdemeBilgileri?.soloFirmaSayisi || 0,
+        denetciOdemeBilgileri?.konsolideAnaFirmaSayisi || 0,
+        denetciOdemeBilgileri?.konsolideYavruFirmaSayisi || 0
       );
 
-      row.kotaGecmisi = denetciKotaGecmisi.map((kota: any) => ({
-        id: kota.id,
-        tarih: kota.tarih.split("T")[0].split("-").reverse().join("."),
-        sirketKota: kota.sirketKota,
-        diskKota: kota.diskKota,
-        enflasyonKota: kota.enflasyonKota,
-        ekKota: kota.ekKota,
-        aciklama: kota.aciklama,
-      }));
+      if (denetciKotaGecmisi && Array.isArray(denetciKotaGecmisi)) {
+        row.kotaGecmisi = denetciKotaGecmisi.map((kota: any) => ({
+          id: kota.id,
+          tarih: kota.tarih ? kota.tarih.split("T")[0].split("-").reverse().join(".") : "-",
+          sirketKota: kota.sirketKota || 0,
+          diskKota: kota.diskKota || 0,
+          enflasyonKota: kota.enflasyonKota || 0,
+          ekKota: kota.ekKota || 0,
+          aciklama: kota.aciklama || "",
+        }));
+      }
 
       setRows([row]);
     } catch (error) {
