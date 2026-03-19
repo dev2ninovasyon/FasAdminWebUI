@@ -32,7 +32,7 @@ const SirketYonetimKadrosuDuzenleForm = () => {
             if (result) {
                 router.push("/StandartCalismaKagitlari/Musteri/SirketYonetimKadrosu");
             } else {
-                console.log("Åirket Yönetim Kadrosu düzenleme başarısız");
+                console.log("Şirket Yönetim Kadrosu düzenleme başarısız");
             }
         } catch (error) {
             console.log("Bir hata oluştu:", error);
@@ -125,7 +125,7 @@ const SirketYonetimKadrosuDuzenleForm = () => {
                         color="primary"
                         onClick={handleButtonClick}
                     >
-                        Åirket Yönetim Kadrosu Düzenle
+                        Şirket Yönetim Kadrosu Düzenle
                     </Button>
                 </Grid>
             </Grid>

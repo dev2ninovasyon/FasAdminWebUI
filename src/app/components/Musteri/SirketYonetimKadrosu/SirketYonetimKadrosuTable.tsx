@@ -57,7 +57,7 @@ const SirketYonetimKadrosuTable = () => {
             if (result) {
                 fetchData();
             } else {
-                console.log("Åirket Yönetim Kadrosu silinemedi");
+                console.log("Şirket Yönetim Kadrosu silinemedi");
             }
         } catch (error) {
             console.log("Bir hata oluştu:", error);

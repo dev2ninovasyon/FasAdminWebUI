@@ -146,7 +146,7 @@ const KullaniciEkleForm = ({ id }: { id?: string }) => {
           htmlFor="sifre"
           sx={{ mt: 0, mb: { xs: "-10px", sm: 0 } }}
         >
-          Åifre
+          Şifre
         </CustomFormLabel>
       </Grid>
       <Grid size={{ xs: 12, sm: 9 }}>

@@ -237,7 +237,7 @@ const DenetciOdemeBilgileriDuzenleForm = ({ id }: { id?: string }) => {
           htmlFor="sirketKota"
           sx={{ mt: 0, mb: { xs: "-10px", sm: 0 } }}
         >
-          Åirket Kotası
+          Şirket Kotası
         </CustomFormLabel>
       </Grid>
       <Grid size={{ xs: 12, sm: 9 }}>

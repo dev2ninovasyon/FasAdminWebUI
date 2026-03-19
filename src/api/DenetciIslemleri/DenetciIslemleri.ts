@@ -218,7 +218,8 @@ export const importDenetci = async (token: string, denetci: any) => {
       body: JSON.stringify(denetci),
     });
 
-    if (response.ok) return true;
+    if (response.ok) return "ok";
+    if (response.status === 409) return "already_exists";
     const txt = await response.text();
     console.error("importDenetci failed", response.status, txt);
     return false;
