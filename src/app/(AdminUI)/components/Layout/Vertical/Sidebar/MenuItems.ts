@@ -60,7 +60,7 @@ export function createMenuItems(
       },
       {
         id: uniqueId(),
-        title: "MÜÃ…ÂTERİ",
+        title: "MÜŞTERİ",
         icon: IconUsers,
         href: "/Musteri",
         children: [
@@ -76,7 +76,7 @@ export function createMenuItems(
       { id: uniqueId(), navlabel: true, subheader: "MENÜ" },
       {
         id: uniqueId(),
-        title: "DİÃ„ÂER İÃ…ÂLEMLER",
+        title: "DİĞER İŞLEMLER",
         icon: IconHierarchy,
         href: "/DigerIslemler",
         children: [
@@ -143,7 +143,7 @@ export function createMenuItems(
       },
       {
         id: uniqueId(),
-        title: "MÜÃ…ÂTERİ",
+        title: "MÜŞTERİ",
         icon: IconUsers,
         href: "/Musteri",
         children: [
@@ -156,7 +156,7 @@ export function createMenuItems(
           },
           {
             id: uniqueId(),
-            title: "Ã…Âirket Yönetim Kadrosu",
+            title: "Şirket Yönetim Kadrosu",
             formKodu: "SirketYonetimKadrosu",
             customIcon:
               "public/images/svgs/musteri/sirket-yonetim-kadrosu.svg",
@@ -165,7 +165,7 @@ export function createMenuItems(
           },
           {
             id: uniqueId(),
-            title: "Ã…Âubeler",
+            title: "Şubeler",
             formKodu: "Subeler",
             customIcon: "public/images/svgs/musteri/subeler.svg",
             icon: IconPoint,
@@ -274,7 +274,7 @@ export function createMenuItems(
       },
       {
         id: uniqueId(),
-        title: "SÖZLEÃ…ÂME",
+        title: "SÖZLEŞME",
         icon: IconScript,
         href: "/Sozlesme",
         children: [
@@ -361,7 +361,7 @@ export function createMenuItems(
       },
       {
         id: uniqueId(),
-        title: "MÜÃ…ÂTERİ BELGELERİ",
+        title: "MÜŞTERİ BELGELERİ",
         icon: IconFileDescription,
         href: "/MusteriBelgeleri",
       },
@@ -766,7 +766,7 @@ export function createMenuItems(
       },
       {
         id: uniqueId(),
-        title: "DÖNÜÃ…ÂÜM",
+        title: "DÖNÜŞÜM",
         icon: IconRepeat,
         href: "/Donusum",
         children: [
@@ -1957,7 +1957,7 @@ export function createMenuItems(
               },
               {
                 id: uniqueId(),
-                title: "1.3 Denetim Ã…Âirketinin Yapısı",
+                title: "1.3 Denetim Şirketinin Yapısı",
                 icon: IconPoint,
                 href: "/Kys/Belgelendirme/DenetimSirketininYapisi",
                 formKodu: "KysDenetimSirketininYapisi",
@@ -2273,7 +2273,7 @@ export function createMenuItems(
               },
               {
                 id: uniqueId(),
-                title: "9.5 Müşteri Ã…ÂikÃƒÂ¢yet Kaydı",
+                title: "9.5 Müşteri Şikâyet Kaydı",
                 icon: IconPoint,
                 href: "/Kys/IzlemeVeDuzeltme/MusteriSikayetKaydi",
                 formKodu: "KysMusteriSikayetKaydi",
@@ -2327,7 +2327,7 @@ export function createMenuItems(
       },
       {
         id: uniqueId(),
-        title: "DİÃ„ÂER İÃ…ÂLEMLER",
+        title: "DİĞER İŞLEMLER",
         icon: IconHierarchy,
         href: "/DigerIslemler",
         children: [

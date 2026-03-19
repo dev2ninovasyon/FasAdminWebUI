@@ -159,6 +159,12 @@ const Menuitems: MenuitemsType[] = [
         icon: IconPoint,
         href: "/DenetimDosyaBelgeleri",
       },
+      {
+        id: uniqueId(),
+        title: "Menü Kullanım Bilgileri",
+        icon: IconPoint,
+        href: "/MenuIslemleri",
+      },
     ],
   },
   {
