@@ -45,6 +45,7 @@ const MenuIslemleriPage = () => {
   const user = useSelector((state: AppState) => state.userReducer);
   const [menus, setMenus] = useState<MenuType[]>([]);
   const [loading, setLoading] = useState(true);
+  const [error, setError] = useState("");
   const [searchTerm, setSearchTerm] = useState("");
   const [page, setPage] = useState(0);
   const [rowsPerPage, setRowsPerPage] = useState(10);
@@ -54,15 +55,25 @@ const MenuIslemleriPage = () => {
   const [selectedMenu, setSelectedMenu] = useState<MenuType | null>(null);
 
   useEffect(() => {
+    if (!user.token) {
+      setLoading(false);
+      return;
+    }
+
     fetchMenus();
-  }, []);
+  }, [user.token]);
 
   const fetchMenus = async () => {
+    if (!user.token) return;
+
     setLoading(true);
+    setError("");
     try {
-      const data = await getMenus(user.token || "");
+      const data = await getMenus(user.token);
       setMenus(Array.isArray(data) ? data : []);
     } catch (err) {
+      setMenus([]);
+      setError("Menuler yuklenirken bir hata olustu.");
       console.error("Menüler getirilemedi:", err);
     } finally {
       setLoading(false);
@@ -168,7 +179,14 @@ const MenuIslemleriPage = () => {
                       </TableCell>
                     </TableRow>
                   ))}
-                {filteredMenus.length === 0 && !loading && (
+                {error && !loading && (
+                  <TableRow>
+                    <TableCell colSpan={6} align="center" sx={{ py: 3 }}>
+                      <Typography variant="body2" color="error">{error}</Typography>
+                    </TableCell>
+                  </TableRow>
+                )}
+                {filteredMenus.length === 0 && !loading && !error && (
                   <TableRow>
                     <TableCell colSpan={6} align="center" sx={{ py: 3 }}>
                       <Typography variant="body2" color="textSecondary">Menü bulunamadı.</Typography>

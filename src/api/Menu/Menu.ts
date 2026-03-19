@@ -35,6 +35,9 @@ export interface MenuKullanimBilgisi {
 
 export const getMenus = async (token: string) => {
     const response = await apiFetch("/Menu", { token });
+    if (!response.ok) {
+        throw new Error(`Menu istegi basarisiz oldu: ${response.status}`);
+    }
     return await response.json();
 };
 
