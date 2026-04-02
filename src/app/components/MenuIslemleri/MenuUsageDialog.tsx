@@ -434,8 +434,8 @@ const MenuUsageDialog = ({
 
   return (
     <Dialog open={open} onClose={onClose} fullWidth maxWidth="lg">
-      <DialogTitle>
-        <Typography variant="h5">{menu?.belgeAdi} - Kullanim Paneli</Typography>
+      <DialogTitle sx={{ fontSize: "1.5rem", fontWeight: 600 }}>
+        {menu?.belgeAdi} - Kullanim Paneli
       </DialogTitle>
 
       <DialogContent dividers>
