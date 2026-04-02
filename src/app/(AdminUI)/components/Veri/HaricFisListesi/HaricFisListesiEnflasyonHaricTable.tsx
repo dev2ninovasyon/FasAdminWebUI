@@ -324,7 +324,7 @@ const HaricFisListesiEnflasyonHaricTable: React.FC<Props> = ({
 
       <Stack direction="row" alignItems="center" marginBottom={2} spacing={2}>
         <Typography variant="h6" sx={{ flexGrow: 1 }}>
-          Fiş Listesi (Enflasyon Hariç)
+          Fiş Listesi 
         </Typography>
       </Stack>
 

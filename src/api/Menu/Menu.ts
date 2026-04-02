@@ -22,6 +22,7 @@ export interface MenuKullanimBilgisi {
     baslik?: string;
     ozet?: string;
     kullanimNotu?: string;
+    icerikHtml?: string;
     kullanimAdimlariJson?: string;
     dikkatEdileceklerJson?: string;
     sikSorulanSorularJson?: string;

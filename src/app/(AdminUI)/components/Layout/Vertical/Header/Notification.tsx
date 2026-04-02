@@ -23,13 +23,8 @@ import Scrollbar from "@/app/components/CustomScroll/Scrollbar";
 import {
   getBildirimler,
   updateBildirimlerOkundumu,
-  startBildirimConnection,
-  onYeniBildirim,
-  stopBildirimConnection,
-  startPollingBildirim,
-  stopPollingBildirim,
-  getBildirimConnectionStatus,
 } from "@/api/BaglantiBilgileri/BaglantiBilgileri";
+import { useBildirimConnection } from "@/hooks/useBildirimConnection";
 import { useDispatch, useSelector } from "@/store/hooks";
 import { AppState } from "@/store/store";
 import { useRouter } from "next/navigation";
@@ -127,6 +122,11 @@ const Notifications: React.FC<Props> = ({ isSidebarHover }) => {
   const dispatch = useDispatch();
 
   const [fetchedData, setFetchedData] = useState<Veri[]>([]);
+
+  const { status, bildirimState, registerCallback, startConnection, stopConnection } = useBildirimConnection({
+    denetciId: user.denetciId || 0,
+    autoConnect: false,
+  });
 
   // Tarih formatï¿½: "Bugï¿½n 14:30" veya "Dï¿½n 09:45" veya "01 ï¿½ 14:30"
   const formatTarih = (tarih?: string) => {
@@ -231,10 +231,10 @@ const Notifications: React.FC<Props> = ({ isSidebarHover }) => {
       };
 
       // Listener'ï¿½ kaydet ve polling fallback saï¿½la
-      onYeniBildirim(handleBildirim, denetciId);
+      registerCallback(handleBildirim);
 
       // Baï¿½lantï¿½yï¿½ baï¿½lat
-      startBildirimConnection(denetciId)
+      startConnection()
         .then(() => {
           if (process.env.NODE_ENV === 'development') {
             console.log("?? SignalR modu aktif!");
@@ -248,9 +248,9 @@ const Notifications: React.FC<Props> = ({ isSidebarHover }) => {
     }
 
     return () => {
-      stopPollingBildirim();
+      stopConnection();
     };
-  }, [user.token, user.denetciId]);
+  }, [user.token, user.denetciId, registerCallback, startConnection, stopConnection]);
 
   // Yeni bildirim handle helper
   const handleNewNotification = (bildirim: any) => {

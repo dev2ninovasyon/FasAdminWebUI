@@ -1,11 +1,11 @@
 import { useDispatch, useSelector } from "@/store/hooks";
-import { resetToNull, setToken } from "@/store/user/UserSlice";
+import { resetToNull, setRefreshToken, setToken } from "@/store/user/UserSlice";
 import { useRouter } from "next/navigation";
 import { useEffect, useRef, useCallback } from "react";
 import { AppState } from "@/store/store";
-import { apiFetch } from "@/api/apiBase";
+import { clearStoredAuthTokens } from "@/utils/authStorage";
+import { refreshAuthSession } from "@/utils/authSession";
 
-const STORAGE_KEY = "user";
 const TIMEOUT_KEY = "user_expiry";
 
 export default function useAutoLogout(
@@ -20,11 +20,12 @@ export default function useAutoLogout(
   const user = useSelector((state: AppState) => state.userReducer);
 
   const logout = useCallback(() => {
-    localStorage.removeItem(STORAGE_KEY);
     localStorage.removeItem(TIMEOUT_KEY);
+    clearStoredAuthTokens();
     dispatch(resetToNull(""));
     if (refreshTimerRef.current) clearInterval(refreshTimerRef.current);
     if (idleTimerRef.current) clearTimeout(idleTimerRef.current);
+    router.push("/");
   }, [router, dispatch]);
 
   // idle timer reset
@@ -40,21 +41,18 @@ export default function useAutoLogout(
     if (!user?.token) return;
 
     try {
-      const response = await apiFetch(`/Auth/refresh`, {
-        method: "POST",
-        token: user.token,
-        body: JSON.stringify({ token: user.token || "" }),
+      const refreshedSession = await refreshAuthSession({
+        accessToken: user.token,
+        refreshToken: user.refreshToken,
       });
-      if (response.ok) {
-        const data = await response.json();
-        dispatch(setToken(data.token));
-        console.log("Refresh token yenilendi");
-      }
+      dispatch(setToken(refreshedSession.token));
+      dispatch(setRefreshToken(refreshedSession.refreshToken));
+      console.log("Refresh token yenilendi");
     } catch (err) {
       console.error("Refresh token yenilenemedi:", err);
       logout();
     }
-  }, [user, logout]);
+  }, [dispatch, logout, user?.refreshToken, user?.token]);
 
   useEffect(() => {
     if (!user?.token) return;
@@ -82,7 +80,7 @@ export default function useAutoLogout(
       if (idleTimerRef.current) clearTimeout(idleTimerRef.current);
       if (refreshTimerRef.current) clearInterval(refreshTimerRef.current);
     };
-  }, []);
+  }, [refreshInterval, refreshToken, resetIdleTimer, user?.token]);
 
   return null;
 }

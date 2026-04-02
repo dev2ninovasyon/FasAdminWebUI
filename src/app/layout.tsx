@@ -22,6 +22,7 @@ import useAutoLogout from "@/utils/useAutoLogOut";
 import { LoadingProvider } from "@/contexts/LoadingContext";
 import Script from "next/script";
 import "@/utils/utf8Support"; // Initialize UTF-8 support
+import AuthSessionBootstrap from "@/app/components/AuthSessionBootstrap";
 
 const MyApp = ({ children }: { children: React.ReactNode }) => {
   useAutoLogout(45 * 60 * 1000, 40 * 60 * 1000);
@@ -42,6 +43,7 @@ const MyApp = ({ children }: { children: React.ReactNode }) => {
               }}
             >
               <LoadingProvider>
+                <AuthSessionBootstrap />
                 {children}
               </LoadingProvider>
             </SnackbarProvider>

@@ -1,7 +1,9 @@
-import React, { useEffect, useState } from "react";
+import React, { useEffect, useMemo, useState } from "react";
 import {
   Alert,
   Box,
+  Card,
+  CardContent,
   Dialog,
   DialogActions,
   DialogContent,
@@ -14,7 +16,12 @@ import {
   TextField,
   Typography,
 } from "@mui/material";
-import { getMenuUsageByMenuId, Menu, MenuKullanimBilgisi, upsertMenuUsage } from "@/api/Menu/Menu";
+import {
+  getMenuUsageByMenuId,
+  Menu,
+  MenuKullanimBilgisi,
+  upsertMenuUsage,
+} from "@/api/Menu/Menu";
 import { useSelector } from "@/store/hooks";
 import { AppState } from "@/store/store";
 
@@ -25,94 +32,297 @@ interface MenuUsageDialogProps {
   onSuccess: () => void;
 }
 
-type FormState = {
+type ParsedFaq = {
+  soru: string;
+  cevap: string;
+};
+
+type ParsedUsage = {
   baslik: string;
   ozet: string;
   kullanimNotu: string;
-  kullanimAdimlari: string;
-  dikkatEdilecekler: string;
-  sikSorulanSorular: string;
-  videoUrl: string;
-  videoBaslik: string;
-  videoAciklama: string;
+  kullanimAdimlari: string[];
+  dikkatEdilecekler: string[];
+  sikSorulanSorular: ParsedFaq[];
 };
 
-const emptyForm: FormState = {
+type FormState = {
+  icerikMetni: string;
+  videoUrl: string;
+};
+
+const emptyParsedUsage: ParsedUsage = {
   baslik: "",
   ozet: "",
   kullanimNotu: "",
-  kullanimAdimlari: "",
-  dikkatEdilecekler: "",
-  sikSorulanSorular: "",
-  videoUrl: "",
-  videoBaslik: "",
-  videoAciklama: "",
+  kullanimAdimlari: [],
+  dikkatEdilecekler: [],
+  sikSorulanSorular: [],
 };
 
-const parseList = (value?: string | null) => {
-  if (!value) return "";
+const emptyForm: FormState = {
+  icerikMetni: "",
+  videoUrl: "",
+};
+
+const sectionTitles = [
+  "Panel Başlığı",
+  "Kısa Özet",
+  "Detaylı Kullanım Notu",
+  "Kullanım Adımları",
+  "Dikkat Edilecekler",
+  "Sık Sorulan Sorular",
+] as const;
+
+const normalizeText = (value: string) =>
+  value
+    .replace(/\r\n/g, "\n")
+    .replace(/\n\s*\.\s*\n/g, "\n\n")
+    .replace(/\n\s*\.\s*$/g, "")
+    .replace(/[ \t]+\n/g, "\n")
+    .replace(/\u00a0/g, " ")
+    .trim();
+
+const encodeHtml = (value: string) =>
+  value
+    .replaceAll("&", "&amp;")
+    .replaceAll("<", "&lt;")
+    .replaceAll(">", "&gt;")
+    .replaceAll('"', "&quot;")
+    .replaceAll("'", "&#39;");
+
+const stringifyList = (items: string[]) => JSON.stringify(items.filter(Boolean));
+
+const stringifyFaq = (items: ParsedFaq[]) =>
+  JSON.stringify(items.filter((item) => item.soru && item.cevap));
+
+const parseJsonList = (value?: string | null) => {
+  if (!value) return [] as string[];
 
   try {
     const parsed = JSON.parse(value);
-    return Array.isArray(parsed) ? parsed.filter(Boolean).join("\n") : "";
+    return Array.isArray(parsed)
+      ? parsed.map((item) => String(item || "").trim()).filter(Boolean)
+      : [];
   } catch {
-    return "";
+    return [];
   }
 };
 
-const parseFaq = (value?: string | null) => {
-  if (!value) return "";
+const parseJsonFaq = (value?: string | null) => {
+  if (!value) return [] as ParsedFaq[];
 
   try {
     const parsed = JSON.parse(value);
-    if (!Array.isArray(parsed)) return "";
+    if (!Array.isArray(parsed)) return [];
 
     return parsed
-      .map((item) => `${item?.soru || ""} | ${item?.cevap || ""}`.trim())
-      .filter((item) => item !== "|")
-      .join("\n");
+      .map((item) => ({
+        soru: String(item?.soru || "").trim(),
+        cevap: String(item?.cevap || "").trim(),
+      }))
+      .filter((item) => item.soru && item.cevap);
   } catch {
-    return "";
+    return [];
   }
 };
 
-const stringifyList = (value: string) =>
-  JSON.stringify(
-    value
-      .split("\n")
-      .map((item) => item.trim())
-      .filter(Boolean)
+const extractSection = (text: string, title: (typeof sectionTitles)[number]) => {
+  const escapedTitles = sectionTitles.map((item) => item.replace(/[.*+?^${}()|[\]\\]/g, "\\$&"));
+  const titleRegex = title.replace(/[.*+?^${}()|[\]\\]/g, "\\$&");
+  const pattern = new RegExp(
+    `(?:^|\\n)${titleRegex}\\s*:?[ \\t]*\\n?([\\s\\S]*?)(?=\\n(?:${escapedTitles.join("|")})\\s*:?[ \\t]*\\n?|$)`,
+    "i"
   );
+  const match = text.match(pattern);
+  return match?.[1]?.trim() || "";
+};
 
-const stringifyFaq = (value: string) =>
-  JSON.stringify(
-    value
-      .split("\n")
-      .map((item) => item.trim())
-      .filter(Boolean)
-      .map((item) => {
-        const [soru, ...cevapParts] = item.split("|");
-        return {
-          soru: (soru || "").trim(),
-          cevap: cevapParts.join("|").trim(),
-        };
-      })
-      .filter((item) => item.soru && item.cevap)
-  );
+const parseUsageText = (rawText: string): ParsedUsage => {
+  const normalized = normalizeText(rawText);
+  if (!normalized) {
+    return emptyParsedUsage;
+  }
 
-const mapUsageToForm = (usage?: Partial<MenuKullanimBilgisi> | null): FormState => ({
-  baslik: usage?.baslik || "",
-  ozet: usage?.ozet || "",
-  kullanimNotu: usage?.kullanimNotu || "",
-  kullanimAdimlari: parseList(usage?.kullanimAdimlariJson),
-  dikkatEdilecekler: parseList(usage?.dikkatEdileceklerJson),
-  sikSorulanSorular: parseFaq(usage?.sikSorulanSorularJson),
-  videoUrl: usage?.videoUrl || "",
-  videoBaslik: usage?.videoBaslik || "",
-  videoAciklama: usage?.videoAciklama || "",
-});
+  const baslik = extractSection(normalized, "Panel Başlığı").replace(/^:\s*/, "").trim();
+  const ozet = extractSection(normalized, "Kısa Özet").replace(/^:\s*/, "").trim();
+  const kullanimNotu = extractSection(normalized, "Detaylı Kullanım Notu").trim();
+  const kullanimAdimlari = extractSection(normalized, "Kullanım Adımları")
+    .split(/\n\s*\n|\n/)
+    .map((item) => item.trim())
+    .filter(Boolean);
+  const dikkatEdilecekler = extractSection(normalized, "Dikkat Edilecekler")
+    .split(/\n\s*\n|\n/)
+    .map((item) => item.trim())
+    .filter(Boolean);
+  const sikSorulanSorular = extractSection(normalized, "Sık Sorulan Sorular")
+    .split(/\n\s*\n|\n/)
+    .map((item) => item.trim())
+    .filter(Boolean)
+    .map((item) => {
+      const firstQuestionMarkIndex = item.indexOf("?");
+      if (firstQuestionMarkIndex === -1) {
+        return { soru: "", cevap: item };
+      }
 
-const MenuUsageDialog = ({ open, onClose, menu, onSuccess }: MenuUsageDialogProps) => {
+      return {
+        soru: item.slice(0, firstQuestionMarkIndex + 1).trim(),
+        cevap: item.slice(firstQuestionMarkIndex + 1).trim(),
+      };
+    })
+    .filter((item) => item.soru && item.cevap);
+
+  return {
+    baslik,
+    ozet,
+    kullanimNotu,
+    kullanimAdimlari,
+    dikkatEdilecekler,
+    sikSorulanSorular,
+  };
+};
+
+const formatUsageText = (usage?: Partial<MenuKullanimBilgisi> | null) => {
+  const baslik = usage?.baslik?.trim() || "";
+  const ozet = usage?.ozet?.trim() || "";
+  const kullanimNotu = usage?.kullanimNotu?.trim() || "";
+  const kullanimAdimlari = parseJsonList(usage?.kullanimAdimlariJson);
+  const dikkatEdilecekler = parseJsonList(usage?.dikkatEdileceklerJson);
+  const sikSorulanSorular = parseJsonFaq(usage?.sikSorulanSorularJson);
+
+  return [
+    `Panel Başlığı: ${baslik}`.trimEnd(),
+    "",
+    `Kısa Özet ${ozet}`.trimEnd(),
+    "",
+    `Detaylı Kullanım Notu ${kullanimNotu}`.trimEnd(),
+    "",
+    "Kullanım Adımları",
+    ...kullanimAdimlari,
+    "",
+    "Dikkat Edilecekler",
+    ...dikkatEdilecekler,
+    "",
+    "Sık Sorulan Sorular",
+    ...sikSorulanSorular.map((item) => `${item.soru} ${item.cevap}`.trim()),
+  ]
+    .join("\n")
+    .replace(/\n{3,}/g, "\n\n")
+    .trim();
+};
+
+const buildUsagePreviewHtml = (parsed: ParsedUsage) => {
+  const paragraflar = parsed.kullanimNotu
+    .split(/\n\s*\n|\n/)
+    .map((item) => item.trim())
+    .filter(Boolean);
+
+  if (
+    !parsed.baslik &&
+    !parsed.ozet &&
+    paragraflar.length === 0 &&
+    parsed.kullanimAdimlari.length === 0 &&
+    parsed.dikkatEdilecekler.length === 0 &&
+    parsed.sikSorulanSorular.length === 0
+  ) {
+    return "";
+  }
+
+  return `
+    <div style="display:grid;gap:18px;color:#1f2937;font-family:'Segoe UI',Tahoma,sans-serif;line-height:1.7;">
+      ${
+        parsed.baslik || parsed.ozet
+          ? `
+        <section style="padding:24px;border:1px solid #dbe4f0;border-radius:18px;background:linear-gradient(135deg,#f8fbff 0%,#eef6ff 100%);box-shadow:0 10px 30px rgba(15,23,42,0.06);">
+          ${
+            parsed.baslik
+              ? `
+            <div style="font-size:12px;font-weight:700;letter-spacing:.08em;text-transform:uppercase;color:#2563eb;margin-bottom:10px;">Panel Başlığı</div>
+            <h2 style="margin:0 0 10px;font-size:28px;line-height:1.25;color:#0f172a;">${encodeHtml(parsed.baslik)}</h2>
+          `
+              : ""
+          }
+          ${
+            parsed.ozet
+              ? `
+            <div style="font-size:12px;font-weight:700;letter-spacing:.08em;text-transform:uppercase;color:#475569;margin:16px 0 8px;">Kısa Özet</div>
+            <p style="margin:0;font-size:15px;color:#334155;">${encodeHtml(parsed.ozet)}</p>
+          `
+              : ""
+          }
+        </section>
+      `
+          : ""
+      }
+      ${
+        paragraflar.length > 0
+          ? `
+        <section style="padding:22px 24px;border:1px solid #e5e7eb;border-radius:18px;background:#ffffff;box-shadow:0 8px 24px rgba(15,23,42,0.04);">
+          <h3 style="margin:0 0 12px;font-size:18px;color:#0f172a;">Detaylı Kullanım Notu</h3>
+          ${paragraflar
+            .map((paragraph) => `<p style="margin:0 0 12px;color:#475569;">${encodeHtml(paragraph)}</p>`)
+            .join("")}
+        </section>
+      `
+          : ""
+      }
+      ${
+        parsed.kullanimAdimlari.length > 0
+          ? `
+        <section style="padding:22px 24px;border:1px solid #dbe4f0;border-radius:18px;background:#f8fafc;">
+          <h3 style="margin:0 0 14px;font-size:18px;color:#0f172a;">Kullanım Adımları</h3>
+          <ol style="margin:0;padding-left:22px;">
+            ${parsed.kullanimAdimlari
+              .map((item) => `<li style="margin:0 0 10px;color:#334155;">${encodeHtml(item)}</li>`)
+              .join("")}
+          </ol>
+        </section>
+      `
+          : ""
+      }
+      ${
+        parsed.dikkatEdilecekler.length > 0
+          ? `
+        <section style="padding:22px 24px;border:1px solid #fde68a;border-radius:18px;background:#fffbeb;">
+          <h3 style="margin:0 0 14px;font-size:18px;color:#92400e;">Dikkat Edilecekler</h3>
+          <ul style="margin:0;padding-left:22px;">
+            ${parsed.dikkatEdilecekler
+              .map((item) => `<li style="margin:0 0 10px;color:#78350f;">${encodeHtml(item)}</li>`)
+              .join("")}
+          </ul>
+        </section>
+      `
+          : ""
+      }
+      ${
+        parsed.sikSorulanSorular.length > 0
+          ? `
+        <section style="padding:22px 24px;border:1px solid #d1fae5;border-radius:18px;background:#f0fdf4;">
+          <h3 style="margin:0 0 14px;font-size:18px;color:#166534;">Sık Sorulan Sorular</h3>
+          ${parsed.sikSorulanSorular
+            .map(
+              (item) => `
+                <div style="padding:14px 16px;margin-bottom:12px;border-radius:14px;background:#ffffff;border:1px solid #bbf7d0;">
+                  <div style="margin-bottom:8px;font-weight:700;color:#14532d;">${encodeHtml(item.soru)}</div>
+                  <div style="color:#166534;">${encodeHtml(item.cevap)}</div>
+                </div>
+              `
+            )
+            .join("")}
+        </section>
+      `
+          : ""
+      }
+    </div>
+  `;
+};
+
+const MenuUsageDialog = ({
+  open,
+  onClose,
+  menu,
+  onSuccess,
+}: MenuUsageDialogProps) => {
   const user = useSelector((state: AppState) => state.userReducer);
 
   const [loading, setLoading] = useState(false);
@@ -123,6 +333,16 @@ const MenuUsageDialog = ({ open, onClose, menu, onSuccess }: MenuUsageDialogProp
     hitCount: 0,
   });
   const [form, setForm] = useState<FormState>(emptyForm);
+
+  const parsedUsage = useMemo(
+    () => parseUsageText(form.icerikMetni),
+    [form.icerikMetni]
+  );
+
+  const previewHtml = useMemo(
+    () => buildUsagePreviewHtml(parsedUsage),
+    [parsedUsage]
+  );
 
   useEffect(() => {
     if (open && menu) {
@@ -145,7 +365,10 @@ const MenuUsageDialog = ({ open, onClose, menu, onSuccess }: MenuUsageDialogProp
       if (result && result.length > 0) {
         const latest = result[0];
         setUsage(latest);
-        setForm(mapUsageToForm(latest));
+        setForm({
+          icerikMetni: formatUsageText(latest),
+          videoUrl: latest.videoUrl || "",
+        });
       } else {
         const initialUsage = { menuId: menu.id, kullanimNotu: "", hitCount: 0 };
         setUsage(initialUsage);
@@ -166,7 +389,10 @@ const MenuUsageDialog = ({ open, onClose, menu, onSuccess }: MenuUsageDialogProp
     };
 
   const handleReset = () => {
-    setForm(mapUsageToForm(usage));
+    setForm({
+      icerikMetni: formatUsageText(usage),
+      videoUrl: usage.videoUrl || "",
+    });
   };
 
   const handleSave = async () => {
@@ -179,15 +405,15 @@ const MenuUsageDialog = ({ open, onClose, menu, onSuccess }: MenuUsageDialogProp
       const dataToSave = {
         ...usage,
         menuId: menu.id,
-        baslik: form.baslik.trim(),
-        ozet: form.ozet.trim(),
-        kullanimNotu: form.kullanimNotu.trim(),
-        kullanimAdimlariJson: stringifyList(form.kullanimAdimlari),
-        dikkatEdileceklerJson: stringifyList(form.dikkatEdilecekler),
-        sikSorulanSorularJson: stringifyFaq(form.sikSorulanSorular),
+        baslik: parsedUsage.baslik,
+        ozet: parsedUsage.ozet,
+        kullanimNotu: parsedUsage.kullanimNotu,
+        kullanimAdimlariJson: stringifyList(parsedUsage.kullanimAdimlari),
+        dikkatEdileceklerJson: stringifyList(parsedUsage.dikkatEdilecekler),
+        sikSorulanSorularJson: stringifyFaq(parsedUsage.sikSorulanSorular),
         videoUrl: form.videoUrl.trim(),
-        videoBaslik: form.videoBaslik.trim(),
-        videoAciklama: form.videoAciklama.trim(),
+        videoBaslik: "",
+        videoAciklama: "",
         ekleyenKullaniciId: user.id || 1,
       };
 
@@ -207,11 +433,9 @@ const MenuUsageDialog = ({ open, onClose, menu, onSuccess }: MenuUsageDialogProp
   };
 
   return (
-    <Dialog open={open} onClose={onClose} fullWidth maxWidth="md">
+    <Dialog open={open} onClose={onClose} fullWidth maxWidth="lg">
       <DialogTitle>
-        <Typography variant="h5">
-          {menu?.belgeAdi} - Kullanim Paneli
-        </Typography>
+        <Typography variant="h5">{menu?.belgeAdi} - Kullanim Paneli</Typography>
       </DialogTitle>
 
       <DialogContent dividers>
@@ -225,74 +449,83 @@ const MenuUsageDialog = ({ open, onClose, menu, onSuccess }: MenuUsageDialogProp
             {error && <Alert severity="error">{error}</Alert>}
 
             <Alert severity="info">
-              Bu ekrandaki bilgiler breadcrumb uzerindeki bilgi panelinde gosterilir. Video URL bos ise video alani son kullanicida gizlenir.
+              Tek bir metin girin; sistem bu metni otomatik olarak panel başlığı,
+              özet, kullanım notu, adımlar, dikkat alanları ve sık sorulan
+              sorulara ayırarak kaydeder. Video alanı için yalnızca URL girmeniz
+              yeterlidir.
             </Alert>
 
             <Grid container spacing={2}>
-              <Grid size={{ xs: 12, md: 6 }}>
-                <TextField
-                  fullWidth
-                  label="Panel Basligi"
-                  value={form.baslik}
-                  onChange={handleFieldChange("baslik")}
-                  disabled={saving}
-                />
-              </Grid>
-              <Grid size={{ xs: 12, md: 6 }}>
-                <TextField
-                  fullWidth
-                  label="Kisa Ozet"
-                  value={form.ozet}
-                  onChange={handleFieldChange("ozet")}
-                  disabled={saving}
-                />
-              </Grid>
-              <Grid size={{ xs: 12 }}>
+              <Grid size={{ xs: 12, md: 7 }}>
                 <TextField
                   fullWidth
                   multiline
-                  minRows={5}
-                  label="Detayli Kullanim Notu"
-                  value={form.kullanimNotu}
-                  onChange={handleFieldChange("kullanimNotu")}
+                  minRows={22}
+                  label="Kullanım Bilgisi Metni"
+                  placeholder={`Panel Başlığı: Bağımsız Denetim Sözleşmesi Paneli
+
+Kısa Özet ...
+
+Detaylı Kullanım Notu ...
+
+Kullanım Adımları
+Sözleşme Tarihini Belirleme: ...
+Hatalı Girişleri Kontrol Etme: ...
+
+Dikkat Edilecekler
+Tarih Uyumluluğu: ...
+
+Sık Sorulan Sorular
+Sözleşme tarihini girmeden belgeyi indirebilir miyim? ...`}
+                  value={form.icerikMetni}
+                  onChange={handleFieldChange("icerikMetni")}
                   disabled={saving}
                 />
               </Grid>
-              <Grid size={{ xs: 12, md: 6 }}>
-                <TextField
-                  fullWidth
-                  multiline
-                  minRows={7}
-                  label="Kullanim Adimlari"
-                  placeholder={"Her satira bir adim girin\nOrn. Musteri secin"}
-                  value={form.kullanimAdimlari}
-                  onChange={handleFieldChange("kullanimAdimlari")}
-                  disabled={saving}
-                />
-              </Grid>
-              <Grid size={{ xs: 12, md: 6 }}>
-                <TextField
-                  fullWidth
-                  multiline
-                  minRows={7}
-                  label="Dikkat Edilecekler"
-                  placeholder={"Her satira bir not girin\nOrn. Yil bilgisini kontrol edin"}
-                  value={form.dikkatEdilecekler}
-                  onChange={handleFieldChange("dikkatEdilecekler")}
-                  disabled={saving}
-                />
-              </Grid>
-              <Grid size={{ xs: 12 }}>
-                <TextField
-                  fullWidth
-                  multiline
-                  minRows={7}
-                  label="Sik Sorulan Sorular"
-                  placeholder={"Her satirda 'Soru | Cevap' formati kullanin\nOrn. Video zorunlu mu? | Hayir, URL bos olabilir."}
-                  value={form.sikSorulanSorular}
-                  onChange={handleFieldChange("sikSorulanSorular")}
-                  disabled={saving}
-                />
+
+              <Grid size={{ xs: 12, md: 5 }}>
+                <Stack spacing={2}>
+                  <TextField
+                    fullWidth
+                    label="Video URL"
+                    value={form.videoUrl}
+                    onChange={handleFieldChange("videoUrl")}
+                    disabled={saving}
+                    placeholder="https://..."
+                  />
+
+                  <Card variant="outlined" sx={{ borderRadius: 3, bgcolor: "grey.50" }}>
+                    <CardContent>
+                      <Stack spacing={1.5}>
+                        <Typography variant="subtitle1" fontWeight={700}>
+                          HTML Önizleme
+                        </Typography>
+                        <Typography variant="body2" color="text.secondary">
+                          Kaydedildiğinde son kullanıcı panelinde oluşacak görünüm.
+                        </Typography>
+                        <Box
+                          sx={{
+                            border: "1px solid",
+                            borderColor: "divider",
+                            borderRadius: 3,
+                            bgcolor: "#fff",
+                            p: 2,
+                            maxHeight: 560,
+                            overflow: "auto",
+                          }}
+                        >
+                          {previewHtml ? (
+                            <Box dangerouslySetInnerHTML={{ __html: previewHtml }} />
+                          ) : (
+                            <Typography variant="body2" color="text.secondary">
+                              Önizleme için içerik girin.
+                            </Typography>
+                          )}
+                        </Box>
+                      </Stack>
+                    </CardContent>
+                  </Card>
+                </Stack>
               </Grid>
             </Grid>
 
@@ -300,41 +533,12 @@ const MenuUsageDialog = ({ open, onClose, menu, onSuccess }: MenuUsageDialogProp
 
             <Box>
               <Typography variant="subtitle1" fontWeight={600} gutterBottom>
-                Video Alani
+                Ayrıştırılan Alan Özeti
               </Typography>
-              <Typography variant="body2" color="text.secondary" mb={2}>
-                YouTube veya embed destekli video linkini ekleyebilirsiniz. Link yoksa panelde video bolumu gosterilmez.
+              <Typography variant="body2" color="text.secondary">
+                Başlık: {parsedUsage.baslik || "-"} | Adım: {parsedUsage.kullanimAdimlari.length} |
+                Dikkat: {parsedUsage.dikkatEdilecekler.length} | SSS: {parsedUsage.sikSorulanSorular.length}
               </Typography>
-
-              <Grid container spacing={2}>
-                <Grid size={{ xs: 12 }}>
-                  <TextField
-                    fullWidth
-                    label="Video URL"
-                    value={form.videoUrl}
-                    onChange={handleFieldChange("videoUrl")}
-                    disabled={saving}
-                  />
-                </Grid>
-                <Grid size={{ xs: 12, md: 6 }}>
-                  <TextField
-                    fullWidth
-                    label="Video Basligi"
-                    value={form.videoBaslik}
-                    onChange={handleFieldChange("videoBaslik")}
-                    disabled={saving}
-                  />
-                </Grid>
-                <Grid size={{ xs: 12, md: 6 }}>
-                  <TextField
-                    fullWidth
-                    label="Video Aciklamasi"
-                    value={form.videoAciklama}
-                    onChange={handleFieldChange("videoAciklama")}
-                    disabled={saving}
-                  />
-                </Grid>
-              </Grid>
             </Box>
           </Stack>
         )}

@@ -2,6 +2,48 @@ import { decodeUTF8Deep } from "@/utils/utf8Support";
 
 const normalizeApiUrl = (value: string) => value.replace(/\/+$/, "");
 
+const sanitizeHeadersForLog = (headers: HeadersInit) => {
+  const safeHeaders: Record<string, string> = {};
+
+  Object.entries(headers as Record<string, string>).forEach(([key, value]) => {
+    safeHeaders[key] =
+      key.toLowerCase() === "authorization" ? "[REDACTED]" : value;
+  });
+
+  return safeHeaders;
+};
+
+const sanitizeBodyForLog = (body: RequestInit["body"]) => {
+  if (!body || typeof body !== "string") {
+    return body ? "[BODY_PRESENT]" : undefined;
+  }
+
+  try {
+    const parsedBody = JSON.parse(body);
+    if (!parsedBody || typeof parsedBody !== "object") {
+      return "[BODY_PRESENT]";
+    }
+
+    const sensitiveKeys = [
+      "password",
+      "token",
+      "refreshToken",
+      "RefreshToken",
+      "CaptchaToken",
+    ];
+
+    sensitiveKeys.forEach((key) => {
+      if (key in parsedBody) {
+        parsedBody[key] = "[REDACTED]";
+      }
+    });
+
+    return parsedBody;
+  } catch {
+    return "[BODY_PRESENT]";
+  }
+};
+
 const getDefaultApiUrl = () => {
   if (typeof window === "undefined") {
     return "http://localhost:5000/api";
@@ -72,8 +114,8 @@ export async function apiFetch(
     console.log(`[API Istek] ${fullUrl}`, {
       method: rest.method || "GET",
       credentials: includeCredentials ? "include" : "omit",
-      headers: mergedHeaders,
-      body: rest.body,
+      headers: sanitizeHeadersForLog(mergedHeaders),
+      body: sanitizeBodyForLog(rest.body),
     });
 
     const response = await fetch(fullUrl, {

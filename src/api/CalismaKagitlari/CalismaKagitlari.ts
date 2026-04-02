@@ -1,5 +1,11 @@
 ﻿import { apiFetch } from "@/api/apiBase";
 import { store } from "@/store/storeConfig";
+import { getStoredAuthTokens } from "@/utils/authStorage";
+
+const getAuthToken = () => {
+    const state = store.getState() as { userReducer?: { token?: string } };
+    return state.userReducer?.token || getStoredAuthTokens().token || "";
+};
 
 
 export const getCalismaKagidiVerileriByDenetciDenetlenenYil = async (
@@ -9,7 +15,7 @@ export const getCalismaKagidiVerileriByDenetciDenetlenenYil = async (
     yil: number
 ) => {
     try {
-        const token = store.getState().userReducer.token;
+        const token = getAuthToken();
         const response = await apiFetch(
             `/${controller}/Standart`,
             {
@@ -38,7 +44,7 @@ export const getCalismaKagidiVerileriByDenetciDenetlenenYilDipnotNo = async (
     dipnotNo: string
 ) => {
     try {
-        const token = store.getState().userReducer.token;
+        const token = getAuthToken();
         const response = await apiFetch(
             `/${controller}/Standart?denetciId=${denetciId}&yil=${yil}&denetlenenId=${denetlenenId}&dipnotNo=${dipnotNo}`,
             {
@@ -67,7 +73,7 @@ export const getCalismaKagidiVerileriByDenetciDenetlenenKullaniciYil = async (
     yil: number
 ) => {
     try {
-        const token = store.getState().userReducer.token;
+        const token = getAuthToken();
         const response = await apiFetch(
             `/${controller}/Standart?denetciId=${denetciId}&yil=${yil}&denetlenenId=${denetlenenId}&kullaniciId=${kullaniciId}`,
             {
@@ -96,7 +102,7 @@ export const getCalismaKagidiVerileriByDenetciDenetlenenYilByKonu = async (
     konu: string
 ) => {
     try {
-        const token = store.getState().userReducer.token;
+        const token = getAuthToken();
         const response = await apiFetch(
             `/${controller}/Standart?denetciId=${denetciId}&yil=${yil}&denetlenenId=${denetlenenId}&konu=${konu}`,
             {
@@ -125,7 +131,7 @@ export const getCalismaKagidiVerileriByDenetciDenetlenenYilByUrl = async (
     formUrl: string
 ) => {
     try {
-        const token = store.getState().userReducer.token;
+        const token = getAuthToken();
         const response = await apiFetch(
             `/${controller}/Standart?denetciId=${denetciId}&yil=${yil}&denetlenenId=${denetlenenId}&url=${formUrl}`,
             {
