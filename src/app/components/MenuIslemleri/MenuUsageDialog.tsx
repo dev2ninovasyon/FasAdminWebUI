@@ -48,7 +48,7 @@ type ParsedUsage = {
 
 type FormState = {
   icerikMetni: string;
-  videoUrl: string;
+  videoId: string;
 };
 
 const emptyParsedUsage: ParsedUsage = {
@@ -62,7 +62,28 @@ const emptyParsedUsage: ParsedUsage = {
 
 const emptyForm: FormState = {
   icerikMetni: "",
-  videoUrl: "",
+  videoId: "",
+};
+
+const normalizeVideoId = (value?: string | null) => {
+  const rawValue = String(value || "").trim();
+
+  if (!rawValue) {
+    return "";
+  }
+
+  if (/^\d+$/.test(rawValue)) {
+    return rawValue;
+  }
+
+  try {
+    const parsedUrl = new URL(rawValue);
+    const pathParts = parsedUrl.pathname.split("/").filter(Boolean);
+    const idCandidate = pathParts[pathParts.length - 1] || "";
+    return /^\d+$/.test(idCandidate) ? idCandidate : rawValue;
+  } catch {
+    return rawValue;
+  }
 };
 
 const sectionTitles = [
@@ -367,7 +388,7 @@ const MenuUsageDialog = ({
         setUsage(latest);
         setForm({
           icerikMetni: formatUsageText(latest),
-          videoUrl: latest.videoUrl || "",
+          videoId: normalizeVideoId(latest.videoUrl),
         });
       } else {
         const initialUsage = { menuId: menu.id, kullanimNotu: "", hitCount: 0 };
@@ -391,7 +412,7 @@ const MenuUsageDialog = ({
   const handleReset = () => {
     setForm({
       icerikMetni: formatUsageText(usage),
-      videoUrl: usage.videoUrl || "",
+      videoId: normalizeVideoId(usage.videoUrl),
     });
   };
 
@@ -411,7 +432,7 @@ const MenuUsageDialog = ({
         kullanimAdimlariJson: stringifyList(parsedUsage.kullanimAdimlari),
         dikkatEdileceklerJson: stringifyList(parsedUsage.dikkatEdilecekler),
         sikSorulanSorularJson: stringifyFaq(parsedUsage.sikSorulanSorular),
-        videoUrl: form.videoUrl.trim(),
+        videoUrl: normalizeVideoId(form.videoId),
         videoBaslik: "",
         videoAciklama: "",
         ekleyenKullaniciId: user.id || 1,
@@ -451,8 +472,8 @@ const MenuUsageDialog = ({
             <Alert severity="info">
               Tek bir metin girin; sistem bu metni otomatik olarak panel başlığı,
               özet, kullanım notu, adımlar, dikkat alanları ve sık sorulan
-              sorulara ayırarak kaydeder. Video alanı için yalnızca URL girmeniz
-              yeterlidir.
+              sorulara ayırarak kaydeder. Video alanı için yalnızca Vimeo video ID
+              girmeniz yeterlidir.
             </Alert>
 
             <Grid container spacing={2}>
@@ -487,11 +508,12 @@ Sözleşme tarihini girmeden belgeyi indirebilir miyim? ...`}
                 <Stack spacing={2}>
                   <TextField
                     fullWidth
-                    label="Video URL"
-                    value={form.videoUrl}
-                    onChange={handleFieldChange("videoUrl")}
+                    label="Vimeo Video ID"
+                    value={form.videoId}
+                    onChange={handleFieldChange("videoId")}
                     disabled={saving}
-                    placeholder="https://..."
+                    placeholder="1179481872"
+                    helperText="Sadece sayısal Vimeo video ID girin."
                   />
 
                   <Card variant="outlined" sx={{ borderRadius: 3, bgcolor: "grey.50" }}>
