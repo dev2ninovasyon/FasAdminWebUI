@@ -53,7 +53,7 @@ const getDefaultApiUrl = () => {
   const isLocalhost = hostname === "localhost" || hostname === "127.0.0.1";
 
   return isLocalhost
-    ? "http://localhost:5000/api"
+    ? "http://localhost:5080/api"
     : "https://betaapi.fasmart.app/api";
 };
 

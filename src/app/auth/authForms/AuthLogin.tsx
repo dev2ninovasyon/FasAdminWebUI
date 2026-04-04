@@ -1,6 +1,7 @@
-import { Box, Typography, Stack, useTheme, InputAdornment } from "@mui/material";
+import { Box, Typography, Stack, useTheme, InputAdornment, Link as MuiLink } from "@mui/material";
 import { useState } from "react";
 import { useRouter } from "next/navigation";
+import Link from "next/link";
 import { LoadingButton } from "@mui/lab";
 import { IconMail, IconLock } from "@tabler/icons-react";
 import { useDispatch, useSelector } from "@/store/hooks";
@@ -22,20 +23,16 @@ interface LoginType {
 const AuthLogin: React.FC<LoginType> = ({ title, subtitle, subtext }) => {
   const router = useRouter();
   const dispatch = useDispatch();
-
   const customizer = useSelector((state: AppState) => state.customizer);
   const theme = useTheme();
-
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [isLoggedIn, setIsLoggedIn] = useState(false);
   const [isVerifyingCaptcha, setIsVerifyingCaptcha] = useState(false);
   const { executeRecaptcha } = useGoogleReCaptcha();
-
   const isLocalHost =
     typeof window !== "undefined" &&
-    (window.location.hostname === "localhost" ||
-      window.location.hostname === "127.0.0.1");
+    (window.location.hostname === "localhost" || window.location.hostname === "127.0.0.1");
 
   const handleLogin = async () => {
     if (!isLocalHost && !executeRecaptcha) {
@@ -133,11 +130,7 @@ const AuthLogin: React.FC<LoginType> = ({ title, subtitle, subtext }) => {
           bddkmi: data.bddkmi,
         };
 
-        if (
-          data.sonSecilenDenetlenenId &&
-          data.sonSecilenYil &&
-          data.sonSecilenDenetlenenFirmaAdi
-        ) {
+        if (data.sonSecilenDenetlenenId && data.sonSecilenYil && data.sonSecilenDenetlenenFirmaAdi) {
           Object.assign(userData, {
             denetlenenId: data.sonSecilenDenetlenenId,
             denetlenenFirmaAdi: data.sonSecilenDenetlenenFirmaAdi,
@@ -150,10 +143,7 @@ const AuthLogin: React.FC<LoginType> = ({ title, subtitle, subtext }) => {
             bddkmi: data.sonSecilenBddkmi,
           });
 
-          localStorage.setItem(
-            "fas_denetlenenId",
-            data.sonSecilenDenetlenenId.toString()
-          );
+          localStorage.setItem("fas_denetlenenId", data.sonSecilenDenetlenenId.toString());
           localStorage.setItem("fas_yil", data.sonSecilenYil.toString());
         } else {
           localStorage.removeItem("fas_denetlenenId");
@@ -197,9 +187,7 @@ const AuthLogin: React.FC<LoginType> = ({ title, subtitle, subtext }) => {
         autoHideDuration: 5000,
         style: {
           backgroundColor:
-            customizer.activeMode === "dark"
-              ? theme.palette.error.light
-              : theme.palette.error.main,
+            customizer.activeMode === "dark" ? theme.palette.error.light : theme.palette.error.main,
           maxWidth: "720px",
         },
       });
@@ -215,9 +203,7 @@ const AuthLogin: React.FC<LoginType> = ({ title, subtitle, subtext }) => {
         autoHideDuration: 5000,
         style: {
           backgroundColor:
-            customizer.activeMode === "dark"
-              ? theme.palette.error.light
-              : theme.palette.error.main,
+            customizer.activeMode === "dark" ? theme.palette.error.light : theme.palette.error.main,
           maxWidth: "720px",
         },
       });
@@ -226,8 +212,8 @@ const AuthLogin: React.FC<LoginType> = ({ title, subtitle, subtext }) => {
     }
   };
 
-  const handleSubmit = (e: React.FormEvent) => {
-    e.preventDefault();
+  const handleSubmit = (event: React.FormEvent) => {
+    event.preventDefault();
     if (isLoggedIn || isVerifyingCaptcha) {
       return;
     }
@@ -255,7 +241,7 @@ const AuthLogin: React.FC<LoginType> = ({ title, subtitle, subtext }) => {
               variant="outlined"
               fullWidth
               placeholder="Email adresiniz"
-              onChange={(e: any) => setEmail(e.target.value)}
+              onChange={(event: any) => setEmail(event.target.value)}
               InputProps={{
                 startAdornment: (
                   <InputAdornment position="start">
@@ -273,7 +259,7 @@ const AuthLogin: React.FC<LoginType> = ({ title, subtitle, subtext }) => {
               variant="outlined"
               fullWidth
               placeholder="Sifreniz"
-              onChange={(e: any) => setPassword(e.target.value)}
+              onChange={(event: any) => setPassword(event.target.value)}
               InputProps={{
                 startAdornment: (
                   <InputAdornment position="start">
@@ -286,6 +272,20 @@ const AuthLogin: React.FC<LoginType> = ({ title, subtitle, subtext }) => {
 
           <Box display="flex" justifyContent="center" />
         </Stack>
+
+        <Box display="flex" justifyContent="flex-end" mb={3}>
+          <MuiLink
+            component={Link}
+            href={`/auth/forgot-password${email ? `?email=${encodeURIComponent(email)}` : ""}`}
+            underline="hover"
+            sx={{
+              fontWeight: 600,
+              color: "primary.main",
+            }}
+          >
+            Sifremi unuttum
+          </MuiLink>
+        </Box>
 
         <Box>
           <LoadingButton
@@ -306,11 +306,7 @@ const AuthLogin: React.FC<LoginType> = ({ title, subtitle, subtext }) => {
               borderRadius: "10px",
             }}
           >
-            {isVerifyingCaptcha
-              ? "Guvenlik Dogrulamasi..."
-              : isLoggedIn
-                ? "Giris Yapiliyor..."
-                : "Giris Yap"}
+            {isVerifyingCaptcha ? "Guvenlik Dogrulamasi..." : isLoggedIn ? "Giris Yapiliyor..." : "Giris Yap"}
           </LoadingButton>
         </Box>
       </form>

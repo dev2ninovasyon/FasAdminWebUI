@@ -4,6 +4,7 @@ import {
   Box,
   Card,
   CardContent,
+  Chip,
   Dialog,
   DialogActions,
   DialogContent,
@@ -12,10 +13,12 @@ import {
   CircularProgress,
   Divider,
   Grid,
+  Paper,
   Stack,
   TextField,
   Typography,
 } from "@mui/material";
+import { IconBook, IconBulb, IconChecklist, IconHelpCircle, IconInfoCircle, IconVideo } from "@tabler/icons-react";
 import {
   getMenuUsageByMenuId,
   Menu,
@@ -65,6 +68,11 @@ const emptyForm: FormState = {
   videoId: "",
 };
 
+const sectionCardSx = {
+  p: 2.5,
+  borderRadius: 3,
+};
+
 const normalizeVideoId = (value?: string | null) => {
   const rawValue = String(value || "").trim();
 
@@ -86,14 +94,37 @@ const normalizeVideoId = (value?: string | null) => {
   }
 };
 
-const sectionTitles = [
-  "Panel Başlığı",
-  "Kısa Özet",
-  "Detaylı Kullanım Notu",
-  "Kullanım Adımları",
-  "Dikkat Edilecekler",
-  "Sık Sorulan Sorular",
-] as const;
+const getVimeoEmbedUrl = (value?: string | null) => {
+  const url = String(value || "").trim();
+
+  if (!url) {
+    return null;
+  }
+
+  if (/^\d+$/.test(url)) {
+    return `https://player.vimeo.com/video/${url}?badge=0&autopause=0&player_id=0&app_id=58479`;
+  }
+
+  const iframeSrcMatch = url.match(/src=["']([^"']+)["']/i);
+  const candidateUrl = iframeSrcMatch?.[1] || url;
+
+  try {
+    const parsedUrl = new URL(candidateUrl);
+    const pathParts = parsedUrl.pathname.split("/").filter(Boolean);
+    const videoId = pathParts.find((item) => /^\d+$/.test(item)) || pathParts[pathParts.length - 1];
+
+    if (
+      (parsedUrl.hostname.includes("vimeo.com") || parsedUrl.hostname.includes("player.vimeo.com")) &&
+      /^\d+$/.test(videoId || "")
+    ) {
+      return `https://player.vimeo.com/video/${videoId}?badge=0&autopause=0&player_id=0&app_id=58479`;
+    }
+
+    return candidateUrl;
+  } catch {
+    return candidateUrl;
+  }
+};
 
 const normalizeText = (value: string) =>
   value
@@ -104,13 +135,27 @@ const normalizeText = (value: string) =>
     .replace(/\u00a0/g, " ")
     .trim();
 
-const encodeHtml = (value: string) =>
+const normalizeHeadingKey = (value: string) =>
   value
-    .replaceAll("&", "&amp;")
-    .replaceAll("<", "&lt;")
-    .replaceAll(">", "&gt;")
-    .replaceAll('"', "&quot;")
-    .replaceAll("'", "&#39;");
+    .replace(/^\*\*(.+?)\*\*$/g, "$1") // Remove ** wrapping if present
+    .replace(/^\d+\.\s+/, "") // Remove leading list number (1., 2., etc.)
+    .replace(/^[-*]\s+/, "") // Remove leading list marker (-, *)
+    .toLocaleLowerCase("tr-TR")
+    .normalize("NFD")
+    .replace(/[\u0300-\u036f]/g, "")
+    .replace(/ı/g, "i")
+    .replace(/[^a-z0-9]+/g, " ")
+    .trim();
+
+
+const headingAliases: Record<string, keyof ParsedUsage> = {
+  "panel basligi": "baslik",
+  "kisa ozet": "ozet",
+  "detayli kullanim notu": "kullanimNotu",
+  "kullanim adimlari": "kullanimAdimlari",
+  "dikkat edilecekler": "dikkatEdilecekler",
+  "sik sorulan sorular": "sikSorulanSorular",
+};
 
 const stringifyList = (items: string[]) => JSON.stringify(items.filter(Boolean));
 
@@ -148,15 +193,75 @@ const parseJsonFaq = (value?: string | null) => {
   }
 };
 
-const extractSection = (text: string, title: (typeof sectionTitles)[number]) => {
-  const escapedTitles = sectionTitles.map((item) => item.replace(/[.*+?^${}()|[\]\\]/g, "\\$&"));
-  const titleRegex = title.replace(/[.*+?^${}()|[\]\\]/g, "\\$&");
-  const pattern = new RegExp(
-    `(?:^|\\n)${titleRegex}\\s*:?[ \\t]*\\n?([\\s\\S]*?)(?=\\n(?:${escapedTitles.join("|")})\\s*:?[ \\t]*\\n?|$)`,
-    "i"
-  );
-  const match = text.match(pattern);
-  return match?.[1]?.trim() || "";
+const SectionHeader = ({ icon, title }: { icon: React.ReactNode; title: string }) => (
+  <Stack direction="row" spacing={1.25} alignItems="center" sx={{ mb: 1.5 }}>
+    <Box sx={{ display: "flex", alignItems: "center", color: "primary.main" }}>{icon}</Box>
+    <Typography variant="subtitle1" fontWeight={700}>
+      {title}
+    </Typography>
+  </Stack>
+);
+
+const parseSectionLines = (rawText: string) => {
+  const sections: Record<keyof ParsedUsage, string[]> = {
+    baslik: [],
+    ozet: [],
+    kullanimNotu: [],
+    kullanimAdimlari: [],
+    dikkatEdilecekler: [],
+    sikSorulanSorular: [],
+  };
+
+  let currentSection: keyof ParsedUsage | null = null;
+
+  for (const rawLine of rawText.split("\n")) {
+    let line = rawLine.trim();
+
+    if (!line) {
+      if (currentSection) {
+        sections[currentSection].push("");
+      }
+      continue;
+    }
+
+    // Remove ** wrapping anywhere in the line (before list markers)
+    line = line.replace(/\*\*(.+?)\*\*/g, "$1");
+
+    // Try to find section heading with colon (with or without list markers)
+    let colonIndex = line.indexOf(":");
+    let headingCandidate = colonIndex >= 0 ? line.slice(0, colonIndex) : null;
+    let matchedSection = headingCandidate ? headingAliases[normalizeHeadingKey(headingCandidate)] : null;
+    let restOfLine = colonIndex >= 0 ? line.slice(colonIndex + 1).trim() : "";
+
+    // If no match with colon, try without colon (for lines like "Kısa Özet İşletme Tanıma...")
+    if (!matchedSection) {
+      // Check word by word from the start to find a heading match
+      const words = line.split(/\s+/);
+      for (let i = 1; i <= Math.min(words.length, 4); i++) {
+        const potentialHeading = words.slice(0, i).join(" ");
+        const normalizedHeading = normalizeHeadingKey(potentialHeading);
+        if (headingAliases[normalizedHeading]) {
+          matchedSection = headingAliases[normalizedHeading];
+          restOfLine = words.slice(i).join(" ").trim();
+          break;
+        }
+      }
+    }
+
+    if (matchedSection) {
+      currentSection = matchedSection;
+      if (restOfLine) {
+        sections[currentSection].push(restOfLine);
+      }
+      continue;
+    }
+
+    if (currentSection) {
+      sections[currentSection].push(line);
+    }
+  }
+
+  return sections;
 };
 
 const parseUsageText = (rawText: string): ParsedUsage => {
@@ -165,30 +270,83 @@ const parseUsageText = (rawText: string): ParsedUsage => {
     return emptyParsedUsage;
   }
 
-  const baslik = extractSection(normalized, "Panel Başlığı").replace(/^:\s*/, "").trim();
-  const ozet = extractSection(normalized, "Kısa Özet").replace(/^:\s*/, "").trim();
-  const kullanimNotu = extractSection(normalized, "Detaylı Kullanım Notu").trim();
-  const kullanimAdimlari = extractSection(normalized, "Kullanım Adımları")
-    .split(/\n\s*\n|\n/)
-    .map((item) => item.trim())
-    .filter(Boolean);
-  const dikkatEdilecekler = extractSection(normalized, "Dikkat Edilecekler")
-    .split(/\n\s*\n|\n/)
-    .map((item) => item.trim())
-    .filter(Boolean);
-  const sikSorulanSorular = extractSection(normalized, "Sık Sorulan Sorular")
-    .split(/\n\s*\n|\n/)
+  const sections = parseSectionLines(normalized);
+
+  const baslik = sections.baslik.join(" ").trim();
+  const ozet = sections.ozet.join(" ").trim();
+  const kullanimNotu = sections.kullanimNotu.join("\n").trim();
+  
+  // Parse uses steps - merge sub-items (o, -, *) into parent items
+  const kullanimAdimlari: string[] = [];
+  
+  for (const rawItem of sections.kullanimAdimlari) {
+    const item = rawItem.trim();
+    if (!item) continue;
+
+    // Check if this is a sub-item (starts with o, -, *)
+    const isSubItem = /^\s*[-o*]\s+/.test(item);
+    
+    if (isSubItem) {
+      // Merge sub-item into the last parent item
+      if (kullanimAdimlari.length > 0) {
+        const cleanedItem = item
+          .replace(/^[\d]+\.\s+/, "")
+          .replace(/^[-o*]\s+/, "");
+        kullanimAdimlari[kullanimAdimlari.length - 1] += "\n  • " + cleanedItem;
+      }
+    } else {
+      // This is a parent item
+      let cleanedItem = item
+        .replace(/^[\d]+\.\s+/, "")
+        .replace(/^[-*]\s+/, "");
+      
+      // If item contains colon, format it nicely
+      const colonIndex = cleanedItem.indexOf(":");
+      if (colonIndex > 0) {
+        const title = cleanedItem.slice(0, colonIndex).trim();
+        const content = cleanedItem.slice(colonIndex + 1).trim();
+        cleanedItem = `${title}: ${content}`;
+      }
+      
+      kullanimAdimlari.push(cleanedItem);
+    }
+  }
+
+  const dikkatEdilecekler = sections.dikkatEdilecekler
     .map((item) => item.trim())
     .filter(Boolean)
     .map((item) => {
+      // Remove leading list markers and numbers: "1. ", "- ", "* "
+      item = item.replace(/^[\d]+\.\s+/, "").replace(/^[-*]\s+/, "");
+      
+      const colonIndex = item.indexOf(":");
+      if (colonIndex > 0) {
+        const title = item.slice(0, colonIndex).trim();
+        const content = item.slice(colonIndex + 1).trim();
+        return `${title}: ${content}`.trim();
+      }
+      return item;
+    })
+    .filter(Boolean);
+
+  const sikSorulanSorular = sections.sikSorulanSorular
+    .map((item) => item.trim())
+    .filter(Boolean)
+    .map((item) => {
+      // Remove leading list markers and numbers: "1. ", "- ", "* "
+      item = item.replace(/^[\d]+\.\s+/, "").replace(/^[-o*]\s+/, "");
+      
       const firstQuestionMarkIndex = item.indexOf("?");
       if (firstQuestionMarkIndex === -1) {
         return { soru: "", cevap: item };
       }
 
+      const soru = item.slice(0, firstQuestionMarkIndex + 1).trim();
+      const cevap = item.slice(firstQuestionMarkIndex + 1).trim();
+      
       return {
-        soru: item.slice(0, firstQuestionMarkIndex + 1).trim(),
-        cevap: item.slice(firstQuestionMarkIndex + 1).trim(),
+        soru,
+        cevap,
       };
     })
     .filter((item) => item.soru && item.cevap);
@@ -219,10 +377,10 @@ const formatUsageText = (usage?: Partial<MenuKullanimBilgisi> | null) => {
     `Detaylı Kullanım Notu ${kullanimNotu}`.trimEnd(),
     "",
     "Kullanım Adımları",
-    ...kullanimAdimlari,
+    ...kullanimAdimlari.map((item) => `${item}`),
     "",
     "Dikkat Edilecekler",
-    ...dikkatEdilecekler,
+    ...dikkatEdilecekler.map((item) => `${item}`),
     "",
     "Sık Sorulan Sorular",
     ...sikSorulanSorular.map((item) => `${item.soru} ${item.cevap}`.trim()),
@@ -230,112 +388,6 @@ const formatUsageText = (usage?: Partial<MenuKullanimBilgisi> | null) => {
     .join("\n")
     .replace(/\n{3,}/g, "\n\n")
     .trim();
-};
-
-const buildUsagePreviewHtml = (parsed: ParsedUsage) => {
-  const paragraflar = parsed.kullanimNotu
-    .split(/\n\s*\n|\n/)
-    .map((item) => item.trim())
-    .filter(Boolean);
-
-  if (
-    !parsed.baslik &&
-    !parsed.ozet &&
-    paragraflar.length === 0 &&
-    parsed.kullanimAdimlari.length === 0 &&
-    parsed.dikkatEdilecekler.length === 0 &&
-    parsed.sikSorulanSorular.length === 0
-  ) {
-    return "";
-  }
-
-  return `
-    <div style="display:grid;gap:18px;color:#1f2937;font-family:'Segoe UI',Tahoma,sans-serif;line-height:1.7;">
-      ${
-        parsed.baslik || parsed.ozet
-          ? `
-        <section style="padding:24px;border:1px solid #dbe4f0;border-radius:18px;background:linear-gradient(135deg,#f8fbff 0%,#eef6ff 100%);box-shadow:0 10px 30px rgba(15,23,42,0.06);">
-          ${
-            parsed.baslik
-              ? `
-            <div style="font-size:12px;font-weight:700;letter-spacing:.08em;text-transform:uppercase;color:#2563eb;margin-bottom:10px;">Panel Başlığı</div>
-            <h2 style="margin:0 0 10px;font-size:28px;line-height:1.25;color:#0f172a;">${encodeHtml(parsed.baslik)}</h2>
-          `
-              : ""
-          }
-          ${
-            parsed.ozet
-              ? `
-            <div style="font-size:12px;font-weight:700;letter-spacing:.08em;text-transform:uppercase;color:#475569;margin:16px 0 8px;">Kısa Özet</div>
-            <p style="margin:0;font-size:15px;color:#334155;">${encodeHtml(parsed.ozet)}</p>
-          `
-              : ""
-          }
-        </section>
-      `
-          : ""
-      }
-      ${
-        paragraflar.length > 0
-          ? `
-        <section style="padding:22px 24px;border:1px solid #e5e7eb;border-radius:18px;background:#ffffff;box-shadow:0 8px 24px rgba(15,23,42,0.04);">
-          <h3 style="margin:0 0 12px;font-size:18px;color:#0f172a;">Detaylı Kullanım Notu</h3>
-          ${paragraflar
-            .map((paragraph) => `<p style="margin:0 0 12px;color:#475569;">${encodeHtml(paragraph)}</p>`)
-            .join("")}
-        </section>
-      `
-          : ""
-      }
-      ${
-        parsed.kullanimAdimlari.length > 0
-          ? `
-        <section style="padding:22px 24px;border:1px solid #dbe4f0;border-radius:18px;background:#f8fafc;">
-          <h3 style="margin:0 0 14px;font-size:18px;color:#0f172a;">Kullanım Adımları</h3>
-          <ol style="margin:0;padding-left:22px;">
-            ${parsed.kullanimAdimlari
-              .map((item) => `<li style="margin:0 0 10px;color:#334155;">${encodeHtml(item)}</li>`)
-              .join("")}
-          </ol>
-        </section>
-      `
-          : ""
-      }
-      ${
-        parsed.dikkatEdilecekler.length > 0
-          ? `
-        <section style="padding:22px 24px;border:1px solid #fde68a;border-radius:18px;background:#fffbeb;">
-          <h3 style="margin:0 0 14px;font-size:18px;color:#92400e;">Dikkat Edilecekler</h3>
-          <ul style="margin:0;padding-left:22px;">
-            ${parsed.dikkatEdilecekler
-              .map((item) => `<li style="margin:0 0 10px;color:#78350f;">${encodeHtml(item)}</li>`)
-              .join("")}
-          </ul>
-        </section>
-      `
-          : ""
-      }
-      ${
-        parsed.sikSorulanSorular.length > 0
-          ? `
-        <section style="padding:22px 24px;border:1px solid #d1fae5;border-radius:18px;background:#f0fdf4;">
-          <h3 style="margin:0 0 14px;font-size:18px;color:#166534;">Sık Sorulan Sorular</h3>
-          ${parsed.sikSorulanSorular
-            .map(
-              (item) => `
-                <div style="padding:14px 16px;margin-bottom:12px;border-radius:14px;background:#ffffff;border:1px solid #bbf7d0;">
-                  <div style="margin-bottom:8px;font-weight:700;color:#14532d;">${encodeHtml(item.soru)}</div>
-                  <div style="color:#166534;">${encodeHtml(item.cevap)}</div>
-                </div>
-              `
-            )
-            .join("")}
-        </section>
-      `
-          : ""
-      }
-    </div>
-  `;
 };
 
 const MenuUsageDialog = ({
@@ -360,9 +412,15 @@ const MenuUsageDialog = ({
     [form.icerikMetni]
   );
 
-  const previewHtml = useMemo(
-    () => buildUsagePreviewHtml(parsedUsage),
-    [parsedUsage]
+  const videoEmbedUrl = useMemo(() => getVimeoEmbedUrl(form.videoId), [form.videoId]);
+  const previewHasContent = Boolean(
+    parsedUsage.baslik ||
+      parsedUsage.ozet ||
+      parsedUsage.kullanimNotu ||
+      parsedUsage.kullanimAdimlari.length ||
+      parsedUsage.dikkatEdilecekler.length ||
+      parsedUsage.sikSorulanSorular.length ||
+      videoEmbedUrl
   );
 
   useEffect(() => {
@@ -530,14 +588,144 @@ Sözleşme tarihini girmeden belgeyi indirebilir miyim? ...`}
                             border: "1px solid",
                             borderColor: "divider",
                             borderRadius: 3,
-                            bgcolor: "#fff",
+                            bgcolor: "background.default",
                             p: 2,
                             maxHeight: 560,
                             overflow: "auto",
                           }}
                         >
-                          {previewHtml ? (
-                            <Box dangerouslySetInnerHTML={{ __html: previewHtml }} />
+                          {previewHasContent ? (
+                            <Stack spacing={2}>
+                              {(parsedUsage.baslik || parsedUsage.ozet) && (
+                                <Box sx={{ mb: 1 }}>
+                                  <Stack direction="row" spacing={2.5} alignItems="flex-start">
+                                    <Box
+                                      sx={{
+                                        width: 56,
+                                        height: 56,
+                                        borderRadius: 3,
+                                        display: "flex",
+                                        alignItems: "center",
+                                        justifyContent: "center",
+                                        color: "primary.main",
+                                        backgroundColor: "rgba(25, 118, 210, 0.08)",
+                                        flexShrink: 0,
+                                      }}
+                                    >
+                                      <IconInfoCircle size={24} />
+                                    </Box>
+                                    <Stack spacing={0.75}>
+                                      <Typography variant="h5" fontWeight={700} sx={{ lineHeight: 1.2 }}>
+                                        {parsedUsage.baslik || `${menu?.belgeAdi || "Panel"} nasıl kullanılır?`}
+                                      </Typography>
+                                      <Typography variant="body2" color="text.secondary" sx={{ lineHeight: 1.6 }}>
+                                        {parsedUsage.ozet}
+                                      </Typography>
+                                    </Stack>
+                                  </Stack>
+                                  <Divider sx={{ mt: 3 }} />
+                                </Box>
+                              )}
+
+                              <Box sx={{ ...sectionCardSx }}>
+                                <Stack direction="row" justifyContent="space-between" alignItems="center" spacing={2}>
+                                  <Typography variant="caption" color="text.secondary">
+                                    Son güncelleme: Önizleme
+                                  </Typography>
+                                  <Chip label="0 görüntüleme" size="small" variant="outlined" />
+                                </Stack>
+                              </Box>
+
+                              {!!parsedUsage.kullanimNotu && (
+                                <Box sx={sectionCardSx}>
+                                  <SectionHeader icon={<IconBook size={18} />} title="Genel Açıklama" />
+                                  <Typography variant="body2" sx={{ whiteSpace: "pre-wrap", lineHeight: 1.8 }}>
+                                    {parsedUsage.kullanimNotu}
+                                  </Typography>
+                                </Box>
+                              )}
+
+                              {parsedUsage.kullanimAdimlari.length > 0 && (
+                                <Box sx={sectionCardSx}>
+                                  <SectionHeader icon={<IconChecklist size={18} />} title="Adım Adım Nasıl Kullanılır?" />
+                                  <Stack spacing={1.25}>
+                                    {parsedUsage.kullanimAdimlari.map((step, index) => (
+                                      <Stack key={`${index}-${step}`} direction="row" spacing={1.5} alignItems="flex-start">
+                                        <Chip label={index + 1} size="small" color="primary" sx={{ minWidth: 32 }} />
+                                        <Typography variant="body2" sx={{ lineHeight: 1.7, pt: 0.2 }}>
+                                          {step}
+                                        </Typography>
+                                      </Stack>
+                                    ))}
+                                  </Stack>
+                                </Box>
+                              )}
+
+                              {parsedUsage.dikkatEdilecekler.length > 0 && (
+                                <Box sx={sectionCardSx}>
+                                  <SectionHeader icon={<IconBulb size={18} />} title="Dikkat Edilecekler" />
+                                  <Stack spacing={1}>
+                                    {parsedUsage.dikkatEdilecekler.map((note, index) => (
+                                      <Alert key={`${index}-${note}`} severity="info" variant="outlined">
+                                        {note}
+                                      </Alert>
+                                    ))}
+                                  </Stack>
+                                </Box>
+                              )}
+
+                              {parsedUsage.sikSorulanSorular.length > 0 && (
+                                <Box sx={sectionCardSx}>
+                                  <SectionHeader icon={<IconHelpCircle size={18} />} title="Sık Sorulan Sorular" />
+                                  <Stack spacing={1.5}>
+                                    {parsedUsage.sikSorulanSorular.map((item, index) => (
+                                      <Box key={`${index}-${item.soru || "faq"}`}>
+                                        <Typography variant="body2" fontWeight={700} sx={{ mb: 0.5 }}>
+                                          {item.soru}
+                                        </Typography>
+                                        <Typography variant="body2" color="text.secondary" sx={{ lineHeight: 1.7 }}>
+                                          {item.cevap}
+                                        </Typography>
+                                        {index < parsedUsage.sikSorulanSorular.length - 1 && <Divider sx={{ mt: 1.5 }} />}
+                                      </Box>
+                                    ))}
+                                  </Stack>
+                                </Box>
+                              )}
+
+                              {videoEmbedUrl && (
+                                <Box sx={sectionCardSx}>
+                                  <SectionHeader icon={<IconVideo size={18} />} title="Anlatım Videosu" />
+                                  <Box
+                                    sx={{
+                                      position: "relative",
+                                      width: "100%",
+                                      overflow: "hidden",
+                                      borderRadius: 2,
+                                      backgroundColor: "#000",
+                                      pt: "56.25%",
+                                    }}
+                                  >
+                                    <Box
+                                      component="iframe"
+                                      src={videoEmbedUrl}
+                                      title={`${menu?.belgeAdi || "Panel"} video anlatımı`}
+                                      allow="autoplay; fullscreen; picture-in-picture; clipboard-write; encrypted-media; web-share"
+                                      allowFullScreen
+                                      referrerPolicy="strict-origin-when-cross-origin"
+                                      sx={{
+                                        position: "absolute",
+                                        top: 0,
+                                        left: 0,
+                                        width: "100%",
+                                        height: "100%",
+                                        border: 0,
+                                      }}
+                                    />
+                                  </Box>
+                                </Box>
+                              )}
+                            </Stack>
                           ) : (
                             <Typography variant="body2" color="text.secondary">
                               Önizleme için içerik girin.

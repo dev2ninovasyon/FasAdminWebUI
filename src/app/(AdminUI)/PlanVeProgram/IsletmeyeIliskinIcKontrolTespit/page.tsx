@@ -39,7 +39,7 @@ const Page = () => {
   const [toplam, setToplam] = useState(0);
 
   const user = useSelector((state: AppState) => state.userReducer);
-  const controller = "IsletmeyeIliskinIcKontrolTespit";
+  const controller = "IcKontrolTespitBelgesi"; // Yeni form için yeni controller
   const grupluMu = false;
   const handleMenuOpen = (event: React.MouseEvent<HTMLElement>) => {
     setAnchorEl(event.currentTarget);

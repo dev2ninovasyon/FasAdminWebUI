@@ -1,5 +1,5 @@
 "use client";
-import React from "react";
+import React, { useEffect } from "react";
 import { ThemeProvider } from "@mui/material/styles";
 import CssBaseline from "@mui/material/CssBaseline";
 import { ThemeSettings } from "@/utils/theme/Theme";
@@ -23,6 +23,35 @@ import { LoadingProvider } from "@/contexts/LoadingContext";
 import Script from "next/script";
 import "@/utils/utf8Support"; // Initialize UTF-8 support
 import AuthSessionBootstrap from "@/app/components/AuthSessionBootstrap";
+import { usePathname } from "next/navigation";
+
+const TitleUpdater = () => {
+  const pathname = usePathname();
+
+  useEffect(() => {
+    // Convert path to readable title
+    // Example: /MenuIslemleri → Menü İşlemleri
+    // Example: /DenetciFirmaIslemleri → Denetçi Firma İşlemleri
+    const pathSegments = pathname
+      .split("/")
+      .filter(Boolean)
+      .pop() || "Anasayfa";
+
+    // Remove group routes (text in parentheses)
+    let cleanPath = pathSegments.replace(/\(.*?\)/g, "");
+
+    // Add space before uppercase letters (camelCase to spaced)
+    const titleText = cleanPath
+      .replace(/([A-Z])/g, " $1")
+      .trim()
+      .replace(/^./, (str) => str.toUpperCase());
+
+    // Set document title
+    document.title = titleText ? `${titleText} - FAS Denetim` : "FAS Denetim";
+  }, [pathname]);
+
+  return null;
+};
 
 const MyApp = ({ children }: { children: React.ReactNode }) => {
   useAutoLogout(45 * 60 * 1000, 40 * 60 * 1000);
@@ -32,6 +61,7 @@ const MyApp = ({ children }: { children: React.ReactNode }) => {
 
   return (
     <>
+      <TitleUpdater />
       <NextAppDirEmotionCacheProvider options={{ key: "modernize" }}>
         <ThemeProvider theme={theme}>
           <RTL direction={customizer.activeDir}>
