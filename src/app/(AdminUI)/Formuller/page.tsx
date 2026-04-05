@@ -1,4 +1,5 @@
 "use client";
+import { usePageTitle } from "@/hooks/usePageTitle";
 import { Box, Button, Grid, MenuItem, useMediaQuery } from "@mui/material";
 import { useState } from "react";
 import PageContainer from "@/app/components/Container/PageContainer";
@@ -19,6 +20,7 @@ const BCrumb = [
 ];
 
 const Page = () => {
+  usePageTitle("Formüller");
   const smDown = useMediaQuery((theme: any) => theme.breakpoints.down("sm"));
 
   const [denetimTuru, setDenetimTuru] = useState("Bobi");

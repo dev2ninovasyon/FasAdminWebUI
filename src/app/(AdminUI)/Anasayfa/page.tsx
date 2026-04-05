@@ -1,4 +1,5 @@
 "use client";
+import { usePageTitle } from "@/hooks/usePageTitle";
 import Box from "@mui/material/Box";
 import Grid from "@mui/material/Grid";
 import { useEffect, useState } from "react";
@@ -7,6 +8,7 @@ import PageContainer from "@/app/components/Container/PageContainer";
 // components
 
 export default function Dashboard() {
+  usePageTitle("Dashboard");
   const [isLoading, setLoading] = useState(true);
   useEffect(() => {
     setLoading(false);

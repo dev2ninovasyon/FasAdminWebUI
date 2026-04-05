@@ -181,14 +181,6 @@ export function createMenuItems(
           },
           {
             id: uniqueId(),
-            title: "İlişkili Taraflar",
-            formKodu: "IliskiliTaraflar",
-            customIcon: "public/images/svgs/musteri/iliskili-taraflar.svg",
-            icon: IconPoint,
-            href: "/Musteri/IliskiliTaraflar",
-          },
-          {
-            id: uniqueId(),
             title: "Müşteri Tanıma",
             formKodu:
               "MusteriTanimaStatikBilgiler-MusteriTanimaSayisalBilgiler",

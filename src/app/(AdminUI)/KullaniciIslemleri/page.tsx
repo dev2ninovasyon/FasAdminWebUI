@@ -1,4 +1,5 @@
 "use client";
+import { usePageTitle } from "@/hooks/usePageTitle";
 import React, { useState, useEffect } from "react";
 import { Box, Grid, MenuItem, TextField, Typography } from "@mui/material";
 import PageContainer from "@/app/components/Container/PageContainer";
@@ -21,6 +22,7 @@ const BCrumb = [
 ];
 
 const UserOperationsPage = () => {
+    usePageTitle("Kullanıcı İşlemleri");
     const user = useSelector((state: AppState) => state.userReducer);
     const [denetciFirmalar, setDenetciFirmalar] = useState<any[]>([]);
     const [selectedDenetciId, setSelectedDenetciId] = useState<number | "">("");

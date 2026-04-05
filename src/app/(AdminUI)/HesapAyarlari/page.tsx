@@ -1,5 +1,6 @@
 "use client";
 
+import { usePageTitle } from "@/hooks/usePageTitle";
 import { useDispatch, useSelector } from "@/store/hooks";
 import { AppState } from "@/store/store";
 import { Avatar, Box, Grid, styled, Typography, useTheme } from "@mui/material";
@@ -13,6 +14,7 @@ interface avatars {
 }
 
 const Page = () => {
+  usePageTitle("Hesap Ayarları");
   const customizer = useSelector((state: AppState) => state.customizer);
   const theme = useTheme();
 

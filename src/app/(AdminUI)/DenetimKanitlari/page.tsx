@@ -1,5 +1,6 @@
 "use client";
 
+import { usePageTitle } from "@/hooks/usePageTitle";
 import React, { useState } from "react";
 import PageContainer from "@/app/(AdminUI)/components/Container/PageContainer";
 import { Box, Button } from "@mui/material";
@@ -11,6 +12,7 @@ import TopCards from "@/app/(AdminUI)/components/Cards/TopCards";
 import { IconLayoutGrid, IconList } from "@tabler/icons-react";
 
 const Page = () => {
+  usePageTitle("Denetim Kanıtları");
   const [showFilteredMenu, setShowFilteredMenu] = useState(true);
 
   const handleToggle = () => {

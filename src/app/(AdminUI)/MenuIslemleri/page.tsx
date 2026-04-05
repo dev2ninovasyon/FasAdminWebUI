@@ -1,5 +1,6 @@
 "use client";
 
+import { usePageTitle } from "@/hooks/usePageTitle";
 import React, { useEffect, useMemo, useState } from "react";
 import {
   Alert,
@@ -229,6 +230,7 @@ const MenuTreeRow = ({
 };
 
 const MenuIslemleriPage = () => {
+  usePageTitle("Menü İşlemleri");
   const user = useSelector((state: AppState) => state.userReducer);
   const [menus, setMenus] = useState<MenuType[]>([]);
   const [loading, setLoading] = useState(true);

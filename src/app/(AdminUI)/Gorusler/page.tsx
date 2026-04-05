@@ -1,4 +1,5 @@
 "use client";
+import { usePageTitle } from "@/hooks/usePageTitle";
 import { Grid, MenuItem } from "@mui/material";
 import { useState } from "react";
 import PageContainer from "@/app/components/Container/PageContainer";
@@ -18,6 +19,7 @@ const BCrumb = [
 ];
 
 const Page = () => {
+  usePageTitle("Görüşler");
   const [denetimTuru, setDenetimTuru] = useState("Bobi");
 
   const handleChangeDenetimTuru = (

@@ -4,6 +4,7 @@ import { apiFetch } from "@/api/apiBase";
 import { passwordRules, validatePassword } from "@/utils/passwordPolicy";
 import CustomFormLabel from "@/app/components/Forms/ThemeElements/CustomFormLabel";
 import CustomTextField from "@/app/components/Forms/ThemeElements/CustomTextField";
+import PasswordPolicyChecker from "@/components/PasswordPolicy/PasswordPolicyChecker";
 import {
   Alert,
   Box,
@@ -282,6 +283,9 @@ export default function ResetPasswordForm() {
                 ),
               }}
             />
+            
+            {/* Şifre Politikası Göstergesi */}
+            <PasswordPolicyChecker password={newPassword} email={email} showEmail={true} />
           </Box>
 
           <Box>

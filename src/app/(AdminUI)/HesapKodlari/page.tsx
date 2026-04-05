@@ -1,4 +1,5 @@
 "use client";
+import { usePageTitle } from "@/hooks/usePageTitle";
 import { Grid } from "@mui/material";
 import PageContainer from "@/app/components/Container/PageContainer";
 import Breadcrumb from "@/app/components/Layout/Shared/Breadcrumb/Breadcrumb";
@@ -15,6 +16,7 @@ const BCrumb = [
 ];
 
 const Page = () => {
+  usePageTitle("Hesap Kodları");
   return (
     <PageContainer title="Hesap Kodları" description="this is Hesap Kodları">
       <Breadcrumb title="Hesap Kodları" items={BCrumb} />

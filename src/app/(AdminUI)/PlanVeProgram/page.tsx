@@ -1,4 +1,5 @@
 "use client";
+import { usePageTitle } from "@/hooks/usePageTitle";
 import React, { useState } from "react";
 import PageContainer from "@/app/(AdminUI)/components/Container/PageContainer";
 import TopCards from "@/app/(AdminUI)/components/Cards/TopCards";
@@ -8,6 +9,7 @@ import { Box, Button, IconButton } from "@mui/material";
 import { IconLayoutGrid, IconList } from "@tabler/icons-react";
 
 const Page = () => {
+  usePageTitle("Plan ve Program");
   const [showFilteredMenu, setShowFilteredMenu] = useState(true);
 
   const handleToggle = () => {

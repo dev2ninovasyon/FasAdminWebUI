@@ -1,4 +1,5 @@
 "use client";
+import { usePageTitle } from "@/hooks/usePageTitle";
 import {
   Box,
   Grid,
@@ -33,6 +34,7 @@ const BCrumb = [
 ];
 
 const Page = () => {
+  usePageTitle("Genel Hesap Planı");
   const [uploading, setUploading] = useState(false);
   const [dosyaYuklendiMi, setDosyaYuklendiMi] = useState(true);
   const [progressInfos, setProgressInfos] = useState<any[]>([]);

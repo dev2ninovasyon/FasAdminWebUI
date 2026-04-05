@@ -1,4 +1,5 @@
 "use client";
+import { usePageTitle } from "@/hooks/usePageTitle";
 import { Box, Grid } from "@mui/material";
 import PageContainer from "@/app/components/Container/PageContainer";
 import Breadcrumb from "@/app/components/Layout/Shared/Breadcrumb/Breadcrumb";
@@ -18,6 +19,7 @@ const BCrumb = [
 ];
 
 const Page = () => {
+  usePageTitle("Denetçi Firma İşlemleri");
   return (
     <PageContainer
       title="Denetçi Firma İşlemleri"
