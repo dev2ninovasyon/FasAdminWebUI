@@ -21,7 +21,6 @@ import RTL from "./components/Layout/Shared/Customizer/RTL";
 import useAutoLogout from "@/utils/useAutoLogOut";
 import { LoadingProvider } from "@/contexts/LoadingContext";
 import { PageTitleProvider } from "@/contexts/PageTitleContext";
-import Script from "next/script";
 import "@/utils/utf8Support"; // Initialize UTF-8 support
 import AuthSessionBootstrap from "@/app/components/AuthSessionBootstrap";
 import { usePathname } from "next/navigation";
@@ -105,14 +104,8 @@ export default function RootLayout({
         <meta httpEquiv="Content-Type" content="text/html; charset=utf-8" />
         <meta httpEquiv="Accept-CH" content="DPR, Viewport-Width, Width" />
         <meta name="viewport" content="width=device-width, initial-scale=1.0, charset=utf-8" />
-        <link rel="preconnect" href="https://www.google.com" />
-        <link rel="preconnect" href="https://www.gstatic.com" crossOrigin="anonymous" />
       </head>
       <body>
-        <Script
-          src="https://www.google.com/recaptcha/api.js?render=6Ld2CyEsAAAAALNU5rSOM_Q2RAWkQ2RADbsS5NQW"
-          strategy="afterInteractive"
-        />
         <Provider store={store}>
           <PersistGate loading={null} persistor={persistor}>
             {loading ? (

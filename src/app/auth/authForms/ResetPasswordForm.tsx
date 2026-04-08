@@ -1,26 +1,29 @@
 "use client";
 
 import { apiFetch } from "@/api/apiBase";
-import { passwordRules, validatePassword } from "@/utils/passwordPolicy";
 import CustomFormLabel from "@/app/components/Forms/ThemeElements/CustomFormLabel";
 import CustomTextField from "@/app/components/Forms/ThemeElements/CustomTextField";
 import PasswordPolicyChecker from "@/components/PasswordPolicy/PasswordPolicyChecker";
+import { validatePassword } from "@/utils/passwordPolicy";
 import {
   Alert,
   Box,
   Button,
   CircularProgress,
+  IconButton,
   InputAdornment,
   Link as MuiLink,
+  Popover,
   Stack,
+  Tooltip,
   Typography,
   useTheme,
 } from "@mui/material";
-import { IconArrowLeft, IconKey, IconLock } from "@tabler/icons-react";
+import { IconArrowLeft, IconInfoCircle, IconKey, IconLock } from "@tabler/icons-react";
 import Link from "next/link";
 import { useRouter, useSearchParams } from "next/navigation";
 import { enqueueSnackbar } from "notistack";
-import { useEffect, useMemo, useState } from "react";
+import { useEffect, useMemo, useRef, useState } from "react";
 
 interface ValidationState {
   checked: boolean;
@@ -40,14 +43,37 @@ export default function ResetPasswordForm() {
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [validation, setValidation] = useState<ValidationState>({ checked: false, valid: false });
   const [successMessage, setSuccessMessage] = useState("");
+  const [policyAnchorEl, setPolicyAnchorEl] = useState<HTMLElement | null>(null);
+  const passwordFieldRef = useRef<HTMLDivElement | null>(null);
+
   const passwordValidationMessage = useMemo(
     () => (newPassword ? validatePassword(newPassword, email) : ""),
     [email, newPassword]
   );
+
   const passwordsMatch = useMemo(
     () => !confirmPassword || newPassword === confirmPassword,
     [newPassword, confirmPassword]
   );
+
+  const isPolicyOpen = Boolean(policyAnchorEl);
+
+  const handlePolicyOpen = (event: React.MouseEvent<HTMLElement>) => {
+    setPolicyAnchorEl(event.currentTarget);
+  };
+
+  const handlePolicyClose = () => {
+    setPolicyAnchorEl(null);
+  };
+
+  useEffect(() => {
+    if (newPassword && passwordFieldRef.current) {
+      setPolicyAnchorEl(passwordFieldRef.current);
+      return;
+    }
+
+    setPolicyAnchorEl(null);
+  }, [newPassword]);
 
   useEffect(() => {
     const validateToken = async () => {
@@ -55,7 +81,7 @@ export default function ResetPasswordForm() {
         setValidation({
           checked: true,
           valid: false,
-          message: "Sifre sifirlama baglantisi eksik veya hatali gorunuyor.",
+          message: "Şifre sıfırlama bağlantısı eksik veya hatalı görünüyor.",
         });
         return;
       }
@@ -72,34 +98,30 @@ export default function ResetPasswordForm() {
         });
 
         let parsed: any = null;
-        let errorMessage = "Baglanti dogrulanamadi.";
+        let errorMessage = "Bağlantı doğrulanamadı.";
 
-        // Response OK değilse, text veya JSON read
         if (!response.ok) {
           try {
             const text = await response.text();
-            
-            // Text'i JSON'a çevirmeyi dene
+
             try {
               const errorParsed = JSON.parse(text);
               errorMessage = errorParsed?.message || errorParsed?.Message || text.substring(0, 100);
             } catch {
-              // JSON değilse, text'in ilk 100 karakterini mesaj yap
-              errorMessage = text.substring(0, 100) || "Sunucu hatasi.";
+              errorMessage = text.substring(0, 100) || "Sunucu hatası.";
             }
           } catch {
-            errorMessage = "Yanit ayristirilamadi.";
+            errorMessage = "Yanıt ayrıştırılamadı.";
           }
-          
+
           setValidation({ checked: true, valid: false, message: errorMessage });
           return;
         }
 
-        // Response OK ise, JSON oku
         try {
           parsed = await response.json();
         } catch {
-          errorMessage = "Yanit ayristirilamadi.";
+          errorMessage = "Yanıt ayrıştırılamadı.";
         }
 
         setValidation({
@@ -111,7 +133,7 @@ export default function ResetPasswordForm() {
         setValidation({
           checked: true,
           valid: false,
-          message: error?.message || "Baglanti dogrulanirken bir hata olustu.",
+          message: error?.message || "Bağlantı doğrulanırken bir hata oluştu.",
         });
       }
     };
@@ -123,22 +145,34 @@ export default function ResetPasswordForm() {
     event.preventDefault();
 
     if (!validation.valid) {
-      enqueueSnackbar("Sifre sifirlama baglantisi gecerli degil.", { variant: "warning", autoHideDuration: 4000 });
+      enqueueSnackbar("Şifre sıfırlama bağlantısı geçerli değil.", {
+        variant: "warning",
+        autoHideDuration: 4000,
+      });
       return;
     }
 
     if (!newPassword || !confirmPassword) {
-      enqueueSnackbar("Lutfen yeni sifrenizi ve tekrarini girin.", { variant: "warning", autoHideDuration: 4000 });
+      enqueueSnackbar("Lütfen yeni şifrenizi ve tekrarını girin.", {
+        variant: "warning",
+        autoHideDuration: 4000,
+      });
       return;
     }
 
     if (!passwordsMatch) {
-      enqueueSnackbar("Sifreler birbiriyle uyusmuyor.", { variant: "warning", autoHideDuration: 4000 });
+      enqueueSnackbar("Şifreler birbiriyle uyuşmuyor.", {
+        variant: "warning",
+        autoHideDuration: 4000,
+      });
       return;
     }
 
     if (passwordValidationMessage) {
-      enqueueSnackbar(passwordValidationMessage, { variant: "warning", autoHideDuration: 5000 });
+      enqueueSnackbar(passwordValidationMessage, {
+        variant: "warning",
+        autoHideDuration: 5000,
+      });
       return;
     }
 
@@ -169,10 +203,10 @@ export default function ResetPasswordForm() {
       }
 
       if (!response.ok) {
-        throw new Error(parsedMessage || "Sifre guncellenemedi.");
+        throw new Error(parsedMessage || "Şifre güncellenemedi.");
       }
 
-      const message = parsedMessage || "Sifreniz basariyla guncellendi.";
+      const message = parsedMessage || "Şifreniz başarıyla güncellendi.";
       setSuccessMessage(message);
       enqueueSnackbar(message, { variant: "success", autoHideDuration: 5000 });
 
@@ -180,7 +214,7 @@ export default function ResetPasswordForm() {
         router.replace("/");
       }, 1800);
     } catch (error: any) {
-      enqueueSnackbar(error?.message || "Sifre guncellenemedi.", {
+      enqueueSnackbar(error?.message || "Şifre güncellenemedi.", {
         variant: "error",
         autoHideDuration: 5000,
         style: {
@@ -198,7 +232,7 @@ export default function ResetPasswordForm() {
       <Box display="flex" flexDirection="column" alignItems="center" gap={2} py={4}>
         <CircularProgress />
         <Typography variant="body2" color="text.secondary">
-          Sifre sifirlama baglantisi dogrulaniyor...
+          Şifre sıfırlama bağlantısı doğrulanıyor...
         </Typography>
       </Box>
     );
@@ -208,7 +242,7 @@ export default function ResetPasswordForm() {
     return (
       <Stack spacing={3}>
         <Alert severity="error" sx={{ borderRadius: 3 }}>
-          {validation.message || "Sifre sifirlama baglantisi gecersiz veya suresi dolmus."}
+          {validation.message || "Şifre sıfırlama bağlantısı geçersiz veya süresi dolmuş."}
         </Alert>
         <MuiLink
           component={Link}
@@ -223,7 +257,7 @@ export default function ResetPasswordForm() {
           }}
         >
           <IconArrowLeft size={18} />
-          Yeni bir baglanti iste
+          Yeni bir bağlantı iste
         </MuiLink>
       </Stack>
     );
@@ -235,71 +269,53 @@ export default function ResetPasswordForm() {
         <Stack spacing={2.5}>
           {email ? (
             <Alert severity="info" sx={{ borderRadius: 3 }}>
-              {email} hesabi icin yeni sifre belirliyorsunuz.
+              {email} hesabı için yeni şifre belirliyorsunuz.
             </Alert>
           ) : null}
 
-          {validation.expiresAt ? (
-            <Typography variant="body2" sx={{ color: "text.secondary" }}>
-              Bu baglanti {new Date(validation.expiresAt).toLocaleString("tr-TR")} tarihine kadar gecerlidir.
-            </Typography>
-          ) : null}
-
-          <Alert severity={passwordValidationMessage ? "warning" : "info"} sx={{ borderRadius: 3 }}>
-            <Typography variant="body2" sx={{ fontWeight: 700, mb: 1 }}>
-              Sifre kurallari
-            </Typography>
-            <Box component="ul" sx={{ pl: 2.5, my: 0 }}>
-              {passwordRules.map((rule) => (
-                <Typography key={rule} component="li" variant="body2" sx={{ color: "text.secondary", mb: 0.5 }}>
-                  {rule}
-                </Typography>
-              ))}
-            </Box>
-            {passwordValidationMessage ? (
-              <Typography variant="body2" sx={{ mt: 1, fontWeight: 600 }}>
-                {passwordValidationMessage}
-              </Typography>
-            ) : null}
-          </Alert>
-
-          <Box>
-            <CustomFormLabel htmlFor="reset-password">Yeni Sifre</CustomFormLabel>
+          <Box ref={passwordFieldRef}>
+            <CustomFormLabel htmlFor="reset-password">Yeni Şifre</CustomFormLabel>
             <CustomTextField
               id="reset-password"
               type="password"
               variant="outlined"
               fullWidth
-              placeholder="Yeni sifreniz"
+              placeholder="Yeni şifreniz"
               value={newPassword}
               onChange={(event: any) => setNewPassword(event.target.value)}
               error={!!newPassword && !!passwordValidationMessage}
-              helperText={newPassword ? passwordValidationMessage || "Guclu bir sifre girdiniz." : " "}
+              helperText={newPassword ? passwordValidationMessage || "Güçlü bir şifre girdiniz." : " "}
               InputProps={{
                 startAdornment: (
                   <InputAdornment position="start">
                     <IconLock size={20} />
                   </InputAdornment>
                 ),
+                endAdornment: (
+                  <InputAdornment position="end">
+                    <Tooltip title="Şifre kriterlerini göster">
+                      <IconButton edge="end" size="small" onClick={handlePolicyOpen}>
+                        <IconInfoCircle size={18} />
+                      </IconButton>
+                    </Tooltip>
+                  </InputAdornment>
+                ),
               }}
             />
-            
-            {/* Şifre Politikası Göstergesi */}
-            <PasswordPolicyChecker password={newPassword} email={email} showEmail={true} />
           </Box>
 
           <Box>
-            <CustomFormLabel htmlFor="reset-password-confirm">Yeni Sifre Tekrar</CustomFormLabel>
+            <CustomFormLabel htmlFor="reset-password-confirm">Yeni Şifre Tekrar</CustomFormLabel>
             <CustomTextField
               id="reset-password-confirm"
               type="password"
               variant="outlined"
               fullWidth
-              placeholder="Yeni sifrenizi tekrar girin"
+              placeholder="Yeni şifrenizi tekrar girin"
               value={confirmPassword}
               onChange={(event: any) => setConfirmPassword(event.target.value)}
               error={!!confirmPassword && !passwordsMatch}
-              helperText={!passwordsMatch ? "Sifreler birbiriyle uyusmuyor." : " "}
+              helperText={!passwordsMatch ? "Şifreler birbiriyle uyuşmuyor." : " "}
               InputProps={{
                 startAdornment: (
                   <InputAdornment position="start">
@@ -313,20 +329,23 @@ export default function ResetPasswordForm() {
           {successMessage ? (
             <Stack spacing={2}>
               <Alert severity="success" sx={{ borderRadius: 3 }}>
-                <Box component="div" sx={{ display: 'flex', alignItems: 'center', gap: 1, mb: 1 }}>
+                <Box component="div" sx={{ display: "flex", alignItems: "center", gap: 1, mb: 1 }}>
                   <Typography variant="body2" sx={{ fontWeight: 600 }}>
-                    ✅ {successMessage}
+                    {successMessage}
                   </Typography>
                 </Box>
                 <Typography variant="body2" sx={{ color: "success.dark", mb: 1 }}>
-                  Yeni sifrenizle giris yapabilirsiniz.
+                  Yeni şifrenizle giriş yapabilirsiniz.
                 </Typography>
-                <Typography variant="caption" sx={{ color: "text.secondary", display: 'block' }}>
-                  Ⓘ Bu sifre sifirlama baglantisi artik kullanilamaz. Baska bir sifirlama isteginde bulunmak isterseniz oturum actiktan sonra "Sifremi Unuttum" seçenegini kullanabilirsiniz.
+                <Typography variant="caption" sx={{ color: "text.secondary", display: "block" }}>
+                  Bu şifre sıfırlama bağlantısı artık kullanılamaz.
                 </Typography>
               </Alert>
-              <Typography variant="body2" sx={{ textAlign: "center", color: "text.secondary", fontStyle: "italic" }}>
-                Giris ekranina yonlendiriliyorsunuz...
+              <Typography
+                variant="body2"
+                sx={{ textAlign: "center", color: "text.secondary", fontStyle: "italic" }}
+              >
+                Giriş ekranına yönlendiriliyorsunuz...
               </Typography>
             </Stack>
           ) : null}
@@ -343,16 +362,38 @@ export default function ResetPasswordForm() {
               boxShadow: "0 3px 5px 2px rgba(33, 203, 243, .3)",
               color: "white",
               height: 48,
-              padding: "0 30px",
+              px: 4,
               fontSize: "1.05rem",
               textTransform: "none",
               borderRadius: "10px",
             }}
           >
-            {isSubmitting ? "Sifre Guncelleniyor..." : "Yeni Sifreyi Kaydet"}
+            {isSubmitting ? "Şifre Güncelleniyor..." : "Yeni Şifreyi Kaydet"}
           </Button>
         </Stack>
       </form>
+
+      <Popover
+        open={isPolicyOpen}
+        anchorEl={policyAnchorEl}
+        onClose={handlePolicyClose}
+        anchorOrigin={{ vertical: "center", horizontal: "right" }}
+        transformOrigin={{ vertical: "top", horizontal: "left" }}
+        PaperProps={{
+          sx: {
+            ml: 1,
+            width: { xs: "calc(100vw - 48px)", sm: 420 },
+            maxWidth: 420,
+            borderRadius: 3,
+            boxShadow: "0 20px 50px rgba(15, 23, 42, 0.18)",
+            overflow: "hidden",
+          },
+        }}
+      >
+        <Box sx={{ p: 1 }}>
+          <PasswordPolicyChecker password={newPassword} email={email} showEmail={true} borderless />
+        </Box>
+      </Popover>
 
       <Box mt={3}>
         <MuiLink
@@ -368,7 +409,7 @@ export default function ResetPasswordForm() {
           }}
         >
           <IconArrowLeft size={18} />
-          Giris ekranina don
+          Giriş ekranına dön
         </MuiLink>
       </Box>
     </>

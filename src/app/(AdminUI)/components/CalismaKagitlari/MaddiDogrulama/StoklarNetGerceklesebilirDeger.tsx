@@ -1,10 +1,11 @@
 "use client";
 
 import React, { useEffect, useState, useRef, forwardRef, useImperativeHandle } from "react";
-import { HotTable } from "@handsontable/react";
+import "@/lib/handsontableSetup";
+
+import CustomHotTable from "@/components/HotTableWrapper";
 import { registerAllModules } from "handsontable/registry";
-import "handsontable/dist/handsontable.full.min.css";
-import "@/utils/languages/handsontable.tr-TR";
+
 import { Box, Typography, useTheme, Button } from "@mui/material";
 import { useSelector } from "@/store/hooks";
 import { AppState } from "@/store/store";
@@ -49,8 +50,8 @@ const StoklarNetGerceklesebilirDeger = forwardRef<any, Props>(({
             );
             setData(response.stokVerileri || []);
         } catch (error) {
-            console.log("Veri çekme hatası:", error);
-            enqueueSnackbar("Veriler yüklenirken bir hata oluştu", { variant: "error" });
+            console.log("Veri ÃƒÂ§ekme hatasÃ„Â±:", error);
+            enqueueSnackbar("Veriler yÃƒÂ¼klenirken bir hata oluÃ…Å¸tu", { variant: "error" });
         } finally {
             setLoading(false);
         }
@@ -72,8 +73,8 @@ const StoklarNetGerceklesebilirDeger = forwardRef<any, Props>(({
                 enqueueSnackbar(result.message, { variant: "error" });
             }
         } catch (error) {
-            console.log("Oluşturma hatası:", error);
-            enqueueSnackbar("Veriler oluşturulurken bir hata oluştu", { variant: "error" });
+            console.log("OluÃ…Å¸turma hatasÃ„Â±:", error);
+            enqueueSnackbar("Veriler oluÃ…Å¸turulurken bir hata oluÃ…Å¸tu", { variant: "error" });
         } finally {
             setLoading(false);
         }
@@ -113,21 +114,21 @@ const StoklarNetGerceklesebilirDeger = forwardRef<any, Props>(({
                     enqueueSnackbar(result.message, { variant: "error" });
                 }
             } catch (error) {
-                console.log("Güncelleme hatası:", error);
-                enqueueSnackbar("Güncelleme sırasında bir hata oluştu", { variant: "error" });
+                console.log("GÃƒÂ¼ncelleme hatasÃ„Â±:", error);
+                enqueueSnackbar("GÃƒÂ¼ncelleme sÃ„Â±rasÃ„Â±nda bir hata oluÃ…Å¸tu", { variant: "error" });
             }
         }
     };
 
     const columns = [
         { data: "detayKodu", title: "Hesap No", readOnly: true },
-        { data: "hesapAdi", title: "Hesap Adı", readOnly: true },
-        { data: "maliyetDegeri", title: "Maliyet Değeri", type: "numeric", numericFormat: { pattern: "0,0.00", culture: "tr-TR" }, readOnly: true },
-        { data: "gercegeUygunDeger", title: "Gerçeğe Uygun Değer", type: "numeric", numericFormat: { pattern: "0,0.00", culture: "tr-TR" } },
+        { data: "hesapAdi", title: "Hesap AdÃ„Â±", readOnly: true },
+        { data: "maliyetDegeri", title: "Maliyet DeÃ„Å¸eri", type: "numeric", numericFormat: { pattern: "0,0.00", culture: "tr-TR" }, readOnly: true },
+        { data: "gercegeUygunDeger", title: "GerÃƒÂ§eÃ„Å¸e Uygun DeÃ„Å¸er", type: "numeric", numericFormat: { pattern: "0,0.00", culture: "tr-TR" } },
         { data: "tamamlamaMaliyeti", title: "Tamamlama Maliyeti", type: "numeric", numericFormat: { pattern: "0,0.00", culture: "tr-TR" } },
-        { data: "satisGiderleri", title: "Satış Giderleri", type: "numeric", numericFormat: { pattern: "0,0.00", culture: "tr-TR" } },
-        { data: "netGerceklesebilirDeger", title: "Net Gerçekleşebilir Değer", type: "numeric", numericFormat: { pattern: "0,0.00", culture: "tr-TR" }, readOnly: true },
-        { data: "degerDusukluguTutar", title: "Değer Düşüklüğü Tutarı", type: "numeric", numericFormat: { pattern: "0,0.00", culture: "tr-TR" }, readOnly: true },
+        { data: "satisGiderleri", title: "SatÃ„Â±Ã…Å¸ Giderleri", type: "numeric", numericFormat: { pattern: "0,0.00", culture: "tr-TR" } },
+        { data: "netGerceklesebilirDeger", title: "Net GerÃƒÂ§ekleÃ…Å¸ebilir DeÃ„Å¸er", type: "numeric", numericFormat: { pattern: "0,0.00", culture: "tr-TR" }, readOnly: true },
+        { data: "degerDusukluguTutar", title: "DeÃ„Å¸er DÃƒÂ¼Ã…Å¸ÃƒÂ¼klÃƒÂ¼Ã„Å¸ÃƒÂ¼ TutarÃ„Â±", type: "numeric", numericFormat: { pattern: "0,0.00", culture: "tr-TR" }, readOnly: true },
     ];
 
     if (isReport && !loading && !data.length) return null;
@@ -135,9 +136,9 @@ const StoklarNetGerceklesebilirDeger = forwardRef<any, Props>(({
     return (
         <Box sx={{ p: isReport ? 0 : 3 }}>
             <Typography variant="h6" sx={{ color: "#2C3E50", fontWeight: "bold", mb: 3 }}>
-                Stoklar Net Gerçekleşebilir Değer
+                Stoklar Net GerÃƒÂ§ekleÃ…Å¸ebilir DeÃ„Å¸er
             </Typography>
-            {/* Buton Bölümü */}
+            {/* Buton BÃƒÂ¶lÃƒÂ¼mÃƒÂ¼ */}
             {!isReport && (
                 <Box sx={{ display: "flex", justifyContent: "flex-end", alignItems: "center", mb: 2 }}>
                     <Button
@@ -174,7 +175,7 @@ const StoklarNetGerceklesebilirDeger = forwardRef<any, Props>(({
                     }
                 }}
             >
-                <HotTable
+                <CustomHotTable 
                     ref={hotTableComponent}
                     data={data}
                     columns={columns}
@@ -199,7 +200,7 @@ const StoklarNetGerceklesebilirDeger = forwardRef<any, Props>(({
                 {data.length === 0 && (
                     <Box sx={{ p: 4, textAlign: "center" }}>
                         <Typography variant="body1" color="textSecondary">
-                            Veri bulunmamaktadır. Sağ üstteki buton yardımıyla verileri oluşturabilirsiniz.
+                            Veri bulunmamaktadÃ„Â±r. SaÃ„Å¸ ÃƒÂ¼stteki buton yardÃ„Â±mÃ„Â±yla verileri oluÃ…Å¸turabilirsiniz.
                         </Typography>
                     </Box>
                 )}

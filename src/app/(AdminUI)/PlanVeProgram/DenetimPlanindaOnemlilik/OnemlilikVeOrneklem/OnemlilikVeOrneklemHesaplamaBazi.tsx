@@ -1,7 +1,9 @@
-import { HotTable } from "@handsontable/react";
-import { registerAllModules } from "handsontable/registry";
 import { dictionary } from "@/utils/languages/handsontable.tr-TR";
-import "handsontable/dist/handsontable.full.min.css";
+import "@/lib/handsontableSetup";
+
+import CustomHotTable from "@/components/HotTableWrapper";
+import { registerAllModules } from "handsontable/registry";
+
 import { plus } from "@/utils/theme/Typography";
 import { useDispatch, useSelector } from "@/store/hooks";
 import { AppState } from "@/store/store";
@@ -73,12 +75,12 @@ const OnemlilikVeOrneklemHesaplamaBazi: React.FC<Props> = ({
 
   const colHeaders = [
     "Id",
-    "Hesaplama Bazï¿½",
+    "Hesaplama BazÃƒÂ¯Ã‚Â¿Ã‚Â½",
     "Oran",
-    "Mali Tablolar ï¿½ï¿½in Genel ï¿½nemlilik Seviyesi",
-    "Performans ï¿½nemliliï¿½i",
-    "Kabul Edilebilir Yanlï¿½ï¿½lï¿½k Yï¿½zdesi",
-    "Kabul Edilebilir Yanlï¿½ï¿½lï¿½k Tutarï¿½",
+    "Mali Tablolar ÃƒÂ¯Ã‚Â¿Ã‚Â½ÃƒÂ¯Ã‚Â¿Ã‚Â½in Genel ÃƒÂ¯Ã‚Â¿Ã‚Â½nemlilik Seviyesi",
+    "Performans ÃƒÂ¯Ã‚Â¿Ã‚Â½nemliliÃƒÂ¯Ã‚Â¿Ã‚Â½i",
+    "Kabul Edilebilir YanlÃƒÂ¯Ã‚Â¿Ã‚Â½ÃƒÂ¯Ã‚Â¿Ã‚Â½lÃƒÂ¯Ã‚Â¿Ã‚Â½k YÃƒÂ¯Ã‚Â¿Ã‚Â½zdesi",
+    "Kabul Edilebilir YanlÃƒÂ¯Ã‚Â¿Ã‚Â½ÃƒÂ¯Ã‚Â¿Ã‚Â½lÃƒÂ¯Ã‚Â¿Ã‚Â½k TutarÃƒÂ¯Ã‚Â¿Ã‚Â½",
   ];
 
   const columns = [
@@ -90,7 +92,7 @@ const OnemlilikVeOrneklemHesaplamaBazi: React.FC<Props> = ({
       allowInvalid: false,
       readOnly: true,
       editor: false,
-    }, // Hesaplama Bazï¿½
+    }, // Hesaplama BazÃƒÂ¯Ã‚Â¿Ã‚Â½
     {
       type: "numeric",
       numericFormat: {
@@ -112,7 +114,7 @@ const OnemlilikVeOrneklemHesaplamaBazi: React.FC<Props> = ({
       className: "htRight",
       readOnly: true,
       editor: false,
-    }, // Mali Tablolar ï¿½ï¿½in Genel ï¿½nemlilik Seviyesi
+    }, // Mali Tablolar ÃƒÂ¯Ã‚Â¿Ã‚Â½ÃƒÂ¯Ã‚Â¿Ã‚Â½in Genel ÃƒÂ¯Ã‚Â¿Ã‚Â½nemlilik Seviyesi
     {
       type: "numeric",
       numericFormat: {
@@ -123,14 +125,14 @@ const OnemlilikVeOrneklemHesaplamaBazi: React.FC<Props> = ({
       className: "htRight",
       readOnly: true,
       editor: false,
-    }, // Performans ï¿½nemliliï¿½i
+    }, // Performans ÃƒÂ¯Ã‚Â¿Ã‚Â½nemliliÃƒÂ¯Ã‚Â¿Ã‚Â½i
     {
       type: "dropdown",
       source: [0.1, 0.5, 1, 5],
       className: "htRight",
       strict: true,
       allowInvalid: false,
-    }, // Kabul Edilebilir Yanlï¿½ï¿½lï¿½k Yï¿½zdesi
+    }, // Kabul Edilebilir YanlÃƒÂ¯Ã‚Â¿Ã‚Â½ÃƒÂ¯Ã‚Â¿Ã‚Â½lÃƒÂ¯Ã‚Â¿Ã‚Â½k YÃƒÂ¯Ã‚Â¿Ã‚Â½zdesi
     {
       type: "numeric",
       numericFormat: {
@@ -141,7 +143,7 @@ const OnemlilikVeOrneklemHesaplamaBazi: React.FC<Props> = ({
       className: "htRight",
       readOnly: true,
       editor: false,
-    }, // Kabul Edilebilir Yanlï¿½ï¿½lï¿½k Tutarï¿½
+    }, // Kabul Edilebilir YanlÃƒÂ¯Ã‚Â¿Ã‚Â½ÃƒÂ¯Ã‚Â¿Ã‚Â½lÃƒÂ¯Ã‚Â¿Ã‚Â½k TutarÃƒÂ¯Ã‚Â¿Ã‚Â½
   ];
 
   const afterGetColHeader = (col: any, TH: any) => {
@@ -255,7 +257,7 @@ const OnemlilikVeOrneklemHesaplamaBazi: React.FC<Props> = ({
     if (hotTableComponent.current) {
       const hotInstance = hotTableComponent.current.hotInstance;
       const cellMeta = hotInstance.getDataAtRow(row);
-      console.log("Satï¿½r Verileri:", cellMeta);
+      console.log("SatÃƒÂ¯Ã‚Â¿Ã‚Â½r Verileri:", cellMeta);
       return cellMeta;
     }
   };
@@ -301,7 +303,7 @@ const OnemlilikVeOrneklemHesaplamaBazi: React.FC<Props> = ({
       if (result) {
         fetchData();
         setOpenCartAlert(false);
-        enqueueSnackbar("ï¿½nemlilik Hesaplama Bazï¿½ Gï¿½ncellendi", {
+        enqueueSnackbar("ÃƒÂ¯Ã‚Â¿Ã‚Â½nemlilik Hesaplama BazÃƒÂ¯Ã‚Â¿Ã‚Â½ GÃƒÂ¯Ã‚Â¿Ã‚Â½ncellendi", {
           variant: "success",
           autoHideDuration: 5000,
           style: {
@@ -313,7 +315,7 @@ const OnemlilikVeOrneklemHesaplamaBazi: React.FC<Props> = ({
         });
       } else {
         setOpenCartAlert(false);
-        enqueueSnackbar("ï¿½nemlilik Hesaplama Bazï¿½ Gï¿½ncellenemedi", {
+        enqueueSnackbar("ÃƒÂ¯Ã‚Â¿Ã‚Â½nemlilik Hesaplama BazÃƒÂ¯Ã‚Â¿Ã‚Â½ GÃƒÂ¯Ã‚Â¿Ã‚Â½ncellenemedi", {
           variant: "error",
           autoHideDuration: 5000,
           style: {
@@ -326,7 +328,7 @@ const OnemlilikVeOrneklemHesaplamaBazi: React.FC<Props> = ({
         });
       }
     } catch (error) {
-      console.log("Bir hata oluï¿½tu:", error);
+      console.log("Bir hata oluÃƒÂ¯Ã‚Â¿Ã‚Â½tu:", error);
     }
   };
 
@@ -356,7 +358,7 @@ const OnemlilikVeOrneklemHesaplamaBazi: React.FC<Props> = ({
         setFetchedData(rowsAll);
       }
     } catch (error) {
-      console.log("Bir hata oluï¿½tu:", error);
+      console.log("Bir hata oluÃƒÂ¯Ã‚Â¿Ã‚Â½tu:", error);
     }
   };
 
@@ -393,7 +395,7 @@ const OnemlilikVeOrneklemHesaplamaBazi: React.FC<Props> = ({
   return (
     <>
       {fetchedData.length > 0 && (
-        <HotTable
+        <CustomHotTable 
           style={{
             height: "100%",
             width: "100%",

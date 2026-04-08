@@ -1,10 +1,11 @@
 "use client";
 
 import React, { useEffect, useState, useRef } from "react";
-import { HotTable } from "@handsontable/react";
+import "@/lib/handsontableSetup";
+
+import CustomHotTable from "@/components/HotTableWrapper";
 import { registerAllModules } from "handsontable/registry";
-import "handsontable/dist/handsontable.full.min.css";
-import "@/utils/languages/handsontable.tr-TR";
+
 import { Box, Typography, useTheme } from "@mui/material";
 import { useSelector } from "@/store/hooks";
 import { AppState } from "@/store/store";
@@ -66,7 +67,7 @@ const MaliyetKontrolleri: React.FC<Props> = ({
 
     const fetchData = async () => {
         if (!user.denetlenenId || !user.yil || !resolvedDipnotNo) {
-            console.warn("Parametreler eksik, istek atılmıyor:", {
+            console.warn("Parametreler eksik, istek atÃ„Â±lmÃ„Â±yor:", {
                 denetlenenId: user.denetlenenId,
                 yil: user.yil,
                 dipnotNo: resolvedDipnotNo
@@ -81,16 +82,16 @@ const MaliyetKontrolleri: React.FC<Props> = ({
                 resolvedDipnotNo
             );
             if (Array.isArray(response)) {
-                console.log("Veri geldi, satır sayısı:", response.length);
+                console.log("Veri geldi, satÃ„Â±r sayÃ„Â±sÃ„Â±:", response.length);
                 setData(response);
             } else {
-                console.log("Beklenmeyen veri formatı:", response);
-                enqueueSnackbar("Sunucudan geçersiz veri formatı alındı", { variant: "error" });
+                console.log("Beklenmeyen veri formatÃ„Â±:", response);
+                enqueueSnackbar("Sunucudan geÃƒÂ§ersiz veri formatÃ„Â± alÃ„Â±ndÃ„Â±", { variant: "error" });
                 setData([]);
             }
         } catch (error) {
-            console.log("Veri çekme hatası:", error);
-            enqueueSnackbar("Veriler yüklenirken bir hata oluştu", { variant: "error" });
+            console.log("Veri ÃƒÂ§ekme hatasÃ„Â±:", error);
+            enqueueSnackbar("Veriler yÃƒÂ¼klenirken bir hata oluÃ…Å¸tu", { variant: "error" });
         } finally {
             setLoading(false);
         }
@@ -108,11 +109,11 @@ const MaliyetKontrolleri: React.FC<Props> = ({
 
     const columns = [
         { data: "hesapNo", title: "Hesap No", readOnly: true },
-        { data: "hesapAciklamasi", title: "Hesap Açıklaması", readOnly: true },
-        { data: "oncekiDonemBakiye", title: "Önceki Dönem Bakiye", type: "numeric", numericFormat: { pattern: "0,0.00", culture: "tr-TR" }, readOnly: true },
-        { data: "cariDonemBakiye", title: "Cari Dönem Bakiye", type: "numeric", numericFormat: { pattern: "0,0.00", culture: "tr-TR" }, readOnly: true },
-        { data: "degisimTL", title: "Değişim TL", type: "numeric", numericFormat: { pattern: "0,0.00", culture: "tr-TR" }, readOnly: true },
-        { data: "degisimYuzde", title: "Değişim Yüzde", type: "numeric", numericFormat: { pattern: "0,0.00", culture: "tr-TR" }, readOnly: true },
+        { data: "hesapAciklamasi", title: "Hesap AÃƒÂ§Ã„Â±klamasÃ„Â±", readOnly: true },
+        { data: "oncekiDonemBakiye", title: "Ãƒâ€“nceki DÃƒÂ¶nem Bakiye", type: "numeric", numericFormat: { pattern: "0,0.00", culture: "tr-TR" }, readOnly: true },
+        { data: "cariDonemBakiye", title: "Cari DÃƒÂ¶nem Bakiye", type: "numeric", numericFormat: { pattern: "0,0.00", culture: "tr-TR" }, readOnly: true },
+        { data: "degisimTL", title: "DeÃ„Å¸iÃ…Å¸im TL", type: "numeric", numericFormat: { pattern: "0,0.00", culture: "tr-TR" }, readOnly: true },
+        { data: "degisimYuzde", title: "DeÃ„Å¸iÃ…Å¸im YÃƒÂ¼zde", type: "numeric", numericFormat: { pattern: "0,0.00", culture: "tr-TR" }, readOnly: true },
     ];
 
     return (
@@ -152,7 +153,7 @@ const MaliyetKontrolleri: React.FC<Props> = ({
                     }
                 }}
             >
-                <HotTable
+                <CustomHotTable 
                     ref={hotTableComponent}
                     data={data}
                     columns={columns}
@@ -196,7 +197,7 @@ const MaliyetKontrolleri: React.FC<Props> = ({
                         }}
                     >
                         <Typography variant="body1" color="textSecondary">
-                            Veri bulunmamaktadır.
+                            Veri bulunmamaktadÃ„Â±r.
                         </Typography>
                     </Box>
                 )}

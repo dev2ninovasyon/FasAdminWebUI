@@ -1,4 +1,4 @@
-/** @type {import('next').NextConfig} */
+﻿/** @type {import(''next'').NextConfig} */
 
 const nextConfig = {
   transpilePackages: [
@@ -14,9 +14,14 @@ const nextConfig = {
       "@tabler/icons-react",
     ],
   },
-  reactStrictMode: false,
+  reactStrictMode: true,
   distDir: "build",
   output: "standalone",
+  compress: true,
+  images: {
+    unoptimized: false,
+    formats: ["image/avif", "image/webp"],
+  },
 };
 
 module.exports = nextConfig;

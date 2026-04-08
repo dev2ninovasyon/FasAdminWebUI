@@ -84,8 +84,10 @@ export default function AuthPageShell({
       <GlobalStyles
         styles={{
           ".grecaptcha-badge": {
-            left: "24px !important",
-            right: "auto !important",
+            display: "none !important",
+            visibility: "hidden !important",
+            opacity: "0 !important",
+            pointerEvents: "none !important",
           },
         }}
       />

@@ -8,19 +8,23 @@ import NavItem from "./NavItem";
 import NavGroup from "./NavGroup/NavGroup";
 import { AppState } from "@/store/store";
 import { toggleMobileSidebar } from "@/store/customizer/CustomizerSlice";
-import { MenuitemsType } from "@/app/(AdminUI)/components/Layout/Vertical/Sidebar/MenuItems";
-import { createMenuItems } from "@/app/(AdminUI)/components/Layout/Vertical/Sidebar/MenuItems";
+import {
+  MenuitemsType,
+  createMenuItems,
+} from "@/app/(AdminUI)/components/Layout/Vertical/Sidebar/MenuItems";
 
 interface Props {
   isSidebarHover: boolean;
 }
+
 const SidebarItems: React.FC<Props> = ({ isSidebarHover }) => {
   const pathname = usePathname();
   const pathDirect = pathname.split("/").slice(0, 2).join("/");
-  const pathWithoutLastPart = pathname.slice(0, pathname.lastIndexOf("/"));
   const user = useSelector((state: AppState) => state.userReducer);
   const customizer = useSelector((state: AppState) => state.customizer);
-  const Menuitems: MenuitemsType[] = createMenuItems(
+  const dispatch = useDispatch();
+
+  const menuItems: MenuitemsType[] = createMenuItems(
     user.rol || undefined,
     user.denetimTuru || undefined,
     user.enflasyonmu || undefined,
@@ -29,24 +33,23 @@ const SidebarItems: React.FC<Props> = ({ isSidebarHover }) => {
     user.yil || undefined
   );
 
-  // ï¿½irket seï¿½ilmediyse sadece ANASAYFA gï¿½ster
-  const filteredMenuItems = user.denetlenenId
-    ? Menuitems
-    : Menuitems.filter((item) => item.title === "ANASAYFA");
+  const visibleMenuItems = user.denetlenenId
+    ? menuItems
+    : menuItems.filter((item) => item.title === "ANASAYFA");
 
   const lgUp = useMediaQuery((theme: any) => theme.breakpoints.up("lg"));
   const hideMenu: any = lgUp ? customizer.isCollapse && !isSidebarHover : "";
-  const dispatch = useDispatch();
+
   return (
     <Box sx={{ px: 3 }}>
       <List sx={{ pt: 0 }} className="sidebarNav">
-        {filteredMenuItems.map((item) => {
-          // {/********SubHeader**********/}
+        {visibleMenuItems.map((item) => {
           if (item.subheader) {
             return (
               <NavGroup item={item} hideMenu={hideMenu} key={item.subheader} />
             );
           }
+
           return (
             <NavItem
               item={item}
@@ -56,11 +59,10 @@ const SidebarItems: React.FC<Props> = ({ isSidebarHover }) => {
               onClick={() => dispatch(toggleMobileSidebar())}
             />
           );
-          //}
         })}
       </List>
     </Box>
   );
 };
-export default SidebarItems;
 
+export default SidebarItems;

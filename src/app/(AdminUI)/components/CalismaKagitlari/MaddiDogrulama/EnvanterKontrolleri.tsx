@@ -1,10 +1,11 @@
 "use client";
 
 import React, { useEffect, useState, useRef } from "react";
-import { HotTable } from "@handsontable/react";
+import "@/lib/handsontableSetup";
+
+import CustomHotTable from "@/components/HotTableWrapper";
 import { registerAllModules } from "handsontable/registry";
-import "handsontable/dist/handsontable.full.min.css";
-import "@/utils/languages/handsontable.tr-TR";
+
 import { Box, Typography, useTheme } from "@mui/material";
 import { useSelector } from "@/store/hooks";
 import { AppState } from "@/store/store";
@@ -91,12 +92,12 @@ const EnvanterKontrolleri: React.FC<Props> = ({
                     listeFaturaList: [],
                 });
             } else {
-                console.log("Beklenmeyen veri formatı:", response);
-                enqueueSnackbar("Sunucudan geçersiz veri formatı alındı", { variant: "error" });
+                console.log("Beklenmeyen veri formatÃ„Â±:", response);
+                enqueueSnackbar("Sunucudan geÃƒÂ§ersiz veri formatÃ„Â± alÃ„Â±ndÃ„Â±", { variant: "error" });
             }
         } catch (error) {
-            console.log("Veri çekme hatası:", error);
-            enqueueSnackbar("Veriler yüklenirken bir hata oluştu", { variant: "error" });
+            console.log("Veri ÃƒÂ§ekme hatasÃ„Â±:", error);
+            enqueueSnackbar("Veriler yÃƒÂ¼klenirken bir hata oluÃ…Å¸tu", { variant: "error" });
         } finally {
             setLoading(false);
         }
@@ -114,7 +115,7 @@ const EnvanterKontrolleri: React.FC<Props> = ({
 
     const columns1 = [
         { data: "stokKodu", title: "Stok Kodu", readOnly: true },
-        { data: "stokAdi", title: "Stok Adı", readOnly: true },
+        { data: "stokAdi", title: "Stok AdÃ„Â±", readOnly: true },
         { data: "bakiyeMiktar", title: "Bakiye Miktar", type: "numeric", numericFormat: { pattern: "0,0.00", culture: "tr-TR" }, readOnly: true },
         { data: "kalanTutar", title: "Kalan Tutar", type: "numeric", numericFormat: { pattern: "0,0.00", culture: "tr-TR" }, readOnly: true },
         { data: "birimMaliyet", title: "Birim Maliyet", type: "numeric", numericFormat: { pattern: "0,0.00", culture: "tr-TR" }, readOnly: true },
@@ -123,21 +124,21 @@ const EnvanterKontrolleri: React.FC<Props> = ({
 
     const columns2 = [
         { data: "stokKodu", title: "Stok Kodu", readOnly: true },
-        { data: "stokAdi", title: "Stok Adı", readOnly: true },
+        { data: "stokAdi", title: "Stok AdÃ„Â±", readOnly: true },
         { data: "bakiyeMiktar", title: "Bakiye Miktar", type: "numeric", numericFormat: { pattern: "0,0.00", culture: "tr-TR" }, readOnly: true },
         { data: "kalanTutar", title: "Kalan Tutar", type: "numeric", numericFormat: { pattern: "0,0.00", culture: "tr-TR" }, readOnly: true },
-        { data: "stokKartiBirimMaliyet", title: "Stok Kartı Birim Maliyet", type: "numeric", numericFormat: { pattern: "0,0.00", culture: "tr-TR" }, readOnly: true },
+        { data: "stokKartiBirimMaliyet", title: "Stok KartÃ„Â± Birim Maliyet", type: "numeric", numericFormat: { pattern: "0,0.00", culture: "tr-TR" }, readOnly: true },
         { data: "listedekiBirimMaliyet", title: "Listedeki Birim Maliyet", type: "numeric", numericFormat: { pattern: "0,0.00", culture: "tr-TR" }, readOnly: true },
         { data: "fark", title: "Fark", type: "numeric", numericFormat: { pattern: "0,0.00", culture: "tr-TR" }, readOnly: true },
     ];
 
     const columns3 = [
         { data: "stokKodu", title: "Stok Kodu", readOnly: true },
-        { data: "stokAdi", title: "Stok Adı", readOnly: true },
+        { data: "stokAdi", title: "Stok AdÃ„Â±", readOnly: true },
         { data: "listedekiBirimMaliyet", title: "Listedeki Birim Maliyet", type: "numeric", numericFormat: { pattern: "0,0.00", culture: "tr-TR" }, readOnly: true },
         { data: "faturaTarihi", title: "Fatura Tarihi", type: "date", dateFormat: "DD.MM.YYYY", correctFormat: true, readOnly: true },
         { data: "faturaNo", title: "Fatura No", readOnly: true },
-        { data: "faturaBirimTutari", title: "Fatura Birim Tutarı", type: "numeric", numericFormat: { pattern: "0,0.00", culture: "tr-TR" }, readOnly: true },
+        { data: "faturaBirimTutari", title: "Fatura Birim TutarÃ„Â±", type: "numeric", numericFormat: { pattern: "0,0.00", culture: "tr-TR" }, readOnly: true },
         { data: "fark", title: "Fark", type: "numeric", numericFormat: { pattern: "0,0.00", culture: "tr-TR" }, readOnly: true },
     ];
 
@@ -173,7 +174,7 @@ const EnvanterKontrolleri: React.FC<Props> = ({
                     }
                 }}
             >
-                <HotTable
+                <CustomHotTable 
                     data={tableData}
                     columns={columns}
                     colHeaders={true}
@@ -207,7 +208,7 @@ const EnvanterKontrolleri: React.FC<Props> = ({
                 />
                 {tableData.length === 0 && (
                     <Box sx={{ p: 4, textAlign: "center", backgroundColor: theme.palette.background.paper }}>
-                        <Typography variant="body1" color="textSecondary">Veri bulunmamaktadır.</Typography>
+                        <Typography variant="body1" color="textSecondary">Veri bulunmamaktadÃ„Â±r.</Typography>
                     </Box>
                 )}
             </Box>
@@ -219,9 +220,9 @@ const EnvanterKontrolleri: React.FC<Props> = ({
             <Typography variant="h6" sx={{ color: theme.palette.primary.main, fontWeight: "bold", mb: 3 }}>
                 Envanter Kontrolleri
             </Typography>
-            {renderTable(data.envanterMizanList, columns1, "Envanter ve Mizan Kontrolü")}
-            {renderTable(data.stokKartListeList, columns2, "Stok Kartı ve Liste Fiyatı Kontrolü")}
-            {renderTable(data.listeFaturaList, columns3, "Liste Fiyatı ve Fatura Kontrolü")}
+            {renderTable(data.envanterMizanList, columns1, "Envanter ve Mizan KontrolÃƒÂ¼")}
+            {renderTable(data.stokKartListeList, columns2, "Stok KartÃ„Â± ve Liste FiyatÃ„Â± KontrolÃƒÂ¼")}
+            {renderTable(data.listeFaturaList, columns3, "Liste FiyatÃ„Â± ve Fatura KontrolÃƒÂ¼")}
         </Box>
     );
 };

@@ -1,7 +1,9 @@
-import { HotTable } from "@handsontable/react";
-import { registerAllModules } from "handsontable/registry";
 import { dictionary } from "@/utils/languages/handsontable.tr-TR";
-import "handsontable/dist/handsontable.full.min.css";
+import "@/lib/handsontableSetup";
+
+import CustomHotTable from "@/components/HotTableWrapper";
+import { registerAllModules } from "handsontable/registry";
+
 import { plus } from "@/utils/theme/Typography";
 import { useDispatch, useSelector } from "@/store/hooks";
 import { AppState } from "@/store/store";
@@ -71,10 +73,10 @@ const OnemlilikVeOrneklemSeviyesi: React.FC<Props> = ({
 
   const colHeaders = [
     "Id",
-    "Hesaplama Bazï¿½",
+    "Hesaplama BazÃƒÂ¯Ã‚Â¿Ã‚Â½",
     "Oran",
-    "Hesaplama Bazï¿½nï¿½n Tutarï¿½",
-    "Genel ï¿½nemlilik Seviyesi",
+    "Hesaplama BazÃƒÂ¯Ã‚Â¿Ã‚Â½nÃƒÂ¯Ã‚Â¿Ã‚Â½n TutarÃƒÂ¯Ã‚Â¿Ã‚Â½",
+    "Genel ÃƒÂ¯Ã‚Â¿Ã‚Â½nemlilik Seviyesi",
   ];
 
   const columns = [
@@ -86,7 +88,7 @@ const OnemlilikVeOrneklemSeviyesi: React.FC<Props> = ({
       allowInvalid: false,
       readOnly: true,
       editor: false,
-    }, // Hesaplama Bazï¿½
+    }, // Hesaplama BazÃƒÂ¯Ã‚Â¿Ã‚Â½
     {
       type: "numeric",
       numericFormat: {
@@ -106,7 +108,7 @@ const OnemlilikVeOrneklemSeviyesi: React.FC<Props> = ({
       className: "htRight",
       readOnly: true,
       editor: false,
-    }, // Hesaplama Bazï¿½nï¿½n Tutarï¿½
+    }, // Hesaplama BazÃƒÂ¯Ã‚Â¿Ã‚Â½nÃƒÂ¯Ã‚Â¿Ã‚Â½n TutarÃƒÂ¯Ã‚Â¿Ã‚Â½
     {
       type: "numeric",
       numericFormat: {
@@ -117,7 +119,7 @@ const OnemlilikVeOrneklemSeviyesi: React.FC<Props> = ({
       className: "htRight",
       readOnly: true,
       editor: false,
-    }, // Genel ï¿½nemlilik Seviyesi
+    }, // Genel ÃƒÂ¯Ã‚Â¿Ã‚Â½nemlilik Seviyesi
   ];
 
   const afterGetColHeader = (col: any, TH: any) => {
@@ -231,7 +233,7 @@ const OnemlilikVeOrneklemSeviyesi: React.FC<Props> = ({
     if (hotTableComponent.current) {
       const hotInstance = hotTableComponent.current.hotInstance;
       const cellMeta = hotInstance.getDataAtRow(row);
-      console.log("Satï¿½r Verileri:", cellMeta);
+      console.log("SatÃƒÂ¯Ã‚Â¿Ã‚Â½r Verileri:", cellMeta);
       return cellMeta;
     }
   };
@@ -274,7 +276,7 @@ const OnemlilikVeOrneklemSeviyesi: React.FC<Props> = ({
         fetchData();
         setHesaplaTiklandimi(true);
         setOpenCartAlert(false);
-        enqueueSnackbar("ï¿½nemlilik Hesaplandï¿½", {
+        enqueueSnackbar("ÃƒÂ¯Ã‚Â¿Ã‚Â½nemlilik HesaplandÃƒÂ¯Ã‚Â¿Ã‚Â½", {
           variant: "success",
           autoHideDuration: 5000,
           style: {
@@ -286,7 +288,7 @@ const OnemlilikVeOrneklemSeviyesi: React.FC<Props> = ({
         });
       } else {
         setOpenCartAlert(false);
-        enqueueSnackbar("ï¿½nemlilik Hesaplanamadï¿½", {
+        enqueueSnackbar("ÃƒÂ¯Ã‚Â¿Ã‚Â½nemlilik HesaplanamadÃƒÂ¯Ã‚Â¿Ã‚Â½", {
           variant: "error",
           autoHideDuration: 5000,
           style: {
@@ -299,7 +301,7 @@ const OnemlilikVeOrneklemSeviyesi: React.FC<Props> = ({
         });
       }
     } catch (error) {
-      console.log("Bir hata oluï¿½tu:", error);
+      console.log("Bir hata oluÃƒÂ¯Ã‚Â¿Ã‚Â½tu:", error);
     }
   };
 
@@ -325,7 +327,7 @@ const OnemlilikVeOrneklemSeviyesi: React.FC<Props> = ({
       setRowCount(rowsAll.length);
       setFetchedData(rowsAll);
     } catch (error) {
-      console.log("Bir hata oluï¿½tu:", error);
+      console.log("Bir hata oluÃƒÂ¯Ã‚Â¿Ã‚Â½tu:", error);
     }
   };
 
@@ -355,7 +357,7 @@ const OnemlilikVeOrneklemSeviyesi: React.FC<Props> = ({
 
   return (
     <>
-      <HotTable
+      <CustomHotTable 
         style={{
           height: "100%",
           width: "100%",
@@ -394,7 +396,7 @@ const OnemlilikVeOrneklemSeviyesi: React.FC<Props> = ({
         contextMenu={{
           items: {
             onemlilik_seviyesi_hesapla: {
-              name: "ï¿½nemlilik Seviyesi Hesapla",
+              name: "ÃƒÂ¯Ã‚Â¿Ã‚Â½nemlilik Seviyesi Hesapla",
               callback: async function (key, selection) {
                 const row = await handleGetRowData(selection[0].start.row);
                 handleOnemlilikHesaplamaBazi(selection[0].start.row);

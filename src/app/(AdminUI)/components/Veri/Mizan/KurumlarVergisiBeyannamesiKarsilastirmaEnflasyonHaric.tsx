@@ -1,7 +1,9 @@
-import { HotTable } from "@handsontable/react";
-import { registerAllModules } from "handsontable/registry";
 import { dictionary } from "@/utils/languages/handsontable.tr-TR";
-import "handsontable/dist/handsontable.full.min.css";
+import "@/lib/handsontableSetup";
+
+import CustomHotTable from "@/components/HotTableWrapper";
+import { registerAllModules } from "handsontable/registry";
+
 import { plus } from "@/utils/theme/Typography";
 import { useDispatch, useSelector } from "@/store/hooks";
 import { AppState } from "@/store/store";
@@ -69,10 +71,10 @@ const KurumlarVergisiBeyannamesiKarsilastirmaEnflasyonHaric: React.FC<
 
   const colHeaders = [
     "Kebir Kodu",
-    "Hesap Adı",
-    "Borç",
+    "Hesap AdÃ„Â±",
+    "BorÃƒÂ§",
     "Alacak",
-    "Mizan Bakiye (Enflasyon Hariç)",
+    "Mizan Bakiye (Enflasyon HariÃƒÂ§)",
     "Enflasyon Bakiye",
     "KVB",
     "Fark",
@@ -93,7 +95,7 @@ const KurumlarVergisiBeyannamesiKarsilastirmaEnflasyonHaric: React.FC<
       allowInvalid: false,
       readOnly: true,
       editor: false,
-    }, // Hesap Adı
+    }, // Hesap AdÃ„Â±
     {
       type: "numeric",
       numericFormat: {
@@ -104,7 +106,7 @@ const KurumlarVergisiBeyannamesiKarsilastirmaEnflasyonHaric: React.FC<
       className: "htRight",
       readOnly: true,
       editor: false,
-    }, // Borç
+    }, // BorÃƒÂ§
     {
       type: "numeric",
       numericFormat: {
@@ -126,7 +128,7 @@ const KurumlarVergisiBeyannamesiKarsilastirmaEnflasyonHaric: React.FC<
       className: "htRight",
       readOnly: true,
       editor: false,
-    }, // Mizan Bakiye (Enflasyon Hariç)
+    }, // Mizan Bakiye (Enflasyon HariÃƒÂ§)
     {
       type: "numeric",
       numericFormat: {
@@ -296,7 +298,7 @@ const KurumlarVergisiBeyannamesiKarsilastirmaEnflasyonHaric: React.FC<
       setRowCount(rowsAll.length);
       setFetchedData(rowsAll);
     } catch (error) {
-      console.log("Bir hata oluştu:", error);
+      console.log("Bir hata oluÃ…Å¸tu:", error);
     }
   };
 
@@ -346,9 +348,9 @@ const KurumlarVergisiBeyannamesiKarsilastirmaEnflasyonHaric: React.FC<
           type: "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
         });
         saveAs(blob, "KurumlarVergisiBeyannamesiKarsilastirma.xlsx");
-        console.log("Excel dosyası başarıyla oluşturuldu");
+        console.log("Excel dosyasÃ„Â± baÃ…Å¸arÃ„Â±yla oluÃ…Å¸turuldu");
       } catch (error) {
-        console.log("Excel dosyası oluşturulurken bir hata oluştu:", error);
+        console.log("Excel dosyasÃ„Â± oluÃ…Å¸turulurken bir hata oluÃ…Å¸tu:", error);
       }
     }
     createExcelFile();
@@ -373,7 +375,7 @@ const KurumlarVergisiBeyannamesiKarsilastirmaEnflasyonHaric: React.FC<
 
   return (
     <>
-      <HotTable
+      <CustomHotTable 
         style={{
           height: "100%",
           width: "100%",

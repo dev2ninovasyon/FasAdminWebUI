@@ -1,10 +1,11 @@
 "use client";
 
 import React, { useEffect, useState, useRef } from "react";
-import { HotTable } from "@handsontable/react";
+import "@/lib/handsontableSetup";
+
+import CustomHotTable from "@/components/HotTableWrapper";
 import { registerAllModules } from "handsontable/registry";
-import "handsontable/dist/handsontable.full.min.css";
-import "@/utils/languages/handsontable.tr-TR";
+
 import { Box, Typography, useTheme } from "@mui/material";
 import { useSelector } from "@/store/hooks";
 import { AppState } from "@/store/store";
@@ -73,8 +74,8 @@ const DegerlemeveDegerDusukluguKontrolleri: React.FC<Props> = ({
             );
             setData(response.donusumMizanBobi || []);
         } catch (error) {
-            console.log("Veri çekme hatası:", error);
-            enqueueSnackbar("Veriler yüklenirken bir hata oluştu", { variant: "error" });
+            console.log("Veri ÃƒÂ§ekme hatasÃ„Â±:", error);
+            enqueueSnackbar("Veriler yÃƒÂ¼klenirken bir hata oluÃ…Å¸tu", { variant: "error" });
         } finally {
             setLoading(false);
         }
@@ -88,8 +89,8 @@ const DegerlemeveDegerDusukluguKontrolleri: React.FC<Props> = ({
 
     const columns = [
         { data: "detayKodu", title: "Hesap No", readOnly: true },
-        { data: "hesapAdi", title: "Hesap Adı", readOnly: true },
-        { data: "fisBorc", title: "Borç", type: "numeric", numericFormat: { pattern: "0,0.00", culture: "tr-TR" }, readOnly: true },
+        { data: "hesapAdi", title: "Hesap AdÃ„Â±", readOnly: true },
+        { data: "fisBorc", title: "BorÃƒÂ§", type: "numeric", numericFormat: { pattern: "0,0.00", culture: "tr-TR" }, readOnly: true },
         { data: "fisAlacak", title: "Alacak", type: "numeric", numericFormat: { pattern: "0,0.00", culture: "tr-TR" }, readOnly: true },
         { data: "fisBakiye", title: "Bakiye", type: "numeric", numericFormat: { pattern: "0,0.00", culture: "tr-TR" }, readOnly: true },
     ];
@@ -102,7 +103,7 @@ const DegerlemeveDegerDusukluguKontrolleri: React.FC<Props> = ({
     return (
         <Box sx={{ p: isReport ? 0 : 0 }}>
             <Typography variant="h6" sx={{ color: "#2C3E50", fontWeight: "bold", mb: 3 }}>
-                Değerleme ve Değer Düşüklüğü Kontrolleri
+                DeÃ„Å¸erleme ve DeÃ„Å¸er DÃƒÂ¼Ã…Å¸ÃƒÂ¼klÃƒÂ¼Ã„Å¸ÃƒÂ¼ Kontrolleri
             </Typography>
             <Box
                 sx={{
@@ -127,7 +128,7 @@ const DegerlemeveDegerDusukluguKontrolleri: React.FC<Props> = ({
                     }
                 }}
             >
-                <HotTable
+                <CustomHotTable 
                     data={processedData}
                     columns={columns}
                     colHeaders={true}
@@ -153,7 +154,7 @@ const DegerlemeveDegerDusukluguKontrolleri: React.FC<Props> = ({
                 />
                 {processedData.length === 0 && (
                     <Box sx={{ p: 4, textAlign: "center" }}>
-                        <Typography variant="body1" color="textSecondary">Veri bulunmamaktadır.</Typography>
+                        <Typography variant="body1" color="textSecondary">Veri bulunmamaktadÃ„Â±r.</Typography>
                     </Box>
                 )}
             </Box>

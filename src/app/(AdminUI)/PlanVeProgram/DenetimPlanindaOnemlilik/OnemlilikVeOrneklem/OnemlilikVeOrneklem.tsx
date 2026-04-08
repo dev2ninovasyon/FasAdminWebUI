@@ -1,7 +1,9 @@
-import { HotTable } from "@handsontable/react";
-import { registerAllModules } from "handsontable/registry";
 import { dictionary } from "@/utils/languages/handsontable.tr-TR";
-import "handsontable/dist/handsontable.full.min.css";
+import "@/lib/handsontableSetup";
+
+import CustomHotTable from "@/components/HotTableWrapper";
+import { registerAllModules } from "handsontable/registry";
+
 import { plus } from "@/utils/theme/Typography";
 import { useDispatch, useSelector } from "@/store/hooks";
 import { AppState } from "@/store/store";
@@ -78,7 +80,7 @@ const OnemlilikVeOrneklem: React.FC<Props> = ({ hesaplaTiklandimi }) => {
 
   const textValidator = (value: string, callback: (value: boolean) => void) => {
     if (!value || value.trim() === "") {
-      // Eï¿½er deï¿½er boï¿½sa geï¿½ersiz kabul et
+      // EÃƒÂ¯Ã‚Â¿Ã‚Â½er deÃƒÂ¯Ã‚Â¿Ã‚Â½er boÃƒÂ¯Ã‚Â¿Ã‚Â½sa geÃƒÂ¯Ã‚Â¿Ã‚Â½ersiz kabul et
       callback(false);
     } else {
       callback(true);
@@ -88,14 +90,14 @@ const OnemlilikVeOrneklem: React.FC<Props> = ({ hesaplaTiklandimi }) => {
   const colHeaders = [
     "Id",
     "Kebir Kodu",
-    "Hesap Adï¿½",
-    "Borï¿½ Alacak Toplamï¿½",
-    "Mizan ï¿½ï¿½indeki Payï¿½",
-    "Genel ï¿½nemlilik",
-    "Performans ï¿½nemliliï¿½i",
-    "B. Fiï¿½ Sayï¿½sï¿½",
-    "A. Fiï¿½ Sayï¿½sï¿½",
-    "Toplam Fiï¿½ Sayï¿½sï¿½",
+    "Hesap AdÃƒÂ¯Ã‚Â¿Ã‚Â½",
+    "BorÃƒÂ¯Ã‚Â¿Ã‚Â½ Alacak ToplamÃƒÂ¯Ã‚Â¿Ã‚Â½",
+    "Mizan ÃƒÂ¯Ã‚Â¿Ã‚Â½ÃƒÂ¯Ã‚Â¿Ã‚Â½indeki PayÃƒÂ¯Ã‚Â¿Ã‚Â½",
+    "Genel ÃƒÂ¯Ã‚Â¿Ã‚Â½nemlilik",
+    "Performans ÃƒÂ¯Ã‚Â¿Ã‚Â½nemliliÃƒÂ¯Ã‚Â¿Ã‚Â½i",
+    "B. FiÃƒÂ¯Ã‚Â¿Ã‚Â½ SayÃƒÂ¯Ã‚Â¿Ã‚Â½sÃƒÂ¯Ã‚Â¿Ã‚Â½",
+    "A. FiÃƒÂ¯Ã‚Â¿Ã‚Â½ SayÃƒÂ¯Ã‚Â¿Ã‚Â½sÃƒÂ¯Ã‚Â¿Ã‚Â½",
+    "Toplam FiÃƒÂ¯Ã‚Â¿Ã‚Â½ SayÃƒÂ¯Ã‚Â¿Ã‚Â½sÃƒÂ¯Ã‚Â¿Ã‚Â½",
     "Risk",
     "Tespit",
   ];
@@ -116,7 +118,7 @@ const OnemlilikVeOrneklem: React.FC<Props> = ({ hesaplaTiklandimi }) => {
       allowInvalid: false,
       readOnly: true,
       editor: false,
-    }, // Hesap Adï¿½
+    }, // Hesap AdÃƒÂ¯Ã‚Â¿Ã‚Â½
     {
       type: "numeric",
       numericFormat: {
@@ -127,7 +129,7 @@ const OnemlilikVeOrneklem: React.FC<Props> = ({ hesaplaTiklandimi }) => {
       className: "htRight",
       readOnly: true,
       editor: false,
-    }, // Borï¿½ Alacak Toplamï¿½
+    }, // BorÃƒÂ¯Ã‚Â¿Ã‚Â½ Alacak ToplamÃƒÂ¯Ã‚Â¿Ã‚Â½
     {
       type: "numeric",
       numericFormat: {
@@ -138,7 +140,7 @@ const OnemlilikVeOrneklem: React.FC<Props> = ({ hesaplaTiklandimi }) => {
       className: "htRight",
       readOnly: true,
       editor: false,
-    }, // Mizan ï¿½ï¿½indeki Payï¿½
+    }, // Mizan ÃƒÂ¯Ã‚Â¿Ã‚Â½ÃƒÂ¯Ã‚Â¿Ã‚Â½indeki PayÃƒÂ¯Ã‚Â¿Ã‚Â½
     {
       type: "numeric",
       numericFormat: {
@@ -149,7 +151,7 @@ const OnemlilikVeOrneklem: React.FC<Props> = ({ hesaplaTiklandimi }) => {
       className: "htRight",
       readOnly: true,
       editor: false,
-    }, // Genel ï¿½nemlilik
+    }, // Genel ÃƒÂ¯Ã‚Â¿Ã‚Â½nemlilik
     {
       type: "numeric",
       numericFormat: {
@@ -160,7 +162,7 @@ const OnemlilikVeOrneklem: React.FC<Props> = ({ hesaplaTiklandimi }) => {
       className: "htRight",
       readOnly: true,
       editor: false,
-    }, // Performans ï¿½nemliliï¿½i
+    }, // Performans ÃƒÂ¯Ã‚Â¿Ã‚Â½nemliliÃƒÂ¯Ã‚Â¿Ã‚Â½i
     {
       type: "numeric",
       numericFormat: {
@@ -171,7 +173,7 @@ const OnemlilikVeOrneklem: React.FC<Props> = ({ hesaplaTiklandimi }) => {
       className: "htRight",
       readOnly: true,
       editor: false,
-    }, // Borï¿½ Fiï¿½ Sayï¿½sï¿½
+    }, // BorÃƒÂ¯Ã‚Â¿Ã‚Â½ FiÃƒÂ¯Ã‚Â¿Ã‚Â½ SayÃƒÂ¯Ã‚Â¿Ã‚Â½sÃƒÂ¯Ã‚Â¿Ã‚Â½
     {
       type: "numeric",
       numericFormat: {
@@ -182,7 +184,7 @@ const OnemlilikVeOrneklem: React.FC<Props> = ({ hesaplaTiklandimi }) => {
       className: "htRight",
       readOnly: true,
       editor: false,
-    }, // Alacak Fiï¿½ Sayï¿½sï¿½
+    }, // Alacak FiÃƒÂ¯Ã‚Â¿Ã‚Â½ SayÃƒÂ¯Ã‚Â¿Ã‚Â½sÃƒÂ¯Ã‚Â¿Ã‚Â½
     {
       type: "numeric",
       numericFormat: {
@@ -193,10 +195,10 @@ const OnemlilikVeOrneklem: React.FC<Props> = ({ hesaplaTiklandimi }) => {
       className: "htRight",
       readOnly: true,
       editor: false,
-    }, // Toplam Fiï¿½ Sayï¿½sï¿½
+    }, // Toplam FiÃƒÂ¯Ã‚Â¿Ã‚Â½ SayÃƒÂ¯Ã‚Â¿Ã‚Â½sÃƒÂ¯Ã‚Â¿Ã‚Â½
     {
       type: "dropdown",
-      source: ["Dï¿½ï¿½ï¿½k", "Orta", "Yï¿½ksek"],
+      source: ["DÃƒÂ¯Ã‚Â¿Ã‚Â½ÃƒÂ¯Ã‚Â¿Ã‚Â½ÃƒÂ¯Ã‚Â¿Ã‚Â½k", "Orta", "YÃƒÂ¯Ã‚Â¿Ã‚Â½ksek"],
       className: "htLeft",
       allowInvalid: false,
     }, // Risk
@@ -320,7 +322,7 @@ const OnemlilikVeOrneklem: React.FC<Props> = ({ hesaplaTiklandimi }) => {
     if (hotTableComponent.current) {
       const hotInstance = hotTableComponent.current.hotInstance;
       const cellMeta = hotInstance.getDataAtRow(row);
-      console.log("Satï¿½r Verileri:", cellMeta);
+      console.log("SatÃƒÂ¯Ã‚Â¿Ã‚Â½r Verileri:", cellMeta);
       return cellMeta;
     }
   };
@@ -370,7 +372,7 @@ const OnemlilikVeOrneklem: React.FC<Props> = ({ hesaplaTiklandimi }) => {
       if (result) {
         fetchData();
         setOpenCartAlert(false);
-        enqueueSnackbar("ï¿½rneklem Gï¿½ncellendi", {
+        enqueueSnackbar("ÃƒÂ¯Ã‚Â¿Ã‚Â½rneklem GÃƒÂ¯Ã‚Â¿Ã‚Â½ncellendi", {
           variant: "success",
           autoHideDuration: 5000,
           style: {
@@ -382,7 +384,7 @@ const OnemlilikVeOrneklem: React.FC<Props> = ({ hesaplaTiklandimi }) => {
         });
       } else {
         setOpenCartAlert(false);
-        enqueueSnackbar("ï¿½rneklem Gï¿½ncellenemedi", {
+        enqueueSnackbar("ÃƒÂ¯Ã‚Â¿Ã‚Â½rneklem GÃƒÂ¯Ã‚Â¿Ã‚Â½ncellenemedi", {
           variant: "error",
           autoHideDuration: 5000,
           style: {
@@ -395,7 +397,7 @@ const OnemlilikVeOrneklem: React.FC<Props> = ({ hesaplaTiklandimi }) => {
         });
       }
     } catch (error) {
-      console.log("Bir hata oluï¿½tu:", error);
+      console.log("Bir hata oluÃƒÂ¯Ã‚Â¿Ã‚Â½tu:", error);
     }
   };
 
@@ -428,7 +430,7 @@ const OnemlilikVeOrneklem: React.FC<Props> = ({ hesaplaTiklandimi }) => {
       setRowCount(rowsAll.length);
       setFetchedData(rowsAll);
     } catch (error) {
-      console.log("Bir hata oluï¿½tu:", error);
+      console.log("Bir hata oluÃƒÂ¯Ã‚Â¿Ã‚Â½tu:", error);
     }
   };
 
@@ -487,9 +489,9 @@ const OnemlilikVeOrneklem: React.FC<Props> = ({ hesaplaTiklandimi }) => {
           type: "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
         });
         saveAs(blob, "OnemlilikVeOrneklem.xlsx");
-        console.log("Excel dosyasï¿½ baï¿½arï¿½yla oluï¿½turuldu");
+        console.log("Excel dosyasÃƒÂ¯Ã‚Â¿Ã‚Â½ baÃƒÂ¯Ã‚Â¿Ã‚Â½arÃƒÂ¯Ã‚Â¿Ã‚Â½yla oluÃƒÂ¯Ã‚Â¿Ã‚Â½turuldu");
       } catch (error) {
-        console.log("Excel dosyasï¿½ oluï¿½turulurken bir hata oluï¿½tu:", error);
+        console.log("Excel dosyasÃƒÂ¯Ã‚Â¿Ã‚Â½ oluÃƒÂ¯Ã‚Â¿Ã‚Â½turulurken bir hata oluÃƒÂ¯Ã‚Â¿Ã‚Â½tu:", error);
       }
     }
     createExcelFile();
@@ -517,7 +519,7 @@ const OnemlilikVeOrneklem: React.FC<Props> = ({ hesaplaTiklandimi }) => {
 
   return (
     <>
-      <HotTable
+      <CustomHotTable 
         style={{
           height: "100%",
           width: "100%",

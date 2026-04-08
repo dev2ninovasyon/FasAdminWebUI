@@ -1,7 +1,9 @@
-import { HotTable } from "@handsontable/react";
-import { registerAllModules } from "handsontable/registry";
 import { dictionary } from "@/utils/languages/handsontable.tr-TR";
-import "handsontable/dist/handsontable.full.min.css";
+import "@/lib/handsontableSetup";
+
+import CustomHotTable from "@/components/HotTableWrapper";
+import { registerAllModules } from "handsontable/registry";
+
 import { plus } from "@/utils/theme/Typography";
 import { useDispatch, useSelector } from "@/store/hooks";
 import { AppState } from "@/store/store";
@@ -61,7 +63,7 @@ const BulguRiskiBelirleme: React.FC<Props> = ({ hesaplaTiklandimi }) => {
   }, [customizer.activeMode]);
 
   const colHeaders = [
-    "Doï¿½al Risk",
+    "DoÃƒÂ¯Ã‚Â¿Ã‚Â½al Risk",
     "Kontrol Riski",
     "Girilen Risk",
     "Bulgu Riski",
@@ -79,7 +81,7 @@ const BulguRiskiBelirleme: React.FC<Props> = ({ hesaplaTiklandimi }) => {
       allowInvalid: false,
       readOnly: true,
       editor: false,
-    }, // Doï¿½al Risk
+    }, // DoÃƒÂ¯Ã‚Â¿Ã‚Â½al Risk
     {
       type: "numeric",
       numericFormat: {
@@ -246,7 +248,7 @@ const BulguRiskiBelirleme: React.FC<Props> = ({ hesaplaTiklandimi }) => {
         setFetchedData(rowsAll);
       }
     } catch (error) {
-      console.log("Bir hata oluï¿½tu:", error);
+      console.log("Bir hata oluÃƒÂ¯Ã‚Â¿Ã‚Â½tu:", error);
     }
   };
 
@@ -305,9 +307,9 @@ const BulguRiskiBelirleme: React.FC<Props> = ({ hesaplaTiklandimi }) => {
           type: "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
         });
         saveAs(blob, "BulguRiskiBelirleme.xlsx");
-        console.log("Excel dosyasï¿½ baï¿½arï¿½yla oluï¿½turuldu");
+        console.log("Excel dosyasÃƒÂ¯Ã‚Â¿Ã‚Â½ baÃƒÂ¯Ã‚Â¿Ã‚Â½arÃƒÂ¯Ã‚Â¿Ã‚Â½yla oluÃƒÂ¯Ã‚Â¿Ã‚Â½turuldu");
       } catch (error) {
-        console.log("Excel dosyasï¿½ oluï¿½turulurken bir hata oluï¿½tu:", error);
+        console.log("Excel dosyasÃƒÂ¯Ã‚Â¿Ã‚Â½ oluÃƒÂ¯Ã‚Â¿Ã‚Â½turulurken bir hata oluÃƒÂ¯Ã‚Â¿Ã‚Â½tu:", error);
       }
     }
     createExcelFile();
@@ -335,7 +337,7 @@ const BulguRiskiBelirleme: React.FC<Props> = ({ hesaplaTiklandimi }) => {
 
   return (
     <>
-      <HotTable
+      <CustomHotTable 
         style={{
           height: "100%",
           width: "100%",

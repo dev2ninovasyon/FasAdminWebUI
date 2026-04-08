@@ -1,10 +1,12 @@
 "use client";
 
-import React, { useEffect, useState } from "react";
-import { HotTable } from "@handsontable/react";
-import { registerAllModules } from "handsontable/registry";
 import { dictionary } from "@/utils/languages/handsontable.tr-TR";
-import "handsontable/dist/handsontable.full.min.css";
+import "@/lib/handsontableSetup";
+
+import React, { useEffect, useState } from "react";
+import CustomHotTable from "@/components/HotTableWrapper";
+import { registerAllModules } from "handsontable/registry";
+
 import { Box, useTheme, Typography, CircularProgress } from "@mui/material";
 import { useSelector } from "@/store/hooks";
 import { AppState } from "@/store/store";
@@ -51,7 +53,7 @@ const FaturaTestleriTablo = ({ dipnotNo, isReport }: { dipnotNo: string, isRepor
                 })));
             }
         } catch (error) {
-            enqueueSnackbar("Veriler yüklenirken hata oluştu", { variant: "error" });
+            enqueueSnackbar("Veriler yÃƒÂ¼klenirken hata oluÃ…Å¸tu", { variant: "error" });
         } finally {
             setLoading(false);
         }
@@ -68,9 +70,9 @@ const FaturaTestleriTablo = ({ dipnotNo, isReport }: { dipnotNo: string, isRepor
             const updatedRow = { ...data[row], [prop]: newValue };
             try {
                 await faturaTestiGuncelle(updatedRow);
-                enqueueSnackbar("Güncellendi", { variant: "success" });
+                enqueueSnackbar("GÃƒÂ¼ncellendi", { variant: "success" });
             } catch (error) {
-                enqueueSnackbar("Güncelleme hatası", { variant: "error" });
+                enqueueSnackbar("GÃƒÂ¼ncelleme hatasÃ„Â±", { variant: "error" });
             }
         }
     };
@@ -121,14 +123,14 @@ const FaturaTestleriTablo = ({ dipnotNo, isReport }: { dipnotNo: string, isRepor
                     "& ::-webkit-scrollbar-thumb": { backgroundColor: "#ccc", borderRadius: "4px" }
                 }}
             >
-                <HotTable
+                <CustomHotTable 
                     data={data.length > 0 ? data : [{}, {}, {}]}
                     afterChange={handleAfterChange}
                     colHeaders={[
                         "Yevmiye Tarihi", "Yevmiye No", "Fatura No", "Fatura Tarih",
-                        "Hesap Kodu", "Hesap Adi", "Açıklama", "Para Birimi",
-                        "Borç", "Alacak", "Borç Tespit", "Alacak Tespit",
-                        "Tespit Fark", "Tespit Açıklama"
+                        "Hesap Kodu", "Hesap Adi", "AÃƒÂ§Ã„Â±klama", "Para Birimi",
+                        "BorÃƒÂ§", "Alacak", "BorÃƒÂ§ Tespit", "Alacak Tespit",
+                        "Tespit Fark", "Tespit AÃƒÂ§Ã„Â±klama"
                     ]}
                     columns={[
                         { data: "yevmiyeTarihi", type: "date", dateFormat: "DD-MM-YYYY", readOnly: true, width: 100 },
@@ -172,7 +174,7 @@ const FaturaTestleriTablo = ({ dipnotNo, isReport }: { dipnotNo: string, isRepor
                         borderTop: `1px solid ${theme.palette.divider}`
                     }}>
                         <Typography variant="body2" color="textSecondary">
-                            Görüntülenecek veri bulunmamaktadır.
+                            GÃƒÂ¶rÃƒÂ¼ntÃƒÂ¼lenecek veri bulunmamaktadÃ„Â±r.
                         </Typography>
                     </Box>
                 )}

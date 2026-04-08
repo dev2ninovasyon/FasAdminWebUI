@@ -1,7 +1,9 @@
-import { HotTable } from "@handsontable/react";
-import { registerAllModules } from "handsontable/registry";
 import { dictionary } from "@/utils/languages/handsontable.tr-TR";
-import "handsontable/dist/handsontable.full.min.css";
+import "@/lib/handsontableSetup";
+
+import CustomHotTable from "@/components/HotTableWrapper";
+import { registerAllModules } from "handsontable/registry";
+
 import { plus } from "@/utils/theme/Typography";
 import { useDispatch, useSelector } from "@/store/hooks";
 import { AppState } from "@/store/store";
@@ -53,7 +55,7 @@ const IliskiliTarafInceleme = () => {
     loadStyles();
   }, [customizer.activeMode]);
 
-  const colHeaders = ["Kebir Kodu", "Hesap Adï¿½", "Bakiye"];
+  const colHeaders = ["Kebir Kodu", "Hesap AdÃƒÂ¯Ã‚Â¿Ã‚Â½", "Bakiye"];
 
   const columns = [
     {
@@ -70,7 +72,7 @@ const IliskiliTarafInceleme = () => {
       allowInvalid: false,
       readOnly: true,
       editor: false,
-    }, // Hesap Adï¿½
+    }, // Hesap AdÃƒÂ¯Ã‚Â¿Ã‚Â½
     {
       type: "numeric",
       numericFormat: {
@@ -195,7 +197,7 @@ const IliskiliTarafInceleme = () => {
     if (hotTableComponent.current) {
       const hotInstance = hotTableComponent.current.hotInstance;
       const cellMeta = hotInstance.getDataAtRow(row);
-      console.log("Satï¿½r Verileri:", cellMeta);
+      console.log("SatÃƒÂ¯Ã‚Â¿Ã‚Â½r Verileri:", cellMeta);
       return cellMeta;
     }
   };
@@ -219,7 +221,7 @@ const IliskiliTarafInceleme = () => {
       setRowCount(rowsAll.length);
       setFetchedData(rowsAll);
     } catch (error) {
-      console.log("Bir hata oluï¿½tu:", error);
+      console.log("Bir hata oluÃƒÂ¯Ã‚Â¿Ã‚Â½tu:", error);
     }
   };
 
@@ -245,7 +247,7 @@ const IliskiliTarafInceleme = () => {
 
   return (
     <>
-      <HotTable
+      <CustomHotTable 
         style={{
           height: "100%",
           width: "100%",

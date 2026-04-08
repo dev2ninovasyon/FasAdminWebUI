@@ -1,7 +1,9 @@
-import { HotTable } from "@handsontable/react";
-import { registerAllModules } from "handsontable/registry";
 import { dictionary } from "@/utils/languages/handsontable.tr-TR";
-import "handsontable/dist/handsontable.full.min.css";
+import "@/lib/handsontableSetup";
+
+import CustomHotTable from "@/components/HotTableWrapper";
+import { registerAllModules } from "handsontable/registry";
+
 import { plus } from "@/utils/theme/Typography";
 import { useDispatch, useSelector } from "@/store/hooks";
 import { AppState } from "@/store/store";
@@ -66,8 +68,8 @@ const OlusturulmusProgramVukMizanlar: React.FC<Props> = ({ type1 }) => {
   const colHeaders = [
     "Kebir Kodu",
     "Detay Kodu",
-    "Hesap Adı",
-    "Borç",
+    "Hesap AdÃ„Â±",
+    "BorÃƒÂ§",
     "Alacak",
     "Bakiye",
   ];
@@ -95,7 +97,7 @@ const OlusturulmusProgramVukMizanlar: React.FC<Props> = ({ type1 }) => {
       allowInvalid: false,
       readOnly: true,
       editor: false,
-    }, // Hesap Adı
+    }, // Hesap AdÃ„Â±
     {
       type: "numeric",
       numericFormat: {
@@ -106,7 +108,7 @@ const OlusturulmusProgramVukMizanlar: React.FC<Props> = ({ type1 }) => {
       className: "htRight",
       readOnly: true,
       editor: false,
-    }, // Borç
+    }, // BorÃƒÂ§
     {
       type: "numeric",
       numericFormat: {
@@ -283,7 +285,7 @@ const OlusturulmusProgramVukMizanlar: React.FC<Props> = ({ type1 }) => {
       setRowCount(rowsAll.length);
       setFetchedData(rowsAll);
     } catch (error) {
-      console.log("Bir hata oluştu:", error);
+      console.log("Bir hata oluÃ…Å¸tu:", error);
     }
   };
 
@@ -337,9 +339,9 @@ const OlusturulmusProgramVukMizanlar: React.FC<Props> = ({ type1 }) => {
           type: "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
         });
         saveAs(blob, "ProgramVukMizan.xlsx");
-        console.log("Excel dosyası başarıyla oluşturuldu");
+        console.log("Excel dosyasÃ„Â± baÃ…Å¸arÃ„Â±yla oluÃ…Å¸turuldu");
       } catch (error) {
-        console.log("Excel dosyası oluşturulurken bir hata oluştu:", error);
+        console.log("Excel dosyasÃ„Â± oluÃ…Å¸turulurken bir hata oluÃ…Å¸tu:", error);
       }
     }
     createExcelFile();
@@ -364,7 +366,7 @@ const OlusturulmusProgramVukMizanlar: React.FC<Props> = ({ type1 }) => {
 
   return (
     <>
-      <HotTable
+      <CustomHotTable 
         style={{
           height: "100%",
           width: "100%",

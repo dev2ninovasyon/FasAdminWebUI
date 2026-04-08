@@ -1,4 +1,14 @@
 import { uniqueId } from "lodash";
+import {
+  IconPoint,
+  IconUpload,
+  IconFileAnalytics,
+  IconKeyframes,
+  IconBuildingSkyscraper,
+  IconTemplate,
+  IconBarcode,
+  IconNumbers,
+} from "@tabler/icons-react";
 
 interface MenuitemsType {
   [x: string]: any;
@@ -14,65 +24,6 @@ interface MenuitemsType {
   variant?: string;
   external?: boolean;
 }
-import {
-  IconAward,
-  IconBoxMultiple,
-  IconPoint,
-  IconAlertCircle,
-  IconNotes,
-  IconCalendar,
-  IconMail,
-  IconTicket,
-  IconEdit,
-  IconGitMerge,
-  IconCurrencyDollar,
-  IconApps,
-  IconFileDescription,
-  IconFileDots,
-  IconFiles,
-  IconBan,
-  IconStar,
-  IconMoodSmile,
-  IconBorderAll,
-  IconBorderHorizontal,
-  IconBorderInner,
-  IconBorderVertical,
-  IconBorderTop,
-  IconUserCircle,
-  IconPackage,
-  IconMessage2,
-  IconBasket,
-  IconChartLine,
-  IconChartArcs,
-  IconChartCandle,
-  IconChartArea,
-  IconChartDots,
-  IconChartDonut3,
-  IconChartRadar,
-  IconLogin,
-  IconUserPlus,
-  IconRotate,
-  IconFileAnalytics,
-  IconBox,
-  IconShoppingCart,
-  IconAperture,
-  IconLayout,
-  IconUpload,
-  IconSettings,
-  IconHelp,
-  IconZoomCode,
-  IconBoxAlignBottom,
-  IconBoxAlignLeft,
-  IconBorderStyle2,
-  IconLockAccess,
-  IconAppWindow,
-  IconKeyframes,
-  IconBuildingSkyscraper,
-  IconTemplate,
-  IconBarcode,
-  IconNumber,
-  IconNumbers,
-} from "@tabler/icons-react";
 
 const Menuitems: MenuitemsType[] = [
   {
@@ -104,6 +55,12 @@ const Menuitems: MenuitemsType[] = [
         title: "Formatlar",
         icon: IconPoint,
         href: "/Formatlar",
+      },
+      {
+        id: uniqueId(),
+        title: "Email Şablonları",
+        icon: IconPoint,
+        href: "/EmailSablonlari",
       },
     ],
   },
@@ -186,20 +143,19 @@ const Menuitems: MenuitemsType[] = [
         href: "/Dipnotlar",
       },
     ],
-    
   },
-   {
+  {
     id: uniqueId(),
     title: "Çalışma Kağıtları",
     icon: IconFileAnalytics,
     href: "//",
-       children: [
-          {
-            id: uniqueId(),
-            title: "Bağımsız Denetim Metodolojisi",
-            icon: IconPoint,
-            href: "/StandartCalismaKagitlari/BagimsizDenetimMetodolojisi",
-          },
+    children: [
+      {
+        id: uniqueId(),
+        title: "Bağımsız Denetim Metodolojisi",
+        icon: IconPoint,
+        href: "/StandartCalismaKagitlari/BagimsizDenetimMetodolojisi",
+      },
     ],
   },
 ];

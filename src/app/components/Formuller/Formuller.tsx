@@ -1,7 +1,9 @@
-import { HotTable } from "@handsontable/react";
+﻿import { dictionary } from "@/utils/languages/handsontable.tr-TR";
+import "@/lib/handsontableSetup";
+
+import CustomHotTable from "@/components/HotTableWrapper";
 import { registerAllModules } from "handsontable/registry";
-import { dictionary } from "@/utils/languages/handsontable.tr-TR";
-import "handsontable/dist/handsontable.full.min.css";
+
 import { plus } from "@/utils/theme/Typography";
 import { useDispatch, useSelector } from "@/store/hooks";
 import { AppState } from "@/store/store";
@@ -471,7 +473,7 @@ const Formuller: React.FC<Props> = ({
 
   return (
     <>
-      <HotTable
+      <CustomHotTable 
         style={{
           height: "100%",
           width: "100%",
@@ -529,3 +531,5 @@ const Formuller: React.FC<Props> = ({
 };
 
 export default Formuller;
+
+

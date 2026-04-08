@@ -1,10 +1,11 @@
 "use client";
 
 import React, { useEffect, useState, useRef, useMemo } from "react";
-import { HotTable } from "@handsontable/react";
+import "@/lib/handsontableSetup";
+
+import CustomHotTable from "@/components/HotTableWrapper";
 import { registerAllModules } from "handsontable/registry";
-import "handsontable/dist/handsontable.full.min.css";
-import "@/utils/languages/handsontable.tr-TR";
+
 import { Box, Typography, useTheme } from "@mui/material";
 import { useSelector } from "@/store/hooks";
 import { AppState } from "@/store/store";
@@ -63,11 +64,11 @@ const VarlikVeAmortismanOzetTablo: React.FC<Props> = ({ parentName, childName, d
 
     const fetchData = async () => {
         if (!resolvedDipnotNo || resolvedDipnotNo === "") {
-            console.warn("DipnotNo boş, veri çekilemiyor");
+            console.warn("DipnotNo boÃ…Å¸, veri ÃƒÂ§ekilemiyor");
             return;
         }
 
-        console.log("Veri çekiliyor - dipnotNo:", resolvedDipnotNo, "denetlenenId:", user.denetlenenId, "yil:", user.yil);
+        console.log("Veri ÃƒÂ§ekiliyor - dipnotNo:", resolvedDipnotNo, "denetlenenId:", user.denetlenenId, "yil:", user.yil);
         setLoading(true);
         try {
             const response = await fetchVarlikVeAmortismanOzetTablo(user.denetlenenId || 0,
@@ -75,7 +76,7 @@ const VarlikVeAmortismanOzetTablo: React.FC<Props> = ({ parentName, childName, d
                 resolvedDipnotNo
             );
 
-            console.log("API Yanıtı alındı:", response);
+            console.log("API YanÃ„Â±tÃ„Â± alÃ„Â±ndÃ„Â±:", response);
 
             if (response && response.success) {
                 if (Array.isArray(response.data)) {
@@ -86,22 +87,22 @@ const VarlikVeAmortismanOzetTablo: React.FC<Props> = ({ parentName, childName, d
                         amortismanBaslangicTarihi: item.amortismanBaslangicTarihi ? new Date(item.amortismanBaslangicTarihi).toLocaleDateString("tr-TR") : "",
                         amortismanBitisTarihi: item.amortismanBitisTarihi ? new Date(item.amortismanBitisTarihi).toLocaleDateString("tr-TR") : "",
                     }));
-                    console.log("Formatlanmış veri:", formattedData);
+                    console.log("FormatlanmÃ„Â±Ã…Å¸ veri:", formattedData);
                     setData(formattedData);
                 } else {
-                    console.log("API yanıtı beklenmeyen formatta:", response.data);
+                    console.log("API yanÃ„Â±tÃ„Â± beklenmeyen formatta:", response.data);
                     setData([]);
-                    enqueueSnackbar("Veri formatı hatalı", { variant: "error" });
+                    enqueueSnackbar("Veri formatÃ„Â± hatalÃ„Â±", { variant: "error" });
                 }
             } else {
-                console.warn("API başarısız yanıt döndü:", response);
+                console.warn("API baÃ…Å¸arÃ„Â±sÃ„Â±z yanÃ„Â±t dÃƒÂ¶ndÃƒÂ¼:", response);
                 setData([]);
                 if (response?.message)
                     enqueueSnackbar(response.message, { variant: "info" });
             }
         } catch (error) {
-            console.log("Veri çekme hatası:", error);
-            enqueueSnackbar("Veriler yüklenirken bir hata oluştu", {
+            console.log("Veri ÃƒÂ§ekme hatasÃ„Â±:", error);
+            enqueueSnackbar("Veriler yÃƒÂ¼klenirken bir hata oluÃ…Å¸tu", {
                 variant: "error",
             });
         } finally {
@@ -140,21 +141,21 @@ const VarlikVeAmortismanOzetTablo: React.FC<Props> = ({ parentName, childName, d
     const nestedHeaders = useMemo(() => {
         return [
             [
-                { label: "Sıra", rowspan: 2, colspan: 1 },
+                { label: "SÃ„Â±ra", rowspan: 2, colspan: 1 },
                 { label: "Hesap Kodu", rowspan: 2, colspan: 1 },
-                { label: "Hesap Adı", rowspan: 2, colspan: 1 },
-                { label: "A. Baş. Tarihi", rowspan: 2, colspan: 1 },
+                { label: "Hesap AdÃ„Â±", rowspan: 2, colspan: 1 },
+                { label: "A. BaÃ…Å¸. Tarihi", rowspan: 2, colspan: 1 },
                 { label: "A. Bit. Tarihi", rowspan: 2, colspan: 1 },
-                { label: "Giriş Tutarı", rowspan: 2, colspan: 1 },
-                { label: "Yeniden Değerleme", colspan: 2, rowspan: 1 },
-                { label: "Kalıntı Değer", rowspan: 2, colspan: 1 },
-                { label: "BOBI/TFRS A. Oranı", rowspan: 2, colspan: 1 },
-                { label: "Cari Yıl Amortismanı", colspan: 3, rowspan: 1 },
-                { label: "Dönem Sonu Birikmiş Amortismanı", colspan: 3, rowspan: 1 },
+                { label: "GiriÃ…Å¸ TutarÃ„Â±", rowspan: 2, colspan: 1 },
+                { label: "Yeniden DeÃ„Å¸erleme", colspan: 2, rowspan: 1 },
+                { label: "KalÃ„Â±ntÃ„Â± DeÃ„Å¸er", rowspan: 2, colspan: 1 },
+                { label: "BOBI/TFRS A. OranÃ„Â±", rowspan: 2, colspan: 1 },
+                { label: "Cari YÃ„Â±l AmortismanÃ„Â±", colspan: 3, rowspan: 1 },
+                { label: "DÃƒÂ¶nem Sonu BirikmiÃ…Å¸ AmortismanÃ„Â±", colspan: 3, rowspan: 1 },
             ],
             [
                 "", "", "", "", "", "",
-                "Artış", "Azalış",
+                "ArtÃ„Â±Ã…Å¸", "AzalÃ„Â±Ã…Å¸",
                 "", "",
                 "VUK", "BOBI/TFRS", "Fark",
                 "VUK", "BOBI/TFRS", "Fark",
@@ -165,7 +166,7 @@ const VarlikVeAmortismanOzetTablo: React.FC<Props> = ({ parentName, childName, d
     return (
         <Box sx={{ p: isReport ? 0 : 3 }}>
             <Typography variant="h6" sx={{ color: theme.palette.mode === 'dark' ? "#FFFFFF" : "#2C3E50", fontWeight: "bold", mb: 3 }}>
-                Varlık ve Amortisman Özet Tablo
+                VarlÃ„Â±k ve Amortisman Ãƒâ€“zet Tablo
             </Typography>
 
             <Box
@@ -200,7 +201,7 @@ const VarlikVeAmortismanOzetTablo: React.FC<Props> = ({ parentName, childName, d
                     }
                 }}
             >
-                <HotTable
+                <CustomHotTable 
                     ref={hotTableComponent}
                     data={data}
                     columns={columns}
@@ -228,7 +229,7 @@ const VarlikVeAmortismanOzetTablo: React.FC<Props> = ({ parentName, childName, d
                 {data.length === 0 && (
                     <Box sx={{ p: 4, textAlign: "center" }}>
                         <Typography variant="body1" color="textSecondary">
-                            Veri bulunamadı.
+                            Veri bulunamadÃ„Â±.
                         </Typography>
                     </Box>
                 )}

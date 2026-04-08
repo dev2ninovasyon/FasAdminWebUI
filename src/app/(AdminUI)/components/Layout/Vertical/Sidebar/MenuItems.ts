@@ -39,6 +39,7 @@ import {
   IconCalculator,
   IconRepeat,
   IconAddressBook,
+  IconMail,
 } from "@tabler/icons-react";
 
 export function createMenuItems(
@@ -103,6 +104,12 @@ export function createMenuItems(
             title: "Veri Aktarma",
             icon: IconPoint,
             href: "/DigerIslemler/VeriAktarma",
+          },
+          {
+            id: uniqueId(),
+            title: "Email ÅablonlarÄ±",
+            icon: IconMail,
+            href: "/admin/email-templates",
           },
         ],
       },
@@ -2347,6 +2354,12 @@ export function createMenuItems(
             icon: IconPoint,
             href: "/DigerIslemler/VeriAktarma",
           },
+          {
+            id: uniqueId(),
+            title: "Email Şablonları",
+            icon: IconMail,
+            href: "/admin/email-templates",
+          },
         ],
       },
       {
@@ -2357,4 +2370,3 @@ export function createMenuItems(
       },
     ];
 }
-

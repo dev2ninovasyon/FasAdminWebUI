@@ -59,11 +59,11 @@ const AuthLogin: React.FC<LoginType> = ({ title, subtitle, subtext }) => {
         token = await runRecaptcha("login");
       }
     } catch (error: any) {
-      let errorMessage = "Guvenlik dogrulamasi sirasinda bir hata olustu.";
+      let errorMessage = "Güvenlik doğrulaması sırasında bir hata oluştu.";
 
       if (error?.message?.includes("message channel closed")) {
         errorMessage =
-          "Tarayici eklentileriniz guvenlik dogrulamasini engelliyor olabilir. Lutfen reklam engelleyici veya benzeri eklentileri kapatip tekrar deneyin.";
+          "Tarayıcı eklentileriniz güvenlik doğrulamasını engelliyor olabilir. Lütfen reklam engelleyici veya benzeri eklentileri kapatıp tekrar deneyin.";
       }
 
       enqueueSnackbar(errorMessage, {
@@ -78,7 +78,7 @@ const AuthLogin: React.FC<LoginType> = ({ title, subtitle, subtext }) => {
     setIsVerifyingCaptcha(false);
 
     if (!token) {
-      enqueueSnackbar("Recaptcha dogrulamasi basarisiz.", {
+      enqueueSnackbar("Recaptcha doğrulaması başarısız.", {
         variant: "warning",
         autoHideDuration: 3000,
       });
@@ -165,7 +165,7 @@ const AuthLogin: React.FC<LoginType> = ({ title, subtitle, subtext }) => {
 
       setIsLoggedIn(false);
 
-      let errorMessage = "Giris basarisiz";
+      let errorMessage = "Giriş başarısız";
       try {
         const errorText = await response.text();
         if (errorText) {
@@ -195,8 +195,8 @@ const AuthLogin: React.FC<LoginType> = ({ title, subtitle, subtext }) => {
       setIsLoggedIn(false);
       const message =
         error?.message === "Failed to fetch"
-          ? "Baglanti hatasi: sisteme su an ulasilamiyor. Lutfen daha sonra tekrar deneyiniz."
-          : `Giris sirasinda bir hata olustu: ${error?.message || "Bilinmeyen hata"}`;
+          ? "Bağlantı hatası: sisteme şu an ulaşılamıyor. Lütfen daha sonra tekrar deneyin."
+          : `Giriş sırasında bir hata oluştu: ${error?.message || "Bilinmeyen hata"}`;
 
       enqueueSnackbar(message, {
         variant: "error",
@@ -252,13 +252,13 @@ const AuthLogin: React.FC<LoginType> = ({ title, subtitle, subtext }) => {
             />
           </Box>
           <Box>
-            <CustomFormLabel htmlFor="password">Sifre</CustomFormLabel>
+            <CustomFormLabel htmlFor="password">Şifre</CustomFormLabel>
             <CustomTextField
               id="password"
               type="password"
               variant="outlined"
               fullWidth
-              placeholder="Sifreniz"
+              placeholder="Şifreniz"
               onChange={(event: any) => setPassword(event.target.value)}
               InputProps={{
                 startAdornment: (
@@ -283,7 +283,7 @@ const AuthLogin: React.FC<LoginType> = ({ title, subtitle, subtext }) => {
               color: "primary.main",
             }}
           >
-            Sifremi unuttum
+            Şifremi unuttum
           </MuiLink>
         </Box>
 

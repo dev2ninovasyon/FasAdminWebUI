@@ -1,269 +1,375 @@
-import React, { useEffect, useState } from "react";
-import {
-  TableContainer,
-  Table,
-  TableHead,
-  TableRow,
-  TableCell,
-  TableBody,
-  Typography,
-  Chip,
-  Menu,
-  MenuItem,
-  IconButton,
-  ListItemIcon,
-} from "@mui/material";
+"use client";
+
+import { dictionary } from "@/utils/languages/handsontable.tr-TR";
+import "@/lib/handsontableSetup";
+
+import CustomHotTable from "@/components/HotTableWrapper";
 import BlankCard from "@/app/components/Shared/BlankCard";
-import {
-  IconCash,
-  IconDotsVertical,
-  IconEdit,
-  IconEye,
-  IconPlus,
-  IconTrash,
-} from "@tabler/icons-react";
-import {
-  deleteDenetciById,
-  getDenetciler,
-} from "@/api/DenetciIslemleri/DenetciIslemleri";
-import { useRouter } from "next/navigation";
-import { useSelector } from "@/store/hooks";
+import { deleteDenetciById, getDenetciler } from "@/api/DenetciIslemleri/DenetciIslemleri";
+import { setCollapse } from "@/store/customizer/CustomizerSlice";
+import { useDispatch, useSelector } from "@/store/hooks";
 import { AppState } from "@/store/store";
+import { plus } from "@/utils/theme/Typography";
+import { Box, Typography, useTheme } from "@mui/material";
+import { enqueueSnackbar } from "notistack";
+import { useRouter } from "next/navigation";
+import { useEffect, useMemo, useRef, useState } from "react";
+import { registerAllModules } from "handsontable/registry";
+
+registerAllModules();
+
+interface DenetciRow {
+  id: number;
+  firmaAdi: string;
+  email: string;
+  tel: string;
+  il: string;
+  arsivId: string;
+  kayitTarihi: string;
+  durum: string;
+  aktifmi: boolean;
+}
+
+const ACTIONS_COL_INDEX = 7;
 
 const DenetciTable = () => {
-  const user = useSelector((state: AppState) => state.userReducer);
-
-  const [anchorEl, setAnchorEl] = React.useState<null | HTMLElement>(null);
-  const [selectedId, setSelectedId] = useState<number | null>(null);
-
-  const open = Boolean(anchorEl);
-  const handleClick = (
-    event: React.MouseEvent<HTMLButtonElement>,
-    id: number
-  ) => {
-    setAnchorEl(event.currentTarget);
-    setSelectedId(id);
-  };
+  const hotRef = useRef<any>(null);
   const router = useRouter();
+  const theme = useTheme();
+  const dispatch = useDispatch();
+  const user = useSelector((state: AppState) => state.userReducer);
+  const customizer = useSelector((state: AppState) => state.customizer);
 
-  const handleClose = () => {
-    setAnchorEl(null);
-  };
+  const [rows, setRows] = useState<DenetciRow[]>([]);
+  const [loading, setLoading] = useState(false);
 
-  const handleOdemeBilgileri = () => {
-    handleClose();
-    router.push(`/DenetciFirmaIslemleri/DenetciOdemeBilgileri/${selectedId}`);
-  };
-
-  const handleKullaniciEkle = () => {
-    handleClose();
-    router.push(`/DenetciFirmaIslemleri/KullaniciEkle/${selectedId}`);
-  };
-
-  const handleDuzenle = () => {
-    handleClose();
-    router.push(`/DenetciFirmaIslemleri/DenetciDuzenle/${selectedId}`);
-  };
-
-  const handleDetay = () => {
-    handleClose();
-    router.push(`/DenetciFirmaIslemleri/DenetciDetay/${selectedId}`);
-  };
-
-  const handleDelete = async () => {
-    handleClose();
-    try {
-      const result = await deleteDenetciById(user.token || "", selectedId || 0);
-      if (result) {
-        fetchData();
+  useEffect(() => {
+    const loadStyles = async () => {
+      dispatch(setCollapse(true));
+      if (customizer.activeMode === "dark") {
+        await import("@/app/components/HandsOnTable/HandsOnTableDark.css");
       } else {
-        console.error("Denetci silinemedi");
+        await import("@/app/components/HandsOnTable/HandsOnTableLight.css");
       }
-    } catch (error) {
-      console.error("Bir hata oluştu:", error);
-    }
-  };
+    };
 
-  const [rows, setRows] = useState<any[]>([]);
+    void loadStyles();
+  }, [customizer.activeMode, dispatch]);
 
   const fetchData = async () => {
+    if (!user.token) {
+      return;
+    }
+
+    setLoading(true);
+
     try {
-      console.log("DenetciTable: fetching denetciler with token ->", user.token);
-      const denetciVerileri = await getDenetciler(user.token || "");
-      console.log("DenetciTable: getDenetciler ->", denetciVerileri);
-      if (denetciVerileri && Array.isArray(denetciVerileri)) {
+      const denetciVerileri = await getDenetciler(user.token);
+
+      if (Array.isArray(denetciVerileri)) {
         const newRows = denetciVerileri.map((denetci: any) => ({
           id: denetci.id,
-          firmaAdi: denetci.firmaAdi,
-          firmaUnvani: denetci.firmaUnvani,
-          adres: denetci.adres,
-          il: denetci.il,
-          tel: denetci.tel,
-          fax: denetci.fax,
-          email: denetci.email,
-          web: denetci.web,
-          vergiNo: denetci.vergiNo,
-          vergiDairesi: denetci.vergiDairesi,
-          ticaretSicilNo: denetci.ticaretSicilNo,
-          kayitTarihi: denetci.kayitTarihi,
-          arsivId: denetci.arsivId,
-          aktifmi: denetci.aktifmi,
+          firmaAdi: denetci.firmaAdi ?? "",
+          email: denetci.email ?? "",
+          tel: denetci.tel ?? "",
+          il: denetci.il ?? "",
+          arsivId: denetci.arsivId?.toString() ?? "-",
+          kayitTarihi: denetci.kayitTarihi?.split("T")[0] ?? "-",
+          durum: denetci.aktifmi ? "Aktif" : "Pasif",
+          aktifmi: Boolean(denetci.aktifmi),
         }));
+
         setRows(newRows);
+      } else {
+        setRows([]);
       }
     } catch (error) {
-      console.error("Bir hata oluştu:", error);
+      console.error("Denetçi listesi alınırken bir hata oluştu:", error);
+      enqueueSnackbar("Denetçi listesi alınırken bir hata oluştu.", {
+        variant: "error",
+        autoHideDuration: 4000,
+      });
+    } finally {
+      setLoading(false);
     }
   };
 
   useEffect(() => {
-    if (user.token) {
-      fetchData();
-    } else {
-      console.warn("DenetciTable: user.token yok, fetch atılmadı");
-    }
+    void fetchData();
   }, [user.token]);
+
+  const tableData = useMemo(
+    () =>
+      rows.map((row) => ({
+        firmaAdi: row.firmaAdi,
+        email: row.email || "-",
+        tel: row.tel || "-",
+        il: row.il || "-",
+        arsivId: row.arsivId,
+        kayitTarihi: row.kayitTarihi,
+        durum: row.durum,
+        islemler: "",
+      })),
+    [rows]
+  );
+
+  const colHeaders = [
+    "Firma Adı",
+    "E-posta",
+    "Telefon",
+    "İl",
+    "Arşiv ID",
+    "Kayıt Tarihi",
+    "Durum",
+    "İşlemler",
+  ];
+
+  const columns = [
+    { data: "firmaAdi", type: "text", readOnly: true, className: "htLeft htMiddle" },
+    { data: "email", type: "text", readOnly: true, className: "htLeft htMiddle" },
+    { data: "tel", type: "text", readOnly: true, className: "htLeft htMiddle" },
+    { data: "il", type: "text", readOnly: true, className: "htLeft htMiddle" },
+    { data: "arsivId", type: "text", readOnly: true, className: "htCenter htMiddle" },
+    { data: "kayitTarihi", type: "text", readOnly: true, className: "htCenter htMiddle" },
+    { data: "durum", type: "text", readOnly: true, className: "htCenter htMiddle" },
+    {
+      data: "islemler",
+      type: "text",
+      readOnly: true,
+      className: "htCenter htMiddle",
+      renderer: (instance: any, td: HTMLTableCellElement, row: number) => {
+        const item = rows[row];
+
+        td.innerHTML = "";
+        td.style.padding = "8px";
+
+        if (!item) {
+          return td;
+        }
+
+        const wrapper = document.createElement("div");
+        wrapper.style.display = "flex";
+        wrapper.style.flexWrap = "wrap";
+        wrapper.style.gap = "6px";
+        wrapper.style.justifyContent = "center";
+
+        const buttonConfigs = [
+          { label: "Ödeme", action: "odeme" },
+          { label: "Kullanıcı", action: "kullanici" },
+          { label: "Düzenle", action: "duzenle" },
+          { label: "Detay", action: "detay" },
+          { label: "Sil", action: "sil", danger: true },
+        ];
+
+        buttonConfigs.forEach((config) => {
+          const button = document.createElement("button");
+          button.type = "button";
+          button.textContent = config.label;
+          button.dataset.action = config.action;
+          button.dataset.rowIndex = row.toString();
+          button.style.border = "0";
+          button.style.borderRadius = "999px";
+          button.style.padding = "4px 10px";
+          button.style.fontSize = "12px";
+          button.style.fontWeight = "600";
+          button.style.cursor = "pointer";
+          button.style.whiteSpace = "nowrap";
+          button.style.fontFamily = plus.style.fontFamily;
+          button.style.background = config.danger ? "#fee2e2" : "#e8f1ff";
+          button.style.color = config.danger ? "#b91c1c" : "#1d4ed8";
+
+          wrapper.appendChild(button);
+        });
+
+        td.appendChild(wrapper);
+        return td;
+      },
+    },
+  ];
+
+  const afterGetColHeader = (col: number, TH: HTMLTableHeaderCellElement) => {
+    TH.style.height = "46px";
+    TH.style.fontFamily = plus.style.fontFamily;
+    TH.style.fontWeight = "600";
+    TH.style.fontSize = "13px";
+    TH.style.color = customizer.activeMode === "dark" ? "#ffffff" : "#1f2937";
+    TH.style.backgroundColor = theme.palette.primary.light;
+    TH.style.borderColor = customizer.activeMode === "dark" ? "#2a3447" : "#dbe4f0";
+
+    const div = TH.querySelector("div");
+    if (div) {
+      div.style.display = "flex";
+      div.style.alignItems = "center";
+      div.style.justifyContent = col === ACTIONS_COL_INDEX ? "center" : "flex-start";
+      div.style.height = "100%";
+      div.style.whiteSpace = "normal";
+    }
+  };
+
+  const afterGetRowHeader = (_row: number, TH: HTMLTableHeaderCellElement) => {
+    TH.style.fontFamily = plus.style.fontFamily;
+    TH.style.fontWeight = "600";
+    TH.style.fontSize = "13px";
+    TH.style.color = customizer.activeMode === "dark" ? "#ffffff" : "#1f2937";
+    TH.style.backgroundColor = theme.palette.primary.light;
+    TH.style.borderColor = customizer.activeMode === "dark" ? "#2a3447" : "#dbe4f0";
+
+    const div = TH.querySelector("div");
+    if (div) {
+      div.style.display = "flex";
+      div.style.alignItems = "center";
+      div.style.justifyContent = "center";
+      div.style.height = "100%";
+    }
+  };
+
+  const afterRenderer = (
+    td: HTMLTableCellElement,
+    row: number,
+    col: number,
+    _prop: string,
+    value: string
+  ) => {
+    td.style.fontFamily = plus.style.fontFamily;
+    td.style.fontSize = "13px";
+    td.style.fontWeight = col === 0 ? "600" : "500";
+    td.style.lineHeight = "1.35";
+    td.style.verticalAlign = "middle";
+
+    if (col === 6) {
+      td.innerHTML = "";
+
+      const chip = document.createElement("span");
+      chip.textContent = value;
+      chip.style.display = "inline-flex";
+      chip.style.alignItems = "center";
+      chip.style.justifyContent = "center";
+      chip.style.padding = "4px 10px";
+      chip.style.borderRadius = "999px";
+      chip.style.fontSize = "12px";
+      chip.style.fontWeight = "700";
+      chip.style.backgroundColor = rows[row]?.aktifmi ? "#dcfce7" : "#fee2e2";
+      chip.style.color = rows[row]?.aktifmi ? "#15803d" : "#b91c1c";
+
+      td.appendChild(chip);
+    }
+  };
+
+  const handleAction = async (action: string, rowIndex: number) => {
+    const selectedRow = rows[rowIndex];
+
+    if (!selectedRow) {
+      return;
+    }
+
+    if (action === "odeme") {
+      router.push(`/DenetciFirmaIslemleri/DenetciOdemeBilgileri/${selectedRow.id}`);
+      return;
+    }
+
+    if (action === "kullanici") {
+      router.push(`/DenetciFirmaIslemleri/KullaniciEkle/${selectedRow.id}`);
+      return;
+    }
+
+    if (action === "duzenle") {
+      router.push(`/DenetciFirmaIslemleri/DenetciDuzenle/${selectedRow.id}`);
+      return;
+    }
+
+    if (action === "detay") {
+      router.push(`/DenetciFirmaIslemleri/DenetciDetay/${selectedRow.id}`);
+      return;
+    }
+
+    if (action === "sil") {
+      const confirmed = window.confirm(
+        `${selectedRow.firmaAdi} kaydını silmek istediğinize emin misiniz?`
+      );
+
+      if (!confirmed) {
+        return;
+      }
+
+      const result = await deleteDenetciById(user.token || "", selectedRow.id);
+
+      if (result) {
+        enqueueSnackbar("Denetçi kaydı silindi.", {
+          variant: "success",
+          autoHideDuration: 3000,
+        });
+        void fetchData();
+      } else {
+        enqueueSnackbar("Denetçi kaydı silinemedi.", {
+          variant: "error",
+          autoHideDuration: 4000,
+        });
+      }
+    }
+  };
 
   return (
     <BlankCard>
-      <TableContainer>
-        <Table aria-label="simple table">
-          <TableHead>
-            <TableRow>
-              <TableCell>
-                <Typography variant="h6">Firma Adı</Typography>
-              </TableCell>
-              <TableCell>
-                <Typography textAlign="center" variant="h6">
-                  Telefon
-                </Typography>
-              </TableCell>
-              <TableCell>
-                <Typography textAlign="center" variant="h6">
-                  ArşivID
-                </Typography>
-              </TableCell>
-              <TableCell>
-                <Typography textAlign="center" variant="h6">
-                  Kayıt Tarihi
-                </Typography>
-              </TableCell>
-              <TableCell>
-                <Typography textAlign="center" variant="h6">
-                  Durum
-                </Typography>
-              </TableCell>
+      <Box sx={{ p: 2 }}>
+        <Typography variant="h6" sx={{ mb: 1 }}>
+          Denetçi firma listesi
+        </Typography>
+        <Typography variant="body2" color="text.secondary" sx={{ mb: 2 }}>
+          Sıralama, filtreleme ve hızlı işlem seçenekleriyle denetçi kayıtlarını buradan
+          yönetebilirsiniz.
+        </Typography>
 
-              <TableCell></TableCell>
-            </TableRow>
-          </TableHead>
-          <TableBody>
-            {rows.map((row: any) => (
-              <TableRow
-                key={row.id}
-                sx={{ "&:last-child td, &:last-child th": { border: 0 } }}
-              >
-                <TableCell>
-                  <Typography variant="h6">{row.firmaAdi}</Typography>
-                </TableCell>
-                <TableCell scope="row">
-                  <Typography
-                    textAlign="center"
-                    variant="subtitle1"
-                    color="textSecondary"
-                  >
-                    {row.tel}
-                  </Typography>
-                </TableCell>
-                <TableCell>
-                  <Typography
-                    textAlign="center"
-                    variant="subtitle1"
-                    color="textSecondary"
-                  >
-                    {row.arsivId}
-                  </Typography>
-                </TableCell>
-                <TableCell>
-                  <Typography
-                    textAlign="center"
-                    variant="subtitle1"
-                    color="textSecondary"
-                  >
-                    {row.kayitTarihi?.split("T")[0] ?? "-"}
-                  </Typography>
-                </TableCell>
-                <TableCell sx={{ textAlign: "center" }}>
-                  <Chip
-                    label={row.aktifmi ? "Aktif" : "Pasif"}
-                    sx={{
-                      backgroundColor: row.aktifmi
-                        ? (theme) => theme.palette.success.light
-                        : (theme) => theme.palette.error.light,
-                      color: row.aktifmi
-                        ? (theme) => theme.palette.success.main
-                        : (theme) => theme.palette.error.main,
-                    }}
-                  />
-                </TableCell>
+        <CustomHotTable
+          ref={hotRef}
+          data={tableData}
+          language={dictionary.languageCode}
+          colHeaders={colHeaders}
+          columns={columns as any}
+          rowHeaders={true}
+          width="100%"
+          height={Math.max(420, Math.min(720, rows.length * 42 + 90))}
+          stretchH="all"
+          licenseKey="non-commercial-and-evaluation"
+          dropdownMenu={true}
+          filters={true}
+          columnSorting={true}
+          manualColumnResize={true}
+          navigableHeaders={true}
+          autoWrapRow={true}
+          autoWrapCol={true}
+          readOnly={true}
+          disableVisualSelection={false}
+          hiddenColumns={{ indicators: true }}
+          afterGetColHeader={afterGetColHeader as any}
+          afterGetRowHeader={afterGetRowHeader as any}
+          afterRenderer={afterRenderer as any}
+          afterOnCellMouseDown={(_event: MouseEvent, coords: any, td: HTMLTableCellElement) => {
+            if (coords.col !== ACTIONS_COL_INDEX) {
+              return;
+            }
 
-                <TableCell>
-                  <IconButton
-                    id="basic-button"
-                    aria-controls={open ? "basic-menu" : undefined}
-                    aria-haspopup="true"
-                    aria-expanded={open ? "true" : undefined}
-                    onClick={(event) => handleClick(event, row.id)}
-                  >
-                    <IconDotsVertical width={18} />
-                  </IconButton>
-                  <Menu
-                    id="basic-menu"
-                    anchorEl={anchorEl}
-                    open={open}
-                    onClose={handleClose}
-                    MenuListProps={{
-                      "aria-labelledby": "basic-button",
-                    }}
-                  >
-                    <MenuItem onClick={() => handleOdemeBilgileri()}>
-                      <ListItemIcon>
-                        <IconCash width={18} />
-                      </ListItemIcon>
-                      Ödeme Bilgileri
-                    </MenuItem>
-                    <MenuItem onClick={() => handleKullaniciEkle()}>
-                      <ListItemIcon>
-                        <IconPlus width={18} />
-                      </ListItemIcon>
-                      Kullanıcı Ekle
-                    </MenuItem>
-                    <MenuItem onClick={() => handleDuzenle()}>
-                      <ListItemIcon>
-                        <IconEdit width={18} />
-                      </ListItemIcon>
-                      Düzenle
-                    </MenuItem>
+            const target = _event.target as HTMLElement | null;
+            const actionElement = target?.closest("[data-action]") as HTMLElement | null;
 
-                    <MenuItem onClick={() => handleDetay()}>
-                      <ListItemIcon>
-                        <IconEye width={18} />
-                      </ListItemIcon>
-                      Detay
-                    </MenuItem>
-                    <MenuItem onClick={() => handleDelete()}>
-                      <ListItemIcon>
-                        <IconTrash width={18} />
-                      </ListItemIcon>
-                      Sil
-                    </MenuItem>
-                  </Menu>
-                </TableCell>
-              </TableRow>
-            ))}
-          </TableBody>
-        </Table>
-      </TableContainer>
+            if (!actionElement) {
+              return;
+            }
+
+            const action = actionElement.dataset.action;
+            const rowIndex = Number(actionElement.dataset.rowIndex);
+
+            if (action && Number.isFinite(rowIndex)) {
+              void handleAction(action, rowIndex);
+            }
+          }}
+        />
+
+        {loading ? (
+          <Typography variant="body2" color="text.secondary" sx={{ mt: 1.5 }}>
+            Denetçi kayıtları yükleniyor...
+          </Typography>
+        ) : null}
+      </Box>
     </BlankCard>
   );
 };

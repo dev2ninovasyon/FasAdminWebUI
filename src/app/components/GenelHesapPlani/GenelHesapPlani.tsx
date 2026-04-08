@@ -1,7 +1,9 @@
-import { HotTable } from "@handsontable/react";
-import { registerAllModules } from "handsontable/registry";
 import { dictionary } from "@/utils/languages/handsontable.tr-TR";
-import "handsontable/dist/handsontable.full.min.css";
+import "@/lib/handsontableSetup";
+
+import CustomHotTable from "@/components/HotTableWrapper";
+import { registerAllModules } from "handsontable/registry";
+
 import { plus } from "@/utils/theme/Typography";
 import { useDispatch, useSelector } from "@/store/hooks";
 import { AppState } from "@/store/store";
@@ -55,7 +57,7 @@ const GenelHesapPlani: React.FC<Props> = ({ fileType }) => {
     loadStyles();
   }, [customizer.activeMode]);
 
-  const colHeaders = ["Id", "Kodu", "Hesap Adı", "Para Birimi"];
+  const colHeaders = ["Id", "Kodu", "Hesap AdÃ„Â±", "Para Birimi"];
 
   const columns = [
     {
@@ -78,7 +80,7 @@ const GenelHesapPlani: React.FC<Props> = ({ fileType }) => {
       columnSorting: true,
       className: "htLeft",
       allowInvalid: false,
-    }, // Hesap Adı
+    }, // Hesap AdÃ„Â±
     {
       type: "text",
       columnSorting: true,
@@ -200,15 +202,15 @@ const GenelHesapPlani: React.FC<Props> = ({ fileType }) => {
     if (hotTableComponent.current) {
       const hotInstance = hotTableComponent.current.hotInstance;
       const cellMeta = hotInstance.getDataAtRow(row);
-      console.log("Satır Verileri:", cellMeta);
+      console.log("SatÃ„Â±r Verileri:", cellMeta);
       return cellMeta;
     }
   };
 
   const handleAfterChange = async (changes: any, source: any) => {
-    //Değişen Cellin Satır Indexi
+    //DeÃ„Å¸iÃ…Å¸en Cellin SatÃ„Â±r Indexi
     let changedRow = -1;
-    //Değişen Cellin Satır Verileri
+    //DeÃ„Å¸iÃ…Å¸en Cellin SatÃ„Â±r Verileri
     let changedRowData: any;
     if (source === "loadData") {
       return; // Skip this hook on loadData
@@ -222,7 +224,7 @@ const GenelHesapPlani: React.FC<Props> = ({ fileType }) => {
 
         changedRowData = await handleGetRowData(row);
 
-        //Cell Güncelleme
+        //Cell GÃƒÂ¼ncelleme
         if (changedRow >= 0) {
           await handleUpdateGenelHesapPlaniVerisi(changedRow);
           changedRow = -1;
@@ -248,12 +250,12 @@ const GenelHesapPlani: React.FC<Props> = ({ fileType }) => {
       );
       if (result) {
         await fetchData();
-        console.log("Genel Hesap Planı Verisi güncelleme başarılı");
+        console.log("Genel Hesap PlanÃ„Â± Verisi gÃƒÂ¼ncelleme baÃ…Å¸arÃ„Â±lÃ„Â±");
       } else {
-        console.error("Genel Hesap Planı güncelleme başarısız");
+        console.error("Genel Hesap PlanÃ„Â± gÃƒÂ¼ncelleme baÃ…Å¸arÃ„Â±sÃ„Â±z");
       }
     } catch (error) {
-      console.error("Bir hata oluştu:", error);
+      console.error("Bir hata oluÃ…Å¸tu:", error);
     }
   };
 
@@ -274,7 +276,7 @@ const GenelHesapPlani: React.FC<Props> = ({ fileType }) => {
       setRowCount(rowsAll.length);
       setFetchedData(rowsAll);
     } catch (error) {
-      console.error("Bir hata oluştu:", error);
+      console.error("Bir hata oluÃ…Å¸tu:", error);
     }
   };
 
@@ -328,9 +330,9 @@ const GenelHesapPlani: React.FC<Props> = ({ fileType }) => {
           type: "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
         });
         saveAs(blob, "GenelHesapPlani.xlsx");
-        console.log("Excel dosyası başarıyla oluşturuldu");
+        console.log("Excel dosyasÃ„Â± baÃ…Å¸arÃ„Â±yla oluÃ…Å¸turuldu");
       } catch (error) {
-        console.error("Excel dosyası oluşturulurken bir hata oluştu:", error);
+        console.error("Excel dosyasÃ„Â± oluÃ…Å¸turulurken bir hata oluÃ…Å¸tu:", error);
       }
     }
     createExcelFile();
@@ -355,7 +357,7 @@ const GenelHesapPlani: React.FC<Props> = ({ fileType }) => {
 
   return (
     <>
-      <HotTable
+      <CustomHotTable 
         style={{
           height: "100%",
           width: "100%",

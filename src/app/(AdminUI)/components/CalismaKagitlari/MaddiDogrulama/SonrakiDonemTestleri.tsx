@@ -1,10 +1,11 @@
 "use client";
 
 import React, { useEffect, useState, useRef, forwardRef, useImperativeHandle } from "react";
-import { HotTable } from "@handsontable/react";
+import "@/lib/handsontableSetup";
+
+import CustomHotTable from "@/components/HotTableWrapper";
 import { registerAllModules } from "handsontable/registry";
-import "handsontable/dist/handsontable.full.min.css";
-import "@/utils/languages/handsontable.tr-TR";
+
 import { Box, Typography, useTheme } from "@mui/material";
 import { useSelector } from "@/store/hooks";
 import { AppState } from "@/store/store";
@@ -90,8 +91,8 @@ const SonrakiDonemTestleri = forwardRef<any, Props>(({
                 tarih: item.tarih ? moment(item.tarih).format("DD.MM.YYYY") : ""
             })));
         } catch (error) {
-            console.log("Veri çekme hatası:", error);
-            enqueueSnackbar("Veriler yüklenirken bir hata oluştu", { variant: "error" });
+            console.log("Veri ÃƒÂ§ekme hatasÃ„Â±:", error);
+            enqueueSnackbar("Veriler yÃƒÂ¼klenirken bir hata oluÃ…Å¸tu", { variant: "error" });
         } finally {
             setLoading(false);
         }
@@ -122,15 +123,15 @@ const SonrakiDonemTestleri = forwardRef<any, Props>(({
                 enqueueSnackbar(result.message, { variant: "error" });
             }
         } catch (error) {
-            console.log("Ekleme hatası:", error);
-            enqueueSnackbar("Satır eklenirken bir hata oluştu", { variant: "error" });
+            console.log("Ekleme hatasÃ„Â±:", error);
+            enqueueSnackbar("SatÃ„Â±r eklenirken bir hata oluÃ…Å¸tu", { variant: "error" });
         }
     };
 
     const handleSeciliSatirlariSil = async () => {
         const selectedIds = data.filter(item => item.selected).map(item => item.id);
         if (selectedIds.length === 0) {
-            enqueueSnackbar("Silinecek satır seçilmedi", { variant: "warning" });
+            enqueueSnackbar("Silinecek satÃ„Â±r seÃƒÂ§ilmedi", { variant: "warning" });
             return;
         }
         try {
@@ -143,8 +144,8 @@ const SonrakiDonemTestleri = forwardRef<any, Props>(({
                 enqueueSnackbar(result.message, { variant: "error" });
             }
         } catch (error) {
-            console.log("Toplu silme hatası:", error);
-            enqueueSnackbar("Seçili satırlar silinirken bir hata oluştu", { variant: "error" });
+            console.log("Toplu silme hatasÃ„Â±:", error);
+            enqueueSnackbar("SeÃƒÂ§ili satÃ„Â±rlar silinirken bir hata oluÃ…Å¸tu", { variant: "error" });
         } finally {
             setLoading(false);
         }
@@ -188,19 +189,19 @@ const SonrakiDonemTestleri = forwardRef<any, Props>(({
                     enqueueSnackbar(result.message, { variant: "error" });
                 }
             } catch (error) {
-                console.log("Güncelleme hatası:", error);
-                enqueueSnackbar("Güncelleme sırasında bir hata oluştu", { variant: "error" });
+                console.log("GÃƒÂ¼ncelleme hatasÃ„Â±:", error);
+                enqueueSnackbar("GÃƒÂ¼ncelleme sÃ„Â±rasÃ„Â±nda bir hata oluÃ…Å¸tu", { variant: "error" });
             }
         }
     };
 
     const columns = [
-        ...(!isReport ? [{ data: "selected", title: "Seç", type: "checkbox", className: "htCenter" }] : []),
-        { data: "kayitNo", title: "Kayıt No" },
+        ...(!isReport ? [{ data: "selected", title: "SeÃƒÂ§", type: "checkbox", className: "htCenter" }] : []),
+        { data: "kayitNo", title: "KayÃ„Â±t No" },
         { data: "hesapNo", title: "Hesap No" },
-        { data: "hesapAciklamasi", title: "Hesap Açıklaması" },
+        { data: "hesapAciklamasi", title: "Hesap AÃƒÂ§Ã„Â±klamasÃ„Â±" },
         { data: "tarih", title: "Tarih", type: "date", dateFormat: "DD.MM.YYYY", correctFormat: true },
-        { data: "giris", title: "Giriş", type: "numeric", numericFormat: { pattern: "0,0.00", culture: "tr-TR" } },
+        { data: "giris", title: "GiriÃ…Å¸", type: "numeric", numericFormat: { pattern: "0,0.00", culture: "tr-TR" } },
         { data: "tahsilat", title: "Tahsilat", type: "numeric", numericFormat: { pattern: "0,0.00", culture: "tr-TR" } },
         { data: "bakiye", title: "Bakiye", type: "numeric", numericFormat: { pattern: "0,0.00", culture: "tr-TR" } },
     ];
@@ -210,7 +211,7 @@ const SonrakiDonemTestleri = forwardRef<any, Props>(({
     return (
         <Box>
             <Typography variant="h6" sx={{ color: theme.palette.mode === 'dark' ? "#FFFFFF" : "#2C3E50", fontWeight: "bold", mb: 3 }}>
-                Sonraki Dönem Testleri
+                Sonraki DÃƒÂ¶nem Testleri
             </Typography>
             <Box
                 sx={{
@@ -235,7 +236,7 @@ const SonrakiDonemTestleri = forwardRef<any, Props>(({
                     }
                 }}
             >
-                <HotTable
+                <CustomHotTable 
                     ref={hotTableComponent}
                     data={data}
                     columns={columns}
@@ -259,7 +260,7 @@ const SonrakiDonemTestleri = forwardRef<any, Props>(({
                 />
                 {data.length === 0 && (
                     <Box sx={{ p: 4, textAlign: "center" }}>
-                        <Typography variant="body1" color="textSecondary">Veri bulunmamaktadır.</Typography>
+                        <Typography variant="body1" color="textSecondary">Veri bulunmamaktadÃ„Â±r.</Typography>
                     </Box>
                 )}
             </Box>

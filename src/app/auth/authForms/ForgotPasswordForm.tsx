@@ -7,11 +7,11 @@ import { Box, Button, InputAdornment, Link as MuiLink, Stack, Typography, useThe
 import { IconArrowLeft, IconMail, IconSend } from "@tabler/icons-react";
 import Link from "next/link";
 import { enqueueSnackbar } from "notistack";
-import { useMemo, useState, useEffect } from "react";
+import { useEffect, useMemo, useState } from "react";
 import { useSearchParams } from "next/navigation";
 
 const defaultSuccessMessage =
-  "Eger e-posta adresi sistemde kayitliysa, sifre sifirlama baglantisi gonderilecektir.";
+  "Eğer e-posta adresi sistemde kayıtlıysa, şifre sıfırlama bağlantısı gönderilecektir.";
 
 export default function ForgotPasswordForm() {
   const theme = useTheme();
@@ -21,7 +21,6 @@ export default function ForgotPasswordForm() {
   const [submittedEmail, setSubmittedEmail] = useState("");
   const [successMessage, setSuccessMessage] = useState("");
 
-  // URL parametrisinden email'i oku ve form alanını doldur
   useEffect(() => {
     const emailParam = searchParams.get("email");
     if (emailParam) {
@@ -35,12 +34,15 @@ export default function ForgotPasswordForm() {
     event.preventDefault();
 
     if (!email.trim()) {
-      enqueueSnackbar("Lutfen e-posta adresinizi girin.", { variant: "warning", autoHideDuration: 4000 });
+      enqueueSnackbar("Lütfen e-posta adresinizi girin.", { variant: "warning", autoHideDuration: 4000 });
       return;
     }
 
     if (!emailIsValid) {
-      enqueueSnackbar("Lutfen gecerli bir e-posta adresi girin.", { variant: "warning", autoHideDuration: 4000 });
+      enqueueSnackbar("Lütfen geçerli bir e-posta adresi girin.", {
+        variant: "warning",
+        autoHideDuration: 4000,
+      });
       return;
     }
 
@@ -58,7 +60,7 @@ export default function ForgotPasswordForm() {
       });
 
       let parsedResponse: any = null;
-      let errorMessage = "Sifre sifirlama baglantisi gonderilemedi.";
+      let errorMessage = "Şifre sıfırlama bağlantısı gönderilemedi.";
 
       try {
         parsedResponse = await response.clone().json();
@@ -68,7 +70,7 @@ export default function ForgotPasswordForm() {
           const rawText = await response.clone().text();
           errorMessage = rawText || errorMessage;
         } catch {
-          // If we can't read the response, use default message
+          // Varsayılan mesaj kullanılacak.
         }
       }
 
@@ -76,12 +78,12 @@ export default function ForgotPasswordForm() {
         throw new Error(errorMessage);
       }
 
-      const successMessage = errorMessage || defaultSuccessMessage;
-      setSuccessMessage(successMessage);
+      const nextSuccessMessage = errorMessage || defaultSuccessMessage;
+      setSuccessMessage(nextSuccessMessage);
       setSubmittedEmail(email.trim());
-      enqueueSnackbar(successMessage, { variant: "success", autoHideDuration: 5000 });
+      enqueueSnackbar(nextSuccessMessage, { variant: "success", autoHideDuration: 5000 });
     } catch (error: any) {
-      enqueueSnackbar(error?.message || "Sifre sifirlama baglantisi gonderilemedi.", {
+      enqueueSnackbar(error?.message || "Şifre sıfırlama bağlantısı gönderilemedi.", {
         variant: "error",
         autoHideDuration: 5000,
         style: {
@@ -104,7 +106,7 @@ export default function ForgotPasswordForm() {
               id="forgot-password-email"
               variant="outlined"
               fullWidth
-              placeholder="Kayitli e-posta adresiniz"
+              placeholder="Kayıtlı e-posta adresiniz"
               value={email}
               onChange={(event: any) => setEmail(event.target.value)}
               InputProps={{
@@ -118,7 +120,8 @@ export default function ForgotPasswordForm() {
           </Box>
 
           <Typography variant="body2" sx={{ color: "text.secondary", lineHeight: 1.7 }}>
-            Sifre sifirlama baglantisini kayitli e-posta adresinize gonderecegiz. Linke tiklayarak yeni sifrenizi guvenli sekilde belirleyebilirsiniz.
+            Şifre sıfırlama bağlantısını kayıtlı e-posta adresinize göndereceğiz. Linke tıklayarak
+            yeni şifrenizi güvenli şekilde belirleyebilirsiniz.
           </Typography>
 
           {successMessage ? (
@@ -132,10 +135,11 @@ export default function ForgotPasswordForm() {
               }}
             >
               <Typography variant="body2" sx={{ fontWeight: 600, color: "#166534", mb: 0.5 }}>
-                Mail gonderimi tamamlandi
+                Mail gönderimi tamamlandı
               </Typography>
               <Typography variant="body2" sx={{ color: "text.secondary" }}>
-                {submittedEmail || email.trim()} adresini kontrol edin. Mail birkaç dakika icinde gelmezse spam klasorune de bakin.
+                {submittedEmail || email.trim()} adresini kontrol edin. Mail birkaç dakika içinde gelmezse
+                spam klasörüne de bakın.
               </Typography>
             </Box>
           ) : null}
@@ -159,7 +163,7 @@ export default function ForgotPasswordForm() {
               borderRadius: "10px",
             }}
           >
-            {isSubmitting ? "Baglanti Gonderiliyor..." : "Sifre Sifirlama Linki Gonder"}
+            {isSubmitting ? "Bağlantı Gönderiliyor..." : "Şifre Sıfırlama Linki Gönder"}
           </Button>
         </Stack>
       </form>
@@ -178,7 +182,7 @@ export default function ForgotPasswordForm() {
           }}
         >
           <IconArrowLeft size={18} />
-          Giris ekranina don
+          Giriş ekranına dön
         </MuiLink>
       </Box>
     </>

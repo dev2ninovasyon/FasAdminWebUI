@@ -1,11 +1,12 @@
 "use client";
 
 import React, { useEffect, useState, useRef, useCallback } from "react";
-import { HotTable } from "@handsontable/react";
+import "@/lib/handsontableSetup";
+
+import CustomHotTable from "@/components/HotTableWrapper";
 import { registerAllModules } from "handsontable/registry";
 import Handsontable from "handsontable";
-import "handsontable/dist/handsontable.full.min.css";
-import "@/utils/languages/handsontable.tr-TR";
+
 
 import { Box, Typography, Button, Snackbar, Alert, CircularProgress, useTheme } from "@mui/material";
 import { IconDeviceFloppy } from "@tabler/icons-react";
@@ -75,7 +76,7 @@ const SupheliAlacakTestleri: React.FC<Props> = ({
                 const result = await getSupheliAlacakTestleri(user.denetciId, user.yil, user.denetlenenId, resolvedDipnotNo);
                 setVeriler(result || []);
             } catch (error) {
-                showSnackbar("Veriler yüklenirken hata oluştu.", "error");
+                showSnackbar("Veriler yÃƒÂ¼klenirken hata oluÃ…Å¸tu.", "error");
             } finally {
                 setLoading(false);
             }
@@ -96,11 +97,11 @@ const SupheliAlacakTestleri: React.FC<Props> = ({
                         dipnotNo
                     );
                     if (success) {
-                        showSnackbar("Veriler başarıyla sıfırlandı.", "success");
+                        showSnackbar("Veriler baÃ…Å¸arÃ„Â±yla sÃ„Â±fÃ„Â±rlandÃ„Â±.", "success");
                         await fetchData();
                     }
                 } catch (error) {
-                    showSnackbar("Sıfırlama işlemi sırasında hata oluştu.", "error");
+                    showSnackbar("SÃ„Â±fÃ„Â±rlama iÃ…Å¸lemi sÃ„Â±rasÃ„Â±nda hata oluÃ…Å¸tu.", "error");
                 } finally {
                     setIsClickedVarsayilanaDon(false);
                     setLoading(false);
@@ -124,14 +125,14 @@ const SupheliAlacakTestleri: React.FC<Props> = ({
 
         const allData = hotInstance.getSourceData();
 
-        // Sadece gerekli alanları gönderiyoruz ve navigation property'leri temizliyoruz
+        // Sadece gerekli alanlarÃ„Â± gÃƒÂ¶nderiyoruz ve navigation property'leri temizliyoruz
         const dataToSend = allData.map((row: any) => ({
             id: Number(row.id) || 0,
             denetciId: user.denetciId,
             denetlenenId: user.denetlenenId,
             yil: user.yil,
             dipnotNo: dipnotNo,
-            baslik: row.baslik || "Şüpheli Alacak Testleri",
+            baslik: row.baslik || "Ã…ÂÃƒÂ¼pheli Alacak Testleri",
             hesapNo: row.hesapNo || "",
             hesapAdi: row.hesapAdi || "",
             kebirKodu: row.kebirKodu || "128",
@@ -147,13 +148,13 @@ const SupheliAlacakTestleri: React.FC<Props> = ({
             const success = await saveAllSupheliAlacakTestleri(dataToSend);
 
             if (success) {
-                showSnackbar("Tüm tablo başarıyla kaydedildi.", "success");
+                showSnackbar("TÃƒÂ¼m tablo baÃ…Å¸arÃ„Â±yla kaydedildi.", "success");
                 fetchData();
             } else {
-                showSnackbar("Kaydetme sırasında bir hata oluştu. Lütfen verileri kontrol ediniz.", "error");
+                showSnackbar("Kaydetme sÃ„Â±rasÃ„Â±nda bir hata oluÃ…Å¸tu. LÃƒÂ¼tfen verileri kontrol ediniz.", "error");
             }
         } catch (error) {
-            showSnackbar("Bağlantı hatası oluştu!", "error");
+            showSnackbar("BaÃ„Å¸lantÃ„Â± hatasÃ„Â± oluÃ…Å¸tu!", "error");
         }
     };
 
@@ -189,7 +190,7 @@ const SupheliAlacakTestleri: React.FC<Props> = ({
     return (
         <Box sx={{ p: isReport ? 0 : 3 }}>
             <Typography variant="h6" sx={{ color: theme.palette.mode === 'dark' ? "#FFFFFF" : "#2C3E50", fontWeight: "bold", mb: 3 }}>
-                Şüpheli Alacak Testleri
+                Ã…ÂÃƒÂ¼pheli Alacak Testleri
             </Typography>
             {!isReport && (
                 <Box sx={{ mb: 2, display: 'flex', justifyContent: 'flex-end', alignItems: 'center' }}>
@@ -201,7 +202,7 @@ const SupheliAlacakTestleri: React.FC<Props> = ({
                         onClick={handleSaveAll}
                         sx={{ px: 2, borderRadius: "6px", fontSize: '0.8125rem', textTransform: 'none' }}
                     >
-                        Tüm Tabloyu Kaydet
+                        TÃƒÂ¼m Tabloyu Kaydet
                     </Button>
                 </Box>
             )}
@@ -227,16 +228,16 @@ const SupheliAlacakTestleri: React.FC<Props> = ({
                     backgroundColor: theme.palette.mode === 'dark' ? theme.palette.grey[900] : "#F9FAFB",
                 }
             }}>
-                <HotTable
+                <CustomHotTable 
                     ref={hotRef}
                     data={veriler}
                     language="tr-TR"
                     colHeaders={[
                         "Hesap No",
-                        "Hesap Adı",
-                        "Önceki Dönem Bakiye",
-                        "Cari Dönem Bakiye",
-                        "Değişim (TL)",
+                        "Hesap AdÃ„Â±",
+                        "Ãƒâ€“nceki DÃƒÂ¶nem Bakiye",
+                        "Cari DÃƒÂ¶nem Bakiye",
+                        "DeÃ„Å¸iÃ…Å¸im (TL)",
                         "Avukat Mektubu"
                     ]}
                     columns={[
@@ -260,12 +261,12 @@ const SupheliAlacakTestleri: React.FC<Props> = ({
                     columnSorting={!isReport}
                     contextMenu={isReport ? false : {
                         items: {
-                            "row_above": { name: "Üste Satır Ekle" },
-                            "row_below": { name: "Alta Satır Ekle" },
+                            "row_above": { name: "ÃƒÅ“ste SatÃ„Â±r Ekle" },
+                            "row_below": { name: "Alta SatÃ„Â±r Ekle" },
                             "separator": Handsontable.plugins.ContextMenu.SEPARATOR,
-                            "remove_row": { name: "Seçili Satırı Sil" },
+                            "remove_row": { name: "SeÃƒÂ§ili SatÃ„Â±rÃ„Â± Sil" },
                             "undo": { name: "Geri Al" },
-                            "redo": { name: "İleri Al" }
+                            "redo": { name: "Ã„Â°leri Al" }
                         }
                     }}
                     readOnly={isReport}

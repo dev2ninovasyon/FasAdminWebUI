@@ -1,7 +1,9 @@
-import { HotTable } from "@handsontable/react";
-import { registerAllModules } from "handsontable/registry";
 import { dictionary } from "@/utils/languages/handsontable.tr-TR";
-import "handsontable/dist/handsontable.full.min.css";
+import "@/lib/handsontableSetup";
+
+import CustomHotTable from "@/components/HotTableWrapper";
+import { registerAllModules } from "handsontable/registry";
+
 import { plus } from "@/utils/theme/Typography";
 import { useDispatch, useSelector } from "@/store/hooks";
 import { AppState } from "@/store/store";
@@ -73,20 +75,20 @@ const Orneklem: React.FC<Props> = ({ dipnot, isReport }) => {
   const colHeaders = [
     "Id",
     "Kebir Kodu",
-    "Hesap Adı",
-    "Borç",
-    "B. Fiş Sayısı",
-    "B. Ortalaması",
+    "Hesap AdÃ„Â±",
+    "BorÃƒÂ§",
+    "B. FiÃ…Å¸ SayÃ„Â±sÃ„Â±",
+    "B. OrtalamasÃ„Â±",
     "Alacak",
-    "A. Fiş Sayısı",
-    "A. Ortalaması",
+    "A. FiÃ…Å¸ SayÃ„Â±sÃ„Â±",
+    "A. OrtalamasÃ„Â±",
     "Bakiye",
-    "Toplam Fiş Sayısı",
-    "Örneklem Sayısı",
-    "Borç Örnek Sayısı",
-    "Alacak Örnek Sayısı",
-    "Listeleme Türü",
-    "Güvenilirlik Düzeyi",
+    "Toplam FiÃ…Å¸ SayÃ„Â±sÃ„Â±",
+    "Ãƒâ€“rneklem SayÃ„Â±sÃ„Â±",
+    "BorÃƒÂ§ Ãƒâ€“rnek SayÃ„Â±sÃ„Â±",
+    "Alacak Ãƒâ€“rnek SayÃ„Â±sÃ„Â±",
+    "Listeleme TÃƒÂ¼rÃƒÂ¼",
+    "GÃƒÂ¼venilirlik DÃƒÂ¼zeyi",
   ];
 
   const columns = [
@@ -105,7 +107,7 @@ const Orneklem: React.FC<Props> = ({ dipnot, isReport }) => {
       allowInvalid: false,
       readOnly: true,
       editor: false,
-    }, // Hesap Adı
+    }, // Hesap AdÃ„Â±
     {
       type: "numeric",
       numericFormat: {
@@ -116,7 +118,7 @@ const Orneklem: React.FC<Props> = ({ dipnot, isReport }) => {
       className: "htRight",
       readOnly: true,
       editor: false,
-    }, // Borç
+    }, // BorÃƒÂ§
     {
       type: "numeric",
       numericFormat: {
@@ -127,7 +129,7 @@ const Orneklem: React.FC<Props> = ({ dipnot, isReport }) => {
       className: "htRight",
       readOnly: true,
       editor: false,
-    }, // Borç Fiş Sayısı
+    }, // BorÃƒÂ§ FiÃ…Å¸ SayÃ„Â±sÃ„Â±
     {
       type: "numeric",
       numericFormat: {
@@ -138,7 +140,7 @@ const Orneklem: React.FC<Props> = ({ dipnot, isReport }) => {
       className: "htRight",
       readOnly: true,
       editor: false,
-    }, // Borç Ortalaması
+    }, // BorÃƒÂ§ OrtalamasÃ„Â±
     {
       type: "numeric",
       numericFormat: {
@@ -160,7 +162,7 @@ const Orneklem: React.FC<Props> = ({ dipnot, isReport }) => {
       className: "htRight",
       readOnly: true,
       editor: false,
-    }, // Alacak Fiş Sayısı
+    }, // Alacak FiÃ…Å¸ SayÃ„Â±sÃ„Â±
     {
       type: "numeric",
       numericFormat: {
@@ -171,7 +173,7 @@ const Orneklem: React.FC<Props> = ({ dipnot, isReport }) => {
       className: "htRight",
       readOnly: true,
       editor: false,
-    }, // Alacak Ortalaması
+    }, // Alacak OrtalamasÃ„Â±
     {
       type: "numeric",
       numericFormat: {
@@ -193,7 +195,7 @@ const Orneklem: React.FC<Props> = ({ dipnot, isReport }) => {
       className: "htRight",
       readOnly: true,
       editor: false,
-    }, // Toplam İşlem Sayısı
+    }, // Toplam Ã„Â°Ã…Å¸lem SayÃ„Â±sÃ„Â±
     {
       type: "numeric",
       numericFormat: {
@@ -204,7 +206,7 @@ const Orneklem: React.FC<Props> = ({ dipnot, isReport }) => {
       className: "htRight",
       readOnly: true,
       editor: false,
-    }, // Örneklem Sayısı
+    }, // Ãƒâ€“rneklem SayÃ„Â±sÃ„Â±
     {
       type: "numeric",
       numericFormat: {
@@ -215,7 +217,7 @@ const Orneklem: React.FC<Props> = ({ dipnot, isReport }) => {
       className: "htRight",
       readOnly: true,
       editor: false,
-    }, // Borç Örnek Sayısı
+    }, // BorÃƒÂ§ Ãƒâ€“rnek SayÃ„Â±sÃ„Â±
     {
       type: "numeric",
       numericFormat: {
@@ -226,7 +228,7 @@ const Orneklem: React.FC<Props> = ({ dipnot, isReport }) => {
       className: "htRight",
       readOnly: true,
       editor: false,
-    }, // Alacak Örnek Sayısı
+    }, // Alacak Ãƒâ€“rnek SayÃ„Â±sÃ„Â±
     {
       type: "text",
       columnSorting: true,
@@ -234,7 +236,7 @@ const Orneklem: React.FC<Props> = ({ dipnot, isReport }) => {
       allowInvalid: false,
       readOnly: true,
       editor: false,
-    }, // Listeleme Türü
+    }, // Listeleme TÃƒÂ¼rÃƒÂ¼
     {
       type: "text",
       columnSorting: true,
@@ -242,7 +244,7 @@ const Orneklem: React.FC<Props> = ({ dipnot, isReport }) => {
       allowInvalid: false,
       readOnly: true,
       editor: false,
-    }, // Güvenilirlik Düzeyi
+    }, // GÃƒÂ¼venilirlik DÃƒÂ¼zeyi
   ];
 
   const afterGetColHeader = (col: any, TH: any) => {
@@ -352,7 +354,7 @@ const Orneklem: React.FC<Props> = ({ dipnot, isReport }) => {
     if (hotTableComponent.current) {
       const hotInstance = hotTableComponent.current.hotInstance;
       const cellMeta = hotInstance.getDataAtRow(row);
-      console.log("Satır Verileri:", cellMeta);
+      console.log("SatÃ„Â±r Verileri:", cellMeta);
       return cellMeta;
     }
   };
@@ -391,7 +393,7 @@ const Orneklem: React.FC<Props> = ({ dipnot, isReport }) => {
       setRowCount(rowsAll.length);
       setFetchedData(rowsAll);
     } catch (error) {
-      console.log("Bir hata oluştu:", error);
+      console.log("Bir hata oluÃ…Å¸tu:", error);
     }
   };
 
@@ -422,9 +424,9 @@ const Orneklem: React.FC<Props> = ({ dipnot, isReport }) => {
   return (
     <Box>
       <Typography variant="h6" sx={{ color: "#2C3E50", fontWeight: "bold", mb: 3 }}>
-        Örneklem
+        Ãƒâ€“rneklem
       </Typography>
-      <HotTable
+      <CustomHotTable 
         style={{
           height: isReport ? "auto" : "100%",
           width: "100%",

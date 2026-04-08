@@ -6,8 +6,8 @@ import ForgotPasswordForm from "../authForms/ForgotPasswordForm";
 export default function ForgotPasswordPage() {
   return (
     <AuthPageShell
-      title="Sifremi Unuttum"
-      description="Kayitli e-posta adresinizi girin, size tek kullanimlik bir sifre sifirlama baglantisi gonderelim."
+      title="Şifremi Unuttum"
+      description="Kayıtlı e-posta adresinizi girin, size tek kullanımlık bir şifre sıfırlama bağlantısı gönderelim."
     >
       <ForgotPasswordForm />
     </AuthPageShell>

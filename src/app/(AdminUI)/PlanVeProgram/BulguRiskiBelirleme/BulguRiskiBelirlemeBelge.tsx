@@ -1,7 +1,9 @@
-import { HotTable } from "@handsontable/react";
-import { registerAllModules } from "handsontable/registry";
 import { dictionary } from "@/utils/languages/handsontable.tr-TR";
-import "handsontable/dist/handsontable.full.min.css";
+import "@/lib/handsontableSetup";
+
+import CustomHotTable from "@/components/HotTableWrapper";
+import { registerAllModules } from "handsontable/registry";
+
 import { plus } from "@/utils/theme/Typography";
 import { useDispatch, useSelector } from "@/store/hooks";
 import { AppState } from "@/store/store";
@@ -29,39 +31,39 @@ const BulguRiskiBelirlemeBelge = () => {
 
   const fetchedData: any[] = [
     [
-      "Detaylï¿½ denetim prosedï¿½rï¿½",
+      "DetaylÃƒÂ¯Ã‚Â¿Ã‚Â½ denetim prosedÃƒÂ¯Ã‚Â¿Ã‚Â½rÃƒÂ¯Ã‚Â¿Ã‚Â½",
       "%0-%15",
-      "Tutar olarak ana kï¿½tlenin %31 ve daha fazlasï¿½",
+      "Tutar olarak ana kÃƒÂ¯Ã‚Â¿Ã‚Â½tlenin %31 ve daha fazlasÃƒÂ¯Ã‚Â¿Ã‚Â½",
       "31-50",
     ],
     [
-      "Detaylï¿½ denetim prosedï¿½rï¿½",
+      "DetaylÃƒÂ¯Ã‚Â¿Ã‚Â½ denetim prosedÃƒÂ¯Ã‚Â¿Ã‚Â½rÃƒÂ¯Ã‚Â¿Ã‚Â½",
       "%16-%25",
-      "Tutar olarak ana kï¿½tlenin %26-%30 arasï¿½",
+      "Tutar olarak ana kÃƒÂ¯Ã‚Â¿Ã‚Â½tlenin %26-%30 arasÃƒÂ¯Ã‚Â¿Ã‚Â½",
       "26-30",
     ],
     [
-      "Kï¿½smen detaylï¿½, kï¿½smen analitik denetim prosedï¿½rï¿½",
+      "KÃƒÂ¯Ã‚Â¿Ã‚Â½smen detaylÃƒÂ¯Ã‚Â¿Ã‚Â½, kÃƒÂ¯Ã‚Â¿Ã‚Â½smen analitik denetim prosedÃƒÂ¯Ã‚Â¿Ã‚Â½rÃƒÂ¯Ã‚Â¿Ã‚Â½",
       "%26-%40",
-      "Tutar olarak ana kï¿½tlenin %21-%25 arasï¿½",
+      "Tutar olarak ana kÃƒÂ¯Ã‚Â¿Ã‚Â½tlenin %21-%25 arasÃƒÂ¯Ã‚Â¿Ã‚Â½",
       "21-25",
     ],
     [
-      "Kï¿½smen detaylï¿½, kï¿½smen analitik denetim prosedï¿½rï¿½",
+      "KÃƒÂ¯Ã‚Â¿Ã‚Â½smen detaylÃƒÂ¯Ã‚Â¿Ã‚Â½, kÃƒÂ¯Ã‚Â¿Ã‚Â½smen analitik denetim prosedÃƒÂ¯Ã‚Â¿Ã‚Â½rÃƒÂ¯Ã‚Â¿Ã‚Â½",
       "%41-%60",
-      "Tutar olarak ana kï¿½tlenin %16-%20 arasï¿½",
+      "Tutar olarak ana kÃƒÂ¯Ã‚Â¿Ã‚Â½tlenin %16-%20 arasÃƒÂ¯Ã‚Â¿Ã‚Â½",
       "16-20",
     ],
     [
-      "Analitik incelemeye dayalï¿½ denetim prosedï¿½rï¿½",
+      "Analitik incelemeye dayalÃƒÂ¯Ã‚Â¿Ã‚Â½ denetim prosedÃƒÂ¯Ã‚Â¿Ã‚Â½rÃƒÂ¯Ã‚Â¿Ã‚Â½",
       "%61-%80",
-      "Tutar olarak ana kï¿½tlenin %11-%15 arasï¿½	",
+      "Tutar olarak ana kÃƒÂ¯Ã‚Â¿Ã‚Â½tlenin %11-%15 arasÃƒÂ¯Ã‚Â¿Ã‚Â½	",
       "11-15",
     ],
     [
-      "Analitik incelemeye dayalï¿½ denetim prosedï¿½rï¿½",
+      "Analitik incelemeye dayalÃƒÂ¯Ã‚Â¿Ã‚Â½ denetim prosedÃƒÂ¯Ã‚Â¿Ã‚Â½rÃƒÂ¯Ã‚Â¿Ã‚Â½",
       "%81-%100",
-      "Tutar olarak ana kï¿½tlenin %0-%10 arasï¿½",
+      "Tutar olarak ana kÃƒÂ¯Ã‚Â¿Ã‚Â½tlenin %0-%10 arasÃƒÂ¯Ã‚Â¿Ã‚Â½",
       "0-10",
     ],
   ];
@@ -84,9 +86,9 @@ const BulguRiskiBelirlemeBelge = () => {
   }, [customizer.activeMode]);
 
   const colHeaders = [
-    "Denetim Prosedï¿½rleri",
+    "Denetim ProsedÃƒÂ¯Ã‚Â¿Ã‚Â½rleri",
     "Bulgu Riski",
-    "Toplanacak Denetim Kanï¿½tï¿½",
+    "Toplanacak Denetim KanÃƒÂ¯Ã‚Â¿Ã‚Â½tÃƒÂ¯Ã‚Â¿Ã‚Â½",
     "Risk",
   ];
 
@@ -98,7 +100,7 @@ const BulguRiskiBelirlemeBelge = () => {
       allowInvalid: false,
       readOnly: true,
       editor: false,
-    }, // Denetim Prosedï¿½rleri
+    }, // Denetim ProsedÃƒÂ¯Ã‚Â¿Ã‚Â½rleri
     {
       type: "text",
       columnSorting: true,
@@ -114,7 +116,7 @@ const BulguRiskiBelirlemeBelge = () => {
       allowInvalid: false,
       readOnly: true,
       editor: false,
-    }, // Toplanacak Denetim Kanï¿½tï¿½
+    }, // Toplanacak Denetim KanÃƒÂ¯Ã‚Â¿Ã‚Â½tÃƒÂ¯Ã‚Â¿Ã‚Â½
     {
       type: "text",
       columnSorting: true,
@@ -254,7 +256,7 @@ const BulguRiskiBelirlemeBelge = () => {
 
   return (
     <>
-      <HotTable
+      <CustomHotTable 
         style={{
           height: "100%",
           width: "100%",

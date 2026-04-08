@@ -1,7 +1,9 @@
-import { HotTable } from "@handsontable/react";
-import { registerAllModules } from "handsontable/registry";
 import { dictionary } from "@/utils/languages/handsontable.tr-TR";
-import "handsontable/dist/handsontable.full.min.css";
+import "@/lib/handsontableSetup";
+
+import CustomHotTable from "@/components/HotTableWrapper";
+import { registerAllModules } from "handsontable/registry";
+
 import { plus } from "@/utils/theme/Typography";
 import { useDispatch, useSelector } from "@/store/hooks";
 import { AppState } from "@/store/store";
@@ -66,13 +68,13 @@ const Onemlilik: React.FC<Props> = ({ dipnot, isReport }) => {
   const colHeaders = [
     "Id",
     "Kebir Kodu",
-    "Hesap Adı",
-    "Borç Alacak Toplamı",
-    "Mizan İçindeki Payı",
-    "Genel Önemlilik",
-    "Performans Önemliliği",
-    "İncelenen Örnek Tutarı",
-    "Tespit Açıklama",
+    "Hesap AdÃ„Â±",
+    "BorÃƒÂ§ Alacak ToplamÃ„Â±",
+    "Mizan Ã„Â°ÃƒÂ§indeki PayÃ„Â±",
+    "Genel Ãƒâ€“nemlilik",
+    "Performans Ãƒâ€“nemliliÃ„Å¸i",
+    "Ã„Â°ncelenen Ãƒâ€“rnek TutarÃ„Â±",
+    "Tespit AÃƒÂ§Ã„Â±klama",
   ];
 
   const columns = [
@@ -91,7 +93,7 @@ const Onemlilik: React.FC<Props> = ({ dipnot, isReport }) => {
       allowInvalid: false,
       readOnly: true,
       editor: false,
-    }, // Hesap Adı
+    }, // Hesap AdÃ„Â±
     {
       type: "numeric",
       numericFormat: {
@@ -102,7 +104,7 @@ const Onemlilik: React.FC<Props> = ({ dipnot, isReport }) => {
       className: "htRight",
       readOnly: true,
       editor: false,
-    }, // Borç Alacak Toplamı
+    }, // BorÃƒÂ§ Alacak ToplamÃ„Â±
     {
       type: "numeric",
       numericFormat: {
@@ -113,7 +115,7 @@ const Onemlilik: React.FC<Props> = ({ dipnot, isReport }) => {
       className: "htRight",
       readOnly: true,
       editor: false,
-    }, // Mizan İçindeki Payı
+    }, // Mizan Ã„Â°ÃƒÂ§indeki PayÃ„Â±
     {
       type: "numeric",
       numericFormat: {
@@ -124,7 +126,7 @@ const Onemlilik: React.FC<Props> = ({ dipnot, isReport }) => {
       className: "htRight",
       readOnly: true,
       editor: false,
-    }, // Genel Önemlilik
+    }, // Genel Ãƒâ€“nemlilik
     {
       type: "numeric",
       numericFormat: {
@@ -135,7 +137,7 @@ const Onemlilik: React.FC<Props> = ({ dipnot, isReport }) => {
       className: "htRight",
       readOnly: true,
       editor: false,
-    }, // Performans Önemliliği
+    }, // Performans Ãƒâ€“nemliliÃ„Å¸i
     {
       type: "numeric",
       numericFormat: {
@@ -146,14 +148,14 @@ const Onemlilik: React.FC<Props> = ({ dipnot, isReport }) => {
       className: "htRight",
       readOnly: true,
       editor: false,
-    }, // İncelenen Örnek Tutarı
+    }, // Ã„Â°ncelenen Ãƒâ€“rnek TutarÃ„Â±
     {
       type: "text",
       columnSorting: true,
       className: "htLeft",
       readOnly: true,
       editor: false,
-    }, // Tespit Açıklama
+    }, // Tespit AÃƒÂ§Ã„Â±klama
   ];
 
   const afterGetColHeader = (col: any, TH: any) => {
@@ -263,7 +265,7 @@ const Onemlilik: React.FC<Props> = ({ dipnot, isReport }) => {
     if (hotTableComponent.current) {
       const hotInstance = hotTableComponent.current.hotInstance;
       const cellMeta = hotInstance.getDataAtRow(row);
-      console.log("Satır Verileri:", cellMeta);
+      console.log("SatÃ„Â±r Verileri:", cellMeta);
       return cellMeta;
     }
   };
@@ -295,7 +297,7 @@ const Onemlilik: React.FC<Props> = ({ dipnot, isReport }) => {
       setRowCount(rowsAll.length);
       setFetchedData(rowsAll);
     } catch (error) {
-      console.log("Bir hata oluştu:", error);
+      console.log("Bir hata oluÃ…Å¸tu:", error);
     }
   };
 
@@ -326,9 +328,9 @@ const Onemlilik: React.FC<Props> = ({ dipnot, isReport }) => {
   return (
     <Box>
       <Typography variant="h6" sx={{ color: "#2C3E50", fontWeight: "bold", mb: 3 }}>
-        Önemlilik
+        Ãƒâ€“nemlilik
       </Typography>
-      <HotTable
+      <CustomHotTable 
         style={{
           height: isReport ? "auto" : "100%",
           width: "100%",

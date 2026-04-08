@@ -1,10 +1,11 @@
 "use client";
 
 import React, { useEffect, useState, useRef } from "react";
-import { HotTable } from "@handsontable/react";
+import "@/lib/handsontableSetup";
+
+import CustomHotTable from "@/components/HotTableWrapper";
 import { registerAllModules } from "handsontable/registry";
-import "handsontable/dist/handsontable.full.min.css";
-import "@/utils/languages/handsontable.tr-TR";
+
 import { Box, Button, Typography, useTheme } from "@mui/material";
 import { useSelector } from "@/store/hooks";
 import { AppState } from "@/store/store";
@@ -49,8 +50,8 @@ const StokDonemsellikTesti: React.FC<Props> = ({
                 setData(response);
             }
         } catch (error) {
-            console.log("Veri çekme hatası:", error);
-            enqueueSnackbar("Veriler yüklenirken bir hata oluştu", { variant: "error" });
+            console.log("Veri ÃƒÂ§ekme hatasÃ„Â±:", error);
+            enqueueSnackbar("Veriler yÃƒÂ¼klenirken bir hata oluÃ…Å¸tu", { variant: "error" });
         } finally {
             setLoading(false);
         }
@@ -69,13 +70,13 @@ const StokDonemsellikTesti: React.FC<Props> = ({
                 dipnotNo
             );
             if (success) {
-                enqueueSnackbar("Veriler başarıyla getirildi", { variant: "success" });
+                enqueueSnackbar("Veriler baÃ…Å¸arÃ„Â±yla getirildi", { variant: "success" });
                 fetchData();
             } else {
-                enqueueSnackbar("Veriler getirilirken bir hata oluştu", { variant: "error" });
+                enqueueSnackbar("Veriler getirilirken bir hata oluÃ…Å¸tu", { variant: "error" });
             }
         } catch (error) {
-            console.log("Varsayılana dönme hatası:", error);
+            console.log("VarsayÃ„Â±lana dÃƒÂ¶nme hatasÃ„Â±:", error);
         } finally {
             setLoading(false);
         }
@@ -91,8 +92,8 @@ const StokDonemsellikTesti: React.FC<Props> = ({
                     try {
                         await updateStokDonemsellikTesti(updatedRow.id, updateData);
                     } catch (error) {
-                        console.log("Güncelleme hatası:", error);
-                        enqueueSnackbar("Güncelleme sırasında bir hata oluştu", { variant: "error" });
+                        console.log("GÃƒÂ¼ncelleme hatasÃ„Â±:", error);
+                        enqueueSnackbar("GÃƒÂ¼ncelleme sÃ„Â±rasÃ„Â±nda bir hata oluÃ…Å¸tu", { variant: "error" });
                     }
                 }
             }
@@ -101,13 +102,13 @@ const StokDonemsellikTesti: React.FC<Props> = ({
 
     const columns = [
         { data: "detayKodu", title: "Hesap Kodu", readOnly: true },
-        { data: "hesapAdi", title: "Hesap Adı", readOnly: true },
+        { data: "hesapAdi", title: "Hesap AdÃ„Â±", readOnly: true },
         { data: "belgeNevi", title: "Belge Nevi", readOnly: true },
         { data: "belgeNo", title: "Belge No", readOnly: true },
         { data: "belgeTarihi", title: "Belge Tarihi", type: "date", dateFormat: "DD.MM.YYYY", readOnly: true },
-        { data: "belgeTutari", title: "Belge Tutarı", type: "numeric", numericFormat: { pattern: "0,0.00", culture: "tr-TR" }, readOnly: true },
-        { data: "kayitTarihi", title: "Kayıt Tarihi", type: "date", dateFormat: "DD.MM.YYYY", readOnly: true },
-        { data: "kayitNo", title: "Kayıt No", type: "numeric", readOnly: true },
+        { data: "belgeTutari", title: "Belge TutarÃ„Â±", type: "numeric", numericFormat: { pattern: "0,0.00", culture: "tr-TR" }, readOnly: true },
+        { data: "kayitTarihi", title: "KayÃ„Â±t Tarihi", type: "date", dateFormat: "DD.MM.YYYY", readOnly: true },
+        { data: "kayitNo", title: "KayÃ„Â±t No", type: "numeric", readOnly: true },
         { data: "tespit", title: "Tespit" },
     ];
 
@@ -116,7 +117,7 @@ const StokDonemsellikTesti: React.FC<Props> = ({
     return (
         <Box sx={{ p: isReport ? 0 : 3 }}>
             <Typography variant="h6" sx={{ color: "#2C3E50", fontWeight: "bold", mb: 3 }}>
-                Stok Dönemsellik Testi
+                Stok DÃƒÂ¶nemsellik Testi
             </Typography>
             {!isReport && (
                 <Box display="flex" justifyContent="flex-end" mb={2}>
@@ -153,15 +154,15 @@ const StokDonemsellikTesti: React.FC<Props> = ({
                     }
                 }}
             >
-                {/* Tablo her zaman render edilir (başlıklar için) */}
-                <HotTable
+                {/* Tablo her zaman render edilir (baÃ…Å¸lÃ„Â±klar iÃƒÂ§in) */}
+                <CustomHotTable 
                     ref={hotTableComponent}
                     data={data}
                     columns={columns}
                     colHeaders={true}
                     rowHeaders={false}
                     stretchH="all"
-                    height={data.length > 0 ? "auto" : "35px"} // Veri yoksa sadece başlık boyu kadar (yaklaşık 35px) yer kaplar
+                    height={data.length > 0 ? "auto" : "35px"} // Veri yoksa sadece baÃ…Å¸lÃ„Â±k boyu kadar (yaklaÃ…Å¸Ã„Â±k 35px) yer kaplar
                     autoWrapRow={true}
                     autoWrapCol={true}
                     language="tr-TR"
@@ -176,7 +177,7 @@ const StokDonemsellikTesti: React.FC<Props> = ({
                     columnSorting={!isReport}
                 />
 
-                {/* Eğer veri yoksa tablonun hemen altına mesajı basıyoruz */}
+                {/* EÃ„Å¸er veri yoksa tablonun hemen altÃ„Â±na mesajÃ„Â± basÃ„Â±yoruz */}
                 {data.length === 0 && (
                     <Box
                         sx={{
@@ -188,7 +189,7 @@ const StokDonemsellikTesti: React.FC<Props> = ({
                         }}
                     >
                         <Typography variant="body1" color="textSecondary">
-                            Veri bulunmamaktadır.
+                            Veri bulunmamaktadÃ„Â±r.
                         </Typography>
                     </Box>
                 )}

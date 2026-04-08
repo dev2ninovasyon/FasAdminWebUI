@@ -46,7 +46,7 @@ const Page = () => {
         <Grid
           size={{
             xs: 12,
-            lg: 12
+            lg: 12,
           }}
           sx={{
             display: "flex",
@@ -156,4 +156,3 @@ const Page = () => {
 };
 
 export default Page;
-

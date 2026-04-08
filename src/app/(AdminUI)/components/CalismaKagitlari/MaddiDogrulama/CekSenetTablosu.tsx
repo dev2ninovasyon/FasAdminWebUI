@@ -1,11 +1,12 @@
 "use client";
 
 import React, { useEffect, useState, useRef, useCallback } from "react";
-import { HotTable } from "@handsontable/react";
+import "@/lib/handsontableSetup";
+
+import CustomHotTable from "@/components/HotTableWrapper";
 import { registerAllModules } from "handsontable/registry";
 import Handsontable from "handsontable";
-import "handsontable/dist/handsontable.full.min.css";
-import "@/utils/languages/handsontable.tr-TR";
+
 
 import { Box, Typography, Button, Snackbar, Alert, CircularProgress, useTheme } from "@mui/material";
 import { IconDeviceFloppy } from "@tabler/icons-react";
@@ -16,7 +17,7 @@ import {
     createCekSenetReeskontVerisi,
 } from "@/api/Veri/CekSenetReeskont";
 
-// Handsontable modüllerini kaydet
+// Handsontable modÃƒÂ¼llerini kaydet
 registerAllModules();
 
 interface Props {
@@ -42,7 +43,7 @@ const CekSenetTablosu: React.FC<Props> = ({
                 const result = await getCekSenetReeskontVerileriByDenetciDenetlenenYil(user.denetciId, user.denetlenenId, user.yil);
                 setVeriler(result || []);
             } catch (error) {
-                showSnackbar("Veriler yüklenirken hata oluştu.", "error");
+                showSnackbar("Veriler yÃƒÂ¼klenirken hata oluÃ…Å¸tu.", "error");
             } finally {
                 setLoading(false);
             }
@@ -64,13 +65,13 @@ const CekSenetTablosu: React.FC<Props> = ({
         try {
             const success = await createCekSenetReeskontVerisi(data);
             if (success) {
-                showSnackbar("Başarıyla kaydedildi.", "success");
+                showSnackbar("BaÃ…Å¸arÃ„Â±yla kaydedildi.", "success");
                 fetchData();
             } else {
-                showSnackbar("Kaydetme hatası!", "error");
+                showSnackbar("Kaydetme hatasÃ„Â±!", "error");
             }
         } catch (error) {
-            showSnackbar("Kaydetme hatası!", "error");
+            showSnackbar("Kaydetme hatasÃ„Â±!", "error");
         }
     };
 
@@ -87,7 +88,7 @@ const CekSenetTablosu: React.FC<Props> = ({
     return (
         <Box sx={{ p: isReport ? 0 : 3 }}>
             <Typography variant="h6" sx={{ color: "#2C3E50", fontWeight: "bold", mb: 3 }}>
-                Çek Senet Tablosu
+                Ãƒâ€¡ek Senet Tablosu
             </Typography>
             {!isReport && (
                 <Box sx={{ mb: 2, display: 'flex', justifyContent: 'flex-end', alignItems: 'center' }}>
@@ -99,7 +100,7 @@ const CekSenetTablosu: React.FC<Props> = ({
                         onClick={handleSave}
                         sx={{ px: 2, borderRadius: "6px", fontSize: '0.8125rem' }}
                     >
-                        Tümünü Kaydet
+                        TÃƒÂ¼mÃƒÂ¼nÃƒÂ¼ Kaydet
                     </Button>
                 </Box>
             )}
@@ -128,18 +129,18 @@ const CekSenetTablosu: React.FC<Props> = ({
                     backgroundColor: theme.palette.mode === 'dark' ? theme.palette.grey[900] : "#F9FAFB",
                 }
             }}>
-                <HotTable
+                <CustomHotTable 
                     ref={hotRef}
                     data={veriler}
                     language="tr-TR"
                     colHeaders={[
                         "Hesap Kodu",
-                        "Hesap Adı",
-                        "Kayıt Tarihi",
+                        "Hesap AdÃ„Â±",
+                        "KayÃ„Â±t Tarihi",
                         "Muhatap Firma",
                         "No",
                         "Vade Tarihi",
-                        "Nominal Değer",
+                        "Nominal DeÃ„Å¸er",
                         "Para Birimi",
                         "A/V"
                     ]}
@@ -164,12 +165,12 @@ const CekSenetTablosu: React.FC<Props> = ({
                     columnSorting={!isReport}
                     contextMenu={isReport ? false : {
                         items: {
-                            "row_above": { name: "Üste Satır Ekle" },
-                            "row_below": { name: "Alta Satır Ekle" },
+                            "row_above": { name: "ÃƒÅ“ste SatÃ„Â±r Ekle" },
+                            "row_below": { name: "Alta SatÃ„Â±r Ekle" },
                             "separator": Handsontable.plugins.ContextMenu.SEPARATOR,
-                            "remove_row": { name: "Seçili Satırı Sil" },
+                            "remove_row": { name: "SeÃƒÂ§ili SatÃ„Â±rÃ„Â± Sil" },
                             "undo": { name: "Geri Al" },
-                            "redo": { name: "İleri Al" }
+                            "redo": { name: "Ã„Â°leri Al" }
                         }
                     }}
                     readOnly={isReport}

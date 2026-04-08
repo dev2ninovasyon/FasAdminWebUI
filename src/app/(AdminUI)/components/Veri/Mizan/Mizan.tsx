@@ -1,7 +1,9 @@
-import { HotTable } from "@handsontable/react";
-import { registerAllModules } from "handsontable/registry";
 import { dictionary } from "@/utils/languages/handsontable.tr-TR";
-import "handsontable/dist/handsontable.full.min.css";
+import "@/lib/handsontableSetup";
+
+import CustomHotTable from "@/components/HotTableWrapper";
+import { registerAllModules } from "handsontable/registry";
+
 import { plus } from "@/utils/theme/Typography";
 import { useDispatch, useSelector } from "@/store/hooks";
 import { AppState } from "@/store/store";
@@ -110,9 +112,9 @@ const Mizan: React.FC<Props> = ({
   const colHeaders = [
     "Kebir Kodu",
     "D. Hesap Kodu",
-    "Hesap Adı",
-    "D. Hesap Adı",
-    "Borç",
+    "Hesap AdÃ„Â±",
+    "D. Hesap AdÃ„Â±",
+    "BorÃƒÂ§",
     "Alacak",
     "Para Birimi",
     "Bakiye",
@@ -141,7 +143,7 @@ const Mizan: React.FC<Props> = ({
       allowInvalid: false,
       readOnly: true,
       editor: false,
-    }, // Hesap Adı
+    }, // Hesap AdÃ„Â±
     {
       type: "text",
       columnSorting: true,
@@ -149,7 +151,7 @@ const Mizan: React.FC<Props> = ({
       allowInvalid: false,
       readOnly: true,
       editor: false,
-    }, // Detay Hesap Adı
+    }, // Detay Hesap AdÃ„Â±
     {
       type: "numeric",
       numericFormat: {
@@ -160,7 +162,7 @@ const Mizan: React.FC<Props> = ({
       className: "htRight",
       readOnly: true,
       editor: false,
-    }, // Net Borç
+    }, // Net BorÃƒÂ§
     {
       type: "numeric",
       numericFormat: {
@@ -344,7 +346,7 @@ const Mizan: React.FC<Props> = ({
           undefined,
         ]);
       } else {
-        enqueueSnackbar("Mizan Oluşturmalısınız.", {
+        enqueueSnackbar("Mizan OluÃ…Å¸turmalÃ„Â±sÃ„Â±nÃ„Â±z.", {
           variant: "warning",
           autoHideDuration: 5000,
           style: {
@@ -359,7 +361,7 @@ const Mizan: React.FC<Props> = ({
       setFetchedData(rowsAll); // Provide all data to HotTable for global filtering
       setRowCount(rowsAll.length);
     } catch (error) {
-      console.log("Bir hata oluştu:", error);
+      console.log("Bir hata oluÃ…Å¸tu:", error);
     } finally {
       setLoading(false);
     }
@@ -401,7 +403,7 @@ const Mizan: React.FC<Props> = ({
       setPage(0);
       setRawMizanData([]);
     } else {
-      // Yeni verileri yükle
+      // Yeni verileri yÃƒÂ¼kle
       fetchData();
     }
   }, [mizanOlusturTiklandimi]);
@@ -453,9 +455,9 @@ const Mizan: React.FC<Props> = ({
           type: "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
         });
         saveAs(blob, "EDefterMizan.xlsx");
-        console.log("Excel dosyası başarıyla oluşturuldu");
+        console.log("Excel dosyasÃ„Â± baÃ…Å¸arÃ„Â±yla oluÃ…Å¸turuldu");
       } catch (error) {
-        console.log("Excel dosyası oluşturulurken bir hata oluştu:", error);
+        console.log("Excel dosyasÃ„Â± oluÃ…Å¸turulurken bir hata oluÃ…Å¸tu:", error);
       }
     }
     createExcelFile();
@@ -521,7 +523,7 @@ const Mizan: React.FC<Props> = ({
             <CircularProgress />
           </Box>
         )}
-        <HotTable
+        <CustomHotTable 
           style={{
             height: "100%",
             width: "100%",
@@ -580,7 +582,7 @@ const Mizan: React.FC<Props> = ({
           >
             <Grid container spacing={2} p={1} height="100%" direction="column">
               <Grid size="auto">
-                {/* Tarih Satırı */}
+                {/* Tarih SatÃ„Â±rÃ„Â± */}
                 <Grid container spacing={2} alignItems="center">
                   <Grid size="auto">
                     <CustomFormLabel
@@ -593,7 +595,7 @@ const Mizan: React.FC<Props> = ({
                       }}
                     >
                       <Typography variant="subtitle1">
-                        Başlangıç Tarihi:
+                        BaÃ…Å¸langÃ„Â±ÃƒÂ§ Tarihi:
                       </Typography>
                     </CustomFormLabel>
                   </Grid>
@@ -617,7 +619,7 @@ const Mizan: React.FC<Props> = ({
                       }}
                     >
                       <Typography variant="subtitle1">
-                        Bitiş Tarihi:
+                        BitiÃ…Å¸ Tarihi:
                       </Typography>
                     </CustomFormLabel>
                   </Grid>
@@ -632,7 +634,7 @@ const Mizan: React.FC<Props> = ({
                   </Grid>
                 </Grid>
               </Grid>
-              {/* Buton Satırı */}
+              {/* Buton SatÃ„Â±rÃ„Â± */}
               <Grid size="auto" sx={{ mt: 1 }}>
                 <Grid container spacing={2} alignItems="center" justifyContent="center">
                   <Grid size="auto">
@@ -688,7 +690,7 @@ const Mizan: React.FC<Props> = ({
                     </Stack>
                   </Grid>
                   <Grid size="auto">
-                    <Tooltip title="Mizan Oluşturma Kayıtları">
+                    <Tooltip title="Mizan OluÃ…Å¸turma KayÃ„Â±tlarÃ„Â±">
                       <Fab
                         color="warning"
                         size="small"
@@ -707,14 +709,14 @@ const Mizan: React.FC<Props> = ({
                   color="primary"
                   onClick={handleShowAnaHesap}
                 >
-                  Ana Hesap Göster
+                  Ana Hesap GÃƒÂ¶ster
                 </Button>
                 <Button
                   variant="outlined"
                   color="primary"
                   onClick={handleShowDetayHesap}
                 >
-                  Detay Hesap Göster
+                  Detay Hesap GÃƒÂ¶ster
                 </Button>
               </Grid>
             </Grid>
@@ -753,7 +755,7 @@ const Mizan: React.FC<Props> = ({
               <CircularProgress />
             </Box>
           )}
-          <HotTable
+          <CustomHotTable 
             style={{
               height: "100%",
               width: "100%",
@@ -817,7 +819,7 @@ const Mizan: React.FC<Props> = ({
               showLastButton
             />
             <Typography variant="body2" color="text.secondary">
-              {rowCount} kayıttan {page * rowsPerPage + 1}-{Math.min((page + 1) * rowsPerPage, rowCount)} arası gösteriliyor
+              {rowCount} kayÃ„Â±ttan {page * rowsPerPage + 1}-{Math.min((page + 1) * rowsPerPage, rowCount)} arasÃ„Â± gÃƒÂ¶steriliyor
             </Typography>
           </Grid>
           <Grid

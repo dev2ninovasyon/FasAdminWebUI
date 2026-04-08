@@ -1,7 +1,9 @@
-import { HotTable } from "@handsontable/react";
-import { registerAllModules } from "handsontable/registry";
 import { dictionary } from "@/utils/languages/handsontable.tr-TR";
-import "handsontable/dist/handsontable.full.min.css";
+import "@/lib/handsontableSetup";
+
+import CustomHotTable from "@/components/HotTableWrapper";
+import { registerAllModules } from "handsontable/registry";
+
 import { plus } from "@/utils/theme/Typography";
 import { useDispatch, useSelector } from "@/store/hooks";
 import { AppState } from "@/store/store";
@@ -55,7 +57,7 @@ const DovizKurlariOtuzBirAralik: React.FC<Props> = ({
     loadStyles();
   }, [customizer.activeMode]);
 
-  const colHeaders = ["Tarih", "Kodu", "Adı", "Döviz Alış", "Döviz Satış"];
+  const colHeaders = ["Tarih", "Kodu", "AdÃ„Â±", "DÃƒÂ¶viz AlÃ„Â±Ã…Å¸", "DÃƒÂ¶viz SatÃ„Â±Ã…Å¸"];
 
   const columns = [
     {
@@ -81,7 +83,7 @@ const DovizKurlariOtuzBirAralik: React.FC<Props> = ({
       allowInvalid: false,
       readOnly: true,
       editor: false,
-    }, // Adı
+    }, // AdÃ„Â±
     {
       type: "numeric",
       numericFormat: { pattern: "0,0.0000", columnSorting: true },
@@ -89,7 +91,7 @@ const DovizKurlariOtuzBirAralik: React.FC<Props> = ({
       allowInvalid: false,
       readOnly: true,
       editor: false,
-    }, // Döviz Alış
+    }, // DÃƒÂ¶viz AlÃ„Â±Ã…Å¸
     {
       type: "numeric",
       numericFormat: { pattern: "0,0.0000", columnSorting: true },
@@ -97,7 +99,7 @@ const DovizKurlariOtuzBirAralik: React.FC<Props> = ({
       allowInvalid: false,
       readOnly: true,
       editor: false,
-    }, // Döviz Satış
+    }, // DÃƒÂ¶viz SatÃ„Â±Ã…Å¸
   ];
 
   const afterGetColHeader = (col: any, TH: any) => {
@@ -228,7 +230,7 @@ const DovizKurlariOtuzBirAralik: React.FC<Props> = ({
       setRowCount(rowsAll.length);
       setFetchedData(rowsAll);
     } catch (error) {
-      console.error("Bir hata oluştu:", error);
+      console.error("Bir hata oluÃ…Å¸tu:", error);
     }
   };
 
@@ -287,9 +289,9 @@ const DovizKurlariOtuzBirAralik: React.FC<Props> = ({
           type: "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
         });
         saveAs(blob, "DovizKurlariOtuzBirAralik.xlsx");
-        console.log("Excel dosyası başarıyla oluşturuldu");
+        console.log("Excel dosyasÃ„Â± baÃ…Å¸arÃ„Â±yla oluÃ…Å¸turuldu");
       } catch (error) {
-        console.error("Excel dosyası oluşturulurken bir hata oluştu:", error);
+        console.error("Excel dosyasÃ„Â± oluÃ…Å¸turulurken bir hata oluÃ…Å¸tu:", error);
       }
     }
     createExcelFile();
@@ -314,7 +316,7 @@ const DovizKurlariOtuzBirAralik: React.FC<Props> = ({
 
   return (
     <>
-      <HotTable
+      <CustomHotTable 
         style={{
           height: "100%",
           width: "100%",

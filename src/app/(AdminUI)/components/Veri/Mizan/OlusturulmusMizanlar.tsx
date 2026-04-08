@@ -1,7 +1,9 @@
-import { HotTable } from "@handsontable/react";
-import { registerAllModules } from "handsontable/registry";
 import { dictionary } from "@/utils/languages/handsontable.tr-TR";
-import "handsontable/dist/handsontable.full.min.css";
+import "@/lib/handsontableSetup";
+
+import CustomHotTable from "@/components/HotTableWrapper";
+import { registerAllModules } from "handsontable/registry";
+
 import { plus } from "@/utils/theme/Typography";
 import { useDispatch, useSelector } from "@/store/hooks";
 import { AppState } from "@/store/store";
@@ -69,9 +71,9 @@ const OlusturulmusMizanlar: React.FC<Props> = ({ type1, type2 }) => {
   const colHeaders = [
     "Kebir Kodu",
     "D. Hesap Kodu",
-    "Hesap Adı",
-    "D. Hesap Adı",
-    "Borç",
+    "Hesap AdÃ„Â±",
+    "D. Hesap AdÃ„Â±",
+    "BorÃƒÂ§",
     "Alacak",
     "Para Birimi",
     "Bakiye",
@@ -100,7 +102,7 @@ const OlusturulmusMizanlar: React.FC<Props> = ({ type1, type2 }) => {
       allowInvalid: false,
       readOnly: true,
       editor: false,
-    }, // Hesap Adı
+    }, // Hesap AdÃ„Â±
     {
       type: "text",
       columnSorting: true,
@@ -108,7 +110,7 @@ const OlusturulmusMizanlar: React.FC<Props> = ({ type1, type2 }) => {
       allowInvalid: false,
       readOnly: true,
       editor: false,
-    }, // Detay Hesap Adı
+    }, // Detay Hesap AdÃ„Â±
     {
       type: "numeric",
       numericFormat: {
@@ -119,7 +121,7 @@ const OlusturulmusMizanlar: React.FC<Props> = ({ type1, type2 }) => {
       className: "htRight",
       readOnly: true,
       editor: false,
-    }, // Net Borç
+    }, // Net BorÃƒÂ§
     {
       type: "numeric",
       numericFormat: {
@@ -312,7 +314,7 @@ const OlusturulmusMizanlar: React.FC<Props> = ({ type1, type2 }) => {
       setRowCount(rowsAll.length);
       setFetchedData(rowsAll);
     } catch (error) {
-      console.log("Bir hata oluştu:", error);
+      console.log("Bir hata oluÃ…Å¸tu:", error);
     }
   };
 
@@ -366,9 +368,9 @@ const OlusturulmusMizanlar: React.FC<Props> = ({ type1, type2 }) => {
           type: "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
         });
         saveAs(blob, "EDefterMizan.xlsx");
-        console.log("Excel dosyası başarıyla oluşturuldu");
+        console.log("Excel dosyasÃ„Â± baÃ…Å¸arÃ„Â±yla oluÃ…Å¸turuldu");
       } catch (error) {
-        console.log("Excel dosyası oluşturulurken bir hata oluştu:", error);
+        console.log("Excel dosyasÃ„Â± oluÃ…Å¸turulurken bir hata oluÃ…Å¸tu:", error);
       }
     }
     createExcelFile();
@@ -393,7 +395,7 @@ const OlusturulmusMizanlar: React.FC<Props> = ({ type1, type2 }) => {
 
   return (
     <>
-      <HotTable
+      <CustomHotTable 
         style={{
           height: "100%",
           width: "100%",

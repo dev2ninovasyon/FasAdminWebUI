@@ -1,8 +1,10 @@
-import React, { useEffect, useState, useRef } from "react";
-import { HotTable } from "@handsontable/react";
-import { registerAllModules } from "handsontable/registry";
 import { dictionary } from "@/utils/languages/handsontable.tr-TR";
-import "handsontable/dist/handsontable.full.min.css";
+import "@/lib/handsontableSetup";
+
+import React, { useEffect, useState, useRef } from "react";
+import CustomHotTable from "@/components/HotTableWrapper";
+import { registerAllModules } from "handsontable/registry";
+
 import { plus } from "@/utils/theme/Typography";
 import {
   Typography,
@@ -135,10 +137,10 @@ const HaricFisListesiEnflasyonHaricTable: React.FC<Props> = ({
         setTimeout(() => {
           handleSelectAll(true);
           pendingSelectAll.current = false;
-        }, 300); // Back-end yavaş olabilir, biraz bekle
+        }, 300); // Back-end yavaÃ…Å¸ olabilir, biraz bekle
       }
     } catch (error) {
-      console.log("Bir hata oluştu:", error);
+      console.log("Bir hata oluÃ…Å¸tu:", error);
       setLoading(false);
     }
   };
@@ -171,15 +173,15 @@ const HaricFisListesiEnflasyonHaricTable: React.FC<Props> = ({
   };
 
   const handleHeaderClick = (e: any) => {
-    // Handsontable React wrapper'ında cell click olayları bazen input'a ulaşmayabilir.
-    // DOM üzerinden kontrol edelim.
+    // Handsontable React wrapper'Ã„Â±nda cell click olaylarÃ„Â± bazen input'a ulaÃ…Å¸mayabilir.
+    // DOM ÃƒÂ¼zerinden kontrol edelim.
     const target = e.target as HTMLInputElement;
     if (target && target.id === "header-select-all") {
       const isChecked = target.checked;
       if (isChecked && pageSize !== -1) {
-        // Hepsi değilse uyar
+        // Hepsi deÃ„Å¸ilse uyar
         setConfirmOpen(true);
-        target.checked = false; // Onay gelene kadar kapalı tut
+        target.checked = false; // Onay gelene kadar kapalÃ„Â± tut
       } else {
         handleSelectAll(isChecked);
       }
@@ -210,7 +212,7 @@ const HaricFisListesiEnflasyonHaricTable: React.FC<Props> = ({
         selectedRows
       );
 
-      enqueueSnackbar("Değişiklikler Kaydedildi.", {
+      enqueueSnackbar("DeÃ„Å¸iÃ…Å¸iklikler Kaydedildi.", {
         variant: "success",
         autoHideDuration: 5000,
         style: {
@@ -222,41 +224,41 @@ const HaricFisListesiEnflasyonHaricTable: React.FC<Props> = ({
       });
       fetchData(currentPage);
     } catch (error) {
-      console.log("Bir hata oluştu:", error);
+      console.log("Bir hata oluÃ…Å¸tu:", error);
     }
   };
 
   const colHeaders = [
     "Id",
-    `Hariç mi?<br/><input type="checkbox" id="header-select-all" style="width: 20px; height: 20px; cursor: pointer;">`,
+    `HariÃƒÂ§ mi?<br/><input type="checkbox" id="header-select-all" style="width: 20px; height: 20px; cursor: pointer;">`,
     "Yevmiye No",
     "Yevmiye Tarihi",
     "Kebir Kodu",
     "Detay Kodu",
-    "Kebir Adı",
-    "Hesap Adı",
-    "Açıklama",
-    "Borç",
+    "Kebir AdÃ„Â±",
+    "Hesap AdÃ„Â±",
+    "AÃƒÂ§Ã„Â±klama",
+    "BorÃƒÂ§",
     "Alacak",
   ];
 
   const columns = [
     { data: 0, type: "text", readOnly: true }, // Id
-    { data: 1, type: "checkbox", className: "htCenter htMiddle" }, // Hariç mi?
+    { data: 1, type: "checkbox", className: "htCenter htMiddle" }, // HariÃƒÂ§ mi?
     { data: 2, type: "numeric", readOnly: true, className: "htLeft htMiddle" }, // Yevmiye No
     { data: 3, type: "text", readOnly: true, className: "htCenter htMiddle" }, // Yevmiye Tarihi
     { data: 4, type: "numeric", readOnly: true, className: "htCenter htMiddle" }, // Kebir Kodu
     { data: 5, type: "text", readOnly: true, className: "htLeft htMiddle" }, // Detay Kodu
-    { data: 6, type: "text", readOnly: true, className: "htLeft htMiddle" }, // Kebir Adı
-    { data: 7, type: "text", readOnly: true, className: "htLeft htMiddle" }, // Hesap Adı
-    { data: 8, type: "text", readOnly: true, className: "htLeft htMiddle" }, // Açıklama
+    { data: 6, type: "text", readOnly: true, className: "htLeft htMiddle" }, // Kebir AdÃ„Â±
+    { data: 7, type: "text", readOnly: true, className: "htLeft htMiddle" }, // Hesap AdÃ„Â±
+    { data: 8, type: "text", readOnly: true, className: "htLeft htMiddle" }, // AÃƒÂ§Ã„Â±klama
     {
       data: 9,
       type: "numeric",
       numericFormat: { pattern: "0,0.00", culture: "tr-TR" },
       readOnly: true,
       className: "htRight htMiddle",
-    }, // Borç
+    }, // BorÃƒÂ§
     {
       data: 10,
       type: "numeric",
@@ -299,18 +301,18 @@ const HaricFisListesiEnflasyonHaricTable: React.FC<Props> = ({
       `}</style>
 
       <Dialog open={confirmOpen} onClose={() => setConfirmOpen(false)}>
-        <DialogTitle>Tüm Kayıtları Seç</DialogTitle>
+        <DialogTitle>TÃƒÂ¼m KayÃ„Â±tlarÃ„Â± SeÃƒÂ§</DialogTitle>
         <DialogContent>
           <DialogContentText>
-            Tümünü seçmek istiyor musunuz? Şuan{" "}
-            <strong>{fetchedData.length}</strong> kayıt seçildi, onaylarsanız{" "}
-            <strong>{totalCount}</strong> kaydın hepsi seçilecek. Bu işlem satır
-            gösterme alanını "Hepsi" olarak değiştirecektir.
+            TÃƒÂ¼mÃƒÂ¼nÃƒÂ¼ seÃƒÂ§mek istiyor musunuz? Ã…Âuan{" "}
+            <strong>{fetchedData.length}</strong> kayÃ„Â±t seÃƒÂ§ildi, onaylarsanÃ„Â±z{" "}
+            <strong>{totalCount}</strong> kaydÃ„Â±n hepsi seÃƒÂ§ilecek. Bu iÃ…Å¸lem satÃ„Â±r
+            gÃƒÂ¶sterme alanÃ„Â±nÃ„Â± "Hepsi" olarak deÃ„Å¸iÃ…Å¸tirecektir.
           </DialogContentText>
         </DialogContent>
         <DialogActions>
           <Button onClick={() => setConfirmOpen(false)} color="inherit">
-            Vazgeç
+            VazgeÃƒÂ§
           </Button>
           <Button
             onClick={handleConfirmSelectAll}
@@ -324,7 +326,7 @@ const HaricFisListesiEnflasyonHaricTable: React.FC<Props> = ({
 
       <Stack direction="row" alignItems="center" marginBottom={2} spacing={2}>
         <Typography variant="h6" sx={{ flexGrow: 1 }}>
-          Fiş Listesi 
+          FiÃ…Å¸ Listesi 
         </Typography>
       </Stack>
 
@@ -346,7 +348,7 @@ const HaricFisListesiEnflasyonHaricTable: React.FC<Props> = ({
             This is often more reliable than afterOnCellMouseDown when dealing with inputs in headers.
         */}
         <div onClick={handleHeaderClick}>
-          <HotTable
+          <CustomHotTable 
             ref={hotTableComponent}
             data={fetchedData}
             colHeaders={colHeaders}
@@ -376,7 +378,7 @@ const HaricFisListesiEnflasyonHaricTable: React.FC<Props> = ({
               size="small"
               onClick={handleSaveHaricFisListesi}
             >
-              Değişiklikleri Kaydet
+              DeÃ„Å¸iÃ…Å¸iklikleri Kaydet
             </Button>
           </Grid>
 
@@ -403,12 +405,12 @@ const HaricFisListesiEnflasyonHaricTable: React.FC<Props> = ({
             }}
           >
             <Typography variant="body2">
-              Toplam: <strong>{totalCount}</strong> kayıt
+              Toplam: <strong>{totalCount}</strong> kayÃ„Â±t
             </Typography>
             <TextField
               select
               size="small"
-              label="Satır"
+              label="SatÃ„Â±r"
               value={pageSize}
               onChange={(e) => {
                 const val = parseInt(e.target.value);

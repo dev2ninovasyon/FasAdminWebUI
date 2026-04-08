@@ -1,10 +1,11 @@
 "use client";
 
 import React, { useEffect, useState, useRef } from "react";
-import { HotTable } from "@handsontable/react";
+import "@/lib/handsontableSetup";
+
+import CustomHotTable from "@/components/HotTableWrapper";
 import { registerAllModules } from "handsontable/registry";
-import "handsontable/dist/handsontable.full.min.css";
-import "@/utils/languages/handsontable.tr-TR";
+
 import { Box, Typography, useTheme, Divider } from "@mui/material";
 import { useSelector } from "@/store/hooks";
 import { AppState } from "@/store/store";
@@ -77,8 +78,8 @@ const KidemTazminatiCalismasi: React.FC<Props> = ({
             setDataBobi(response.kidemVerileriBobi || []);
             setDataOncekiBobi(response.kidemVerileriOncekiYilBobi || []);
         } catch (error) {
-            console.log("Veri çekme hatası:", error);
-            enqueueSnackbar("Veriler yüklenirken bir hata oluştu", { variant: "error" });
+            console.log("Veri ÃƒÂ§ekme hatasÃ„Â±:", error);
+            enqueueSnackbar("Veriler yÃƒÂ¼klenirken bir hata oluÃ…Å¸tu", { variant: "error" });
         } finally {
             setLoading(false);
         }
@@ -92,20 +93,20 @@ const KidemTazminatiCalismasi: React.FC<Props> = ({
 
     const columns = [
         { data: "tcKimlikNo", title: "TC Kimlik No", readOnly: true },
-        { data: "adiSoyadi", title: "Adı Soyadı", readOnly: true },
-        { data: "kidemTazminati", title: "Kıdem Tazminatı", type: "numeric", numericFormat: { pattern: "0,0.00", culture: "tr-TR" }, readOnly: true },
-        { data: "ihbarTazminati", title: "İhbar Tazminatı", type: "numeric", numericFormat: { pattern: "0,0.00", culture: "tr-TR" }, readOnly: true },
+        { data: "adiSoyadi", title: "AdÃ„Â± SoyadÃ„Â±", readOnly: true },
+        { data: "kidemTazminati", title: "KÃ„Â±dem TazminatÃ„Â±", type: "numeric", numericFormat: { pattern: "0,0.00", culture: "tr-TR" }, readOnly: true },
+        { data: "ihbarTazminati", title: "Ã„Â°hbar TazminatÃ„Â±", type: "numeric", numericFormat: { pattern: "0,0.00", culture: "tr-TR" }, readOnly: true },
         { data: "toplamTutar", title: "Toplam Tutar", type: "numeric", numericFormat: { pattern: "0,0.00", culture: "tr-TR" }, readOnly: true },
     ];
 
     return (
         <Box sx={{ display: "flex", flexDirection: "column", gap: isReport ? 2 : 4 }}>
             <Typography variant="h6" sx={{ color: theme.palette.mode === 'dark' ? "#FFFFFF" : "#2C3E50", fontWeight: "bold", mb: 3 }}>
-                Kıdem Tazminatı Çalışması
+                KÃ„Â±dem TazminatÃ„Â± Ãƒâ€¡alÃ„Â±Ã…Å¸masÃ„Â±
             </Typography>
             <Box>
                 <Typography variant="subtitle1" gutterBottom sx={{ color: theme.palette.primary.main, fontWeight: "bold" }}>
-                    Cari Dönem Kıdem Tazminatı Çalışması ({user.yil || ""})
+                    Cari DÃƒÂ¶nem KÃ„Â±dem TazminatÃ„Â± Ãƒâ€¡alÃ„Â±Ã…Å¸masÃ„Â± ({user.yil || ""})
                 </Typography>
                 <Box
                     sx={{
@@ -130,7 +131,7 @@ const KidemTazminatiCalismasi: React.FC<Props> = ({
                         }
                     }}
                 >
-                    <HotTable
+                    <CustomHotTable 
                         data={dataBobi}
                         columns={columns}
                         colHeaders={true}
@@ -152,7 +153,7 @@ const KidemTazminatiCalismasi: React.FC<Props> = ({
                     />
                     {dataBobi.length === 0 && (
                         <Box sx={{ p: 4, textAlign: "center" }}>
-                            <Typography variant="body1" color="textSecondary">Veri bulunmamaktadır.</Typography>
+                            <Typography variant="body1" color="textSecondary">Veri bulunmamaktadÃ„Â±r.</Typography>
                         </Box>
                     )}
                 </Box>
@@ -162,7 +163,7 @@ const KidemTazminatiCalismasi: React.FC<Props> = ({
 
             <Box>
                 <Typography variant="subtitle1" gutterBottom sx={{ color: theme.palette.primary.main, fontWeight: "bold" }}>
-                    Önceki Dönem Kıdem Tazminatı Çalışması ({(user.yil || 0) - 1})
+                    Ãƒâ€“nceki DÃƒÂ¶nem KÃ„Â±dem TazminatÃ„Â± Ãƒâ€¡alÃ„Â±Ã…Å¸masÃ„Â± ({(user.yil || 0) - 1})
                 </Typography>
                 <Box
                     sx={{
@@ -176,7 +177,7 @@ const KidemTazminatiCalismasi: React.FC<Props> = ({
                         }
                     }}
                 >
-                    <HotTable
+                    <CustomHotTable 
                         data={dataOncekiBobi}
                         columns={columns}
                         colHeaders={true}
@@ -198,7 +199,7 @@ const KidemTazminatiCalismasi: React.FC<Props> = ({
                     />
                     {dataOncekiBobi.length === 0 && (
                         <Box sx={{ p: 4, textAlign: "center" }}>
-                            <Typography variant="body1" color="textSecondary">Veri bulunmamaktadır.</Typography>
+                            <Typography variant="body1" color="textSecondary">Veri bulunmamaktadÃ„Â±r.</Typography>
                         </Box>
                     )}
                 </Box>

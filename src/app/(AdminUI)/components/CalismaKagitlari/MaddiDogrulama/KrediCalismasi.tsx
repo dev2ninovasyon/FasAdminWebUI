@@ -1,10 +1,11 @@
 "use client";
 
 import React, { useEffect, useState, useRef, useMemo } from "react";
-import { HotTable } from "@handsontable/react";
+import "@/lib/handsontableSetup";
+
+import CustomHotTable from "@/components/HotTableWrapper";
 import { registerAllModules } from "handsontable/registry";
-import "handsontable/dist/handsontable.full.min.css";
-import "@/utils/languages/handsontable.tr-TR";
+
 import { Box, Typography, useTheme } from "@mui/material";
 import { useSelector } from "@/store/hooks";
 import { AppState } from "@/store/store";
@@ -112,8 +113,8 @@ const KrediCalismasi: React.FC<Props> = ({ parentName, childName, dipnotNo, isRe
                     enqueueSnackbar(response.message, { variant: "info" });
             }
         } catch (error) {
-            console.log("Veri çekme hatası:", error);
-            enqueueSnackbar("Veriler yüklenirken bir hata oluştu", {
+            console.log("Veri ÃƒÂ§ekme hatasÃ„Â±:", error);
+            enqueueSnackbar("Veriler yÃƒÂ¼klenirken bir hata oluÃ…Å¸tu", {
                 variant: "error",
             });
         } finally {
@@ -147,13 +148,13 @@ const KrediCalismasi: React.FC<Props> = ({ parentName, childName, dipnotNo, isRe
             { data: "faizOrani", type: "numeric", numericFormat: { pattern: "0.00%", culture: "tr-TR" }, readOnly: true, width: 66 },
             { data: "vade", readOnly: true, width: 50 },
 
-            // Vadesel Dağılım - İskontolu
+            // Vadesel DaÃ„Å¸Ã„Â±lÃ„Â±m - Ã„Â°skontolu
             { data: "vadeselDagilim3AyIskontolu", type: "numeric", numericFormat: { pattern: "0,0.00", culture: "tr-TR" }, readOnly: true, className: "htCenter htMiddle", width: 72 },
             { data: "vadeselDagilim12AyIskontolu", type: "numeric", numericFormat: { pattern: "0,0.00", culture: "tr-TR" }, readOnly: true, className: "htCenter htMiddle", width: 82 },
             { data: "vadeselDagilim5YilIskontolu", type: "numeric", numericFormat: { pattern: "0,0.00", culture: "tr-TR" }, readOnly: true, className: "htCenter htMiddle", width: 89 },
             { data: "vadeselDagilim5YildanUzunIskontolu", type: "numeric", numericFormat: { pattern: "0,0.00", culture: "tr-TR" }, readOnly: true, className: "htCenter htMiddle", width: 89 },
 
-            // Vadesel Dağılım - İskontosuz
+            // Vadesel DaÃ„Å¸Ã„Â±lÃ„Â±m - Ã„Â°skontosuz
             { data: "vadeselDagilim3AyIskontosuz", type: "numeric", numericFormat: { pattern: "0,0.00", culture: "tr-TR" }, readOnly: true, className: "htCenter htMiddle", width: 72 },
             { data: "vadeselDagilim12AyIskontosuz", type: "numeric", numericFormat: { pattern: "0,0.00", culture: "tr-TR" }, readOnly: true, className: "htCenter htMiddle", width: 82 },
             { data: "vadeselDagilim5YilIskontosuz", type: "numeric", numericFormat: { pattern: "0,0.00", culture: "tr-TR" }, readOnly: true, className: "htCenter htMiddle", width: 89 },
@@ -167,26 +168,26 @@ const KrediCalismasi: React.FC<Props> = ({ parentName, childName, dipnotNo, isRe
         return [
             [
                 { label: "Hesap Kodu", rowspan: 3, colspan: 1 },
-                { label: "Hesap Adı", rowspan: 3, colspan: 1 },
+                { label: "Hesap AdÃ„Â±", rowspan: 3, colspan: 1 },
                 { label: "Ana Para", rowspan: 3, colspan: 1 },
-                { label: "İskontolu", rowspan: 3, colspan: 1 },
-                { label: "İskontosuz", rowspan: 3, colspan: 1 },
-                { label: "Raporlama\nTarihine\nKadar\nİşleyen\nFaiz+Fon+\nVergi", rowspan: 3, colspan: 1 },
+                { label: "Ã„Â°skontolu", rowspan: 3, colspan: 1 },
+                { label: "Ã„Â°skontosuz", rowspan: 3, colspan: 1 },
+                { label: "Raporlama\nTarihine\nKadar\nÃ„Â°Ã…Å¸leyen\nFaiz+Fon+\nVergi", rowspan: 3, colspan: 1 },
                 { label: "Kalan\nFaiz+Fon+\nVergi", rowspan: 3, colspan: 1 },
-                { label: "Kalan\nFaiz+Fon+\nVerginin\nİskontolu\nTutarı", rowspan: 3, colspan: 1 },
-                { label: "Faiz Oranı", rowspan: 3, colspan: 1 },
+                { label: "Kalan\nFaiz+Fon+\nVerginin\nÃ„Â°skontolu\nTutarÃ„Â±", rowspan: 3, colspan: 1 },
+                { label: "Faiz OranÃ„Â±", rowspan: 3, colspan: 1 },
                 { label: "Vade", rowspan: 3, colspan: 1 },
-                { label: "Vadesel Dağılım", colspan: 8, rowspan: 1 },
+                { label: "Vadesel DaÃ„Å¸Ã„Â±lÃ„Â±m", colspan: 8, rowspan: 1 },
             ],
             [
                 "", "", "", "", "", "", "", "", "", "",
-                { label: "İskontolu", colspan: 4, rowspan: 1 },
-                { label: "İskontosuz", colspan: 4, rowspan: 1 },
+                { label: "Ã„Â°skontolu", colspan: 4, rowspan: 1 },
+                { label: "Ã„Â°skontosuz", colspan: 4, rowspan: 1 },
             ],
             [
                 "", "", "", "", "", "", "", "", "", "",
-                "1-3 Ay", "4-12 Ay", "1-5 Yıl", "5 Yıldan Uzun",
-                "1-3 Ay", "4-12 Ay", "1-5 Yıl", "5 Yıldan Uzun",
+                "1-3 Ay", "4-12 Ay", "1-5 YÃ„Â±l", "5 YÃ„Â±ldan Uzun",
+                "1-3 Ay", "4-12 Ay", "1-5 YÃ„Â±l", "5 YÃ„Â±ldan Uzun",
             ],
         ];
     }, []);
@@ -194,20 +195,20 @@ const KrediCalismasi: React.FC<Props> = ({ parentName, childName, dipnotNo, isRe
     // DETAY TABLO - COLUMNS
     const detailColumns = [
         { data: "hesapKodu", title: "Hesap Kodu", readOnly: true, className: "htCenter htMiddle", },
-        { data: "hesapAdi", title: "Hesap Adı", readOnly: true, className: "htLeft htMiddle" },
+        { data: "hesapAdi", title: "Hesap AdÃ„Â±", readOnly: true, className: "htLeft htMiddle" },
         { data: "tarih", title: "Tarih", type: "date", dateFormat: "DD.MM.YYYY", readOnly: true, className: "htCenter htMiddle" },
         { data: "taksit", title: "Taksit", type: "numeric", numericFormat: { pattern: "0,0.00", culture: "tr-TR" }, readOnly: true, className: "htRight htMiddle" },
         { data: "faiz", title: "Faiz", type: "numeric", numericFormat: { pattern: "0,0.00", culture: "tr-TR" }, readOnly: true, className: "htRight htMiddle" },
         { data: "fonVergi", title: "Fon+Vergi", type: "numeric", numericFormat: { pattern: "0,0.00", culture: "tr-TR" }, readOnly: true, className: "htRight htMiddle" },
         { data: "anaPara", title: "Ana Para", type: "numeric", numericFormat: { pattern: "0,0.00", culture: "tr-TR" }, readOnly: true, className: "htRight htMiddle" },
-        { data: "gun", title: "Gün", type: "numeric", readOnly: true, className: "htCenter htMiddle" },
+        { data: "gun", title: "GÃƒÂ¼n", type: "numeric", readOnly: true, className: "htCenter htMiddle" },
         { data: "tutar", title: "Tutar", type: "numeric", numericFormat: { pattern: "0,0.00", culture: "tr-TR" }, readOnly: true, className: "htRight htMiddle" },
     ];
 
     return (
         <Box sx={{ p: isReport ? 0 : 3 }}>
             <Typography variant="h6" sx={{ color: theme.palette.mode === 'dark' ? "#FFFFFF" : "#2C3E50", fontWeight: "bold", mb: 3 }}>
-                Kredi Çalışması
+                Kredi Ãƒâ€¡alÃ„Â±Ã…Å¸masÃ„Â±
             </Typography>
 
             {/* ANA TABLO */}
@@ -251,7 +252,7 @@ const KrediCalismasi: React.FC<Props> = ({ parentName, childName, dipnotNo, isRe
                     }
                 }}
             >
-                <HotTable
+                <CustomHotTable 
                     ref={hotTableComponent}
                     data={data}
                     columns={columns}
@@ -279,7 +280,7 @@ const KrediCalismasi: React.FC<Props> = ({ parentName, childName, dipnotNo, isRe
                 {data.length === 0 && (
                     <Box sx={{ p: 4, textAlign: "center" }}>
                         <Typography variant="body1" color="textSecondary">
-                            Kredi özeti verisi bulunmamaktadır.
+                            Kredi ÃƒÂ¶zeti verisi bulunmamaktadÃ„Â±r.
                         </Typography>
                     </Box>
                 )}
@@ -319,7 +320,7 @@ const KrediCalismasi: React.FC<Props> = ({ parentName, childName, dipnotNo, isRe
                     }
                 }}
             >
-                <HotTable
+                <CustomHotTable 
                     ref={detailHotTableComponent}
                     data={detailData}
                     columns={detailColumns}
@@ -345,7 +346,7 @@ const KrediCalismasi: React.FC<Props> = ({ parentName, childName, dipnotNo, isRe
                 {detailData.length === 0 && (
                     <Box sx={{ p: 4, textAlign: "center" }}>
                         <Typography variant="body1" color="textSecondary">
-                            Ödeme planı detay verisi bulunmamaktadır.
+                            Ãƒâ€“deme planÃ„Â± detay verisi bulunmamaktadÃ„Â±r.
                         </Typography>
                     </Box>
                 )}

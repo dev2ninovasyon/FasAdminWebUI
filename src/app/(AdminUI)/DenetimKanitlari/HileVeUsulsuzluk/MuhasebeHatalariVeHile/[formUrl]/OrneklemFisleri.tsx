@@ -1,7 +1,9 @@
-import { HotTable } from "@handsontable/react";
-import { registerAllModules } from "handsontable/registry";
 import { dictionary } from "@/utils/languages/handsontable.tr-TR";
-import "handsontable/dist/handsontable.full.min.css";
+import "@/lib/handsontableSetup";
+
+import CustomHotTable from "@/components/HotTableWrapper";
+import { registerAllModules } from "handsontable/registry";
+
 import { plus } from "@/utils/theme/Typography";
 import { useDispatch, useSelector } from "@/store/hooks";
 import { AppState } from "@/store/store";
@@ -73,9 +75,9 @@ const OrneklemFisleri: React.FC<Props> = ({ kebirKodu }) => {
     "Yevmiye No",
     "Yevmiye Tarihi",
     "Detay Kodu",
-    "Hesap Adı",
-    "Açıklama",
-    "Borç",
+    "Hesap AdÃ„Â±",
+    "AÃƒÂ§Ã„Â±klama",
+    "BorÃƒÂ§",
     "Alacak",
   ];
 
@@ -114,14 +116,14 @@ const OrneklemFisleri: React.FC<Props> = ({ kebirKodu }) => {
       readOnly: true,
       editor: false,
       className: "htLeft",
-    }, // Hesap Adı
+    }, // Hesap AdÃ„Â±
     {
       type: "text",
       columnSorting: true,
       readOnly: true,
       editor: false,
       className: "htLeft",
-    }, // Açıklama
+    }, // AÃƒÂ§Ã„Â±klama
     {
       type: "numeric",
       numericFormat: {
@@ -261,7 +263,7 @@ const OrneklemFisleri: React.FC<Props> = ({ kebirKodu }) => {
     if (hotTableComponent.current) {
       const hotInstance = hotTableComponent.current.hotInstance;
       const cellMeta = hotInstance.getDataAtRow(row);
-      console.log("Satır Verileri:", cellMeta);
+      console.log("SatÃ„Â±r Verileri:", cellMeta);
       return cellMeta;
     }
   };
@@ -292,7 +294,7 @@ const OrneklemFisleri: React.FC<Props> = ({ kebirKodu }) => {
       setFetchedData(rowsAll);
       setRowCount(rowsAll.length);
     } catch (error) {
-      console.log("Bir hata oluştu:", error);
+      console.log("Bir hata oluÃ…Å¸tu:", error);
     }
   };
 
@@ -342,9 +344,9 @@ const OrneklemFisleri: React.FC<Props> = ({ kebirKodu }) => {
           type: "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
         });
         saveAs(blob, "OrneklemFisleri.xlsx");
-        console.log("Excel dosyası başarıyla oluşturuldu");
+        console.log("Excel dosyasÃ„Â± baÃ…Å¸arÃ„Â±yla oluÃ…Å¸turuldu");
       } catch (error) {
-        console.log("Excel dosyası oluşturulurken bir hata oluştu:", error);
+        console.log("Excel dosyasÃ„Â± oluÃ…Å¸turulurken bir hata oluÃ…Å¸tu:", error);
       }
     }
     createExcelFile();
@@ -368,7 +370,7 @@ const OrneklemFisleri: React.FC<Props> = ({ kebirKodu }) => {
 
   return (
     <>
-      <HotTable
+      <CustomHotTable 
         style={{
           height: "100%",
           width: "100%",

@@ -1,7 +1,9 @@
-import { HotTable } from "@handsontable/react";
-import { registerAllModules } from "handsontable/registry";
 import { dictionary } from "@/utils/languages/handsontable.tr-TR";
-import "handsontable/dist/handsontable.full.min.css";
+import "@/lib/handsontableSetup";
+
+import CustomHotTable from "@/components/HotTableWrapper";
+import { registerAllModules } from "handsontable/registry";
+
 import { plus } from "@/utils/theme/Typography";
 import { useDispatch, useSelector } from "@/store/hooks";
 import { AppState } from "@/store/store";
@@ -76,7 +78,7 @@ const FinansalTabloKalemlerindeDegisim: React.FC<Props> = ({
 
   const textValidator = (value: string, callback: (value: boolean) => void) => {
     if (!value || value.trim() === "") {
-      // Eï¿½er deï¿½er boï¿½sa geï¿½ersiz kabul et
+      // EÃƒÂ¯Ã‚Â¿Ã‚Â½er deÃƒÂ¯Ã‚Â¿Ã‚Â½er boÃƒÂ¯Ã‚Â¿Ã‚Â½sa geÃƒÂ¯Ã‚Â¿Ã‚Â½ersiz kabul et
       callback(false);
     } else {
       callback(true);
@@ -86,11 +88,11 @@ const FinansalTabloKalemlerindeDegisim: React.FC<Props> = ({
   const colHeaders = [
     "Id",
     "Kebir Kodu",
-    "Hesap Adï¿½",
-    "ï¿½nceki Dï¿½nem Bakiye",
-    "Cari Dï¿½nem Bakiye",
-    "Deï¿½iï¿½im Tutar",
-    "Deï¿½iï¿½im (%)",
+    "Hesap AdÃƒÂ¯Ã‚Â¿Ã‚Â½",
+    "ÃƒÂ¯Ã‚Â¿Ã‚Â½nceki DÃƒÂ¯Ã‚Â¿Ã‚Â½nem Bakiye",
+    "Cari DÃƒÂ¯Ã‚Â¿Ã‚Â½nem Bakiye",
+    "DeÃƒÂ¯Ã‚Â¿Ã‚Â½iÃƒÂ¯Ã‚Â¿Ã‚Â½im Tutar",
+    "DeÃƒÂ¯Ã‚Â¿Ã‚Â½iÃƒÂ¯Ã‚Â¿Ã‚Â½im (%)",
     "Tespit",
   ];
 
@@ -110,7 +112,7 @@ const FinansalTabloKalemlerindeDegisim: React.FC<Props> = ({
       allowInvalid: false,
       readOnly: true,
       editor: false,
-    }, // Hesap Adï¿½
+    }, // Hesap AdÃƒÂ¯Ã‚Â¿Ã‚Â½
     {
       type: "numeric",
       numericFormat: {
@@ -121,7 +123,7 @@ const FinansalTabloKalemlerindeDegisim: React.FC<Props> = ({
       className: "htRight",
       readOnly: true,
       editor: false,
-    }, // ï¿½nceki Dï¿½nem Bakiye
+    }, // ÃƒÂ¯Ã‚Â¿Ã‚Â½nceki DÃƒÂ¯Ã‚Â¿Ã‚Â½nem Bakiye
     {
       type: "numeric",
       numericFormat: {
@@ -132,7 +134,7 @@ const FinansalTabloKalemlerindeDegisim: React.FC<Props> = ({
       className: "htRight",
       readOnly: true,
       editor: false,
-    }, // Cari Dï¿½nem Bakiye
+    }, // Cari DÃƒÂ¯Ã‚Â¿Ã‚Â½nem Bakiye
     {
       type: "numeric",
       numericFormat: {
@@ -143,7 +145,7 @@ const FinansalTabloKalemlerindeDegisim: React.FC<Props> = ({
       className: "htRight",
       readOnly: true,
       editor: false,
-    }, // Deï¿½iï¿½im Tutar
+    }, // DeÃƒÂ¯Ã‚Â¿Ã‚Â½iÃƒÂ¯Ã‚Â¿Ã‚Â½im Tutar
     {
       type: "numeric",
       numericFormat: {
@@ -154,7 +156,7 @@ const FinansalTabloKalemlerindeDegisim: React.FC<Props> = ({
       className: "htRight",
       readOnly: true,
       editor: false,
-    }, // Deï¿½iï¿½im (%)
+    }, // DeÃƒÂ¯Ã‚Â¿Ã‚Â½iÃƒÂ¯Ã‚Â¿Ã‚Â½im (%)
     {
       type: "text",
       columnSorting: true,
@@ -275,7 +277,7 @@ const FinansalTabloKalemlerindeDegisim: React.FC<Props> = ({
     if (hotTableComponent.current) {
       const hotInstance = hotTableComponent.current.hotInstance;
       const cellMeta = hotInstance.getDataAtRow(row);
-      console.log("Satï¿½r Verileri:", cellMeta);
+      console.log("SatÃƒÂ¯Ã‚Â¿Ã‚Â½r Verileri:", cellMeta);
       return cellMeta;
     }
   };
@@ -323,7 +325,7 @@ const FinansalTabloKalemlerindeDegisim: React.FC<Props> = ({
       if (result) {
         fetchData();
         setOpenCartAlert(false);
-        enqueueSnackbar("Gï¿½ncellendi", {
+        enqueueSnackbar("GÃƒÂ¯Ã‚Â¿Ã‚Â½ncellendi", {
           variant: "success",
           autoHideDuration: 5000,
           style: {
@@ -335,7 +337,7 @@ const FinansalTabloKalemlerindeDegisim: React.FC<Props> = ({
         });
       } else {
         setOpenCartAlert(false);
-        enqueueSnackbar("Gï¿½ncellenemedi", {
+        enqueueSnackbar("GÃƒÂ¯Ã‚Â¿Ã‚Â½ncellenemedi", {
           variant: "error",
           autoHideDuration: 5000,
           style: {
@@ -348,7 +350,7 @@ const FinansalTabloKalemlerindeDegisim: React.FC<Props> = ({
         });
       }
     } catch (error) {
-      console.log("Bir hata oluï¿½tu:", error);
+      console.log("Bir hata oluÃƒÂ¯Ã‚Â¿Ã‚Â½tu:", error);
     }
   };
 
@@ -378,7 +380,7 @@ const FinansalTabloKalemlerindeDegisim: React.FC<Props> = ({
       setRowCount(rowsAll.length);
       setFetchedData(rowsAll);
     } catch (error) {
-      console.log("Bir hata oluï¿½tu:", error);
+      console.log("Bir hata oluÃƒÂ¯Ã‚Â¿Ã‚Â½tu:", error);
     }
   };
 
@@ -437,9 +439,9 @@ const FinansalTabloKalemlerindeDegisim: React.FC<Props> = ({
           type: "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
         });
         saveAs(blob, "FinansalTabloKalemlerindeDegisim.xlsx");
-        console.log("Excel dosyasï¿½ baï¿½arï¿½yla oluï¿½turuldu");
+        console.log("Excel dosyasÃƒÂ¯Ã‚Â¿Ã‚Â½ baÃƒÂ¯Ã‚Â¿Ã‚Â½arÃƒÂ¯Ã‚Â¿Ã‚Â½yla oluÃƒÂ¯Ã‚Â¿Ã‚Â½turuldu");
       } catch (error) {
-        console.log("Excel dosyasï¿½ oluï¿½turulurken bir hata oluï¿½tu:", error);
+        console.log("Excel dosyasÃƒÂ¯Ã‚Â¿Ã‚Â½ oluÃƒÂ¯Ã‚Â¿Ã‚Â½turulurken bir hata oluÃƒÂ¯Ã‚Â¿Ã‚Â½tu:", error);
       }
     }
     createExcelFile();
@@ -467,7 +469,7 @@ const FinansalTabloKalemlerindeDegisim: React.FC<Props> = ({
 
   return (
     <>
-      <HotTable
+      <CustomHotTable 
         style={{
           height: "100%",
           width: "100%",

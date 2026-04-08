@@ -1,6 +1,8 @@
 "use client";
 
 import React, { useEffect, useState } from "react";
+import "@/lib/handsontableSetup";
+
 import {
     Box,
     Typography,
@@ -14,9 +16,8 @@ import {
     CircularProgress,
     useTheme,
 } from "@mui/material";
-import { HotTable } from "@handsontable/react";
+import CustomHotTable from "@/components/HotTableWrapper";
 import { registerAllModules } from "handsontable/registry";
-import "handsontable/dist/handsontable.full.min.css";
 import { useSelector } from "@/store/hooks";
 import { AppState } from "@/store/store";
 import {
@@ -27,7 +28,7 @@ import {
     DavaKarsiliklariSummary
 } from "@/api/CalismaKagitlari/DavaKarsiliklariCalismasi";
 import { enqueueSnackbar } from "notistack";
-import "@/utils/languages/handsontable.tr-TR";
+
 
 registerAllModules();
 
@@ -64,7 +65,7 @@ const DavaKarsiliklariCalismasi = ({ dipnotNo, isClickedVarsayilanaDon, setIsCli
             setData(result.liste || []);
             setSummary(result.ozet || null);
         } catch (error) {
-            enqueueSnackbar("Veriler yüklenirken hata oluştu!", { variant: "error" });
+            enqueueSnackbar("Veriler yÃƒÂ¼klenirken hata oluÃ…Å¸tu!", { variant: "error" });
         } finally {
             setLoading(false);
         }
@@ -78,10 +79,10 @@ const DavaKarsiliklariCalismasi = ({ dipnotNo, isClickedVarsayilanaDon, setIsCli
                 try {
                     setLoading(true);
                     await varsayilanaDonDavaKarsiliklari(user.denetciId || 0, user.yil || 0, user.denetlenenId || 0);
-                    enqueueSnackbar("Veriler başarıyla getirildi.", { variant: "success" });
+                    enqueueSnackbar("Veriler baÃ…Å¸arÃ„Â±yla getirildi.", { variant: "success" });
                     await fetchData();
                 } catch (error) {
-                    enqueueSnackbar("İşlem sırasında bir hata oluştu!", { variant: "error" });
+                    enqueueSnackbar("Ã„Â°Ã…Å¸lem sÃ„Â±rasÃ„Â±nda bir hata oluÃ…Å¸tu!", { variant: "error" });
                 } finally {
                     setIsClickedVarsayilanaDon(false);
                     setLoading(false);
@@ -132,11 +133,11 @@ const DavaKarsiliklariCalismasi = ({ dipnotNo, isClickedVarsayilanaDon, setIsCli
                 const filteredData = updatedData.filter(row => row && row.aleyhteDavacininLehteDavalininUnvani);
                 await updateDavaKarsiliklari(filteredData);
                 setData(updatedData);
-                enqueueSnackbar("Güncellendi", { variant: "success" });
+                enqueueSnackbar("GÃƒÂ¼ncellendi", { variant: "success" });
                 const refresh = await getDavaKarsiliklariData(user.denetciId || 0, user.yil || 0, user.denetlenenId || 0);
                 setSummary(refresh.ozet);
             } catch (error) {
-                enqueueSnackbar("Hata oluştu!", { variant: "error" });
+                enqueueSnackbar("Hata oluÃ…Å¸tu!", { variant: "error" });
             }
         }
     };
@@ -148,11 +149,11 @@ const DavaKarsiliklariCalismasi = ({ dipnotNo, isClickedVarsayilanaDon, setIsCli
     return (
         <Box sx={{ width: "100%", p: 0 }}>
             <Typography variant="h6" sx={{ color: theme.palette.mode === 'dark' ? "#FFFFFF" : "#2C3E50", fontWeight: "bold", mb: 3 }}>
-                Dava Karşılıkları Çalışması
+                Dava KarÃ…Å¸Ã„Â±lÃ„Â±klarÃ„Â± Ãƒâ€¡alÃ„Â±Ã…Å¸masÃ„Â±
             </Typography>
-            {/* Arka plansız Düz Metin Başlık */}
+            {/* Arka plansÃ„Â±z DÃƒÂ¼z Metin BaÃ…Å¸lÃ„Â±k */}
             <Typography variant="h5" fontWeight={700} mb={2} sx={{ color: theme.palette.mode === 'dark' ? "#FFFFFF" : "#2C3E50" }}>
-                Dava Karşılıkları Özeti
+                Dava KarÃ…Å¸Ã„Â±lÃ„Â±klarÃ„Â± Ãƒâ€“zeti
             </Typography>
 
             <TableContainer component={Paper} elevation={0} sx={{ borderRadius: 0, border: `1px solid ${BORDER_COLOR}`, mb: 5 }}>
@@ -160,22 +161,22 @@ const DavaKarsiliklariCalismasi = ({ dipnotNo, isClickedVarsayilanaDon, setIsCli
                     <TableHead>
                         <TableRow sx={{ backgroundColor: HEADER_BG }}>
                             <TableCell sx={{ borderRight: `1px solid ${theme.palette.mode === 'dark' ? 'rgba(255,255,255,0.1)' : 'rgba(255,255,255,0.2)'}`, width: "120px" }}></TableCell>
-                            <TableCell align="center" sx={{ fontWeight: 700, color: "white", borderRight: `1px solid ${theme.palette.mode === 'dark' ? 'rgba(255,255,255,0.1)' : 'rgba(255,255,255,0.2)'}` }}>Hesaplanan Toplam Ayrılacak Dava Karşılıkları</TableCell>
-                            <TableCell align="center" sx={{ fontWeight: 700, color: "white", borderRight: `1px solid ${theme.palette.mode === 'dark' ? 'rgba(255,255,255,0.1)' : 'rgba(255,255,255,0.2)'}` }}>Hesaplanan Toplam Koşullu Dava Borçları</TableCell>
-                            <TableCell align="center" sx={{ fontWeight: 700, color: "white", borderRight: `1px solid ${theme.palette.mode === 'dark' ? 'rgba(255,255,255,0.1)' : 'rgba(255,255,255,0.2)'}` }}>Hesaplanan Toplam Koşullu Dava Alacakları</TableCell>
-                            <TableCell align="center" sx={{ fontWeight: 700, color: "white" }}>Uzman Görüşü Gerektirenler</TableCell>
+                            <TableCell align="center" sx={{ fontWeight: 700, color: "white", borderRight: `1px solid ${theme.palette.mode === 'dark' ? 'rgba(255,255,255,0.1)' : 'rgba(255,255,255,0.2)'}` }}>Hesaplanan Toplam AyrÃ„Â±lacak Dava KarÃ…Å¸Ã„Â±lÃ„Â±klarÃ„Â±</TableCell>
+                            <TableCell align="center" sx={{ fontWeight: 700, color: "white", borderRight: `1px solid ${theme.palette.mode === 'dark' ? 'rgba(255,255,255,0.1)' : 'rgba(255,255,255,0.2)'}` }}>Hesaplanan Toplam KoÃ…Å¸ullu Dava BorÃƒÂ§larÃ„Â±</TableCell>
+                            <TableCell align="center" sx={{ fontWeight: 700, color: "white", borderRight: `1px solid ${theme.palette.mode === 'dark' ? 'rgba(255,255,255,0.1)' : 'rgba(255,255,255,0.2)'}` }}>Hesaplanan Toplam KoÃ…Å¸ullu Dava AlacaklarÃ„Â±</TableCell>
+                            <TableCell align="center" sx={{ fontWeight: 700, color: "white" }}>Uzman GÃƒÂ¶rÃƒÂ¼Ã…Å¸ÃƒÂ¼ Gerektirenler</TableCell>
                         </TableRow>
                     </TableHead>
                     <TableBody>
                         <TableRow sx={{ backgroundColor: BG_PAPER }}>
-                            <TableCell sx={{ fontWeight: 700, backgroundColor: HEADER_BG, color: "white", textAlign: 'center', borderRight: `1px solid ${theme.palette.mode === 'dark' ? 'rgba(255,255,255,0.1)' : 'rgba(255,255,255,0.2)'}` }}>Sayısı</TableCell>
+                            <TableCell sx={{ fontWeight: 700, backgroundColor: HEADER_BG, color: "white", textAlign: 'center', borderRight: `1px solid ${theme.palette.mode === 'dark' ? 'rgba(255,255,255,0.1)' : 'rgba(255,255,255,0.2)'}` }}>SayÃ„Â±sÃ„Â±</TableCell>
                             <TableCell align="center" sx={{ fontWeight: 600, color: TEXT_COLOR, borderRight: `1px solid ${BORDER_COLOR}` }}>{summary?.hesaplananToplamAyrilacakDavaKarsiliklariSayisi || 0}</TableCell>
                             <TableCell align="center" sx={{ fontWeight: 600, color: TEXT_COLOR, borderRight: `1px solid ${BORDER_COLOR}` }}>{summary?.hesaplananToplamKosulluDavaBorclariSayisi || 0}</TableCell>
                             <TableCell align="center" sx={{ fontWeight: 600, color: TEXT_COLOR, borderRight: `1px solid ${BORDER_COLOR}` }}>{summary?.hesaplananToplamKosulluDavaAlacaklariSayisi || 0}</TableCell>
                             <TableCell align="center" sx={{ fontWeight: 600, color: TEXT_COLOR }}>{summary?.uzmanGorusuGerektirenlerSayisi || 0}</TableCell>
                         </TableRow>
                         <TableRow sx={{ backgroundColor: ZEBRA_ROW }}>
-                            <TableCell sx={{ fontWeight: 700, backgroundColor: HEADER_BG, color: "white", textAlign: 'center', borderRight: `1px solid ${theme.palette.mode === 'dark' ? 'rgba(255,255,255,0.1)' : 'rgba(255,255,255,0.2)'}` }}>Tutarı</TableCell>
+                            <TableCell sx={{ fontWeight: 700, backgroundColor: HEADER_BG, color: "white", textAlign: 'center', borderRight: `1px solid ${theme.palette.mode === 'dark' ? 'rgba(255,255,255,0.1)' : 'rgba(255,255,255,0.2)'}` }}>TutarÃ„Â±</TableCell>
                             <TableCell align="center" sx={{ fontWeight: 600, color: TEXT_COLOR, borderRight: `1px solid ${BORDER_COLOR}` }}>{fmt(summary?.hesaplananToplamAyrilacakDavaKarsiliklariTutari)}</TableCell>
                             <TableCell align="center" sx={{ fontWeight: 600, color: TEXT_COLOR, borderRight: `1px solid ${BORDER_COLOR}` }}>{fmt(summary?.hesaplananToplamKosulluDavaBorclariTutari)}</TableCell>
                             <TableCell align="center" sx={{ fontWeight: 600, color: TEXT_COLOR, borderRight: `1px solid ${BORDER_COLOR}` }}>{fmt(summary?.hesaplananToplamKosulluDavaAlacaklariTutari)}</TableCell>
@@ -185,9 +186,9 @@ const DavaKarsiliklariCalismasi = ({ dipnotNo, isClickedVarsayilanaDon, setIsCli
                 </Table>
             </TableContainer>
 
-            {/* Arka plansız Düz Metin Başlık */}
+            {/* Arka plansÃ„Â±z DÃƒÂ¼z Metin BaÃ…Å¸lÃ„Â±k */}
             <Typography variant="h5" fontWeight={700} mb={2} sx={{ color: theme.palette.mode === 'dark' ? "#FFFFFF" : "#2C3E50" }}>
-                Dava Detayı Listesi
+                Dava DetayÃ„Â± Listesi
             </Typography>
 
             <Box sx={{
@@ -216,21 +217,21 @@ const DavaKarsiliklariCalismasi = ({ dipnotNo, isClickedVarsayilanaDon, setIsCli
                     backgroundColor: ZEBRA_ROW,
                 }
             }}>
-                <HotTable
+                <CustomHotTable 
                     data={data}
                     afterChange={handleAfterChange}
                     autoColumnSize={true}
                     manualColumnResize={true}
                     colHeaders={[
                         "SN",
-                        "Aleyhte Davacının / Lehte Davalının Unvanı",
+                        "Aleyhte DavacÃ„Â±nÃ„Â±n / Lehte DavalÃ„Â±nÃ„Â±n UnvanÃ„Â±",
                         "Aleyhte / Lehte",
                         "Dava Konusu",
-                        "Dava Yılı",
-                        "Mahkeme Aşaması",
-                        "Varsa, Yerel Mahkeme Kararı",
-                        "Duruşma Aşaması",
-                        "Muhtemel Değeri"
+                        "Dava YÃ„Â±lÃ„Â±",
+                        "Mahkeme AÃ…Å¸amasÃ„Â±",
+                        "Varsa, Yerel Mahkeme KararÃ„Â±",
+                        "DuruÃ…Å¸ma AÃ…Å¸amasÃ„Â±",
+                        "Muhtemel DeÃ„Å¸eri"
                     ]}
                     columns={[
                         { data: "id", readOnly: true, width: 40 },
@@ -264,7 +265,7 @@ const DavaKarsiliklariCalismasi = ({ dipnotNo, isClickedVarsayilanaDon, setIsCli
                         borderTop: `1px solid ${theme.palette.divider}`
                     }}>
                         <Typography variant="body2" color="textSecondary">
-                            Görüntülenecek veri bulunmamaktadır. Sağ tıklayarak satır ekleyebilirsiniz.
+                            GÃƒÂ¶rÃƒÂ¼ntÃƒÂ¼lenecek veri bulunmamaktadÃ„Â±r. SaÃ„Å¸ tÃ„Â±klayarak satÃ„Â±r ekleyebilirsiniz.
                         </Typography>
                     </Box>
                 )}

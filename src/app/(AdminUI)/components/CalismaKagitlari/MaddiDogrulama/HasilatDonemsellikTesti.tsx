@@ -1,9 +1,10 @@
 "use client";
 import React, { useEffect, useState, useRef } from "react";
-import { HotTable } from "@handsontable/react";
+import "@/lib/handsontableSetup";
+
+import CustomHotTable from "@/components/HotTableWrapper";
 import { registerAllModules } from "handsontable/registry";
-import "handsontable/dist/handsontable.full.min.css";
-import "@/utils/languages/handsontable.tr-TR";
+
 import { Box, Button, Typography, useTheme, TextField } from "@mui/material";
 import Grid from "@mui/material/Grid";
 import { useSelector } from "@/store/hooks";
@@ -58,7 +59,7 @@ const HasilatDonemsellikTesti: React.FC<Props> = ({
 
     const fetchData = async () => {
         if (!user.denetlenenId) {
-            enqueueSnackbar("Lütfen bir denetlenen seçiniz", { variant: "warning" });
+            enqueueSnackbar("LÃƒÂ¼tfen bir denetlenen seÃƒÂ§iniz", { variant: "warning" });
             return;
         }
         setLoading(true);
@@ -74,15 +75,15 @@ const HasilatDonemsellikTesti: React.FC<Props> = ({
             );
             if (response && Array.isArray(response)) {
                 setData(response);
-                enqueueSnackbar("Veriler başarıyla yüklendi", { variant: "success" });
+                enqueueSnackbar("Veriler baÃ…Å¸arÃ„Â±yla yÃƒÂ¼klendi", { variant: "success" });
             } else {
                 setData([]);
-                enqueueSnackbar("Veri bulunamadı", { variant: "info" });
+                enqueueSnackbar("Veri bulunamadÃ„Â±", { variant: "info" });
             }
         } catch (error) {
-            console.log("Veri çekme hatası:", error);
+            console.log("Veri ÃƒÂ§ekme hatasÃ„Â±:", error);
             setData([]);
-            enqueueSnackbar("Veriler yüklenirken bir hata oluştu", { variant: "error" });
+            enqueueSnackbar("Veriler yÃƒÂ¼klenirken bir hata oluÃ…Å¸tu", { variant: "error" });
         } finally {
             setLoading(false);
         }
@@ -109,10 +110,10 @@ const HasilatDonemsellikTesti: React.FC<Props> = ({
             }));
 
             await saveHasilatDonemsellikTesti(listToSave, true);
-            enqueueSnackbar("Veriler başarıyla kaydedildi", { variant: "success" });
+            enqueueSnackbar("Veriler baÃ…Å¸arÃ„Â±yla kaydedildi", { variant: "success" });
         } catch (error) {
-            console.log("Kaydetme hatası:", error);
-            enqueueSnackbar("Kaydetme sırasında bir hata oluştu", { variant: "error" });
+            console.log("Kaydetme hatasÃ„Â±:", error);
+            enqueueSnackbar("Kaydetme sÃ„Â±rasÃ„Â±nda bir hata oluÃ…Å¸tu", { variant: "error" });
         } finally {
             setLoading(false);
         }
@@ -133,13 +134,13 @@ const HasilatDonemsellikTesti: React.FC<Props> = ({
 
     const columns = [
         { data: "detayKodu", title: "Hesap Kodu", readOnly: true },
-        { data: "hesapAdi", title: "Hesap Adı", readOnly: true },
+        { data: "hesapAdi", title: "Hesap AdÃ„Â±", readOnly: true },
         { data: "belgeNevi", title: "Belge Nevi", readOnly: true },
         { data: "belgeNo", title: "Belge No", readOnly: true },
         { data: "belgeTarihi", title: "Belge Tarihi", type: "date", dateFormat: "DD.MM.YYYY", readOnly: true },
-        { data: "belgeTutari", title: "Belge Tutarı", type: "numeric", numericFormat: { pattern: "0,0.00", culture: "tr-TR" }, readOnly: true },
-        { data: "kayitTarihi", title: "Kayıt Tarihi", type: "date", dateFormat: "DD.MM.YYYY", readOnly: true },
-        { data: "kayitNo", title: "Kayıt No", type: "numeric", readOnly: true },
+        { data: "belgeTutari", title: "Belge TutarÃ„Â±", type: "numeric", numericFormat: { pattern: "0,0.00", culture: "tr-TR" }, readOnly: true },
+        { data: "kayitTarihi", title: "KayÃ„Â±t Tarihi", type: "date", dateFormat: "DD.MM.YYYY", readOnly: true },
+        { data: "kayitNo", title: "KayÃ„Â±t No", type: "numeric", readOnly: true },
         { data: "tespit", title: "Tespit" },
     ];
 
@@ -148,7 +149,7 @@ const HasilatDonemsellikTesti: React.FC<Props> = ({
     return (
         <Box sx={{ p: isReport ? 0 : 0 }}>
             <Typography variant="h6" sx={{ color: "#2C3E50", fontWeight: "bold", mb: 3 }}>
-                Hasılat Dönemsellik Testi
+                HasÃ„Â±lat DÃƒÂ¶nemsellik Testi
             </Typography>
             {!isReport && (
                 <Grid container spacing={2} mb={3} alignItems="flex-end">
@@ -159,7 +160,7 @@ const HasilatDonemsellikTesti: React.FC<Props> = ({
                         }}>
                         <TextField
                             fullWidth
-                            label="Başlangıç Tarihi"
+                            label="BaÃ…Å¸langÃ„Â±ÃƒÂ§ Tarihi"
                             type="date"
                             name="baslangictarih"
                             value={filters.baslangictarih}
@@ -174,7 +175,7 @@ const HasilatDonemsellikTesti: React.FC<Props> = ({
                         }}>
                         <TextField
                             fullWidth
-                            label="Bitiş Tarihi"
+                            label="BitiÃ…Å¸ Tarihi"
                             type="date"
                             name="bitistarih"
                             value={filters.bitistarih}
@@ -253,7 +254,7 @@ const HasilatDonemsellikTesti: React.FC<Props> = ({
                     }
                 }}
             >
-                <HotTable
+                <CustomHotTable 
                     ref={hotTableComponent}
                     data={data}
                     columns={columns}
@@ -291,7 +292,7 @@ const HasilatDonemsellikTesti: React.FC<Props> = ({
                         }}
                     >
                         <Typography variant="body1" color="textSecondary">
-                            Veri bulunmamaktadır. Filtreleri ayarlayıp "Verileri Getir" butonuna basınız.
+                            Veri bulunmamaktadÃ„Â±r. Filtreleri ayarlayÃ„Â±p "Verileri Getir" butonuna basÃ„Â±nÃ„Â±z.
                         </Typography>
                     </Box>
                 )}
