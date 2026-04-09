@@ -17,6 +17,7 @@ import {
   Stack,
   Tooltip,
   Typography,
+  useMediaQuery,
   useTheme,
 } from "@mui/material";
 import { IconArrowLeft, IconInfoCircle, IconKey, IconLock } from "@tabler/icons-react";
@@ -36,6 +37,7 @@ export default function ResetPasswordForm() {
   const router = useRouter();
   const searchParams = useSearchParams();
   const theme = useTheme();
+  const isMobile = useMediaQuery(theme.breakpoints.down("sm"));
   const token = searchParams.get("token")?.trim() || "";
   const email = searchParams.get("email")?.trim() || "";
   const [newPassword, setNewPassword] = useState("");
@@ -71,14 +73,23 @@ export default function ResetPasswordForm() {
     setPolicyAnchorEl(null);
   };
 
+  const handleConfirmPasswordFocus = () => {
+    if (isMobile) {
+      handlePolicyClose();
+    }
+  };
+
   useEffect(() => {
-    if (newPassword && passwordFieldRef.current) {
+    const shouldAutoOpenPolicy =
+      !!newPassword && passwordFieldRef.current && (!isMobile || !!passwordValidationMessage);
+
+    if (shouldAutoOpenPolicy) {
       setPolicyAnchorEl(passwordFieldRef.current);
       return;
     }
 
     setPolicyAnchorEl(null);
-  }, [newPassword]);
+  }, [isMobile, newPassword, passwordValidationMessage]);
 
   useEffect(() => {
     const validateToken = async () => {
@@ -324,6 +335,7 @@ export default function ResetPasswordForm() {
               fullWidth
               placeholder="Yeni şifrenizi tekrar girin"
               value={confirmPassword}
+              onFocus={handleConfirmPasswordFocus}
               onChange={(event: any) => setConfirmPassword(event.target.value)}
               error={!!confirmPassword && !passwordsMatch}
               helperText={!passwordsMatch ? "Şifreler birbiriyle uyuşmuyor." : " "}
@@ -387,12 +399,12 @@ export default function ResetPasswordForm() {
       <Popper
         open={isPolicyOpen}
         anchorEl={policyAnchorEl}
-        placement="right-start"
+        placement={isMobile ? "top-start" : "right-start"}
         modifiers={[
           {
             name: "offset",
             options: {
-              offset: [12, 0],
+              offset: isMobile ? [0, -8] : [12, 0],
             },
           },
         ]}
@@ -404,8 +416,8 @@ export default function ResetPasswordForm() {
         <Box
           sx={{
             p: 1,
-            width: { xs: "calc(100vw - 48px)", sm: 420 },
-            maxWidth: 420,
+            width: isMobile ? "min(calc(100vw - 32px), 420px)" : 420,
+            maxWidth: isMobile ? "calc(100vw - 32px)" : 420,
             borderRadius: 3,
             boxShadow: "0 20px 50px rgba(15, 23, 42, 0.18)",
             overflow: "hidden",
