@@ -30,6 +30,12 @@ interface DenetciRow {
   aktifmi: boolean;
 }
 
+interface ActionMenuState {
+  rowIndex: number;
+  top: number;
+  left: number;
+}
+
 const ACTIONS_COL_INDEX = 7;
 
 const DenetciTable = () => {
@@ -42,6 +48,7 @@ const DenetciTable = () => {
 
   const [rows, setRows] = useState<DenetciRow[]>([]);
   const [loading, setLoading] = useState(false);
+  const [actionMenu, setActionMenu] = useState<ActionMenuState | null>(null);
 
   useEffect(() => {
     const loadStyles = async () => {
@@ -55,6 +62,22 @@ const DenetciTable = () => {
 
     void loadStyles();
   }, [customizer.activeMode, dispatch]);
+
+  useEffect(() => {
+    if (!actionMenu) {
+      return;
+    }
+
+    const handleClose = () => setActionMenu(null);
+
+    window.addEventListener("click", handleClose);
+    window.addEventListener("scroll", handleClose, true);
+
+    return () => {
+      window.removeEventListener("click", handleClose);
+      window.removeEventListener("scroll", handleClose, true);
+    };
+  }, [actionMenu]);
 
   const fetchData = async () => {
     if (!user.token) {
@@ -137,7 +160,7 @@ const DenetciTable = () => {
       type: "text",
       readOnly: true,
       className: "htCenter htMiddle",
-      renderer: (instance: any, td: HTMLTableCellElement, row: number) => {
+      renderer: (_instance: any, td: HTMLTableCellElement, row: number) => {
         const item = rows[row];
 
         td.innerHTML = "";
@@ -149,38 +172,31 @@ const DenetciTable = () => {
 
         const wrapper = document.createElement("div");
         wrapper.style.display = "flex";
-        wrapper.style.flexWrap = "wrap";
-        wrapper.style.gap = "6px";
         wrapper.style.justifyContent = "center";
+        wrapper.style.alignItems = "center";
 
-        const buttonConfigs = [
-          { label: "Ödeme", action: "odeme" },
-          { label: "Kullanıcı", action: "kullanici" },
-          { label: "Düzenle", action: "duzenle" },
-          { label: "Detay", action: "detay" },
-          { label: "Sil", action: "sil", danger: true },
-        ];
+        const button = document.createElement("button");
+        button.type = "button";
+        button.textContent = "⋮";
+        button.title = "İşlemler";
+        button.dataset.action = "menu";
+        button.dataset.rowIndex = row.toString();
+        button.style.border = "0";
+        button.style.width = "32px";
+        button.style.height = "32px";
+        button.style.borderRadius = "999px";
+        button.style.fontSize = "20px";
+        button.style.fontWeight = "700";
+        button.style.lineHeight = "1";
+        button.style.cursor = "pointer";
+        button.style.fontFamily = plus.style.fontFamily;
+        button.style.background = customizer.activeMode === "dark" ? "#1f2937" : "#eef2ff";
+        button.style.color = customizer.activeMode === "dark" ? "#ffffff" : "#3b5bdb";
+        button.style.display = "inline-flex";
+        button.style.alignItems = "center";
+        button.style.justifyContent = "center";
 
-        buttonConfigs.forEach((config) => {
-          const button = document.createElement("button");
-          button.type = "button";
-          button.textContent = config.label;
-          button.dataset.action = config.action;
-          button.dataset.rowIndex = row.toString();
-          button.style.border = "0";
-          button.style.borderRadius = "999px";
-          button.style.padding = "4px 10px";
-          button.style.fontSize = "12px";
-          button.style.fontWeight = "600";
-          button.style.cursor = "pointer";
-          button.style.whiteSpace = "nowrap";
-          button.style.fontFamily = plus.style.fontFamily;
-          button.style.background = config.danger ? "#fee2e2" : "#e8f1ff";
-          button.style.color = config.danger ? "#b91c1c" : "#1d4ed8";
-
-          wrapper.appendChild(button);
-        });
-
+        wrapper.appendChild(button);
         td.appendChild(wrapper);
         return td;
       },
@@ -256,6 +272,8 @@ const DenetciTable = () => {
   };
 
   const handleAction = async (action: string, rowIndex: number) => {
+    setActionMenu(null);
+
     const selectedRow = rows[rowIndex];
 
     if (!selectedRow) {
@@ -339,16 +357,17 @@ const DenetciTable = () => {
           autoWrapCol={true}
           readOnly={true}
           disableVisualSelection={false}
+          fixedColumnsStart={1}
           hiddenColumns={{ indicators: true }}
           afterGetColHeader={afterGetColHeader as any}
           afterGetRowHeader={afterGetRowHeader as any}
           afterRenderer={afterRenderer as any}
-          afterOnCellMouseDown={(_event: MouseEvent, coords: any, td: HTMLTableCellElement) => {
+          afterOnCellMouseDown={(event: MouseEvent, coords: any, td: HTMLTableCellElement) => {
             if (coords.col !== ACTIONS_COL_INDEX) {
               return;
             }
 
-            const target = _event.target as HTMLElement | null;
+            const target = event.target as HTMLElement | null;
             const actionElement = target?.closest("[data-action]") as HTMLElement | null;
 
             if (!actionElement) {
@@ -358,11 +377,76 @@ const DenetciTable = () => {
             const action = actionElement.dataset.action;
             const rowIndex = Number(actionElement.dataset.rowIndex);
 
+            if (action === "menu" && Number.isFinite(rowIndex)) {
+              event.preventDefault();
+              event.stopPropagation();
+
+              const rect = td.getBoundingClientRect();
+              setActionMenu({
+                rowIndex,
+                top: rect.bottom + 6,
+                left: Math.max(12, rect.left + rect.width - 180),
+              });
+              return;
+            }
+
             if (action && Number.isFinite(rowIndex)) {
               void handleAction(action, rowIndex);
             }
           }}
         />
+
+        {actionMenu ? (
+          <Box
+            sx={{
+              position: "fixed",
+              top: actionMenu.top,
+              left: actionMenu.left,
+              width: 180,
+              zIndex: 1600,
+              bgcolor: "background.paper",
+              border: "1px solid",
+              borderColor: "divider",
+              borderRadius: 2,
+              boxShadow: 8,
+              overflow: "hidden",
+            }}
+            onClick={(event) => event.stopPropagation()}
+          >
+            {[
+              { label: "Ödeme", action: "odeme", color: "text.primary" },
+              { label: "Kullanıcı", action: "kullanici", color: "text.primary" },
+              { label: "Düzenle", action: "duzenle", color: "text.primary" },
+              { label: "Detay", action: "detay", color: "text.primary" },
+              { label: "Sil", action: "sil", color: "error.main" },
+            ].map((item) => (
+              <Box
+                key={item.action}
+                component="button"
+                type="button"
+                onClick={() => void handleAction(item.action, actionMenu.rowIndex)}
+                sx={{
+                  width: "100%",
+                  border: 0,
+                  bgcolor: "transparent",
+                  px: 1.75,
+                  py: 1.2,
+                  textAlign: "left",
+                  cursor: "pointer",
+                  fontFamily: plus.style.fontFamily,
+                  fontSize: 13,
+                  fontWeight: 600,
+                  color: item.color,
+                  "&:hover": {
+                    bgcolor: "action.hover",
+                  },
+                }}
+              >
+                {item.label}
+              </Box>
+            ))}
+          </Box>
+        ) : null}
 
         {loading ? (
           <Typography variant="body2" color="text.secondary" sx={{ mt: 1.5 }}>

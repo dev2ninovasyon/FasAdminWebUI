@@ -13,7 +13,7 @@ import {
   IconButton,
   InputAdornment,
   Link as MuiLink,
-  Popover,
+  Popper,
   Stack,
   Tooltip,
   Typography,
@@ -45,6 +45,7 @@ export default function ResetPasswordForm() {
   const [successMessage, setSuccessMessage] = useState("");
   const [policyAnchorEl, setPolicyAnchorEl] = useState<HTMLElement | null>(null);
   const passwordFieldRef = useRef<HTMLDivElement | null>(null);
+  const passwordInputRef = useRef<HTMLInputElement | null>(null);
 
   const passwordValidationMessage = useMemo(
     () => (newPassword ? validatePassword(newPassword, email) : ""),
@@ -59,7 +60,11 @@ export default function ResetPasswordForm() {
   const isPolicyOpen = Boolean(policyAnchorEl);
 
   const handlePolicyOpen = (event: React.MouseEvent<HTMLElement>) => {
-    setPolicyAnchorEl(event.currentTarget);
+    event.preventDefault();
+    setPolicyAnchorEl(passwordFieldRef.current ?? event.currentTarget);
+    requestAnimationFrame(() => {
+      passwordInputRef.current?.focus();
+    });
   };
 
   const handlePolicyClose = () => {
@@ -280,6 +285,7 @@ export default function ResetPasswordForm() {
               type="password"
               variant="outlined"
               fullWidth
+              inputRef={passwordInputRef}
               placeholder="Yeni şifreniz"
               value={newPassword}
               onChange={(event: any) => setNewPassword(event.target.value)}
@@ -294,7 +300,12 @@ export default function ResetPasswordForm() {
                 endAdornment: (
                   <InputAdornment position="end">
                     <Tooltip title="Şifre kriterlerini göster">
-                      <IconButton edge="end" size="small" onClick={handlePolicyOpen}>
+                      <IconButton
+                        edge="end"
+                        size="small"
+                        onMouseDown={(event) => event.preventDefault()}
+                        onClick={handlePolicyOpen}
+                      >
                         <IconInfoCircle size={18} />
                       </IconButton>
                     </Tooltip>
@@ -373,27 +384,37 @@ export default function ResetPasswordForm() {
         </Stack>
       </form>
 
-      <Popover
+      <Popper
         open={isPolicyOpen}
         anchorEl={policyAnchorEl}
-        onClose={handlePolicyClose}
-        anchorOrigin={{ vertical: "center", horizontal: "right" }}
-        transformOrigin={{ vertical: "top", horizontal: "left" }}
-        PaperProps={{
-          sx: {
-            ml: 1,
+        placement="right-start"
+        modifiers={[
+          {
+            name: "offset",
+            options: {
+              offset: [12, 0],
+            },
+          },
+        ]}
+        sx={{
+          zIndex: theme.zIndex.modal + 1,
+          pointerEvents: "none",
+        }}
+      >
+        <Box
+          sx={{
+            p: 1,
             width: { xs: "calc(100vw - 48px)", sm: 420 },
             maxWidth: 420,
             borderRadius: 3,
             boxShadow: "0 20px 50px rgba(15, 23, 42, 0.18)",
             overflow: "hidden",
-          },
-        }}
-      >
-        <Box sx={{ p: 1 }}>
+            bgcolor: "background.paper",
+          }}
+        >
           <PasswordPolicyChecker password={newPassword} email={email} showEmail={true} borderless />
         </Box>
-      </Popover>
+      </Popper>
 
       <Box mt={3}>
         <MuiLink
