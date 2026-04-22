@@ -2,19 +2,25 @@
 import React, { useEffect, useState } from "react";
 import {
   Box,
+  Button,
   Chip,
   CircularProgress,
   Divider,
   Grid,
+  InputAdornment,
   Paper,
   Stack,
+  TextField,
   Typography,
   useTheme,
 } from "@mui/material";
 import {
   AlertTriangle,
   BarChart2,
+  Bell,
+  Check,
   Clock,
+  Mail,
   MessageSquareDot,
   Star,
   TrendingUp,
@@ -24,7 +30,11 @@ import Breadcrumb from "@/app/components/Layout/Shared/Breadcrumb/Breadcrumb";
 import ParentCard from "@/app/components/Shared/ParentCard";
 import { useSelector } from "@/store/hooks";
 import { AppState } from "@/store/store";
-import { getAdminSummary } from "@/api/Feedback/feedbackAdminApi";
+import {
+  getAdminSummary,
+  getFeedbackNotificationEmail,
+  setFeedbackNotificationEmail,
+} from "@/api/Feedback/feedbackAdminApi";
 import type { FeedbackAdminSummary } from "@/api/Feedback/feedback.types";
 import { SENTIMENT_LABELS } from "@/api/Feedback/feedback.types";
 import FeedbackAdminTable from "@/app/components/GeriBildirimler/FeedbackAdminTable";
@@ -44,6 +54,11 @@ const GeriBildirimlerPage = () => {
   const [summary, setSummary] = useState<FeedbackAdminSummary | null>(null);
   const [isSummaryLoading, setIsSummaryLoading] = useState(true);
 
+  const [notifEmail, setNotifEmail] = useState("");
+  const [notifEmailInput, setNotifEmailInput] = useState("");
+  const [notifSaving, setNotifSaving] = useState(false);
+  const [notifSaved, setNotifSaved] = useState(false);
+
   useEffect(() => {
     if (!token) return;
     setIsSummaryLoading(true);
@@ -51,7 +66,26 @@ const GeriBildirimlerPage = () => {
       .then(setSummary)
       .catch(() => setSummary(null))
       .finally(() => setIsSummaryLoading(false));
+
+    getFeedbackNotificationEmail(token).then((email) => {
+      const val = email ?? "";
+      setNotifEmail(val);
+      setNotifEmailInput(val);
+    });
   }, [token]);
+
+  const handleSaveNotifEmail = async () => {
+    setNotifSaving(true);
+    setNotifSaved(false);
+    try {
+      await setFeedbackNotificationEmail(token, notifEmailInput.trim());
+      setNotifEmail(notifEmailInput.trim());
+      setNotifSaved(true);
+      setTimeout(() => setNotifSaved(false), 3000);
+    } finally {
+      setNotifSaving(false);
+    }
+  };
 
   const sentimentColor = (avg: number) => {
     if (avg >= 4) return theme.palette.success.main;
@@ -185,6 +219,46 @@ const GeriBildirimlerPage = () => {
           </Grid>
         </Grid>
       ) : null}
+
+      {/* Bildirim E-posta Ayarı */}
+      <Paper variant="outlined" sx={{ p: 2.5, mb: 2 }}>
+        <Stack direction="row" alignItems="center" gap={1} mb={2}>
+          <Bell size={16} color={theme.palette.text.secondary} />
+          <Typography variant="subtitle2" fontWeight={600}>
+            Bildirim E-posta Adresi
+          </Typography>
+        </Stack>
+        <Typography variant="body2" color="text.secondary" mb={1.5}>
+          Yeni geri bildirim geldiğinde bu adrese e-posta gönderilir.
+        </Typography>
+        <Stack direction="row" gap={1.5} alignItems="flex-start" flexWrap="wrap">
+          <TextField
+            size="small"
+            type="email"
+            placeholder="ornek@sirket.com"
+            value={notifEmailInput}
+            onChange={(e) => { setNotifEmailInput(e.target.value); setNotifSaved(false); }}
+            sx={{ minWidth: 300 }}
+            InputProps={{
+              startAdornment: (
+                <InputAdornment position="start">
+                  <Mail size={15} color={theme.palette.text.secondary} />
+                </InputAdornment>
+              ),
+            }}
+          />
+          <Button
+            variant="contained"
+            size="small"
+            disabled={notifSaving || notifEmailInput.trim() === notifEmail}
+            onClick={handleSaveNotifEmail}
+            startIcon={notifSaved ? <Check size={14} /> : undefined}
+            color={notifSaved ? "success" : "primary"}
+          >
+            {notifSaving ? "Kaydediliyor..." : notifSaved ? "Kaydedildi" : "Kaydet"}
+          </Button>
+        </Stack>
+      </Paper>
 
       <ParentCard title="Geri Bildirim Listesi">
         {token ? (

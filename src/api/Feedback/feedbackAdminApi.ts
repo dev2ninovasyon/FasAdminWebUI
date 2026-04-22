@@ -83,3 +83,28 @@ export const deleteFeedback = async (
 ): Promise<void> => {
   await apiFetch(`${BASE}/admin/${id}`, { method: "DELETE", token });
 };
+
+const AYAR_BASE = "/SistemAyarlari";
+
+export const getFeedbackNotificationEmail = async (
+  token: string
+): Promise<string | null> => {
+  const res = await apiFetch(`${AYAR_BASE}/feedback.notification.email`, {
+    token,
+  });
+  if (!res.ok) return null;
+  const data = await res.json();
+  return data?.value ?? null;
+};
+
+export const setFeedbackNotificationEmail = async (
+  token: string,
+  email: string
+): Promise<void> => {
+  await apiFetch(`${AYAR_BASE}/feedback.notification.email`, {
+    method: "PUT",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify({ value: email, aciklama: "Yeni geri bildirim bildirimi e-posta adresi" }),
+    token,
+  });
+};
