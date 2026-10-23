@@ -23,6 +23,18 @@ import Archive from "./Archive";
 import React from "react";
 import { enqueueSnackbar } from "notistack";
 
+const AppBarStyled = styled(AppBar)(({ theme }) => ({
+  boxShadow: "none",
+  background: theme.palette.background.paper,
+  justifyContent: "center",
+  backdropFilter: "blur(4px)",
+}));
+const ToolbarStyled = styled(Toolbar)(({ theme }) => ({
+  width: "100%",
+  color: theme.palette.text.secondary,
+  justifyContent: "space-between",
+}));
+
 interface Props {
   isSidebarHover: boolean;
 }
@@ -35,23 +47,8 @@ const Header: React.FC<Props> = ({ isSidebarHover }) => {
   const user = useSelector((state: AppState) => state.userReducer);
   const dispatch = useDispatch();
 
-  const AppBarStyled = styled(AppBar)(({ theme }) => ({
-    boxShadow: "none",
-    background: theme.palette.background.paper,
-    justifyContent: "center",
-    backdropFilter: "blur(4px)",
-    [theme.breakpoints.up("lg")]: {
-      minHeight: customizer.TopbarHeight,
-    },
-  }));
-  const ToolbarStyled = styled(Toolbar)(({ theme }) => ({
-    width: "100%",
-    color: theme.palette.text.secondary,
-    justifyContent: "space-between",
-  }));
-
   return (
-    <AppBarStyled position="sticky" color="default">
+    <AppBarStyled position="sticky" color="default" sx={{ minHeight: { lg: customizer.TopbarHeight } }}>
       <ToolbarStyled>
         <Box>
           <IconButton
