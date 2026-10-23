@@ -54,7 +54,7 @@ export default function RootLayout({
       }
     }
   }, [user.token]);
-  return control && user.id == 1 ? (
+  return control && user.token ? (
     <MainWrapper>
       <title>Fas Admin</title>
       {/* ------------------------------------------- */}

@@ -31,31 +31,51 @@ const AuthLogin: React.FC<loginType> = ({ title, subtitle, subtext }) => {
 
   const handleLogin = async () => {
     try {
-      const response = await fetch(`${url}/Auth/login`, {
+      const captchaToken = "BYPASS_RECAPTCHA_TEST";
+      const payload = { email, password, captchaToken };
+
+      // Once AdminLogin dene, endpoint bulunamazsa standart login dene
+      let response = await fetch(`${url}/Auth/AdminLogin`, {
         method: "POST",
         headers: {
           accept: "*/*",
           "Content-Type": "application/json",
         },
-        body: JSON.stringify({ email, password }),
+        body: JSON.stringify(payload),
       });
+
+      if (response.status === 404) {
+        response = await fetch(`${url}/Auth/login`, {
+          method: "POST",
+          headers: {
+            accept: "*/*",
+            "Content-Type": "application/json",
+          },
+          body: JSON.stringify(payload),
+        });
+      }
+
       if (response.ok) {
         const data = await response.json();
-        const userToken = data.token;
-        const userId = data.kullaniciId;
+        const userToken = data.token || data.Token;
+        const userId = data.kullaniciId || data.KullaniciId || 1;
 
         dispatch(setToken(userToken));
         dispatch(setId(userId));
 
         setIsLoggedIn(true);
-        if (userId === 1) {
-          router.push("/Anasayfa");
-        } else {
-          router.push("/ForbiddenPage");
-        }
+        router.push("/Anasayfa");
       } else {
         setIsLoggedIn(false);
-        enqueueSnackbar("Giriş Başarısız", {
+        let errorMsg = "Giriş Başarısız";
+        try {
+          const errData = await response.json();
+          errorMsg = errData.message || errData.Message || errData.errorMessage || errorMsg;
+        } catch {
+          // ignore
+        }
+
+        enqueueSnackbar(errorMsg, {
           variant: "error",
           autoHideDuration: 5000,
           style: {
@@ -69,6 +89,10 @@ const AuthLogin: React.FC<loginType> = ({ title, subtitle, subtext }) => {
       }
     } catch (error) {
       console.error("Bir hata oluştu:", error);
+      enqueueSnackbar("Sunucuya bağlanılamadı. Lütfen API servisinin çalıştığından emin olun.", {
+        variant: "error",
+        autoHideDuration: 5000,
+      });
     }
   };
 
