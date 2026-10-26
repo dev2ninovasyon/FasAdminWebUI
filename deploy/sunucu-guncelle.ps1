@@ -8,7 +8,7 @@
         C:\deploy\guncelle.ps1 -Uygulama FasAdminWebUI
 
     1. Derlemeye gömülen NEXT_PUBLIC_* değerlerini sunucudaki ortam dosyasından okur (repoda tutulmaz).
-    2. npm ci ve npm run build çalıştırır (site bu sırada çalışmaya devam eder).
+    2. package-lock.json değiştiyse npm ci, ardından npm run build çalıştırır (site bu sırada çalışmaya devam eder).
     3. Standalone çıktıya static ve public klasörlerini ekler.
     4. app_offline.htm ile siteyi geçici olarak kapatır: IIS bu sitenin node sürecini durdurur ve kullanıcılara
        bakım sayfası gösterir. Dosyaları eşitler ve siteyi açar. Sunucudaki diğer node süreçlerine dokunulmaz.
@@ -21,9 +21,10 @@ param(
     [string]$HostAdi = "betadmin.fasmart.app",
     [string]$DistDir = "build",
     [ValidateSet("https", "http")]
-    # betadmin.fasmart.app için sertifika DNS sunucuya yönlendirilince alınır; o zamana kadar http.
-    [string]$Protokol = "http",
-    [string]$OrtamDosyasi = "C:\deploy\env\FasAdminWebUI.env"
+    [string]$Protokol = "https",
+    [string]$OrtamDosyasi = "C:\deploy\env\FasAdminWebUI.env",
+    [string]$PaketOnbellekDosyasi = "C:\deploy\cache\FasAdminWebUI-package-lock.sha256",
+    [switch]$PaketKurulumunuAtla
 )
 
 $ErrorActionPreference = "Stop"
@@ -57,7 +58,9 @@ $env:NODE_ENV = "production"
 $env:NEXT_TELEMETRY_DISABLED = "1"
 if (Test-Path $OrtamDosyasi) {
     foreach ($satir in Get-Content $OrtamDosyasi) {
-        if ($satir -match '^\s*([A-Za-z0-9_]+)\s*=(.*)$') {
+        # tr-TR kültüründe case-insensitive -match, ASCII I harfi içeren env anahtarlarını
+        # [A-Za-z] aralığıyla eşleştirmeyebilir. Ortam anahtarları zaten büyük/küçük harfe duyarlıdır.
+        if ($satir -cmatch '^\s*([A-Za-z0-9_]+)\s*=(.*)$') {
             [Environment]::SetEnvironmentVariable($Matches[1], $Matches[2].Trim(), "Process")
             Write-Host "   $($Matches[1]) ayarlandı"
         }
@@ -69,10 +72,45 @@ else {
 
 Push-Location $repo
 try {
-    # NODE_ENV=production iken npm ci devDependencies kurmaz; derleme araçları devDependencies'te olabilir.
-    Write-Host "==> [2/5] npm ci"
-    $kod = Invoke-Arac $npm @("ci", "--include=dev", "--no-audit", "--no-fund")
-    if ($kod -ne 0) { throw "npm ci başarısız (çıkış kodu $kod)." }
+    $packageLock = Join-Path $repo "package-lock.json"
+    $nodeModules = Join-Path $repo "node_modules"
+    $packageLockHash = if (Test-Path -LiteralPath $packageLock) {
+        (Get-FileHash -Algorithm SHA256 -LiteralPath $packageLock).Hash
+    }
+    else {
+        ""
+    }
+    $cachedHash = if (Test-Path -LiteralPath $PaketOnbellekDosyasi) {
+        [IO.File]::ReadAllText($PaketOnbellekDosyasi).Trim()
+    }
+    else {
+        ""
+    }
+    $paketlerHazir = (Test-Path -LiteralPath $nodeModules) -and
+        -not [string]::IsNullOrWhiteSpace($packageLockHash) -and
+        $packageLockHash -eq $cachedHash
+
+    if ($PaketKurulumunuAtla) {
+        if (-not (Test-Path -LiteralPath $nodeModules)) {
+            throw "Paket kurulumu atlanamaz; node_modules bulunamadı: $nodeModules"
+        }
+        Write-Host "==> [2/5] npm ci atlandı (hızlı dağıtım)"
+    }
+    elseif ($paketlerHazir) {
+        Write-Host "==> [2/5] npm ci atlandı (package-lock.json değişmedi)"
+    }
+    else {
+        # NODE_ENV=production iken npm ci devDependencies kurmaz; derleme araçları devDependencies'te olabilir.
+        Write-Host "==> [2/5] npm ci"
+        $kod = Invoke-Arac $npm @("ci", "--include=dev", "--no-audit", "--no-fund")
+        if ($kod -ne 0) { throw "npm ci başarısız (çıkış kodu $kod)." }
+    }
+
+    if (-not [string]::IsNullOrWhiteSpace($packageLockHash)) {
+        $cacheDirectory = Split-Path -Parent $PaketOnbellekDosyasi
+        New-Item -ItemType Directory -Path $cacheDirectory -Force | Out-Null
+        [IO.File]::WriteAllText($PaketOnbellekDosyasi, $packageLockHash, (New-Object Text.UTF8Encoding($false)))
+    }
 
     Write-Host "==> [2/5] npm run build"
     $kod = Invoke-Arac $npm @("run", "build")
