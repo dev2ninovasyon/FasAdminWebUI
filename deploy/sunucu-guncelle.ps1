@@ -85,7 +85,20 @@ finally {
 Write-Host "==> [3/5] Standalone çıktı hazırlanıyor"
 $dist = Join-Path $repo $DistDir
 $standalone = Join-Path $dist "standalone"
-if (-not (Test-Path (Join-Path $standalone "server.js"))) { throw "Standalone çıktı bulunamadı: $standalone" }
+$serverDosyasi = Join-Path $standalone "server.js"
+if (-not (Test-Path $serverDosyasi)) { throw "Standalone çıktı bulunamadı: $standalone" }
+
+# IIS AspNetCoreModule dinamik portu ASPNETCORE_PORT ile verir; Next.js standalone yalnız PORT'u okur.
+$serverIcerigi = [IO.File]::ReadAllText($serverDosyasi)
+$nextPortIfadesi = "parseInt(process.env.PORT, 10)"
+$iisPortIfadesi = "parseInt(process.env.ASPNETCORE_PORT || process.env.PORT, 10)"
+if ($serverIcerigi.Contains($nextPortIfadesi)) {
+    $serverIcerigi = $serverIcerigi.Replace($nextPortIfadesi, $iisPortIfadesi)
+    [IO.File]::WriteAllText($serverDosyasi, $serverIcerigi, (New-Object System.Text.UTF8Encoding($false)))
+}
+elseif (-not $serverIcerigi.Contains($iisPortIfadesi)) {
+    throw "Standalone server.js port ifadesi tanınmadı; IIS port uyarlaması uygulanamadı."
+}
 Copy-Item (Join-Path $dist "static") (Join-Path $standalone "$DistDir\static") -Recurse -Force
 if (Test-Path (Join-Path $repo "public")) {
     Copy-Item (Join-Path $repo "public") (Join-Path $standalone "public") -Recurse -Force
@@ -129,7 +142,7 @@ $port = if ($Protokol -eq "https") { 443 } else { 80 }
 $durum = ""
 foreach ($deneme in 1..12) {
     Start-Sleep -Seconds 5
-    $durum = & curl.exe -s -o NUL -w "%{http_code}" --resolve "${HostAdi}:${port}:127.0.0.1" "${Protokol}://$HostAdi/"
+    $durum = & curl.exe -s -o NUL -w "%{http_code}" --connect-timeout 5 --max-time 15 --resolve "${HostAdi}:${port}:127.0.0.1" "${Protokol}://$HostAdi/"
     if ($durum -match '^[23]\d\d$') { break }
 }
 if ($durum -notmatch '^[23]\d\d$') { throw "Sağlık kontrolü başarısız: ${Protokol}://$HostAdi/ -> HTTP $durum" }
