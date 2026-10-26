@@ -28,7 +28,17 @@ param(
 
 $ErrorActionPreference = "Stop"
 $repo = Split-Path -Parent $PSScriptRoot
-$npm = "C:\Program Files\nodejs\npm.cmd"
+$nodeKlasoru = "C:\Program Files\nodejs"
+$npm = Join-Path $nodeKlasoru "npm.cmd"
+if (-not (Test-Path (Join-Path $nodeKlasoru "node.exe")) -or -not (Test-Path $npm)) {
+    throw "Node.js kurulumu bulunamadı: $nodeKlasoru"
+}
+# Zamanlanmış görev/S4U oturumunda PATH kullanıcı ortamını içermeyebilir. npm'in lifecycle alt süreçleri
+# node.exe'yi yalnız PATH üzerinden arar; bu nedenle Node.js klasörünü işlem PATH'ine açıkça ekle.
+$pathParcalari = @($env:Path -split ";" | Where-Object { -not [string]::IsNullOrWhiteSpace($_) })
+if ($pathParcalari -notcontains $nodeKlasoru) {
+    $env:Path = (@($nodeKlasoru) + $pathParcalari) -join ";"
+}
 
 # Windows PowerShell 5.1 uzaktan (WinRM) ya da yönlendirilmiş çalışırken yerel araçların stderr satırlarını
 # hata kaydına çevirir; "Stop" ile bu, npm uyarılarında betiği keserdi. Çıktı günlüğe yazılır,
