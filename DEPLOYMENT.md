@@ -6,7 +6,10 @@ Kod değişiklikleri güncel `main` dalından açılan bir dalda hazırlanır ve
 
 ```powershell
 # Sunucuda (yönetici PowerShell):
-C:\deploy\guncelle.ps1 -Uygulama FasAdminWebUI
+C:\deploy\guncelle.ps1                      # tüm uygulamalar
+C:\deploy\guncelle.ps1 -Uygulama FasAdminWebUI   # yalnızca bu uygulama
 ```
+
+Güncelleme sırasında arayüzde üstte uyarı şeridi gösterilir (`SistemGuncellemeUyarisi` bileşeni, sunucudaki `/sistem-durumu/durum.json` dosyasını okur).
 
 Derleme ve kopyalama adımları bu repodaki `deploy/sunucu-guncelle.ps1` dosyasındadır. Sunucu düzeni ve kurallar: FasWebAPI deposundaki `deploy/sunucu/README.md`.
