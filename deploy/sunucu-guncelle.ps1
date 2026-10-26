@@ -31,6 +31,18 @@ $repo = Split-Path -Parent $PSScriptRoot
 $npm = "C:\Program Files\nodejs\npm.cmd"
 Import-Module WebAdministration
 
+# Windows PowerShell 5.1 uzaktan (WinRM) ya da yönlendirilmiş çalışırken yerel araçların stderr satırlarını
+# hata kaydına çevirir; "Stop" ile bu, npm uyarılarında betiği keserdi. Çıktı günlüğe yazılır,
+# başarı çıkış koduna göre değerlendirilir.
+function Invoke-Arac {
+    param([string]$Komut, [string[]]$Argumanlar)
+    $onceki = $ErrorActionPreference
+    $ErrorActionPreference = "Continue"
+    try { & $Komut @Argumanlar 2>&1 | ForEach-Object { Write-Host "$_" } }
+    finally { $ErrorActionPreference = $onceki }
+    return $LASTEXITCODE
+}
+
 Write-Host "==> [1/5] Ortam değişkenleri"
 $env:NODE_ENV = "production"
 $env:NEXT_TELEMETRY_DISABLED = "1"
@@ -48,13 +60,14 @@ else {
 
 Push-Location $repo
 try {
+    # NODE_ENV=production iken npm ci devDependencies kurmaz; derleme araçları devDependencies'te olabilir.
     Write-Host "==> [2/5] npm ci"
-    & $npm ci --no-audit --no-fund
-    if ($LASTEXITCODE -ne 0) { throw "npm ci başarısız (çıkış kodu $LASTEXITCODE)." }
+    $kod = Invoke-Arac $npm @("ci", "--include=dev", "--no-audit", "--no-fund")
+    if ($kod -ne 0) { throw "npm ci başarısız (çıkış kodu $kod)." }
 
     Write-Host "==> [2/5] npm run build"
-    & $npm run build
-    if ($LASTEXITCODE -ne 0) { throw "npm run build başarısız (çıkış kodu $LASTEXITCODE)." }
+    $kod = Invoke-Arac $npm @("run", "build")
+    if ($kod -ne 0) { throw "npm run build başarısız (çıkış kodu $kod)." }
 }
 finally {
     Pop-Location
@@ -82,8 +95,8 @@ foreach ($i in 1..30) {
 Start-Sleep -Seconds 2
 
 try {
-    & robocopy $standalone $SiteKlasoru /MIR /R:5 /W:3 /NP /NFL /NDL /NJH /XF web.config /XD logs
-    if ($LASTEXITCODE -ge 8) { throw "robocopy başarısız (çıkış kodu $LASTEXITCODE)." }
+    $kod = Invoke-Arac "robocopy" @($standalone, $SiteKlasoru, "/MIR", "/R:5", "/W:3", "/NP", "/NFL", "/NDL", "/NJH", "/XF", "web.config", "/XD", "logs")
+    if ($kod -ge 8) { throw "robocopy başarısız (çıkış kodu $kod)." }
 }
 finally {
     if (-not (Test-Path $webConfig) -and (Test-Path $yedek)) { Copy-Item $yedek $webConfig -Force }
@@ -91,10 +104,10 @@ finally {
 }
 
 Write-Host "==> [5/5] Sağlık kontrolü"
+$port = if ($Protokol -eq "https") { 443 } else { 80 }
 $durum = ""
 foreach ($deneme in 1..12) {
     Start-Sleep -Seconds 5
-    $port = if ($Protokol -eq "https") { 443 } else { 80 }
     $durum = & curl.exe -s -o NUL -w "%{http_code}" --resolve "${HostAdi}:${port}:127.0.0.1" "${Protokol}://$HostAdi/"
     if ($durum -match '^[23]\d\d$') { break }
 }
