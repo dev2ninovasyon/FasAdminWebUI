@@ -20,6 +20,7 @@ import { PersistGate } from "redux-persist/integration/react";
 import { store, persistor } from "@/store/storeConfig";
 import { SnackbarProvider } from "notistack";
 import RTL from "./components/Layout/Shared/Customizer/RTL";
+import SistemGuncellemeUyarisi from "./components/SistemGuncelleme/SistemGuncellemeUyarisi";
 import useAutoLogout from "@/utils/useAutoLogOut";
 
 export const MyApp = ({ children }: { children: React.ReactNode }) => {
@@ -36,6 +37,7 @@ export const MyApp = ({ children }: { children: React.ReactNode }) => {
           <RTL direction={customizer.activeDir}>
             {/* CssBaseline kickstart an elegant, consistent, and simple baseline to build upon. */}
             <CssBaseline />
+            <SistemGuncellemeUyarisi />
             <SnackbarProvider
               anchorOrigin={{
                 vertical: "bottom",

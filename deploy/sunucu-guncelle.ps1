@@ -8,16 +8,16 @@
         C:\deploy\guncelle.ps1 -Uygulama FasAdminWebUI
 
     1. Derlemeye gömülen NEXT_PUBLIC_* değerlerini sunucudaki ortam dosyasından okur (repoda tutulmaz).
-    2. npm ci ve npm run build çalıştırır.
+    2. npm ci ve npm run build çalıştırır (site bu sırada çalışmaya devam eder).
     3. Standalone çıktıya static ve public klasörlerini ekler.
-    4. Yalnızca bu sitenin AppPool'unu durdurur, dosyaları eşitler, AppPool'u başlatır. Sunucudaki diğer
-       node süreçlerine dokunulmaz. Sitenin web.config dosyası ve logs klasörü korunur.
+    4. app_offline.htm ile siteyi geçici olarak kapatır: IIS bu sitenin node sürecini durdurur ve kullanıcılara
+       bakım sayfası gösterir. Dosyaları eşitler ve siteyi açar. Sunucudaki diğer node süreçlerine dokunulmaz.
+       Sitenin web.config dosyası ve logs klasörü korunur.
     5. Ana sayfayı yerel olarak isteyerek doğrular.
 #>
 [CmdletBinding()]
 param(
     [string]$SiteKlasoru = "C:\inetpub\betadmin",
-    [string]$AppPool = "betadmin",
     [string]$HostAdi = "betadmin.fasmart.app",
     [string]$DistDir = "build",
     [ValidateSet("https", "http")]
@@ -29,7 +29,6 @@ param(
 $ErrorActionPreference = "Stop"
 $repo = Split-Path -Parent $PSScriptRoot
 $npm = "C:\Program Files\nodejs\npm.cmd"
-Import-Module WebAdministration
 
 # Windows PowerShell 5.1 uzaktan (WinRM) ya da yönlendirilmiş çalışırken yerel araçların stderr satırlarını
 # hata kaydına çevirir; "Stop" ile bu, npm uyarılarında betiği keserdi. Çıktı günlüğe yazılır,
@@ -82,25 +81,37 @@ if (Test-Path (Join-Path $repo "public")) {
     Copy-Item (Join-Path $repo "public") (Join-Path $standalone "public") -Recurse -Force
 }
 
-Write-Host "==> [4/5] AppPool '$AppPool' durduruluyor ve dosyalar eşitleniyor"
+Write-Host "==> [4/5] Site geçici olarak kapatılıyor (app_offline.htm) ve dosyalar eşitleniyor"
 $webConfig = Join-Path $SiteKlasoru "web.config"
-$yedek = Join-Path $env:TEMP "$AppPool-web.config.yedek"
+$yedek = Join-Path $env:TEMP ("{0}-web.config.yedek" -f (Split-Path $SiteKlasoru -Leaf))
 if (Test-Path $webConfig) { Copy-Item $webConfig $yedek -Force }
 
-if ((Get-WebAppPoolState -Name $AppPool).Value -ne "Stopped") { Stop-WebAppPool -Name $AppPool }
-foreach ($i in 1..30) {
-    if ((Get-WebAppPoolState -Name $AppPool).Value -eq "Stopped") { break }
+$offline = Join-Path $SiteKlasoru "app_offline.htm"
+Set-Content -Path $offline -Encoding UTF8 -Value @"
+<!doctype html><html lang="tr"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>Güncelleniyor</title>
+<style>body{margin:0;min-height:100vh;display:flex;align-items:center;justify-content:center;background:#f8fafc;font-family:system-ui,Segoe UI,sans-serif;color:#0f172a}
+.k{max-width:440px;padding:32px;border:1px solid #e2e8f0;border-radius:12px;background:#fff;text-align:center}h1{font-size:18px;margin:0 0 8px}p{margin:0;color:#475569;font-size:14px;line-height:1.6}</style>
+<meta http-equiv="refresh" content="20"></head><body><div class="k"><h1>Sistem güncelleniyor</h1><p>Yeni sürüm yükleniyor. Sayfa birkaç dakika içinde kendiliğinden yenilenecek.</p></div></body></html>
+"@
+
+# IIS node sürecini kapatıp dosyaları bırakana kadar bekle (yerel .node modülleri kilitlenir).
+$kilitliOlabilir = @(Get-ChildItem $SiteKlasoru -Recurse -File -Filter "*.node" -ErrorAction SilentlyContinue | Select-Object -ExpandProperty FullName)
+foreach ($i in 1..60) {
+    $kilitli = $kilitliOlabilir | Where-Object {
+        try { [IO.File]::Open($_, "Open", "ReadWrite", "None").Dispose(); $false } catch [IO.FileNotFoundException] { $false } catch { $true }
+    }
+    if (-not $kilitli) { break }
     Start-Sleep -Seconds 1
 }
 Start-Sleep -Seconds 2
 
 try {
-    $kod = Invoke-Arac "robocopy" @($standalone, $SiteKlasoru, "/MIR", "/R:5", "/W:3", "/NP", "/NFL", "/NDL", "/NJH", "/XF", "web.config", "/XD", "logs")
+    $kod = Invoke-Arac "robocopy" @($standalone, $SiteKlasoru, "/MIR", "/R:5", "/W:3", "/NP", "/NFL", "/NDL", "/NJH", "/XF", "web.config", "app_offline.htm", "/XD", "logs")
     if ($kod -ge 8) { throw "robocopy başarısız (çıkış kodu $kod)." }
 }
 finally {
     if (-not (Test-Path $webConfig) -and (Test-Path $yedek)) { Copy-Item $yedek $webConfig -Force }
-    Start-WebAppPool -Name $AppPool
+    Remove-Item $offline -Force -ErrorAction SilentlyContinue
 }
 
 Write-Host "==> [5/5] Sağlık kontrolü"
