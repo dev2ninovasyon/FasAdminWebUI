@@ -43,7 +43,6 @@ import {
   getFinansalSurumDetay,
   getFinansalTanimSetleri,
   createFinansalKural,
-  createFinansalKalem,
   cloneFinansalSurum,
   compareFinansalSurumler,
   FinansalSurumKarsilastirma,
@@ -205,12 +204,9 @@ const Page = () => {
   const [kgkArsivCiktilariYukleniyor, setKgkArsivCiktilariYukleniyor] = useState(false);
   const [kgkArsivIndirilenSha, setKgkArsivIndirilenSha] = useState("");
   const [kalemTabloId, setKalemTabloId] = useState(0);
-  const [yeniKalemAcik, setYeniKalemAcik] = useState(false);
-  const [kalemOlusturuluyor, setKalemOlusturuluyor] = useState(false);
-  const [yeniKalemForm, setYeniKalemForm] = useState({ sabitAnahtar: "", ad: "", kod: "", sira: 0, kalemTuru: 2, eksen: 1, varsayilanGorunurMu: true, aktifMi: true, ustKalemId: 0 });
   const [duzenlenenKalemId, setDuzenlenenKalemId] = useState(0);
   const [kalemKaydediliyor, setKalemKaydediliyor] = useState(false);
-  const [kalemForm, setKalemForm] = useState({ ad: "", kod: "", sira: 0, kalemTuru: 2, eksen: 1, varsayilanGorunurMu: true, aktifMi: true, ustKalemId: 0 });
+  const [kalemForm, setKalemForm] = useState({ ad: "", kod: "", sira: 0, kalemTuru: 2, eksen: 1, varsayilanGorunurMu: true, ustKalemId: 0 });
   const [duzenlenenKuralId, setDuzenlenenKuralId] = useState(0);
   const [kuralKaydediliyor, setKuralKaydediliyor] = useState(false);
   const [yeniKuralAcik, setYeniKuralAcik] = useState(false);
@@ -284,7 +280,6 @@ const Page = () => {
     setKarsilastirmaSurumId(0);
     setKalemTabloId(0);
     setDuzenlenenKalemId(0);
-    setYeniKalemAcik(false);
   }, [secilenSurum]);
 
   useEffect(() => {
@@ -351,7 +346,6 @@ const Page = () => {
       kalemTuru: kalem.kalemTuru,
       eksen: kalem.eksen,
       varsayilanGorunurMu: kalem.varsayilanGorunurMu,
-      aktifMi: kalem.aktifMi,
       ustKalemId: kalem.ustKalemId || 0,
     });
   };
@@ -385,38 +379,6 @@ const Page = () => {
       setTanimHatasi(error instanceof Error ? error.message : "Finansal tablo kalemi güncellenemedi.");
     } finally {
       setKalemKaydediliyor(false);
-    }
-  };
-
-  const kalemOlustur = async () => {
-    const tablo = surumDetayi?.tablolar.find((aday) => aday.id === kalemTabloId);
-    if (!user.token || !secilenSurum || secilenSurum.durum !== 1 || !tablo || !yeniKalemForm.sabitAnahtar.trim() || !yeniKalemForm.ad.trim()) return;
-    setKalemOlusturuluyor(true);
-    setTanimHatasi("");
-    try {
-      const sonuc = await createFinansalKalem(user.token, secilenSurum.id, tablo.id, {
-        ...yeniKalemForm,
-        sabitAnahtar: yeniKalemForm.sabitAnahtar.trim(),
-        ad: yeniKalemForm.ad.trim(),
-        kod: yeniKalemForm.kod.trim() || null,
-        ustKalemId: yeniKalemForm.ustKalemId || null,
-        beklenenEszamanlilikSurumu: secilenSurum.eszamanlilikSurumu,
-      });
-      setSurumDetayi((onceki) => onceki ? {
-        ...onceki,
-        surum: { ...onceki.surum, eszamanlilikSurumu: sonuc.eszamanlilikSurumu, guncellemeTarihi: sonuc.guncellemeTarihi },
-        tablolar: onceki.tablolar.map((aday) => aday.id !== tablo.id ? aday : {
-          ...aday,
-          kalemler: [...aday.kalemler, { id: sonuc.kalemId, ustKalemId: yeniKalemForm.ustKalemId || null, sabitAnahtar: yeniKalemForm.sabitAnahtar.trim(), kod: yeniKalemForm.kod.trim() || null, ad: yeniKalemForm.ad.trim(), sira: yeniKalemForm.sira, kalemTuru: yeniKalemForm.kalemTuru, eksen: yeniKalemForm.eksen, varsayilanGorunurMu: yeniKalemForm.varsayilanGorunurMu, aktifMi: yeniKalemForm.aktifMi }],
-        }),
-      } : onceki);
-      setTanimSetleri((onceki) => onceki.map((set) => ({ ...set, surumler: set.surumler.map((surum) => surum.id === secilenSurum.id ? { ...surum, eszamanlilikSurumu: sonuc.eszamanlilikSurumu, guncellemeTarihi: sonuc.guncellemeTarihi, kalemSayisi: surum.kalemSayisi + 1 } : surum) })));
-      setYeniKalemForm({ sabitAnahtar: "", ad: "", kod: "", sira: 0, kalemTuru: 2, eksen: 1, varsayilanGorunurMu: true, aktifMi: true, ustKalemId: 0 });
-      setYeniKalemAcik(false);
-    } catch (error) {
-      setTanimHatasi(error instanceof Error ? error.message : "Finansal tablo kalemi oluşturulamadı.");
-    } finally {
-      setKalemOlusturuluyor(false);
     }
   };
 
@@ -709,7 +671,7 @@ const Page = () => {
     setSurumIslemiYukleniyor(true);
     setTanimHatasi("");
     try {
-      const aciklama = `KGK workbook fark incelemesi: ${kgkWorkbookSonucu.oncekiDosyaAdi} → ${kgkWorkbookSonucu.yeniDosyaAdi}; önceki SHA-256 ${kgkWorkbookSonucu.oncekiSha256}; yeni SHA-256 ${kgkWorkbookSonucu.yeniSha256}; ${kgkWorkbookSonucu.farkSayisi} fark. Otomatik yayınlanmaz.`;
+      const aciklama = `KGK workbook fark incelemesi: ${kgkWorkbookSonucu.oncekiDosyaAdi} → ${kgkWorkbookSonucu.yeniDosyaAdi}; önceki SHA-256 ${kgkWorkbookSonucu.oncekiSha256}; yeni SHA-256 ${kgkWorkbookSonucu.yeniSha256}; ${kgkWorkbookSonucu.farkSayisi} yapısal fark, ${kgkWorkbookSonucu.kalemFarklari.length} semantik kalem farkı. Otomatik yayınlanmaz.`;
       const sonuc = await cloneFinansalSurum(user.token, secilenSurum.id, {
         etiket: `${secilenSurum.etiket} - KGK taslak`,
         gecerlilikBaslangici: secilenSurum.gecerlilikBaslangici,
@@ -722,7 +684,7 @@ const Page = () => {
       setSecilenSurumId(sonuc.surumId);
       setSurumId(String(sonuc.surumId));
       setEszamanlilikSurumu(String(sonuc.eszamanlilikSurumu));
-      setTanimHatasi("KGK farkı için taslak oluşturuldu; kalem ve kurallar Admin tarafından gözden geçirilmelidir.");
+      setTanimHatasi("KGK farkı için inceleme taslağı oluşturuldu. Kalem ekleme/kaldırma aktarımı henüz uygulanmadı; otomatik yayınlama yoktur.");
     } catch (error) {
       setTanimHatasi(error instanceof Error ? error.message : "KGK farkı için taslak oluşturulamadı.");
     } finally {
@@ -1139,7 +1101,7 @@ const Page = () => {
           <Divider />
           <Typography variant="subtitle2">Workbook yapısal farkı</Typography>
           <Typography variant="caption" color="text.secondary">
-            İki KGK Excel dosyası makro çalıştırılmadan; sayfa, hücre, formül, stil, birleştirme ve adlandırılmış aralık anahtarlarıyla karşılaştırılır. Karşılaştırma kalıcı saklama yapmaz; arşiv için ilgili dosyanın “Arşivle” düğmesi açıkça kullanılmalıdır.
+            İki KGK Excel dosyası makro çalıştırılmadan; sayfa, hücre, formül, stil, birleştirme ve adlandırılmış aralık anahtarlarıyla karşılaştırılır. Bu aşama yalnız fark raporu üretir; yeni veya kaldırılan kalemler elle eklenmez, sonraki KGK fark aktarımında taslak sürüme alınır.
           </Typography>
           <Stack direction="row" spacing={1} alignItems="center" flexWrap="wrap" useFlexGap>
             <Button component="label" size="small" variant="outlined">
@@ -1159,9 +1121,15 @@ const Page = () => {
               <Stack direction="row" spacing={1} alignItems="center" sx={{ mb: 1 }}>
                 <Chip size="small" color={kgkWorkbookSonucu.yapisalDegisiklikVarMi ? "warning" : "success"} label={kgkWorkbookSonucu.yapisalDegisiklikVarMi ? `${kgkWorkbookSonucu.farkSayisi} yapısal fark` : "Yapısal fark yok"} />
                 {kgkWorkbookSonucu.makroVarMi && <Chip size="small" color="info" label="Makro bulundu; çalıştırılmadı" />}
-                {kgkWorkbookSonucu.yapisalDegisiklikVarMi && secilenSurum && <Button size="small" variant="outlined" onClick={kgkFarktanTaslakOlustur} disabled={surumIslemiYukleniyor}>Farktan taslak oluştur</Button>}
+                {kgkWorkbookSonucu.yapisalDegisiklikVarMi && secilenSurum && <Button size="small" variant="outlined" onClick={kgkFarktanTaslakOlustur} disabled={surumIslemiYukleniyor}>Farktan inceleme taslağı oluştur</Button>}
               </Stack>
               {kgkWorkbookSonucu.farklar.length > 0 && <Table size="small"><TableHead><TableRow><TableCell>Tür</TableCell><TableCell>Anahtar</TableCell><TableCell>Değişiklik</TableCell></TableRow></TableHead><TableBody>{kgkWorkbookSonucu.farklar.map((fark) => <TableRow key={`${fark.degisiklikTuru}-${fark.anahtar}`}><TableCell>{fark.nesneTuru}</TableCell><TableCell>{fark.anahtar}</TableCell><TableCell>{fark.degisiklikTuru}</TableCell></TableRow>)}</TableBody></Table>}
+              <Divider sx={{ my: 1 }} />
+              <Stack direction="row" spacing={1} alignItems="center" sx={{ mb: 1 }}>
+                <Typography variant="caption" color="text.secondary">Semantik kalemler: {kgkWorkbookSonucu.oncekiKalemSayisi} → {kgkWorkbookSonucu.yeniKalemSayisi}</Typography>
+                <Chip size="small" color={kgkWorkbookSonucu.semantikDegisiklikVarMi ? "warning" : "success"} label={kgkWorkbookSonucu.semantikDegisiklikVarMi ? `${kgkWorkbookSonucu.kalemFarklari.length} kalem farkı` : "Kalem farkı yok"} />
+              </Stack>
+              {kgkWorkbookSonucu.kalemFarklari.length > 0 && <Table size="small"><TableHead><TableRow><TableCell>Değişiklik</TableCell><TableCell>Sayfa</TableCell><TableCell>Kalem</TableCell><TableCell>Üst kalem</TableCell><TableCell>Anahtar</TableCell></TableRow></TableHead><TableBody>{kgkWorkbookSonucu.kalemFarklari.map((fark) => { const kalem = fark.yeniKalem || fark.oncekiKalem; return <TableRow key={`${fark.degisiklikTuru}-${fark.sabitAnahtar}`}><TableCell>{fark.degisiklikTuru}</TableCell><TableCell>{kalem?.sayfaAdi || "—"}</TableCell><TableCell>{kalem?.ad || "—"}</TableCell><TableCell>{kalem?.ustSabitAnahtar || "—"}</TableCell><TableCell>{fark.sabitAnahtar}</TableCell></TableRow>; })}</TableBody></Table>}
             </Paper>
           )}
         </Stack>
@@ -1548,8 +1516,10 @@ const Page = () => {
                     <Stack spacing={1.5}>
                       <Stack direction="row" spacing={1} alignItems="center">
                         <Typography variant="subtitle2" sx={{ flexGrow: 1 }}>Taslak kalem düzenleyici</Typography>
-                        <Button size="small" variant="outlined" onClick={() => { setYeniKalemAcik((onceki) => !onceki); setDuzenlenenKalemId(0); }}>{yeniKalemAcik ? "Yeni kalemi kapat" : "Yeni kalem"}</Button>
                       </Stack>
+                      <Alert severity="info" variant="outlined">
+                        Kalem ekleme veya kaldırma elle yapılmaz. KGK Excel sürümleri arasındaki farktan tespit edilen kalemler taslak sürüme aktarılır; bu ekran yalnızca gelen taslağın metadata ve formül incelemesi içindir.
+                      </Alert>
                       <FormControl size="small" fullWidth>
                         <InputLabel>Tablo</InputLabel>
                         <Select label="Tablo" value={secilenKalemTablosu.id} onChange={(event) => { setKalemTabloId(Number(event.target.value)); setDuzenlenenKalemId(0); }}>
@@ -1570,18 +1540,6 @@ const Page = () => {
                           ))}
                         </TableBody>
                       </Table>
-                      {yeniKalemAcik && (
-                        <Grid container spacing={1.5}>
-                          <Grid item xs={12} md={3}><TextField fullWidth size="small" label="Sabit anahtar" value={yeniKalemForm.sabitAnahtar} onChange={(event) => setYeniKalemForm((onceki) => ({ ...onceki, sabitAnahtar: event.target.value }))} /></Grid>
-                          <Grid item xs={12} md={3}><TextField fullWidth size="small" label="Kalem adı" value={yeniKalemForm.ad} onChange={(event) => setYeniKalemForm((onceki) => ({ ...onceki, ad: event.target.value }))} /></Grid>
-                          <Grid item xs={12} md={2}><TextField fullWidth size="small" label="Kod" value={yeniKalemForm.kod} onChange={(event) => setYeniKalemForm((onceki) => ({ ...onceki, kod: event.target.value }))} /></Grid>
-                          <Grid item xs={12} md={2}><TextField fullWidth size="small" type="number" label="Sıra" value={yeniKalemForm.sira} onChange={(event) => setYeniKalemForm((onceki) => ({ ...onceki, sira: Number(event.target.value) }))} /></Grid>
-                          <Grid item xs={12} md={2}><FormControl size="small" fullWidth><InputLabel>Üst kalem</InputLabel><Select label="Üst kalem" value={yeniKalemForm.ustKalemId} onChange={(event) => setYeniKalemForm((onceki) => ({ ...onceki, ustKalemId: Number(event.target.value) }))}><MenuItem value={0}>Yok</MenuItem>{secilenKalemTablosu.kalemler.map((kalem) => <MenuItem key={kalem.id} value={kalem.id}>{kalem.sabitAnahtar}</MenuItem>)}</Select></FormControl></Grid>
-                          <Grid item xs={12} md={3}><FormControl size="small" fullWidth><InputLabel>Kalem türü</InputLabel><Select label="Kalem türü" value={yeniKalemForm.kalemTuru} onChange={(event) => setYeniKalemForm((onceki) => ({ ...onceki, kalemTuru: Number(event.target.value) }))}><MenuItem value={1}>Başlık</MenuItem><MenuItem value={2}>Veri</MenuItem><MenuItem value={3}>Ara toplam</MenuItem><MenuItem value={4}>Toplam</MenuItem><MenuItem value={5}>Manuel</MenuItem></Select></FormControl></Grid>
-                          <Grid item xs={12} md={3}><FormControl size="small" fullWidth><InputLabel>Eksen</InputLabel><Select label="Eksen" value={yeniKalemForm.eksen} onChange={(event) => setYeniKalemForm((onceki) => ({ ...onceki, eksen: Number(event.target.value) }))}><MenuItem value={1}>Satır</MenuItem><MenuItem value={2}>Dikey</MenuItem><MenuItem value={3}>Yatay</MenuItem></Select></FormControl></Grid>
-                          <Grid item xs={12}><Stack direction="row" spacing={1}><Button variant="contained" size="small" onClick={kalemOlustur} disabled={kalemOlusturuluyor || !yeniKalemForm.sabitAnahtar.trim() || !yeniKalemForm.ad.trim()}>{kalemOlusturuluyor ? <CircularProgress size={18} color="inherit" /> : "Yeni kalemi kaydet"}</Button><Button size="small" onClick={() => setYeniKalemAcik(false)} disabled={kalemOlusturuluyor}>İptal</Button></Stack></Grid>
-                        </Grid>
-                      )}
                       {duzenlenenKalemId > 0 && (
                         <Grid container spacing={1.5}>
                           <Grid item xs={12} md={4}><TextField fullWidth size="small" label="Kalem adı" value={kalemForm.ad} onChange={(event) => setKalemForm((onceki) => ({ ...onceki, ad: event.target.value }))} /></Grid>
@@ -1598,9 +1556,6 @@ const Page = () => {
                           </Grid>
                           <Grid item xs={12} md={3}>
                             <FormControl size="small" fullWidth><InputLabel>Görünürlük</InputLabel><Select label="Görünürlük" value={kalemForm.varsayilanGorunurMu ? 1 : 0} onChange={(event) => setKalemForm((onceki) => ({ ...onceki, varsayilanGorunurMu: Number(event.target.value) === 1 }))}><MenuItem value={1}>Görünür</MenuItem><MenuItem value={0}>Gizli</MenuItem></Select></FormControl>
-                          </Grid>
-                          <Grid item xs={12} md={3}>
-                            <FormControl size="small" fullWidth><InputLabel>Durum</InputLabel><Select label="Durum" value={kalemForm.aktifMi ? 1 : 0} onChange={(event) => setKalemForm((onceki) => ({ ...onceki, aktifMi: Number(event.target.value) === 1 }))}><MenuItem value={1}>Aktif</MenuItem><MenuItem value={0}>Pasif</MenuItem></Select></FormControl>
                           </Grid>
                           <Grid item xs={12}><Stack direction="row" spacing={1}><Button variant="contained" size="small" onClick={kalemKaydet} disabled={kalemKaydediliyor || !kalemForm.ad.trim()}>{kalemKaydediliyor ? <CircularProgress size={18} color="inherit" /> : "Kalemi kaydet"}</Button><Button size="small" onClick={() => setDuzenlenenKalemId(0)} disabled={kalemKaydediliyor}>İptal</Button></Stack></Grid>
                         </Grid>

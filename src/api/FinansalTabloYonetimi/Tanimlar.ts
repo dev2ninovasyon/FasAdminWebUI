@@ -545,7 +545,6 @@ export type FinansalKalemGuncelleme = {
   kalemTuru: number;
   eksen: number;
   varsayilanGorunurMu: boolean;
-  aktifMi: boolean;
   ustKalemId?: number | null;
   beklenenEszamanlilikSurumu: number;
 };
@@ -571,41 +570,6 @@ export const updateFinansalKalem = async (
     throw new Error(payload?.message || payload?.Message || "Finansal tablo kalemi güncellenemedi.");
   }
   return payload as { success: boolean; kalemId: number; surumId: number; eszamanlilikSurumu: number; guncellemeTarihi: string };
-};
-
-export type FinansalKalemOlusturma = {
-  sabitAnahtar: string;
-  ad: string;
-  kod?: string | null;
-  sira: number;
-  kalemTuru: number;
-  eksen: number;
-  varsayilanGorunurMu: boolean;
-  aktifMi: boolean;
-  ustKalemId?: number | null;
-  beklenenEszamanlilikSurumu: number;
-};
-
-export const createFinansalKalem = async (
-  token: string,
-  surumId: number,
-  tabloId: number,
-  istek: FinansalKalemOlusturma
-) => {
-  const response = await fetch(`${url}/FinansalTabloYonetimi/Surumler/${surumId}/Tablolar/${tabloId}/Kalemler`, {
-    method: "POST",
-    headers: {
-      accept: "application/json",
-      "Content-Type": "application/json",
-      Authorization: `Bearer ${token}`,
-    },
-    body: JSON.stringify(istek),
-  });
-  const payload = await response.json().catch(() => ({}));
-  if (!response.ok) {
-    throw new Error(payload?.message || payload?.Message || "Finansal tablo kalemi oluşturulamadı.");
-  }
-  return payload as { success: boolean; kalemId: number; surumId: number; tabloId: number; eszamanlilikSurumu: number; guncellemeTarihi: string };
 };
 
 export type FinansalKuralTerimiGuncelleme = {
@@ -900,6 +864,33 @@ export type KgkWorkbookFarkSonucu = {
   makroVarMi: boolean;
   yapisalDegisiklikVarMi: boolean;
   farkSayisi: number;
+  oncekiKalemSayisi: number;
+  yeniKalemSayisi: number;
+  semantikDegisiklikVarMi: boolean;
+  kalemFarklari: Array<{
+    sabitAnahtar: string;
+    degisiklikTuru: string;
+    oncekiKalem?: {
+      sabitAnahtar: string;
+      sayfaAdi: string;
+      satirNo: number;
+      ad: string;
+      girinti: number;
+      ustSabitAnahtar?: string | null;
+      kalemTuru: string;
+      etiketKolonu: string;
+    } | null;
+    yeniKalem?: {
+      sabitAnahtar: string;
+      sayfaAdi: string;
+      satirNo: number;
+      ad: string;
+      girinti: number;
+      ustSabitAnahtar?: string | null;
+      kalemTuru: string;
+      etiketKolonu: string;
+    } | null;
+  }>;
   farklar: Array<{
     nesneTuru: string;
     anahtar: string;
