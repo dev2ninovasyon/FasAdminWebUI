@@ -1513,7 +1513,7 @@ const Page = () => {
             Önizleme, seçilen denetlenenin yıl ve konsolidasyon bilgisine göre mevcut mizan değerlerini okur; tanım sürümünü ve formülleri kullanarak sonuç üretir. Bu işlem üretim arşivine yazmaz.
           </Typography>
           <Stack direction="row" spacing={1} alignItems="center">
-            <Button variant="contained" size="small" onClick={finansalTabloUret} disabled={uretimYukleniyor || !secilenSurum || !secilenKalemTablosu}>
+            <Button variant="contained" size="small" onClick={finansalTabloUret} disabled={uretimYukleniyor || pilotDurumuYukleniyor || pilotDurumu?.yeniMotorEtkin !== true || !secilenSurum || !secilenKalemTablosu}>
               {uretimYukleniyor ? <CircularProgress size={18} color="inherit" /> : "Finansal tablo üret"}
             </Button>
             <Button variant="outlined" color="info" size="small" onClick={finansalTabloOnizle} disabled={uretimOnizlemeYukleniyor || uretimYukleniyor || !secilenSurum || !secilenKalemTablosu}>
@@ -1524,6 +1524,9 @@ const Page = () => {
             </Button>}
             {uretimSonucu && <Chip size="small" color={uretimSonucu.kayit.durum === 1 ? "success" : "error"} label={uretimSonucu.kayit.durum === 1 ? `Üretim arşivlendi · ${uretimSonucu.kayit.uretimId}` : `Üretim durumu: ${uretimSonucu.kayit.durum}`} />}
           </Stack>
+          {pilotDurumu && !pilotDurumu.yeniMotorEtkin && <Alert severity="info">
+            Yeni motor üretimi şu anda kapalıdır. Eski finansal tablo akışı çalışmaya devam eder; bu panelden yalnızca salt-okunur mizan önizlemesi yapılabilir.
+          </Alert>}
           {uretimOnizlemeSonucu && <Paper variant="outlined" sx={{ p: 1.5, maxHeight: 320, overflow: "auto", borderColor: "info.main" }}>
             <Stack direction="row" spacing={1} alignItems="center" flexWrap="wrap" useFlexGap>
               <Chip size="small" color={uretimOnizlemeSonucu.basariliMi ? "success" : "warning"} label={uretimOnizlemeSonucu.basariliMi ? "Salt-okunur önizleme tamamlandı" : `Önizleme durumu: ${uretimOnizlemeSonucu.durum}`} />
