@@ -61,6 +61,7 @@ import {
   KgkWorkbookFarkSonucu,
   compareKgkWorkbooks,
   applyKgkKalemFarklari,
+  applyKgkFormulFarklari,
   createFinansalTabloUretimi,
   getFinansalTabloUretimGecmisi,
   getFinansalTabloPilotDurumu,
@@ -673,7 +674,7 @@ const Page = () => {
     setSurumIslemiYukleniyor(true);
     setTanimHatasi("");
     try {
-      const aciklama = `KGK workbook fark incelemesi: ${kgkWorkbookSonucu.oncekiDosyaAdi} → ${kgkWorkbookSonucu.yeniDosyaAdi}; önceki SHA-256 ${kgkWorkbookSonucu.oncekiSha256}; yeni SHA-256 ${kgkWorkbookSonucu.yeniSha256}; ${kgkWorkbookSonucu.farkSayisi} yapısal fark, ${kgkWorkbookSonucu.kalemFarklari.length} semantik kalem farkı. Otomatik yayınlanmaz.`;
+      const aciklama = `KGK workbook fark incelemesi: ${kgkWorkbookSonucu.oncekiDosyaAdi} → ${kgkWorkbookSonucu.yeniDosyaAdi}; önceki SHA-256 ${kgkWorkbookSonucu.oncekiSha256}; yeni SHA-256 ${kgkWorkbookSonucu.yeniSha256}; ${kgkWorkbookSonucu.farkSayisi} yapısal fark, ${kgkWorkbookSonucu.kalemFarklari.length} semantik kalem farkı, ${kgkWorkbookSonucu.formulFarklari.length} formül farkı. Otomatik yayınlanmaz.`;
       const sonuc = await cloneFinansalSurum(user.token, secilenSurum.id, {
         etiket: `${secilenSurum.etiket} - KGK taslak`,
         gecerlilikBaslangici: secilenSurum.gecerlilikBaslangici,
@@ -703,20 +704,76 @@ const Page = () => {
         if (error instanceof Error) throw error;
         throw new Error("KGK sayfa–tablo eşleştirmesi JSON olarak okunamadı.");
       }
-      const uygulama = await applyKgkKalemFarklari(user.token, sonuc.surumId, {
-        beklenenEszamanlilikSurumu: sonuc.eszamanlilikSurumu,
-        kalemFarklari: kgkWorkbookSonucu.kalemFarklari,
-        sayfaTabloEslestirmeleri: { ...sayfaTabloEslestirmeleri, ...manuelEslestirmeler },
-        aciklama,
-      });
+      const uygulama = kgkWorkbookSonucu.kalemFarklari.length > 0
+        ? await applyKgkKalemFarklari(user.token, sonuc.surumId, {
+          beklenenEszamanlilikSurumu: sonuc.eszamanlilikSurumu,
+          kalemFarklari: kgkWorkbookSonucu.kalemFarklari,
+          sayfaTabloEslestirmeleri: { ...sayfaTabloEslestirmeleri, ...manuelEslestirmeler },
+          aciklama,
+        })
+        : { eszamanlilikSurumu: sonuc.eszamanlilikSurumu, eklenenKalemSayisi: 0, pasifeAlinanKalemSayisi: 0, guncellenenKalemSayisi: 0 };
       const yeniSurum = { ...secilenSurum, id: sonuc.surumId, surumNo: sonuc.surumNo, etiket: `${secilenSurum.etiket} - KGK taslak`, durum: sonuc.durum, kaynakSurumId: secilenSurum.id, aciklama, olusturmaTarihi: new Date().toISOString(), guncellemeTarihi: new Date().toISOString(), onayTarihi: null, eszamanlilikSurumu: uygulama.eszamanlilikSurumu, kalemSayisi: Math.max(0, secilenSurum.kalemSayisi + uygulama.eklenenKalemSayisi - uygulama.pasifeAlinanKalemSayisi) };
       setTanimSetleri((onceki) => onceki.map((set) => set.id === secilenSetId ? { ...set, surumler: [yeniSurum, ...set.surumler] } : set));
       setSecilenSurumId(sonuc.surumId);
       setSurumId(String(sonuc.surumId));
       setEszamanlilikSurumu(String(uygulama.eszamanlilikSurumu));
-      setTanimHatasi(`KGK farkı taslağa aktarıldı: ${uygulama.eklenenKalemSayisi} yeni, ${uygulama.pasifeAlinanKalemSayisi} pasif, ${uygulama.guncellenenKalemSayisi} güncellenen kalem. Formüller admin incelemesi ve sürüm doğrulaması sonrasında yayınlanır.`);
+      setTanimHatasi(`KGK taslağı oluşturuldu: ${uygulama.eklenenKalemSayisi} yeni, ${uygulama.pasifeAlinanKalemSayisi} pasif, ${uygulama.guncellenenKalemSayisi} güncellenen kalem. Formül farkları ayrı Admin onayıyla aktarılır; taslak otomatik yayınlanmaz.`);
     } catch (error) {
       setTanimHatasi(error instanceof Error ? error.message : "KGK farkı için taslak oluşturulamadı.");
+    } finally {
+      setSurumIslemiYukleniyor(false);
+    }
+  };
+
+  const kgkFormulFarklariniTaslagAktar = async () => {
+    if (!user.token || !secilenSurum || secilenSurum.durum !== 1 || !kgkWorkbookSonucu?.formulDegisikligiVarMi) return;
+    const hataliFormuller = kgkWorkbookSonucu.formulFarklari
+      .map((fark) => fark.yeniFormul)
+      .filter((formul) => formul && formul.dogrulamaHatalari.length > 0);
+    if (hataliFormuller.length > 0) {
+      setTanimHatasi("Çözümlenme hatası taşıyan KGK formülleri düzeltilmeden taslağa aktarılamaz.");
+      return;
+    }
+
+    setSurumIslemiYukleniyor(true);
+    setTanimHatasi("");
+    try {
+      const normalize = (value: string) => value.trim().toLocaleUpperCase("tr-TR")
+        .replace(/[ÇĞİÖŞÜ]/g, (karakter) => ({ Ç: "C", Ğ: "G", İ: "I", Ö: "O", Ş: "S", Ü: "U" }[karakter] || karakter))
+        .replace(/[^A-Z0-9]/g, "");
+      const sayfaTabloEslestirmeleri: Record<string, number> = {};
+      const sayfalar = Array.from(new Set(kgkWorkbookSonucu.formulFarklari
+        .map((fark) => (fark.yeniFormul || fark.oncekiFormul)?.sayfaAdi)
+        .filter((sayfa): sayfa is string => Boolean(sayfa))));
+      sayfalar.forEach((sayfa) => {
+        const adaylar = (surumDetayi?.tablolar || []).filter((tablo) => normalize(tablo.kod) === normalize(sayfa) || normalize(tablo.ad) === normalize(sayfa));
+        if (adaylar.length === 1) sayfaTabloEslestirmeleri[sayfa] = adaylar[0].id;
+      });
+      const parsed = JSON.parse(kgkSayfaTabloEslestirmeleriJson || "{}");
+      if (!parsed || Array.isArray(parsed) || typeof parsed !== "object") throw new Error("KGK sayfa–tablo eşleştirmesi bir JSON nesnesi olmalıdır.");
+      Object.entries(parsed).forEach(([sayfa, tabloId]) => {
+        const id = Number(tabloId);
+        if (!sayfa.trim() || !Number.isInteger(id) || id <= 0) throw new Error("KGK sayfa–tablo eşleştirmesinde sayfa adı ve pozitif tablo ID'si kullanılmalıdır.");
+        sayfaTabloEslestirmeleri[sayfa] = id;
+      });
+
+      const sonuc = await applyKgkFormulFarklari(user.token, secilenSurum.id, {
+        beklenenEszamanlilikSurumu: secilenSurum.eszamanlilikSurumu,
+        formulFarklari: kgkWorkbookSonucu.formulFarklari,
+        sayfaTabloEslestirmeleri,
+        aciklama: `KGK workbook formül farkları: ${kgkWorkbookSonucu.oncekiDosyaAdi} → ${kgkWorkbookSonucu.yeniDosyaAdi}`,
+      });
+      setTanimSetleri((onceki) => onceki.map((set) => ({
+        ...set,
+        surumler: set.surumler.map((surum) => surum.id === secilenSurum.id
+          ? { ...surum, eszamanlilikSurumu: sonuc.eszamanlilikSurumu, formulSayisi: surum.formulSayisi + sonuc.eklenenFormulSayisi }
+          : surum),
+      })));
+      setEszamanlilikSurumu(String(sonuc.eszamanlilikSurumu));
+      setSurumDetayi(await getFinansalSurumDetay(user.token, secilenSurum.id));
+      setTanimHatasi(`KGK formül farkları taslağa aktarıldı: ${sonuc.eklenenFormulSayisi} yeni, ${sonuc.guncellenenFormulSayisi} güncellenen, ${sonuc.pasifeAlinanFormulSayisi} pasif formül; ${sonuc.yazilanTerimSayisi} terim yazıldı. Taslak otomatik yayınlanmadı.`);
+    } catch (error) {
+      setTanimHatasi(error instanceof Error ? error.message : "KGK formül farkları taslağa uygulanamadı.");
     } finally {
       setSurumIslemiYukleniyor(false);
     }
@@ -1131,7 +1188,7 @@ const Page = () => {
           <Divider />
           <Typography variant="subtitle2">Workbook yapısal farkı</Typography>
           <Typography variant="caption" color="text.secondary">
-            İki KGK Excel dosyası makro çalıştırılmadan; sayfa, hücre, formül, stil, birleştirme ve adlandırılmış aralık anahtarlarıyla karşılaştırılır. Admin onayıyla tespit edilen yeni kalemler taslağa eklenir, kaldırılanlar silinmeden pasife alınır; formül ve yayın kararı admin incelemesine bırakılır.
+            İki KGK Excel dosyası makro çalıştırılmadan; sayfa, hücre, formül, stil, birleştirme ve adlandırılmış aralık anahtarlarıyla karşılaştırılır. Kalem ve formül farkları ayrı incelenir; yalnız seçili taslağa Admin onayıyla aktarılır ve otomatik yayın yapılmaz.
           </Typography>
           <Stack direction="row" spacing={1} alignItems="center" flexWrap="wrap" useFlexGap>
             <Button component="label" size="small" variant="outlined">
@@ -1161,7 +1218,8 @@ const Page = () => {
               <Stack direction="row" spacing={1} alignItems="center" sx={{ mb: 1 }}>
                 <Chip size="small" color={kgkWorkbookSonucu.yapisalDegisiklikVarMi ? "warning" : "success"} label={kgkWorkbookSonucu.yapisalDegisiklikVarMi ? `${kgkWorkbookSonucu.farkSayisi} yapısal fark` : "Yapısal fark yok"} />
                 {kgkWorkbookSonucu.makroVarMi && <Chip size="small" color="info" label="Makro bulundu; çalıştırılmadı" />}
-                {kgkWorkbookSonucu.semantikDegisiklikVarMi && secilenSurum && <Button size="small" variant="outlined" onClick={kgkFarktanTaslakOlustur} disabled={surumIslemiYukleniyor}>KGK farkını taslağa aktar</Button>}
+                {(kgkWorkbookSonucu.semantikDegisiklikVarMi || kgkWorkbookSonucu.formulDegisikligiVarMi) && secilenSurum && secilenSurum.durum !== 1 && <Button size="small" variant="outlined" onClick={kgkFarktanTaslakOlustur} disabled={surumIslemiYukleniyor}>KGK farkından taslak oluştur</Button>}
+                {kgkWorkbookSonucu.formulDegisikligiVarMi && secilenSurum?.durum === 1 && <Button size="small" variant="contained" color="secondary" onClick={kgkFormulFarklariniTaslagAktar} disabled={surumIslemiYukleniyor}>KGK formül farklarını taslağa aktar</Button>}
               </Stack>
               {kgkWorkbookSonucu.farklar.length > 0 && <Table size="small"><TableHead><TableRow><TableCell>Tür</TableCell><TableCell>Anahtar</TableCell><TableCell>Değişiklik</TableCell></TableRow></TableHead><TableBody>{kgkWorkbookSonucu.farklar.map((fark) => <TableRow key={`${fark.degisiklikTuru}-${fark.anahtar}`}><TableCell>{fark.nesneTuru}</TableCell><TableCell>{fark.anahtar}</TableCell><TableCell>{fark.degisiklikTuru}</TableCell></TableRow>)}</TableBody></Table>}
               <Divider sx={{ my: 1 }} />
@@ -1170,6 +1228,12 @@ const Page = () => {
                 <Chip size="small" color={kgkWorkbookSonucu.semantikDegisiklikVarMi ? "warning" : "success"} label={kgkWorkbookSonucu.semantikDegisiklikVarMi ? `${kgkWorkbookSonucu.kalemFarklari.length} kalem farkı` : "Kalem farkı yok"} />
               </Stack>
               {kgkWorkbookSonucu.kalemFarklari.length > 0 && <Table size="small"><TableHead><TableRow><TableCell>Değişiklik</TableCell><TableCell>Sayfa</TableCell><TableCell>Kalem</TableCell><TableCell>Üst kalem</TableCell><TableCell>Anahtar</TableCell></TableRow></TableHead><TableBody>{kgkWorkbookSonucu.kalemFarklari.map((fark) => { const kalem = fark.yeniKalem || fark.oncekiKalem; return <TableRow key={`${fark.degisiklikTuru}-${fark.sabitAnahtar}`}><TableCell>{fark.degisiklikTuru}</TableCell><TableCell>{kalem?.sayfaAdi || "—"}</TableCell><TableCell>{kalem?.ad || "—"}</TableCell><TableCell>{kalem?.ustSabitAnahtar || "—"}</TableCell><TableCell>{fark.sabitAnahtar}</TableCell></TableRow>; })}</TableBody></Table>}
+              <Divider sx={{ my: 1 }} />
+              <Stack direction="row" spacing={1} alignItems="center" sx={{ mb: 1 }}>
+                <Typography variant="caption" color="text.secondary">Formüller: {kgkWorkbookSonucu.oncekiFormulSayisi} → {kgkWorkbookSonucu.yeniFormulSayisi}</Typography>
+                <Chip size="small" color={kgkWorkbookSonucu.formulDegisikligiVarMi ? "warning" : "success"} label={kgkWorkbookSonucu.formulDegisikligiVarMi ? `${kgkWorkbookSonucu.formulFarklari.length} formül farkı` : "Formül farkı yok"} />
+              </Stack>
+              {kgkWorkbookSonucu.formulFarklari.length > 0 && <Table size="small"><TableHead><TableRow><TableCell>Değişiklik</TableCell><TableCell>Sayfa / hedef</TableCell><TableCell>Kalem anahtarı</TableCell><TableCell>Formül</TableCell><TableCell>Terim</TableCell><TableCell>Durum</TableCell></TableRow></TableHead><TableBody>{kgkWorkbookSonucu.formulFarklari.map((fark) => { const formul = fark.yeniFormul || fark.oncekiFormul; const hatalar = formul?.dogrulamaHatalari || []; return <TableRow key={`${fark.degisiklikTuru}-${fark.sabitAnahtar}`}><TableCell>{fark.degisiklikTuru}</TableCell><TableCell>{formul ? `${formul.sayfaAdi}!${formul.hedefHucreAdresi}` : "—"}</TableCell><TableCell>{formul?.kalemSabitAnahtari || "—"}</TableCell><TableCell sx={{ maxWidth: 320, overflowWrap: "anywhere" }}>{formul?.hamFormul || "—"}</TableCell><TableCell>{formul?.terimler.length || 0}</TableCell><TableCell>{hatalar.length > 0 ? <Chip size="small" color="error" label={`${hatalar.length} çözümleme hatası`} title={hatalar.join("; ")} /> : <Chip size="small" color="success" variant="outlined" label="Hazır" />}</TableCell></TableRow>; })}</TableBody></Table>}
             </Paper>
           )}
         </Stack>
