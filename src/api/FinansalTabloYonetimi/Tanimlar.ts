@@ -709,6 +709,7 @@ export type KgkFormatKontrolSonucu = {
     sonDegistirmeTarihi?: string | null;
     icerikUzunlugu?: number | null;
     sha256?: string | null;
+    oncekiSha256?: string | null;
     degistiMi: boolean;
     karsilastirmaVarMi: boolean;
     hata?: string | null;
@@ -942,6 +943,30 @@ export const compareKgkWorkbooks = async (
   const payload = await response.json().catch(() => ({}));
   if (!response.ok) {
     throw new Error(payload?.detail || payload?.message || payload?.Message || "KGK workbook karşılaştırılamadı.");
+  }
+  return payload as KgkWorkbookFarkSonucu;
+};
+
+export const compareArchivedKgkWorkbooks = async (
+  token: string,
+  istek: { url: string; oncekiSha256: string; yeniSha256: string }
+) => {
+  const response = await fetch(`${url}/FinansalTabloYonetimi/Kgk/ArsivWorkbookKarsilastir`, {
+    method: "POST",
+    headers: {
+      accept: "application/json",
+      "Content-Type": "application/json",
+      Authorization: `Bearer ${token}`,
+    },
+    body: JSON.stringify({
+      url: istek.url,
+      oncekiSha256: istek.oncekiSha256,
+      yeniSha256: istek.yeniSha256,
+    }),
+  });
+  const payload = await response.json().catch(() => ({}));
+  if (!response.ok) {
+    throw new Error(payload?.detail || payload?.message || payload?.Message || "ArÅŸivlenmiÅŸ KGK workbook karÅŸÄ±laÅŸtÄ±rÄ±lamadÄ±.");
   }
   return payload as KgkWorkbookFarkSonucu;
 };

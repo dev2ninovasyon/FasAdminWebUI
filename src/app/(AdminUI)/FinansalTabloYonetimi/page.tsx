@@ -60,6 +60,7 @@ import {
   KgkTaramaGecmisi,
   KgkWorkbookFarkSonucu,
   compareKgkWorkbooks,
+  compareArchivedKgkWorkbooks,
   applyKgkKalemFarklari,
   applyKgkFormulFarklari,
   createFinansalTabloUretimi,
@@ -144,6 +145,7 @@ const Page = () => {
   const [kgkYeniWorkbook, setKgkYeniWorkbook] = useState<File | null>(null);
   const [kgkWorkbookSonucu, setKgkWorkbookSonucu] = useState<KgkWorkbookFarkSonucu | null>(null);
   const [kgkWorkbookYukleniyor, setKgkWorkbookYukleniyor] = useState(false);
+  const [kgkArsivWorkbookYukleniyor, setKgkArsivWorkbookYukleniyor] = useState("");
   const [kgkSayfaTabloEslestirmeleriJson, setKgkSayfaTabloEslestirmeleriJson] = useState("{}");
   const [uretimGirdiSha256, setUretimGirdiSha256] = useState("");
   const [uretimSnapshotSha256, setUretimSnapshotSha256] = useState("");
@@ -669,6 +671,23 @@ const Page = () => {
     }
   };
 
+  const kgkArsivWorkbookKarsilastir = async (dosya: KgkFormatKontrolSonucu["dosyalar"][number]) => {
+    if (!user.token || !dosya.oncekiSha256 || !dosya.sha256) return;
+    setKgkArsivWorkbookYukleniyor(dosya.url);
+    setTanimHatasi("");
+    try {
+      setKgkWorkbookSonucu(await compareArchivedKgkWorkbooks(user.token, {
+        url: dosya.url,
+        oncekiSha256: dosya.oncekiSha256,
+        yeniSha256: dosya.sha256,
+      }));
+    } catch (error) {
+      setTanimHatasi(error instanceof Error ? error.message : "ArÅŸivlenmiÅŸ KGK workbook karÅŸÄ±laÅŸtÄ±rÄ±lamadÄ±.");
+    } finally {
+      setKgkArsivWorkbookYukleniyor("");
+    }
+  };
+
   const kgkFarktanTaslakOlustur = async () => {
     if (!user.token || !secilenSurum || !kgkWorkbookSonucu) return;
     setSurumIslemiYukleniyor(true);
@@ -1171,6 +1190,9 @@ const Page = () => {
                     <Button size="small" variant="outlined" color="secondary" onClick={() => kgkDosyaArsivle(dosya.url)} disabled={!dosya.erisilebilirMi || kgkArsivlenenUrl === dosya.url}>
                       {kgkArsivlenenUrl === dosya.url ? <CircularProgress size={16} /> : "Arşivle"}
                     </Button>
+                    {dosya.degistiMi && dosya.oncekiSha256 && dosya.sha256 && /^(xlsx|xlsm)$/i.test(dosya.dosyaTuru) && <Button size="small" variant="contained" color="info" onClick={() => kgkArsivWorkbookKarsilastir(dosya)} disabled={kgkArsivWorkbookYukleniyor === dosya.url}>
+                      {kgkArsivWorkbookYukleniyor === dosya.url ? <CircularProgress size={16} color="inherit" /> : "Arşivli farkı incele"}
+                    </Button>}
                   </Stack>
                 ))}
               </Stack>
