@@ -287,6 +287,7 @@ const Page = () => {
     setMetaDuzenleme(false);
     setDogrulamaSonucu(null);
     setKarsilastirmaSonucu(null);
+    setUretimOnizlemeSonucu(null);
     setKarsilastirmaSurumId(0);
     setKalemTabloId(0);
     setDuzenlenenKalemId(0);
@@ -301,6 +302,23 @@ const Page = () => {
       setUretimBitis(secilenSurum.gecerlilikBitisi?.slice(0, 10) || "");
     }
   }, [secilenKalemTablosu, secilenSurum]);
+
+  useEffect(() => {
+    setUretimOnizlemeSonucu(null);
+  }, [
+    secilenSurumId,
+    secilenKalemTablosu?.id,
+    uretimDonemAnahtari,
+    uretimGirdiAnahtari,
+    uretimGirdiSha256,
+    uretimDenetlenenId,
+    uretimYil,
+    uretimDenetciId,
+    uretimKonsolide,
+    uretimSnapshotSha256,
+    uretimBaslangic,
+    uretimBitis,
+  ]);
 
   const metaKaydet = async () => {
     if (!user.token || !secilenSurum || secilenSurum.durum !== 1) return;
@@ -872,61 +890,12 @@ const Page = () => {
   };
 
   const finansalTabloUret = async () => {
-    const tablo = secilenKalemTablosu;
-    const set = secilenSet;
-    const surum = secilenSurum;
-    const donem = tablo?.donemKolonlari?.find((kolon) => kolon.sabitAnahtar === uretimDonemAnahtari) || tablo?.donemKolonlari?.[0];
-    if (!user.token || !set || !surum || !tablo || !donem) {
-      setTanimHatasi("Üretim için yayımlanmış sürüm, tablo ve dönem kolonu seçilmelidir.");
-      return;
-    }
-    if (surum.durum !== 2) {
-      setTanimHatasi("Üretim yalnızca yayımlanmış sürüm üzerinden başlatılabilir.");
-      return;
-    }
-    if (uretimGirdiSha256.trim().length !== 64 || !uretimDenetlenenId || !uretimYil || !uretimBaslangic || !uretimBitis) {
-      setTanimHatasi("Girdi SHA-256, denetlenen, yıl ve dönem tarihleri zorunludur.");
-      return;
-    }
+    const istek = finansalTabloIstekOlustur();
+    if (!istek || !user.token) return;
     setUretimYukleniyor(true);
     setTanimHatasi("");
     try {
-      const snapshotSha256 = uretimSnapshotSha256.trim() || dogrulamaSonucu?.tablolar.find((aday) => aday.tabloId === tablo.id)?.snapshotSha256 || "";
-      const data = await createFinansalTabloUretimi(user.token, {
-        yeniMotorSurumu: "finansal-tablo-yeni-motor-v1",
-        tanimSetiSabitAnahtari: set.kod,
-        tanimSurumu: String(surum.surumNo),
-        girdiSabitAnahtari: uretimGirdiAnahtari.trim() || "MIZAN",
-        girdiSha256: uretimGirdiSha256.trim().toLowerCase(),
-        calistirmaBaglami: {
-          donemEslesmeleri: [{
-            donemDavranisi: donem.donemDavranisi,
-            donemOfseti: donem.donemOfseti,
-            donem: {
-              sabitAnahtar: donem.sabitAnahtar,
-              baslangicTarihi: uretimBaslangic,
-              bitisTarihi: uretimBitis,
-            },
-          }],
-          yuvarlamaBasamagi: tablo.yuvarlamaBasamagi,
-          yuvarlamaModu: 1,
-          degerKaynagiBaglami: {
-            denetlenenId: Number(uretimDenetlenenId),
-            yil: Number(uretimYil),
-            konsolidasyonMu: uretimKonsolide,
-            denetciId: Number(uretimDenetciId) || 0,
-          },
-        },
-        tabloSabitAnahtari: tablo.kod,
-        donemSabitAnahtari: donem.sabitAnahtar,
-        raporlamaStandardi: set.raporlamaStandardi,
-        kapsam: set.kapsam,
-        donusumTipi: set.donusumTipi,
-        tabloTuru: tablo.tabloTuru,
-        nakitAkisYontemi: tablo.nakitAkisYontemi,
-        gecerlilikTarihi: uretimBitis,
-        tanimSnapshotSha256: snapshotSha256,
-      });
+      const data = await createFinansalTabloUretimi(user.token, istek);
       setUretimSonucu(data);
       setTanimHatasi(data.kayit.durum === 1 ? "Finansal tablo üretimi arşivlendi." : data.kayit.aciklama || "Finansal tablo üretimi tamamlanamadı.");
     } catch (error) {
@@ -1465,7 +1434,7 @@ const Page = () => {
             <Grid item xs={12} sm={6} md={3}>
               <FormControl fullWidth size="small">
                 <InputLabel>Tablo</InputLabel>
-                <Select label="Tablo" value={secilenKalemTablosu?.id || ""} onChange={(event) => setKalemTabloId(Number(event.target.value))}>
+                <Select label="Tablo" value={secilenKalemTablosu?.id || ""} onChange={(event) => { setKalemTabloId(Number(event.target.value)); setUretimOnizlemeSonucu(null); }}>
                   {(surumDetayi?.tablolar || []).map((tablo) => <MenuItem key={tablo.id} value={tablo.id}>{tablo.kod} · {tablo.ad}</MenuItem>)}
                 </Select>
               </FormControl>
