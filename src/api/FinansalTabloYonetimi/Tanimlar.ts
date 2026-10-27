@@ -919,3 +919,37 @@ export const compareKgkWorkbooks = async (
   }
   return payload as KgkWorkbookFarkSonucu;
 };
+
+export const applyKgkKalemFarklari = async (
+  token: string,
+  surumId: number,
+  istek: {
+    beklenenEszamanlilikSurumu: number;
+    kalemFarklari: KgkWorkbookFarkSonucu["kalemFarklari"];
+    sayfaTabloEslestirmeleri?: Record<string, number>;
+    aciklama?: string | null;
+  }
+) => {
+  const response = await fetch(`${url}/FinansalTabloYonetimi/Surumler/${surumId}/KgkKalemFarklariniUygula`, {
+    method: "POST",
+    headers: {
+      accept: "application/json",
+      "Content-Type": "application/json",
+      Authorization: `Bearer ${token}`,
+    },
+    body: JSON.stringify(istek),
+  });
+  const payload = await response.json().catch(() => ({}));
+  if (!response.ok) {
+    throw new Error(payload?.detail || payload?.message || payload?.Message || "KGK kalem farkları taslağa uygulanamadı.");
+  }
+  return payload as {
+    success: boolean;
+    surumId: number;
+    eszamanlilikSurumu: number;
+    eklenenKalemSayisi: number;
+    pasifeAlinanKalemSayisi: number;
+    guncellenenKalemSayisi: number;
+    islenenAnahtarlar: string[];
+  };
+};

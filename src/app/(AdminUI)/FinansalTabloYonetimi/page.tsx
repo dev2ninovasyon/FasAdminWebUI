@@ -60,6 +60,7 @@ import {
   KgkTaramaGecmisi,
   KgkWorkbookFarkSonucu,
   compareKgkWorkbooks,
+  applyKgkKalemFarklari,
   createFinansalTabloUretimi,
   getFinansalTabloUretimGecmisi,
   getFinansalTabloPilotDurumu,
@@ -142,6 +143,7 @@ const Page = () => {
   const [kgkYeniWorkbook, setKgkYeniWorkbook] = useState<File | null>(null);
   const [kgkWorkbookSonucu, setKgkWorkbookSonucu] = useState<KgkWorkbookFarkSonucu | null>(null);
   const [kgkWorkbookYukleniyor, setKgkWorkbookYukleniyor] = useState(false);
+  const [kgkSayfaTabloEslestirmeleriJson, setKgkSayfaTabloEslestirmeleriJson] = useState("{}");
   const [uretimGirdiSha256, setUretimGirdiSha256] = useState("");
   const [uretimSnapshotSha256, setUretimSnapshotSha256] = useState("");
   const [uretimGirdiAnahtari, setUretimGirdiAnahtari] = useState("MIZAN");
@@ -679,12 +681,40 @@ const Page = () => {
         aciklama,
         beklenenKaynakEszamanlilikSurumu: secilenSurum.eszamanlilikSurumu,
       });
-      const yeniSurum = { ...secilenSurum, id: sonuc.surumId, surumNo: sonuc.surumNo, etiket: `${secilenSurum.etiket} - KGK taslak`, durum: sonuc.durum, kaynakSurumId: secilenSurum.id, aciklama, olusturmaTarihi: new Date().toISOString(), guncellemeTarihi: null, onayTarihi: null, eszamanlilikSurumu: sonuc.eszamanlilikSurumu };
+      const normalize = (value: string) => value.trim().toLocaleUpperCase("tr-TR")
+        .replace(/[ÇĞİÖŞÜ]/g, (karakter) => ({ Ç: "C", Ğ: "G", İ: "I", Ö: "O", Ş: "S", Ü: "U" }[karakter] || karakter))
+        .replace(/[^A-Z0-9]/g, "");
+      const sayfaTabloEslestirmeleri: Record<string, number> = {};
+      const sayfalar = Array.from(new Set(kgkWorkbookSonucu.kalemFarklari.map((fark) => (fark.yeniKalem || fark.oncekiKalem)?.sayfaAdi).filter((sayfa): sayfa is string => Boolean(sayfa))));
+      sayfalar.forEach((sayfa) => {
+        const adaylar = (surumDetayi?.tablolar || []).filter((tablo) => normalize(tablo.kod) === normalize(sayfa) || normalize(tablo.ad) === normalize(sayfa));
+        if (adaylar.length === 1) sayfaTabloEslestirmeleri[sayfa] = adaylar[0].id;
+      });
+      let manuelEslestirmeler: Record<string, number> = {};
+      try {
+        const parsed = JSON.parse(kgkSayfaTabloEslestirmeleriJson || "{}");
+        if (!parsed || Array.isArray(parsed) || typeof parsed !== "object") throw new Error("KGK sayfa–tablo eşleştirmesi bir JSON nesnesi olmalıdır.");
+        Object.entries(parsed).forEach(([sayfa, tabloId]) => {
+          const id = Number(tabloId);
+          if (!sayfa.trim() || !Number.isInteger(id) || id <= 0) throw new Error("KGK sayfa–tablo eşleştirmesinde sayfa adı ve pozitif tablo ID'si kullanılmalıdır.");
+          manuelEslestirmeler[sayfa] = id;
+        });
+      } catch (error) {
+        if (error instanceof Error) throw error;
+        throw new Error("KGK sayfa–tablo eşleştirmesi JSON olarak okunamadı.");
+      }
+      const uygulama = await applyKgkKalemFarklari(user.token, sonuc.surumId, {
+        beklenenEszamanlilikSurumu: sonuc.eszamanlilikSurumu,
+        kalemFarklari: kgkWorkbookSonucu.kalemFarklari,
+        sayfaTabloEslestirmeleri: { ...sayfaTabloEslestirmeleri, ...manuelEslestirmeler },
+        aciklama,
+      });
+      const yeniSurum = { ...secilenSurum, id: sonuc.surumId, surumNo: sonuc.surumNo, etiket: `${secilenSurum.etiket} - KGK taslak`, durum: sonuc.durum, kaynakSurumId: secilenSurum.id, aciklama, olusturmaTarihi: new Date().toISOString(), guncellemeTarihi: new Date().toISOString(), onayTarihi: null, eszamanlilikSurumu: uygulama.eszamanlilikSurumu, kalemSayisi: Math.max(0, secilenSurum.kalemSayisi + uygulama.eklenenKalemSayisi - uygulama.pasifeAlinanKalemSayisi) };
       setTanimSetleri((onceki) => onceki.map((set) => set.id === secilenSetId ? { ...set, surumler: [yeniSurum, ...set.surumler] } : set));
       setSecilenSurumId(sonuc.surumId);
       setSurumId(String(sonuc.surumId));
-      setEszamanlilikSurumu(String(sonuc.eszamanlilikSurumu));
-      setTanimHatasi("KGK farkı için inceleme taslağı oluşturuldu. Kalem ekleme/kaldırma aktarımı henüz uygulanmadı; otomatik yayınlama yoktur.");
+      setEszamanlilikSurumu(String(uygulama.eszamanlilikSurumu));
+      setTanimHatasi(`KGK farkı taslağa aktarıldı: ${uygulama.eklenenKalemSayisi} yeni, ${uygulama.pasifeAlinanKalemSayisi} pasif, ${uygulama.guncellenenKalemSayisi} güncellenen kalem. Formüller admin incelemesi ve sürüm doğrulaması sonrasında yayınlanır.`);
     } catch (error) {
       setTanimHatasi(error instanceof Error ? error.message : "KGK farkı için taslak oluşturulamadı.");
     } finally {
@@ -1101,7 +1131,7 @@ const Page = () => {
           <Divider />
           <Typography variant="subtitle2">Workbook yapısal farkı</Typography>
           <Typography variant="caption" color="text.secondary">
-            İki KGK Excel dosyası makro çalıştırılmadan; sayfa, hücre, formül, stil, birleştirme ve adlandırılmış aralık anahtarlarıyla karşılaştırılır. Bu aşama yalnız fark raporu üretir; yeni veya kaldırılan kalemler elle eklenmez, sonraki KGK fark aktarımında taslak sürüme alınır.
+            İki KGK Excel dosyası makro çalıştırılmadan; sayfa, hücre, formül, stil, birleştirme ve adlandırılmış aralık anahtarlarıyla karşılaştırılır. Admin onayıyla tespit edilen yeni kalemler taslağa eklenir, kaldırılanlar silinmeden pasife alınır; formül ve yayın kararı admin incelemesine bırakılır.
           </Typography>
           <Stack direction="row" spacing={1} alignItems="center" flexWrap="wrap" useFlexGap>
             <Button component="label" size="small" variant="outlined">
@@ -1116,12 +1146,22 @@ const Page = () => {
               {kgkWorkbookYukleniyor ? <CircularProgress size={18} color="inherit" /> : "Workbook karşılaştır"}
             </Button>
           </Stack>
+          <TextField
+            fullWidth
+            size="small"
+            multiline
+            minRows={2}
+            label="KGK sayfa–tablo eşleştirmesi (JSON)"
+            value={kgkSayfaTabloEslestirmeleriJson}
+            onChange={(event) => setKgkSayfaTabloEslestirmeleriJson(event.target.value)}
+            helperText={'Otomatik eşleşmeyen sayfalar için örn. {"BOBİ FRS FDT Konsolide": 12}. Tablo ID\'si bu sürümdeki tanımdan alınır.'}
+          />
           {kgkWorkbookSonucu && (
             <Paper variant="outlined" sx={{ p: 1.5, maxHeight: 320, overflow: "auto" }}>
               <Stack direction="row" spacing={1} alignItems="center" sx={{ mb: 1 }}>
                 <Chip size="small" color={kgkWorkbookSonucu.yapisalDegisiklikVarMi ? "warning" : "success"} label={kgkWorkbookSonucu.yapisalDegisiklikVarMi ? `${kgkWorkbookSonucu.farkSayisi} yapısal fark` : "Yapısal fark yok"} />
                 {kgkWorkbookSonucu.makroVarMi && <Chip size="small" color="info" label="Makro bulundu; çalıştırılmadı" />}
-                {kgkWorkbookSonucu.yapisalDegisiklikVarMi && secilenSurum && <Button size="small" variant="outlined" onClick={kgkFarktanTaslakOlustur} disabled={surumIslemiYukleniyor}>Farktan inceleme taslağı oluştur</Button>}
+                {kgkWorkbookSonucu.semantikDegisiklikVarMi && secilenSurum && <Button size="small" variant="outlined" onClick={kgkFarktanTaslakOlustur} disabled={surumIslemiYukleniyor}>KGK farkını taslağa aktar</Button>}
               </Stack>
               {kgkWorkbookSonucu.farklar.length > 0 && <Table size="small"><TableHead><TableRow><TableCell>Tür</TableCell><TableCell>Anahtar</TableCell><TableCell>Değişiklik</TableCell></TableRow></TableHead><TableBody>{kgkWorkbookSonucu.farklar.map((fark) => <TableRow key={`${fark.degisiklikTuru}-${fark.anahtar}`}><TableCell>{fark.nesneTuru}</TableCell><TableCell>{fark.anahtar}</TableCell><TableCell>{fark.degisiklikTuru}</TableCell></TableRow>)}</TableBody></Table>}
               <Divider sx={{ my: 1 }} />
