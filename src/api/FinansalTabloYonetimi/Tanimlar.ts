@@ -147,7 +147,7 @@ export type FinansalTabloUretimIstegi = {
     }>;
     yuvarlamaBasamagi: number;
     yuvarlamaModu: number;
-    degerKaynagiBaglami?: { denetlenenId: number; yil: number; konsolidasyonMu: boolean; denetciId: number } | null;
+    degerKaynagiBaglami?: { denetlenenId: number; yil: number; konsolidasyonMu: boolean; denetciId: number; testMizanId?: string | null } | null;
   };
   tabloSabitAnahtari: string;
   donemSabitAnahtari: string;

@@ -88,6 +88,12 @@ import {
   FinansalTabloArsivKarsilastirmaApiSonucu,
   FinansalTabloGolgeKarsilastirmaSonucu,
 } from "@/api/FinansalTabloYonetimi/Tanimlar";
+import {
+  createFinansalTabloTestMizani,
+  FinansalTabloTestMizan,
+  FinansalTabloTestMizanOlusturmaIstegi,
+  getFinansalTabloTestMizanlari,
+} from "@/api/FinansalTabloYonetimi/TestMizan";
 
 const breadcrumbItems = [
   { to: "/Anasayfa", title: "Admin Menüsü" },
@@ -165,6 +171,15 @@ const Page = () => {
   const [uretimTekrarYukleniyor, setUretimTekrarYukleniyor] = useState(false);
   const [uretimSonucu, setUretimSonucu] = useState<FinansalTabloUretimSonucu | null>(null);
   const [uretimOnizlemeSonucu, setUretimOnizlemeSonucu] = useState<FinansalTabloUretimOnizlemeSonucu | null>(null);
+  const [testMizanlari, setTestMizanlari] = useState<FinansalTabloTestMizan[]>([]);
+  const [seciliTestMizani, setSeciliTestMizani] = useState<FinansalTabloTestMizan | null>(null);
+  const [testMizanAdi, setTestMizanAdi] = useState("Yeni motor test mizanı");
+  const [testMizanSatirlariJson, setTestMizanSatirlariJson] = useState(`[
+  { "detayKodu": "100.01", "hesapAdi": "Kasa", "borc": 1000, "alacak": 0 },
+  { "detayKodu": "320.01", "hesapAdi": "Satıcılar", "borc": 0, "alacak": 1000 }
+]`);
+  const [testMizanYukleniyor, setTestMizanYukleniyor] = useState(false);
+  const [testMizanListesiYukleniyor, setTestMizanListesiYukleniyor] = useState(false);
   const [uretimGecmisi, setUretimGecmisi] = useState<FinansalTabloUretimArsivSonucu[]>([]);
   const [uretimGecmisiYukleniyor, setUretimGecmisiYukleniyor] = useState(false);
   const [pilotDurumu, setPilotDurumu] = useState<FinansalTabloPilotDurumApiSonucu | null>(null);
@@ -834,6 +849,103 @@ const Page = () => {
     }
   };
 
+  const testMizanSatirlariniOku = (): FinansalTabloTestMizanOlusturmaIstegi["satirlar"] => {
+    const parsed = JSON.parse(testMizanSatirlariJson) as unknown;
+    if (!Array.isArray(parsed) || parsed.length === 0) {
+      throw new Error("Test mizanı için en az bir satır içeren JSON dizisi girin.");
+    }
+    return parsed.map((hamSatir, index) => {
+      if (!hamSatir || typeof hamSatir !== "object") {
+        throw new Error(`Test mizanı ${index + 1}. satırında JSON nesnesi bekleniyor.`);
+      }
+      const satir = hamSatir as Record<string, unknown>;
+      const detayKodu = String(satir.detayKodu || "").trim();
+      if (!detayKodu) {
+        throw new Error(`Test mizanı ${index + 1}. satırında detayKodu zorunludur.`);
+      }
+      const sayiOku = (alan: string, varsayilan = 0) => {
+        const deger = satir[alan];
+        if (deger === undefined || deger === null || deger === "") return varsayilan;
+        const sayiDegeri = Number(deger);
+        if (!Number.isFinite(sayiDegeri)) {
+          throw new Error(`Test mizanı ${index + 1}. satırında ${alan} sayısal olmalıdır.`);
+        }
+        return sayiDegeri;
+      };
+      return {
+        detayKodu,
+        hesapAdi: String(satir.hesapAdi || detayKodu),
+        borc: sayiOku("borc"),
+        alacak: sayiOku("alacak"),
+        raporBorc: sayiOku("raporBorc", sayiOku("borc")),
+        raporAlacak: sayiOku("raporAlacak", sayiOku("alacak")),
+        bakiye: sayiOku("bakiye", sayiOku("borc") - sayiOku("alacak")),
+        kontrolBakiye: sayiOku("kontrolBakiye", sayiOku("bakiye", sayiOku("borc") - sayiOku("alacak"))),
+        bakiyeTransferFisiHaric: sayiOku("bakiyeTransferFisiHaric", sayiOku("bakiye", sayiOku("borc") - sayiOku("alacak"))),
+        paraBirimi: String(satir.paraBirimi || "TRY"),
+      };
+    });
+  };
+
+  const testMizanListesiniYukle = async () => {
+    if (!user.token) return;
+    setTestMizanListesiYukleniyor(true);
+    try {
+      setTestMizanlari(await getFinansalTabloTestMizanlari(user.token, 50));
+    } catch (error) {
+      setTanimHatasi(error instanceof Error ? error.message : "Test mizanları okunamadı.");
+    } finally {
+      setTestMizanListesiYukleniyor(false);
+    }
+  };
+
+  const testMizaniOlustur = async () => {
+    if (!user.token) return;
+    const denetlenenId = Number(uretimDenetlenenId);
+    const yil = Number(uretimYil);
+    if (!Number.isInteger(denetlenenId) || denetlenenId <= 0 || !Number.isInteger(yil) || yil < 1900) {
+      setTanimHatasi("Test mizanı için geçerli denetlenen ID ve yıl girilmelidir.");
+      return;
+    }
+    setTestMizanYukleniyor(true);
+    setTanimHatasi("");
+    try {
+      const kayit = await createFinansalTabloTestMizani(user.token, {
+        ad: testMizanAdi.trim() || "Yeni motor test mizanı",
+        denetlenenId,
+        yil,
+        konsolidasyonMu: uretimKonsolide,
+        satirlar: testMizanSatirlariniOku(),
+      });
+      setSeciliTestMizani(kayit);
+      setTestMizanlari((onceki) => [kayit, ...onceki.filter((aday) => aday.id !== kayit.id)]);
+      setUretimGirdiAnahtari(`TEST-MIZAN-${kayit.id.slice(0, 8).toUpperCase()}`);
+      setUretimGirdiSha256(kayit.sha256);
+      setUretimDenetlenenId(String(kayit.denetlenenId));
+      setUretimYil(String(kayit.yil));
+      setUretimBaslangic((onceki) => onceki || `${kayit.yil}-01-01`);
+      setUretimBitis((onceki) => onceki || `${kayit.yil}-12-31`);
+      setUretimOnizlemeSonucu(null);
+      setTanimHatasi(`Test mizanı oluşturuldu: ${kayit.ad} · ${kayit.satirlar.length} satır · SHA-256 ${kayit.sha256.slice(0, 16)}…`);
+    } catch (error) {
+      setTanimHatasi(error instanceof Error ? error.message : "Test mizanı oluşturulamadı.");
+    } finally {
+      setTestMizanYukleniyor(false);
+    }
+  };
+
+  const testMizaniSec = (kayit: FinansalTabloTestMizan) => {
+    setSeciliTestMizani(kayit);
+    setUretimGirdiAnahtari(`TEST-MIZAN-${kayit.id.slice(0, 8).toUpperCase()}`);
+    setUretimGirdiSha256(kayit.sha256);
+    setUretimDenetlenenId(String(kayit.denetlenenId));
+    setUretimYil(String(kayit.yil));
+    setUretimKonsolide(kayit.konsolidasyonMu);
+    setUretimBaslangic((onceki) => onceki || `${kayit.yil}-01-01`);
+    setUretimBitis((onceki) => onceki || `${kayit.yil}-12-31`);
+    setUretimOnizlemeSonucu(null);
+  };
+
   const finansalTabloIstekOlustur = (): FinansalTabloUretimIstegi | null => {
     const tablo = secilenKalemTablosu;
     const set = secilenSet;
@@ -849,6 +961,13 @@ const Page = () => {
     }
     if (uretimGirdiSha256.trim().length !== 64 || !uretimDenetlenenId || !uretimYil || !uretimBaslangic || !uretimBitis) {
       setTanimHatasi("Girdi SHA-256, denetlenen, yıl ve dönem tarihleri zorunludur.");
+      return null;
+    }
+    if (seciliTestMizani &&
+        (seciliTestMizani.denetlenenId !== Number(uretimDenetlenenId) ||
+         seciliTestMizani.yil !== Number(uretimYil) ||
+         seciliTestMizani.konsolidasyonMu !== uretimKonsolide)) {
+      setTanimHatasi("Seçili test mizanının denetlenen, yıl ve konsolidasyon bilgileri değiştirilemez; yeni fixture oluşturun.");
       return null;
     }
     const snapshotSha256 = uretimSnapshotSha256.trim() || dogrulamaSonucu?.tablolar.find((aday) => aday.tabloId === tablo.id)?.snapshotSha256 || "";
@@ -875,6 +994,7 @@ const Page = () => {
           yil: Number(uretimYil),
           konsolidasyonMu: uretimKonsolide,
           denetciId: Number(uretimDenetciId) || 0,
+          testMizanId: seciliTestMizani?.id || null,
         },
       },
       tabloSabitAnahtari: tablo.kod,
@@ -1311,6 +1431,68 @@ const Page = () => {
           <Alert severity="info">
             Üretim yalnızca yayımlanmış sürümden çalışır. Kullanılan tanım snapshot&#39;ı, girdi SHA-256&#39;sı, değerler ve hesaplama izleri değişmez üretim arşivine kaydedilir.
           </Alert>
+          <Paper variant="outlined" sx={{ p: 1.5, borderColor: "info.main" }}>
+            <Stack spacing={1.25}>
+              <Stack direction="row" spacing={1} alignItems="center" flexWrap="wrap" useFlexGap>
+                <Typography variant="subtitle2">İzole test mizanı</Typography>
+                <Chip size="small" color={seciliTestMizani ? "success" : "default"} label={seciliTestMizani ? `Seçili · ${seciliTestMizani.satirlar.length} satır` : "Seçili değil"} />
+                <Typography variant="caption" color="text.secondary">Bu fixture gerçek mizan ve üretim arşivine yazılmaz.</Typography>
+              </Stack>
+              <Grid container spacing={1.25}>
+                <Grid item xs={12} sm={6} md={3}>
+                  <TextField fullWidth size="small" label="Test mizanı adı" value={testMizanAdi} onChange={(event) => setTestMizanAdi(event.target.value)} />
+                </Grid>
+                <Grid item xs={12} sm={6} md={3}>
+                  <TextField fullWidth size="small" type="number" label="Denetlenen ID" value={uretimDenetlenenId} onChange={(event) => setUretimDenetlenenId(event.target.value)} />
+                </Grid>
+                <Grid item xs={12} sm={6} md={3}>
+                  <TextField fullWidth size="small" type="number" label="Yıl" value={uretimYil} onChange={(event) => setUretimYil(event.target.value)} />
+                </Grid>
+                <Grid item xs={12} sm={6} md={3}>
+                  <Stack direction="row" spacing={0.5} alignItems="center" sx={{ height: "100%" }}>
+                    <Switch size="small" checked={uretimKonsolide} onChange={(event) => setUretimKonsolide(event.target.checked)} />
+                    <Typography variant="body2">Konsolide test verisi</Typography>
+                  </Stack>
+                </Grid>
+              </Grid>
+              <TextField
+                fullWidth
+                size="small"
+                multiline
+                minRows={5}
+                label="Test mizanı satırları (JSON)"
+                value={testMizanSatirlariJson}
+                onChange={(event) => setTestMizanSatirlariJson(event.target.value)}
+                helperText="Her satırda detayKodu, borc ve alacak zorunludur; bakiye alanları boşsa otomatik hesaplanır."
+              />
+              <Stack direction="row" spacing={1} alignItems="center" flexWrap="wrap" useFlexGap>
+                <Button variant="contained" color="info" size="small" onClick={testMizaniOlustur} disabled={testMizanYukleniyor}>
+                  {testMizanYukleniyor ? <CircularProgress size={18} color="inherit" /> : "Test mizanı oluştur"}
+                </Button>
+                <Button variant="outlined" size="small" onClick={testMizanListesiniYukle} disabled={testMizanListesiYukleniyor}>
+                  {testMizanListesiYukleniyor ? <CircularProgress size={18} /> : "Kayıtlı test mizanlarını yükle"}
+                </Button>
+                {seciliTestMizani && <Chip size="small" variant="outlined" label={`SHA-256 ${seciliTestMizani.sha256.slice(0, 16)}…`} />}
+              </Stack>
+              {testMizanlari.length > 0 && <Table size="small">
+                <TableHead><TableRow><TableCell>Ad</TableCell><TableCell>Denetlenen / yıl</TableCell><TableCell>Satır</TableCell><TableCell>Oluşturma</TableCell><TableCell /></TableRow></TableHead>
+                <TableBody>{testMizanlari.slice(0, 10).map((kayit) => <TableRow key={kayit.id} hover selected={seciliTestMizani?.id === kayit.id}>
+                  <TableCell>{kayit.ad}</TableCell>
+                  <TableCell>{kayit.denetlenenId} / {kayit.yil}{kayit.konsolidasyonMu ? " · Konsolide" : ""}</TableCell>
+                  <TableCell>{kayit.satirlar.length}</TableCell>
+                  <TableCell>{new Date(kayit.olusturmaTarihi).toLocaleString("tr-TR")}</TableCell>
+                  <TableCell align="right"><Button size="small" onClick={() => testMizaniSec(kayit)}>Seç</Button></TableCell>
+                </TableRow>)}</TableBody>
+              </Table>}
+              {seciliTestMizani && <Paper variant="outlined" sx={{ p: 1, maxHeight: 220, overflow: "auto" }}>
+                <Typography variant="caption" color="text.secondary" display="block" sx={{ mb: 0.5 }}>Ana uygulamadaki mizan satırlarına karşılık gelen test verisi</Typography>
+                <Table size="small">
+                  <TableHead><TableRow><TableCell>Hesap</TableCell><TableCell>Ad</TableCell><TableCell align="right">Borç</TableCell><TableCell align="right">Alacak</TableCell><TableCell align="right">Bakiye</TableCell></TableRow></TableHead>
+                  <TableBody>{seciliTestMizani.satirlar.slice(0, 100).map((satir) => <TableRow key={`${seciliTestMizani.id}-${satir.detayKodu}`}><TableCell>{satir.detayKodu}</TableCell><TableCell>{satir.hesapAdi}</TableCell><TableCell align="right">{satir.borc.toLocaleString("tr-TR")}</TableCell><TableCell align="right">{satir.alacak.toLocaleString("tr-TR")}</TableCell><TableCell align="right">{satir.bakiye.toLocaleString("tr-TR")}</TableCell></TableRow>)}</TableBody>
+                </Table>
+              </Paper>}
+            </Stack>
+          </Paper>
           <Stack spacing={1}>
             <Stack direction="row" spacing={1} alignItems="center" flexWrap="wrap" useFlexGap>
               <Button variant="outlined" size="small" onClick={finansalTabloPilotDurumunuYukle} disabled={pilotDurumuYukleniyor}>
