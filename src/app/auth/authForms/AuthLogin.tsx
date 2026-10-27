@@ -26,13 +26,18 @@ const AuthLogin: React.FC<loginType> = ({ title, subtitle, subtext }) => {
 
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
+  const [step, setStep] = useState<"credentials" | "otp">("credentials");
+  const [otpCode, setOtpCode] = useState("");
 
   const [isLoggedIn, setIsLoggedIn] = useState(false);
 
   const handleLogin = async () => {
     try {
       const captchaToken = "BYPASS_RECAPTCHA_TEST";
-      const payload = { email, password, captchaToken };
+      const payload: any = { email, password, captchaToken };
+      if (step === "otp") {
+        payload.otpCode = otpCode.trim();
+      }
 
       // Once AdminLogin dene, endpoint bulunamazsa standart login dene
       let response = await fetch(`${url}/Auth/AdminLogin`, {
@@ -57,6 +62,17 @@ const AuthLogin: React.FC<loginType> = ({ title, subtitle, subtext }) => {
 
       if (response.ok) {
         const data = await response.json();
+
+        // 2FA: Backend OTP istiyorsa OTP adimina gec
+        if (data.requiresOtp) {
+          setStep("otp");
+          enqueueSnackbar(data.message || "Doğrulama kodu e-posta adresinize gönderildi.", {
+            variant: "info",
+            autoHideDuration: 5000,
+          });
+          return;
+        }
+
         const userToken = data.token || data.Token;
         const userId = data.kullaniciId || data.KullaniciId || 1;
 
@@ -106,27 +122,50 @@ const AuthLogin: React.FC<loginType> = ({ title, subtitle, subtext }) => {
 
       {subtext}
 
-      <Stack mb={3}>
-        <Box>
-          <CustomFormLabel htmlFor="username">Email</CustomFormLabel>
-          <CustomTextField
-            id="username"
-            variant="outlined"
-            fullWidth
-            onChange={(e: any) => setEmail(e.target.value)}
-          />
-        </Box>
-        <Box>
-          <CustomFormLabel htmlFor="password">Şifre</CustomFormLabel>
-          <CustomTextField
-            id="password"
-            type="password"
-            variant="outlined"
-            fullWidth
-            onChange={(e: any) => setPassword(e.target.value)}
-          />
-        </Box>
-      </Stack>
+      {step === "credentials" ? (
+        <Stack mb={3}>
+          <Box>
+            <CustomFormLabel htmlFor="username">Email</CustomFormLabel>
+            <CustomTextField
+              id="username"
+              variant="outlined"
+              fullWidth
+              value={email}
+              onChange={(e: any) => setEmail(e.target.value)}
+            />
+          </Box>
+          <Box>
+            <CustomFormLabel htmlFor="password">Şifre</CustomFormLabel>
+            <CustomTextField
+              id="password"
+              type="password"
+              variant="outlined"
+              fullWidth
+              value={password}
+              onChange={(e: any) => setPassword(e.target.value)}
+            />
+          </Box>
+        </Stack>
+      ) : (
+        <Stack mb={3}>
+          <Typography variant="body2" color="textSecondary" mb={2}>
+            <strong>{email}</strong> adresine gönderilen 8 haneli güvenlik kodunu giriniz.
+          </Typography>
+          <Box>
+            <CustomFormLabel htmlFor="otp">Doğrulama Kodu (OTP)</CustomFormLabel>
+            <CustomTextField
+              id="otp"
+              variant="outlined"
+              fullWidth
+              placeholder="8 haneli kod"
+              value={otpCode}
+              onChange={(e: any) => setOtpCode(e.target.value)}
+              autoFocus
+            />
+          </Box>
+        </Stack>
+      )}
+
       <Box>
         {!isLoggedIn && (
           <Button
@@ -136,7 +175,19 @@ const AuthLogin: React.FC<loginType> = ({ title, subtitle, subtext }) => {
             fullWidth
             onClick={handleLogin}
           >
-            Giriş
+            {step === "otp" ? "Kodu Onayla ve Giriş Yap" : "Giriş"}
+          </Button>
+        )}
+        {step === "otp" && !isLoggedIn && (
+          <Button
+            color="inherit"
+            variant="text"
+            size="medium"
+            fullWidth
+            sx={{ mt: 1 }}
+            onClick={() => setStep("credentials")}
+          >
+            Geri Dön (Şifre Değiştir)
           </Button>
         )}
         {isLoggedIn && (

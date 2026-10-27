@@ -123,6 +123,12 @@ const Menuitems: MenuitemsType[] = [
   },
   {
     id: uniqueId(),
+    title: "Finansal Tablo Yönetimi",
+    icon: IconChartLine,
+    href: "/FinansalTabloYonetimi",
+  },
+  {
+    id: uniqueId(),
     title: "Genel Hesap Planı",
     icon: IconTemplate,
     href: "/GenelHesapPlani",
