@@ -235,6 +235,7 @@ export const getFinansalTabloUretimGecmisi = (token: string, limit = 100) =>
 
 export type FinansalTabloPilotDurumApiSonucu = {
   yeniMotorEtkin: boolean;
+  kontrolluPilotOnayi: boolean;
   kgkTaramaZamanlayiciEtkin: boolean;
   hangfireDevreDisi: boolean;
   hangfireGelistirmedeDevreDisi: boolean;

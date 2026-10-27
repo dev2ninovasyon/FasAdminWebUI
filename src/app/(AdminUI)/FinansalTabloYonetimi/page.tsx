@@ -1576,6 +1576,7 @@ const Page = () => {
                 {arsivKarsilastirmaYukleniyor ? <CircularProgress size={18} /> : "DB/dosya arşivlerini karşılaştır"}
               </Button>
               {pilotDurumu && <Chip size="small" color={pilotDurumu.yeniMotorEtkin ? "success" : "default"} label={pilotDurumu.yeniMotorEtkin ? "Yeni motor etkin" : "Yeni motor kapalı"} />}
+              {pilotDurumu && <Chip size="small" color={pilotDurumu.kontrolluPilotOnayi ? "success" : "warning"} label={pilotDurumu.kontrolluPilotOnayi ? "Kontrollü pilot onaylı" : "Kontrollü pilot onaysız"} />}
               {pilotDurumu && <Chip size="small" color={pilotDurumu.kgkTaramaZamanlayiciEtkin ? "success" : "default"} label={pilotDurumu.kgkTaramaZamanlayiciEtkin ? "KGK zamanlayıcı etkin" : "KGK zamanlayıcı kapalı"} />}
               {pilotDurumu && <Chip size="small" color={pilotDurumu.dbKaliciArsivEtkin ? "success" : "default"} label={pilotDurumu.dbKaliciArsivEtkin ? "DB kalıcı arşiv etkin" : "DB kalıcı arşiv kapalı"} />}
               {kaliciArsivDurumu && <Chip size="small" color={kaliciArsivDurumu.durum === "UYGULANMIS" ? "success" : kaliciArsivDurumu.durum === "KAPALI" ? "default" : "warning"} label={`Migration: ${kaliciArsivDurumu.durum}`} />}
@@ -1741,7 +1742,7 @@ const Page = () => {
             {uretimSonucu && <Chip size="small" color={uretimSonucu.kayit.durum === 1 ? "success" : "error"} label={uretimSonucu.kayit.durum === 1 ? `Üretim arşivlendi · ${uretimSonucu.kayit.uretimId}` : `Üretim durumu: ${uretimSonucu.kayit.durum}`} />}
           </Stack>
           {pilotDurumu && !pilotDurumu.yeniMotorEtkin && <Alert severity="info">
-            Yeni motor üretimi şu anda kapalıdır. Eski finansal tablo akışı çalışmaya devam eder; bu panelden yalnızca salt-okunur mizan önizlemesi yapılabilir.
+            Yeni motor üretimi şu anda kapalıdır. Eski finansal tablo akışı çalışmaya devam eder; bu panelden yalnızca salt-okunur mizan önizlemesi yapılabilir. Üretim için hem özellik bayrağı hem de kontrollü pilot onayı gerekir.
           </Alert>}
           {uretimOnizlemeSonucu && <Paper variant="outlined" sx={{ p: 1.5, maxHeight: 320, overflow: "auto", borderColor: "info.main" }}>
             <Stack direction="row" spacing={1} alignItems="center" flexWrap="wrap" useFlexGap>
