@@ -64,6 +64,7 @@ import {
   createFinansalTabloUretimi,
   getFinansalTabloUretimGecmisi,
   getFinansalTabloPilotDurumu,
+  getFinansalTabloKaliciArsivDurumu,
   getFinansalTabloArsivDogrulamasi,
   getFinansalTabloKaliciArsivHazirligi,
   getFinansalTabloArsivKarsilastirmasi,
@@ -76,6 +77,7 @@ import {
   FinansalTabloUretimArsivSonucu,
   FinansalTabloUretimSonucu,
   FinansalTabloPilotDurumApiSonucu,
+  FinansalTabloKaliciArsivDurumApiSonucu,
   FinansalTabloArsivDogrulamaApiSonucu,
   FinansalTabloKaliciArsivHazirlikApiSonucu,
   FinansalTabloArsivKarsilastirmaApiSonucu,
@@ -158,6 +160,8 @@ const Page = () => {
   const [uretimGecmisiYukleniyor, setUretimGecmisiYukleniyor] = useState(false);
   const [pilotDurumu, setPilotDurumu] = useState<FinansalTabloPilotDurumApiSonucu | null>(null);
   const [pilotDurumuYukleniyor, setPilotDurumuYukleniyor] = useState(false);
+  const [kaliciArsivDurumu, setKaliciArsivDurumu] = useState<FinansalTabloKaliciArsivDurumApiSonucu | null>(null);
+  const [kaliciArsivDurumuYukleniyor, setKaliciArsivDurumuYukleniyor] = useState(false);
   const [arsivDogrulama, setArsivDogrulama] = useState<FinansalTabloArsivDogrulamaApiSonucu | null>(null);
   const [arsivDogrulamaYukleniyor, setArsivDogrulamaYukleniyor] = useState(false);
   const [kaliciArsivHazirligi, setKaliciArsivHazirligi] = useState<FinansalTabloKaliciArsivHazirlikApiSonucu | null>(null);
@@ -845,6 +849,19 @@ const Page = () => {
     }
   };
 
+  const finansalTabloKaliciArsivDurumunuYukle = async () => {
+    if (!user.token) return;
+    setKaliciArsivDurumuYukleniyor(true);
+    setTanimHatasi("");
+    try {
+      setKaliciArsivDurumu(await getFinansalTabloKaliciArsivDurumu(user.token));
+    } catch (error) {
+      setTanimHatasi(error instanceof Error ? error.message : "Kalıcı arşiv migration durumu okunamadı.");
+    } finally {
+      setKaliciArsivDurumuYukleniyor(false);
+    }
+  };
+
   const finansalTabloArsiviniDogrula = async () => {
     if (!user.token) return;
     setArsivDogrulamaYukleniyor(true);
@@ -1159,6 +1176,9 @@ const Page = () => {
               <Button variant="outlined" size="small" onClick={finansalTabloPilotDurumunuYukle} disabled={pilotDurumuYukleniyor}>
                 {pilotDurumuYukleniyor ? <CircularProgress size={18} /> : "Pilot durumunu kontrol et"}
               </Button>
+              <Button variant="outlined" size="small" onClick={finansalTabloKaliciArsivDurumunuYukle} disabled={kaliciArsivDurumuYukleniyor}>
+                {kaliciArsivDurumuYukleniyor ? <CircularProgress size={18} /> : "DB migration durumunu kontrol et"}
+              </Button>
               <Button variant="outlined" size="small" onClick={finansalTabloArsiviniDogrula} disabled={arsivDogrulamaYukleniyor}>
                 {arsivDogrulamaYukleniyor ? <CircularProgress size={18} /> : "Arşiv bütünlüğünü doğrula"}
               </Button>
@@ -1171,6 +1191,7 @@ const Page = () => {
               {pilotDurumu && <Chip size="small" color={pilotDurumu.yeniMotorEtkin ? "success" : "default"} label={pilotDurumu.yeniMotorEtkin ? "Yeni motor etkin" : "Yeni motor kapalı"} />}
               {pilotDurumu && <Chip size="small" color={pilotDurumu.kgkTaramaZamanlayiciEtkin ? "success" : "default"} label={pilotDurumu.kgkTaramaZamanlayiciEtkin ? "KGK zamanlayıcı etkin" : "KGK zamanlayıcı kapalı"} />}
               {pilotDurumu && <Chip size="small" color={pilotDurumu.dbKaliciArsivEtkin ? "success" : "default"} label={pilotDurumu.dbKaliciArsivEtkin ? "DB kalıcı arşiv etkin" : "DB kalıcı arşiv kapalı"} />}
+              {kaliciArsivDurumu && <Chip size="small" color={kaliciArsivDurumu.durum === "UYGULANMIS" ? "success" : kaliciArsivDurumu.durum === "KAPALI" ? "default" : "warning"} label={`Migration: ${kaliciArsivDurumu.durum}`} />}
               {pilotDurumu && <Chip size="small" variant="outlined" label={`Üretim deposu: ${pilotDurumu.uretimArsivDeposu}`} />}
               {pilotDurumu && <Chip size="small" variant="outlined" label={`KGK deposu: ${pilotDurumu.kgkCiktiArsivDeposu}`} />}
               {pilotDurumu && <Chip size="small" color={pilotDurumu.uretimArsiviEtkin && pilotDurumu.kgkCiktiArsiviEtkin ? "success" : "warning"} label={`Arşiv: ${sayi(pilotDurumu.uretimKayitSayisi)} üretim`} />}
@@ -1182,6 +1203,13 @@ const Page = () => {
                 <Typography variant="caption" color="text.secondary">Depolar: üretim {pilotDurumu.uretimArsivDeposu} · KGK {pilotDurumu.kgkCiktiArsivDeposu}</Typography>
                 {pilotDurumu.sonUretimTarihi && <Typography variant="caption" color="text.secondary">Son üretim: {new Date(pilotDurumu.sonUretimTarihi).toLocaleString("tr-TR")}</Typography>}
               </Stack>
+            </Paper>}
+            {kaliciArsivDurumu && <Paper variant="outlined" sx={{ p: 1.25 }}>
+              <Stack direction="row" spacing={1} flexWrap="wrap" useFlexGap alignItems="center">
+                <Chip size="small" color={kaliciArsivDurumu.migrationUygulanmisMi ? "success" : kaliciArsivDurumu.durum === "KAPALI" ? "default" : "warning"} label={kaliciArsivDurumu.migrationUygulanmisMi ? "Arşiv migration uygulandı" : kaliciArsivDurumu.durum === "KAPALI" ? "Arşiv migration kontrolü kapalı" : "Arşiv migration bekliyor"} />
+                <Typography variant="caption" color="text.secondary">DB servisleri: {kaliciArsivDurumu.dbServisleriKayitliMi ? "kayıtlı" : "kayıtlı değil"} · Kontrol: {new Date(kaliciArsivDurumu.kontrolTarihi).toLocaleString("tr-TR")}</Typography>
+              </Stack>
+              {kaliciArsivDurumu.bekleyenMigrationlar.length > 0 && <Typography variant="caption" color="text.secondary" display="block" sx={{ mt: 0.75 }}>Bekleyen migration: {kaliciArsivDurumu.bekleyenMigrationlar.join(", ")}</Typography>}
             </Paper>}
             {arsivDogrulama && <Paper variant="outlined" sx={{ p: 1.25 }}>
               <Stack direction="row" spacing={1} flexWrap="wrap" useFlexGap alignItems="center">
