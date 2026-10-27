@@ -64,6 +64,7 @@ import {
   applyKgkKalemFarklari,
   applyKgkFormulFarklari,
   createFinansalTabloUretimi,
+  previewFinansalTabloUretimi,
   getFinansalTabloUretimGecmisi,
   getFinansalTabloPilotDurumu,
   getFinansalTabloKaliciArsivDurumu,
@@ -78,6 +79,8 @@ import {
   FinansalTabloKgkUretimArsivKaydi,
   FinansalTabloUretimArsivSonucu,
   FinansalTabloUretimSonucu,
+  FinansalTabloUretimIstegi,
+  FinansalTabloUretimOnizlemeSonucu,
   FinansalTabloPilotDurumApiSonucu,
   FinansalTabloKaliciArsivDurumApiSonucu,
   FinansalTabloArsivDogrulamaApiSonucu,
@@ -158,8 +161,10 @@ const Page = () => {
   const [uretimBaslangic, setUretimBaslangic] = useState("");
   const [uretimBitis, setUretimBitis] = useState("");
   const [uretimYukleniyor, setUretimYukleniyor] = useState(false);
+  const [uretimOnizlemeYukleniyor, setUretimOnizlemeYukleniyor] = useState(false);
   const [uretimTekrarYukleniyor, setUretimTekrarYukleniyor] = useState(false);
   const [uretimSonucu, setUretimSonucu] = useState<FinansalTabloUretimSonucu | null>(null);
+  const [uretimOnizlemeSonucu, setUretimOnizlemeSonucu] = useState<FinansalTabloUretimOnizlemeSonucu | null>(null);
   const [uretimGecmisi, setUretimGecmisi] = useState<FinansalTabloUretimArsivSonucu[]>([]);
   const [uretimGecmisiYukleniyor, setUretimGecmisiYukleniyor] = useState(false);
   const [pilotDurumu, setPilotDurumu] = useState<FinansalTabloPilotDurumApiSonucu | null>(null);
@@ -811,6 +816,61 @@ const Page = () => {
     }
   };
 
+  const finansalTabloIstekOlustur = (): FinansalTabloUretimIstegi | null => {
+    const tablo = secilenKalemTablosu;
+    const set = secilenSet;
+    const surum = secilenSurum;
+    const donem = tablo?.donemKolonlari?.find((kolon) => kolon.sabitAnahtar === uretimDonemAnahtari) || tablo?.donemKolonlari?.[0];
+    if (!user.token || !set || !surum || !tablo || !donem) {
+      setTanimHatasi("Üretim için yayımlanmış sürüm, tablo ve dönem kolonu seçilmelidir.");
+      return null;
+    }
+    if (surum.durum !== 2) {
+      setTanimHatasi("Üretim ve önizleme yalnızca yayımlanmış sürüm üzerinden başlatılabilir.");
+      return null;
+    }
+    if (uretimGirdiSha256.trim().length !== 64 || !uretimDenetlenenId || !uretimYil || !uretimBaslangic || !uretimBitis) {
+      setTanimHatasi("Girdi SHA-256, denetlenen, yıl ve dönem tarihleri zorunludur.");
+      return null;
+    }
+    const snapshotSha256 = uretimSnapshotSha256.trim() || dogrulamaSonucu?.tablolar.find((aday) => aday.tabloId === tablo.id)?.snapshotSha256 || "";
+    return {
+      yeniMotorSurumu: "finansal-tablo-yeni-motor-v1",
+      tanimSetiSabitAnahtari: set.kod,
+      tanimSurumu: String(surum.surumNo),
+      girdiSabitAnahtari: uretimGirdiAnahtari.trim() || "MIZAN",
+      girdiSha256: uretimGirdiSha256.trim().toLowerCase(),
+      calistirmaBaglami: {
+        donemEslesmeleri: [{
+          donemDavranisi: donem.donemDavranisi,
+          donemOfseti: donem.donemOfseti,
+          donem: {
+            sabitAnahtar: donem.sabitAnahtar,
+            baslangicTarihi: uretimBaslangic,
+            bitisTarihi: uretimBitis,
+          },
+        }],
+        yuvarlamaBasamagi: tablo.yuvarlamaBasamagi,
+        yuvarlamaModu: 1,
+        degerKaynagiBaglami: {
+          denetlenenId: Number(uretimDenetlenenId),
+          yil: Number(uretimYil),
+          konsolidasyonMu: uretimKonsolide,
+          denetciId: Number(uretimDenetciId) || 0,
+        },
+      },
+      tabloSabitAnahtari: tablo.kod,
+      donemSabitAnahtari: donem.sabitAnahtar,
+      raporlamaStandardi: set.raporlamaStandardi,
+      kapsam: set.kapsam,
+      donusumTipi: set.donusumTipi,
+      tabloTuru: tablo.tabloTuru,
+      nakitAkisYontemi: tablo.nakitAkisYontemi,
+      gecerlilikTarihi: uretimBitis,
+      tanimSnapshotSha256: snapshotSha256,
+    };
+  };
+
   const finansalTabloUret = async () => {
     const tablo = secilenKalemTablosu;
     const set = secilenSet;
@@ -873,6 +933,23 @@ const Page = () => {
       setTanimHatasi(error instanceof Error ? error.message : "Finansal tablo üretimi tamamlanamadı.");
     } finally {
       setUretimYukleniyor(false);
+    }
+  };
+
+  const finansalTabloOnizle = async () => {
+    const istek = finansalTabloIstekOlustur();
+    if (!istek || !user.token) return;
+    setUretimOnizlemeYukleniyor(true);
+    setUretimOnizlemeSonucu(null);
+    setTanimHatasi("");
+    try {
+      const data = await previewFinansalTabloUretimi(user.token, istek);
+      setUretimOnizlemeSonucu(data);
+      setTanimHatasi(data.basariliMi ? "Salt-okunur örnek mizan önizlemesi tamamlandı; üretim arşivi değiştirilmedi." : data.aciklama || "Örnek mizan önizlemesi tamamlanamadı.");
+    } catch (error) {
+      setTanimHatasi(error instanceof Error ? error.message : "Örnek mizan önizlemesi tamamlanamadı.");
+    } finally {
+      setUretimOnizlemeYukleniyor(false);
     }
   };
 
@@ -1432,15 +1509,39 @@ const Page = () => {
               </Stack>
             </Grid>
           </Grid>
+          <Typography variant="caption" color="text.secondary">
+            Önizleme, seçilen denetlenenin yıl ve konsolidasyon bilgisine göre mevcut mizan değerlerini okur; tanım sürümünü ve formülleri kullanarak sonuç üretir. Bu işlem üretim arşivine yazmaz.
+          </Typography>
           <Stack direction="row" spacing={1} alignItems="center">
             <Button variant="contained" size="small" onClick={finansalTabloUret} disabled={uretimYukleniyor || !secilenSurum || !secilenKalemTablosu}>
               {uretimYukleniyor ? <CircularProgress size={18} color="inherit" /> : "Finansal tablo üret"}
+            </Button>
+            <Button variant="outlined" color="info" size="small" onClick={finansalTabloOnizle} disabled={uretimOnizlemeYukleniyor || uretimYukleniyor || !secilenSurum || !secilenKalemTablosu}>
+              {uretimOnizlemeYukleniyor ? <CircularProgress size={18} /> : "Örnek mizanla önizle"}
             </Button>
             {uretimSonucu?.kayit.uretimId && <Button variant="outlined" size="small" onClick={finansalTabloyuTekrarUret} disabled={uretimTekrarYukleniyor}>
               {uretimTekrarYukleniyor ? <CircularProgress size={18} color="inherit" /> : "Bu üretimi tekrar çalıştır"}
             </Button>}
             {uretimSonucu && <Chip size="small" color={uretimSonucu.kayit.durum === 1 ? "success" : "error"} label={uretimSonucu.kayit.durum === 1 ? `Üretim arşivlendi · ${uretimSonucu.kayit.uretimId}` : `Üretim durumu: ${uretimSonucu.kayit.durum}`} />}
           </Stack>
+          {uretimOnizlemeSonucu && <Paper variant="outlined" sx={{ p: 1.5, maxHeight: 320, overflow: "auto", borderColor: "info.main" }}>
+            <Stack direction="row" spacing={1} alignItems="center" flexWrap="wrap" useFlexGap>
+              <Chip size="small" color={uretimOnizlemeSonucu.basariliMi ? "success" : "warning"} label={uretimOnizlemeSonucu.basariliMi ? "Salt-okunur önizleme tamamlandı" : `Önizleme durumu: ${uretimOnizlemeSonucu.durum}`} />
+              <Typography variant="caption" color="text.secondary">{uretimOnizlemeSonucu.sonuclar.length} sonuç · sürüm {uretimOnizlemeSonucu.motorSurumu} · girdi {uretimOnizlemeSonucu.girdiSabitAnahtari}</Typography>
+              <Chip size="small" variant="outlined" color="info" label="Arşivlenmedi" />
+            </Stack>
+            {uretimOnizlemeSonucu.aciklama && <Typography variant="caption" color="text.secondary" display="block" sx={{ mt: 0.75 }}>{uretimOnizlemeSonucu.aciklama}</Typography>}
+            {uretimOnizlemeSonucu.sonuclar.length > 0 && <Table size="small" sx={{ mt: 1 }}>
+              <TableHead><TableRow><TableCell>Tablo / hedef</TableCell><TableCell>Dönem</TableCell><TableCell>Durum</TableCell><TableCell align="right">Değer</TableCell><TableCell>Hata</TableCell></TableRow></TableHead>
+              <TableBody>{uretimOnizlemeSonucu.sonuclar.slice(0, 100).map((satir, index) => <TableRow key={`${satir.anahtar.tabloSabitAnahtari}-${satir.anahtar.hedefSabitAnahtari}-${satir.anahtar.donemSabitAnahtari}-${index}`}>
+                <TableCell>{satir.anahtar.tabloSabitAnahtari} · {satir.anahtar.hedefSabitAnahtari}</TableCell>
+                <TableCell>{satir.anahtar.donemSabitAnahtari}</TableCell>
+                <TableCell><Chip size="small" label={satir.durum === 1 ? "Bulundu" : satir.durum === 2 ? "Eksik" : `Hata ${satir.durum}`} color={satir.durum === 1 ? "success" : satir.durum === 2 ? "warning" : "error"} /></TableCell>
+                <TableCell align="right">{satir.deger == null ? "-" : satir.deger.toLocaleString("tr-TR")}</TableCell>
+                <TableCell>{satir.hataKodu || satir.aciklama || "-"}</TableCell>
+              </TableRow>)}</TableBody>
+            </Table>}
+          </Paper>}
           {uretimSonucu?.kayit.degerler?.length ? (
             <Paper variant="outlined" sx={{ p: 1.5, maxHeight: 260, overflow: "auto" }}>
               <Typography variant="subtitle2" sx={{ mb: 1 }}>Üretilen değerler</Typography>

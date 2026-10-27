@@ -182,6 +182,51 @@ export const createFinansalTabloUretimi = async (
   return payload as FinansalTabloUretimSonucu;
 };
 
+export type FinansalTabloUretimOnizlemeSonucu = {
+  saltOkunur: boolean;
+  arsivlendiMi: boolean;
+  basariliMi: boolean;
+  durum: number;
+  motorSurumu: string;
+  girdiSabitAnahtari: string;
+  girdiSha256: string;
+  sonuclar: Array<{
+    anahtar: {
+      tabloSabitAnahtari: string;
+      hedefTuru: number;
+      hedefSabitAnahtari: string;
+      donemSabitAnahtari: string;
+    };
+    durum: number;
+    deger?: number | null;
+    izAnahtari?: string | null;
+    hataKodu?: string | null;
+    aciklama?: string | null;
+  }>;
+  hataKodu?: string | null;
+  aciklama?: string | null;
+};
+
+export const previewFinansalTabloUretimi = async (
+  token: string,
+  istek: FinansalTabloUretimIstegi
+) => {
+  const response = await fetch(`${url}/FinansalTabloYonetimi/Uretimler/Onizle`, {
+    method: "POST",
+    headers: {
+      accept: "application/json",
+      "Content-Type": "application/json",
+      Authorization: `Bearer ${token}`,
+    },
+    body: JSON.stringify(istek),
+  });
+  const payload = await response.json().catch(() => ({}));
+  if (!response.ok) {
+    throw new Error(payload?.detail || payload?.message || payload?.Message || "Finansal tablo önizlemesi tamamlanamadı.");
+  }
+  return payload as FinansalTabloUretimOnizlemeSonucu;
+};
+
 export const getFinansalTabloUretimi = (token: string, uretimId: string) =>
   jsonGet<FinansalTabloUretimArsivSonucu>(token, `/Uretimler/${uretimId}`);
 
