@@ -867,6 +867,9 @@ export type KgkWorkbookFarkSonucu = {
   oncekiKalemSayisi: number;
   yeniKalemSayisi: number;
   semantikDegisiklikVarMi: boolean;
+  oncekiFormulSayisi: number;
+  yeniFormulSayisi: number;
+  formulDegisikligiVarMi: boolean;
   kalemFarklari: Array<{
     sabitAnahtar: string;
     degisiklikTuru: string;
@@ -891,6 +894,12 @@ export type KgkWorkbookFarkSonucu = {
       etiketKolonu: string;
     } | null;
   }>;
+  formulFarklari: Array<{
+    sabitAnahtar: string;
+    degisiklikTuru: string;
+    oncekiFormul?: KgkWorkbookFormulu | null;
+    yeniFormul?: KgkWorkbookFormulu | null;
+  }>;
   farklar: Array<{
     nesneTuru: string;
     anahtar: string;
@@ -898,6 +907,23 @@ export type KgkWorkbookFarkSonucu = {
     oncekiDeger?: string | null;
     yeniDeger?: string | null;
   }>;
+};
+
+export type KgkWorkbookFormulu = {
+  sabitAnahtar: string;
+  kalemSabitAnahtari: string;
+  sayfaAdi: string;
+  hedefHucreAdresi: string;
+  kaynakHucreleri: string[];
+  hamFormul: string;
+  terimler: Array<{
+    sira: number;
+    kaynakKalemSabitAnahtari: string;
+    operator: string;
+    kaynakSayfaAdi: string;
+    kaynakHucreAdresi: string;
+  }>;
+  dogrulamaHatalari: string[];
 };
 
 export const compareKgkWorkbooks = async (
@@ -950,6 +976,41 @@ export const applyKgkKalemFarklari = async (
     eklenenKalemSayisi: number;
     pasifeAlinanKalemSayisi: number;
     guncellenenKalemSayisi: number;
+    islenenAnahtarlar: string[];
+  };
+};
+
+export const applyKgkFormulFarklari = async (
+  token: string,
+  surumId: number,
+  istek: {
+    beklenenEszamanlilikSurumu: number;
+    formulFarklari: KgkWorkbookFarkSonucu["formulFarklari"];
+    sayfaTabloEslestirmeleri?: Record<string, number>;
+    aciklama?: string | null;
+  }
+) => {
+  const response = await fetch(`${url}/FinansalTabloYonetimi/Surumler/${surumId}/KgkFormulFarklariniUygula`, {
+    method: "POST",
+    headers: {
+      accept: "application/json",
+      "Content-Type": "application/json",
+      Authorization: `Bearer ${token}`,
+    },
+    body: JSON.stringify(istek),
+  });
+  const payload = await response.json().catch(() => ({}));
+  if (!response.ok) {
+    throw new Error(payload?.detail || payload?.message || payload?.Message || "KGK formül farkları taslağa uygulanamadı.");
+  }
+  return payload as {
+    success: boolean;
+    surumId: number;
+    eszamanlilikSurumu: number;
+    eklenenFormulSayisi: number;
+    guncellenenFormulSayisi: number;
+    pasifeAlinanFormulSayisi: number;
+    yazilanTerimSayisi: number;
     islenenAnahtarlar: string[];
   };
 };
