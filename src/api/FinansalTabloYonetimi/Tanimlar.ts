@@ -209,6 +209,18 @@ export type FinansalTabloPilotDurumApiSonucu = {
 export const getFinansalTabloPilotDurumu = (token: string) =>
   jsonGet<FinansalTabloPilotDurumApiSonucu>(token, "/PilotDurumu");
 
+export type FinansalTabloKaliciArsivDurumApiSonucu = {
+  dbKaliciArsivEtkin: boolean;
+  dbServisleriKayitliMi: boolean;
+  migrationUygulanmisMi: boolean;
+  durum: "KAPALI" | "UYGULANMIS" | "BEKLIYOR" | "ERISILEMIYOR" | string;
+  bekleyenMigrationlar: string[];
+  kontrolTarihi: string;
+};
+
+export const getFinansalTabloKaliciArsivDurumu = (token: string) =>
+  jsonGet<FinansalTabloKaliciArsivDurumApiSonucu>(token, "/KaliciArsivDurumu");
+
 export type FinansalTabloArsivDogrulamaKaydiApiSonucu = {
   uretimId: string;
   uretimArsiviOkunabilir: boolean;
