@@ -886,7 +886,7 @@ export const scanAndArchiveKgkFormats = async (
   });
   const payload = await response.json().catch(() => ({}));
   if (!response.ok) {
-    throw new Error(payload?.detail || payload?.message || payload?.Message || "KGK taramasÄ± tamamlanamadÄ±.");
+    throw new Error(payload?.detail || payload?.message || payload?.Message || "KGK taraması tamamlanamadı.");
   }
   return payload as KgkTaramaSonucu;
 };
@@ -897,7 +897,7 @@ export const getKgkScanHistory = async (token: string, limit = 20) => {
   });
   const payload = await response.json().catch(() => ({}));
   if (!response.ok) {
-    throw new Error(payload?.detail || payload?.message || payload?.Message || "KGK tarama geÃ§miÅŸi okunamadÄ±.");
+    throw new Error(payload?.detail || payload?.message || payload?.Message || "KGK tarama geçmişi okunamadı.");
   }
   return payload as KgkTaramaGecmisi[];
 };
@@ -1011,7 +1011,7 @@ export const compareArchivedKgkWorkbooks = async (
   });
   const payload = await response.json().catch(() => ({}));
   if (!response.ok) {
-    throw new Error(payload?.detail || payload?.message || payload?.Message || "ArÅŸivlenmiÅŸ KGK workbook karÅŸÄ±laÅŸtÄ±rÄ±lamadÄ±.");
+    throw new Error(payload?.detail || payload?.message || payload?.Message || "Arşivlenmiş KGK workbook karşılaştırılamadı.");
   }
   return payload as KgkWorkbookFarkSonucu;
 };

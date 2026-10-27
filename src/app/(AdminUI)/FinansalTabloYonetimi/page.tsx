@@ -619,7 +619,7 @@ const Page = () => {
     try {
       setKgkTaramaGecmisi(await getKgkScanHistory(user.token, 20));
     } catch (error) {
-      setTanimHatasi(error instanceof Error ? error.message : "KGK tarama geÃ§miÅŸi okunamadÄ±.");
+      setTanimHatasi(error instanceof Error ? error.message : "KGK tarama geçmişi okunamadı.");
     } finally {
       setKgkGecmisYukleniyor(false);
     }
@@ -644,11 +644,11 @@ const Page = () => {
       });
       setKgkKontrolSonucu(data.kontrol);
       setTanimHatasi(data.hatalar.length > 0
-        ? `${data.kontrol.bulunanDosyaSayisi} dosya kontrol edildi; ${data.hatalar.length} arÅŸivleme hatasÄ± oluÅŸtu.`
-        : `${data.arsivler.length} KGK dosyasÄ± arÅŸivlendi; ${data.toplamDenemeSayisi} deneme yapÄ±ldÄ±.`);
+        ? `${data.kontrol.bulunanDosyaSayisi} dosya kontrol edildi; ${data.hatalar.length} arşivleme hatası oluştu.`
+        : `${data.arsivler.length} KGK dosyası arşivlendi; ${data.toplamDenemeSayisi} deneme yapıldı.`);
       await kgkTaramaGecmisiniYukle();
     } catch (error) {
-      setTanimHatasi(error instanceof Error ? error.message : "KGK tarama ve arÅŸivleme tamamlanamadÄ±.");
+      setTanimHatasi(error instanceof Error ? error.message : "KGK tarama ve arşivleme tamamlanamadı.");
     } finally {
       setKgkTaramaYukleniyor(false);
     }
@@ -705,7 +705,7 @@ const Page = () => {
         yeniSha256: dosya.sha256,
       }));
     } catch (error) {
-      setTanimHatasi(error instanceof Error ? error.message : "ArÅŸivlenmiÅŸ KGK workbook karÅŸÄ±laÅŸtÄ±rÄ±lamadÄ±.");
+      setTanimHatasi(error instanceof Error ? error.message : "Arşivlenmiş KGK workbook karşılaştırılamadı.");
     } finally {
       setKgkArsivWorkbookYukleniyor("");
     }
