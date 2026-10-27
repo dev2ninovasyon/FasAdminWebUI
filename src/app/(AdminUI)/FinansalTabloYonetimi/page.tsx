@@ -92,6 +92,7 @@ import {
   createFinansalTabloTestMizani,
   FinansalTabloTestMizan,
   FinansalTabloTestMizanOlusturmaIstegi,
+  getFinansalTabloMevcutMizani,
   getFinansalTabloTestMizanlari,
 } from "@/api/FinansalTabloYonetimi/TestMizan";
 
@@ -180,6 +181,8 @@ const Page = () => {
 ]`);
   const [testMizanYukleniyor, setTestMizanYukleniyor] = useState(false);
   const [testMizanListesiYukleniyor, setTestMizanListesiYukleniyor] = useState(false);
+  const [mevcutMizanYukleniyor, setMevcutMizanYukleniyor] = useState(false);
+  const [mevcutMizanBilgi, setMevcutMizanBilgi] = useState("");
   const [uretimGecmisi, setUretimGecmisi] = useState<FinansalTabloUretimArsivSonucu[]>([]);
   const [uretimGecmisiYukleniyor, setUretimGecmisiYukleniyor] = useState(false);
   const [pilotDurumu, setPilotDurumu] = useState<FinansalTabloPilotDurumApiSonucu | null>(null);
@@ -899,6 +902,64 @@ const Page = () => {
     }
   };
 
+  const mevcutMizaniEditoreYukle = async () => {
+    if (!user.token) return;
+    const denetlenenId = Number(uretimDenetlenenId);
+    const yil = Number(uretimYil);
+    if (!Number.isInteger(denetlenenId) || denetlenenId <= 0 || !Number.isInteger(yil) || yil < 1900) {
+      setTanimHatasi("Mevcut mizanı okumak için geçerli denetlenen ID ve yıl girilmelidir.");
+      return;
+    }
+    setMevcutMizanYukleniyor(true);
+    setMevcutMizanBilgi("");
+    setTanimHatasi("");
+    try {
+      const satirlar = await getFinansalTabloMevcutMizani(user.token, denetlenenId, yil, uretimKonsolide);
+      if (satirlar.length === 0) {
+        throw new Error("Seçilen denetlenen ve yıl için mevcut dönüşüm mizanı bulunamadı.");
+      }
+      if (satirlar.length > 5000) {
+        throw new Error("Mevcut mizan 5.000 satırdan fazla; test fixture sınırını aşmamak için aktarılmadı.");
+      }
+      const sayiOku = (deger: number | null | undefined, varsayilan = 0) => {
+        const sayiDegeri = Number(deger ?? varsayilan);
+        return Number.isFinite(sayiDegeri) ? sayiDegeri : varsayilan;
+      };
+      const fixtureSatirlari = satirlar.map((satir, index) => {
+        const detayKodu = String(satir.detayKodu || "").trim();
+        if (!detayKodu) {
+          throw new Error(`Mevcut mizanın ${index + 1}. satırında detay kodu bulunamadı.`);
+        }
+        const borc = sayiOku(satir.borcBakiye);
+        const alacak = sayiOku(satir.alacakBakiye);
+        const raporBorc = sayiOku(satir.raporBorc, borc);
+        const raporAlacak = sayiOku(satir.raporAlacak, alacak);
+        const bakiye = sayiOku(satir.bakiye, raporBorc - raporAlacak);
+        return {
+          detayKodu,
+          hesapAdi: String(satir.hesapAdi || detayKodu),
+          borc,
+          alacak,
+          raporBorc,
+          raporAlacak,
+          bakiye,
+          kontrolBakiye: sayiOku(satir.kontrolBakiye, bakiye),
+          bakiyeTransferFisiHaric: sayiOku(satir.bakiyeTransferFisiHaric, bakiye),
+          paraBirimi: String(satir.paraBirimi || "TRY"),
+        };
+      });
+      setTestMizanSatirlariJson(JSON.stringify(fixtureSatirlari, null, 2));
+      setTestMizanAdi(`Mevcut mizan snapshotı ${denetlenenId}-${yil}`);
+      setSeciliTestMizani(null);
+      setUretimOnizlemeSonucu(null);
+      setMevcutMizanBilgi(`${fixtureSatirlari.length} mizan satırı editöre yüklendi. Kontrol edip “Test mizanı oluştur” düğmesine basın.`);
+    } catch (error) {
+      setTanimHatasi(error instanceof Error ? error.message : "Mevcut dönüşüm mizanı okunamadı.");
+    } finally {
+      setMevcutMizanYukleniyor(false);
+    }
+  };
+
   const testMizaniOlustur = async () => {
     if (!user.token) return;
     const denetlenenId = Number(uretimDenetlenenId);
@@ -1469,11 +1530,15 @@ const Page = () => {
                 <Button variant="contained" color="info" size="small" onClick={testMizaniOlustur} disabled={testMizanYukleniyor}>
                   {testMizanYukleniyor ? <CircularProgress size={18} color="inherit" /> : "Test mizanı oluştur"}
                 </Button>
+                <Button variant="outlined" color="info" size="small" onClick={mevcutMizaniEditoreYukle} disabled={mevcutMizanYukleniyor}>
+                  {mevcutMizanYukleniyor ? <CircularProgress size={18} /> : "Mevcut mizanı editöre al"}
+                </Button>
                 <Button variant="outlined" size="small" onClick={testMizanListesiniYukle} disabled={testMizanListesiYukleniyor}>
                   {testMizanListesiYukleniyor ? <CircularProgress size={18} /> : "Kayıtlı test mizanlarını yükle"}
                 </Button>
                 {seciliTestMizani && <Chip size="small" variant="outlined" label={`SHA-256 ${seciliTestMizani.sha256.slice(0, 16)}…`} />}
               </Stack>
+              {mevcutMizanBilgi && <Alert severity="info" variant="outlined">{mevcutMizanBilgi}</Alert>}
               {testMizanlari.length > 0 && <Table size="small">
                 <TableHead><TableRow><TableCell>Ad</TableCell><TableCell>Denetlenen / yıl</TableCell><TableCell>Satır</TableCell><TableCell>Oluşturma</TableCell><TableCell /></TableRow></TableHead>
                 <TableBody>{testMizanlari.slice(0, 10).map((kayit) => <TableRow key={kayit.id} hover selected={seciliTestMizani?.id === kayit.id}>

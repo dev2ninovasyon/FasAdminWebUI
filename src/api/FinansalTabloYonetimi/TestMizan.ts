@@ -43,6 +43,19 @@ export type FinansalTabloTestMizanOlusturmaIstegi = {
   }>;
 };
 
+export type FinansalTabloMevcutMizanSatiri = {
+  detayKodu?: string | null;
+  hesapAdi?: string | null;
+  borcBakiye?: number | null;
+  alacakBakiye?: number | null;
+  bakiye?: number | null;
+  raporBorc?: number | null;
+  raporAlacak?: number | null;
+  kontrolBakiye?: number | null;
+  bakiyeTransferFisiHaric?: number | null;
+  paraBirimi?: string | null;
+};
+
 const jsonRequest = async <T>(token: string, path: string, init?: RequestInit) => {
   const response = await fetch(`${url}/FinansalTabloYonetimi${path}`, {
     ...init,
@@ -57,6 +70,32 @@ const jsonRequest = async <T>(token: string, path: string, init?: RequestInit) =
     throw new Error(payload?.message || payload?.Message || "Test mizanı işlemi tamamlanamadı.");
   }
   return payload as T;
+};
+
+export const getFinansalTabloMevcutMizani = async (
+  token: string,
+  denetlenenId: number,
+  yil: number,
+  konsolidasyonMu: boolean
+) => {
+  const response = await fetch(
+    `${url}/Donusum/DonusumMizan?denetlenenId=${encodeURIComponent(denetlenenId)}&yil=${encodeURIComponent(yil)}&konsolidasyonMu=${konsolidasyonMu}`,
+    {
+      headers: {
+        accept: "application/json",
+        Authorization: `Bearer ${token}`,
+      },
+    }
+  );
+  const payload = await response.json().catch(() => ({}));
+  if (!response.ok) {
+    throw new Error(payload?.message || payload?.Message || "Mevcut dönüşüm mizanı okunamadı.");
+  }
+  const satirlar = Array.isArray(payload) ? payload : payload?.data;
+  if (!Array.isArray(satirlar)) {
+    throw new Error("Mevcut dönüşüm mizanı beklenen satır listesini döndürmedi.");
+  }
+  return satirlar as FinansalTabloMevcutMizanSatiri[];
 };
 
 export const createFinansalTabloTestMizani = (
