@@ -67,6 +67,9 @@ const jsonRequest = async <T>(token: string, path: string, init?: RequestInit) =
   });
   const payload = await response.json().catch(() => ({}));
   if (!response.ok) {
+    if (payload?.detail) {
+      throw new Error(payload.detail);
+    }
     throw new Error(payload?.message || payload?.Message || "Test mizanı işlemi tamamlanamadı.");
   }
   return payload as T;
