@@ -1,8 +1,9 @@
 import CustomFormLabel from "@/app/components/Forms/ThemeElements/CustomFormLabel";
 import CustomTextField from "@/app/components/Forms/ThemeElements/CustomTextField";
-import { Box, Typography, Button, Stack, useTheme } from "@mui/material";
+import { Box, Typography, Button, Stack, useTheme, Link as MuiLink } from "@mui/material";
 import { useState } from "react";
 import { useRouter } from "next/navigation";
+import Link from "next/link";
 import { LoadingButton } from "@mui/lab";
 import { IconTrash } from "@tabler/icons-react";
 import { useDispatch, useSelector } from "@/store/hooks";
@@ -145,6 +146,9 @@ const AuthLogin: React.FC<loginType> = ({ title, subtitle, subtext }) => {
               onChange={(e: any) => setPassword(e.target.value)}
             />
           </Box>
+          <MuiLink component={Link} href="/auth/forgot-password" underline="hover" sx={{ mt: 1, alignSelf: "flex-end" }}>
+            Şifremi unuttum
+          </MuiLink>
         </Stack>
       ) : (
         <Stack mb={3}>
