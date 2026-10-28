@@ -107,16 +107,36 @@ const breadcrumbItems = [
 const sayi = (value?: number) =>
   new Intl.NumberFormat("tr-TR").format(value ?? 0);
 
+const surumDurumKodu = (durum: number | string) => {
+  if (typeof durum === "number") return durum;
+  return ({ Taslak: 1, Dogrulandi: 2, Yayinda: 3, KullanimdanKaldirildi: 4 } as Record<string, number>)[durum] ?? 0;
+};
+
+const tabloTuruEtiketi = (tabloTuru: number | string) => {
+  const kod = typeof tabloTuru === "number"
+    ? tabloTuru
+    : ({
+        FinansalDurum: 1,
+        KarVeyaZarar: 2,
+        KapsamliGelir: 3,
+        NakitAkis: 4,
+        OzkaynakDegisim: 5,
+      } as Record<string, number>)[tabloTuru] ?? 0;
+
+  return ({
+    1: "Finansal durum",
+    2: "Kâr veya zarar",
+    3: "Kapsamlı gelir",
+    4: "Nakit akış",
+    5: "Özkaynak değişim",
+  } as Record<number, string>)[kod] ?? String(tabloTuru);
+};
+
 const finansalTabloAdimlari = [
   {
     baslik: "Tanımı seç",
     aciklama: "Raporlama standardını seçin, taslak veya yayımlanmış sürümün içeriğini kontrol edin.",
     ipucu: "İlk kullanımda mevcut tanım setini ve sürümü seçmeniz yeterlidir. Kalem ve formül düzenleme yalnız taslak sürümlerde yapılır.",
-  },
-  {
-    baslik: "Paketi aktar",
-    aciklama: "Legacy paket ve manifest dosyalarını önce önizleyin, doğrulama sonucuna göre taslağa uygulayın.",
-    ipucu: "Önce Paket JSON ve Manifest JSON dosyalarını seçin. Önizleme başarılı olmadan “Paketi uygula” işlemini kullanmayın.",
   },
   {
     baslik: "Üretimi test et",
@@ -133,6 +153,7 @@ const finansalTabloAdimlari = [
 const Page = () => {
   const user = useSelector((state: AppState) => state.userReducer);
   const [aktifAdim, setAktifAdim] = useState(0);
+  const [gelismisPaketAraclariAcik, setGelismisPaketAraclariAcik] = useState(false);
   const [surumId, setSurumId] = useState("");
   const [eszamanlilikSurumu, setEszamanlilikSurumu] = useState("");
   const [kaynakSha256, setKaynakSha256] = useState("");
@@ -284,7 +305,7 @@ const Page = () => {
         setTanimSetleri(data);
         const ilkSet = data.find((set) => set.id === secilenSetId) || data[0];
         setSecilenSetId(ilkSet?.id || 0);
-        const ilkSurum = ilkSet?.surumler?.[0];
+        const ilkSurum = ilkSet?.surumler?.find((surum) => surumDurumKodu(surum.durum) === 3) || ilkSet?.surumler?.[0];
         setSecilenSurumId(ilkSurum?.id || 0);
         setSurumId(ilkSurum ? String(ilkSurum.id) : "");
         setEszamanlilikSurumu(ilkSurum ? String(ilkSurum.eszamanlilikSurumu) : "");
@@ -366,7 +387,7 @@ const Page = () => {
   ]);
 
   const metaKaydet = async () => {
-    if (!user.token || !secilenSurum || secilenSurum.durum !== 1) return;
+    if (!user.token || !secilenSurum || surumDurumKodu(secilenSurum.durum) !== 1) return;
     setMetaKaydediliyor(true);
     setTanimHatasi("");
     try {
@@ -393,7 +414,7 @@ const Page = () => {
   };
 
   const teknikDogrula = async () => {
-    if (!user.token || !secilenSurum || secilenSurum.durum !== 1) return;
+    if (!user.token || !secilenSurum || surumDurumKodu(secilenSurum.durum) !== 1) return;
     setDogrulamaYukleniyor(true);
     setTanimHatasi("");
     try {
@@ -425,7 +446,7 @@ const Page = () => {
 
   const kalemKaydet = async () => {
     const tablo = surumDetayi?.tablolar.find((aday) => aday.id === kalemTabloId);
-    if (!user.token || !secilenSurum || secilenSurum.durum !== 1 || !tablo || !duzenlenenKalemId) return;
+    if (!user.token || !secilenSurum || surumDurumKodu(secilenSurum.durum) !== 1 || !tablo || !duzenlenenKalemId) return;
     setKalemKaydediliyor(true);
     setTanimHatasi("");
     try {
@@ -485,7 +506,7 @@ const Page = () => {
 
   const kuralKaydet = async () => {
     const tablo = surumDetayi?.tablolar.find((aday) => aday.id === kalemTabloId);
-    if (!user.token || !secilenSurum || secilenSurum.durum !== 1 || !tablo || !duzenlenenKuralId) return;
+    if (!user.token || !secilenSurum || surumDurumKodu(secilenSurum.durum) !== 1 || !tablo || !duzenlenenKuralId) return;
     setKuralKaydediliyor(true);
     setTanimHatasi("");
     try {
@@ -549,7 +570,7 @@ const Page = () => {
 
   const kuralOlustur = async () => {
     const tablo = surumDetayi?.tablolar.find((aday) => aday.id === kalemTabloId);
-    if (!user.token || !secilenSurum || secilenSurum.durum !== 1 || !tablo || !yeniKuralKalemId) return;
+    if (!user.token || !secilenSurum || surumDurumKodu(secilenSurum.durum) !== 1 || !tablo || !yeniKuralKalemId) return;
     setKuralKaydediliyor(true);
     setTanimHatasi("");
     try {
@@ -596,7 +617,7 @@ const Page = () => {
   };
 
   const taslagiYayinla = async () => {
-    if (!user.token || !secilenSurum || secilenSurum.durum !== 1) return;
+    if (!user.token || !secilenSurum || surumDurumKodu(secilenSurum.durum) !== 1) return;
     setSurumIslemiYukleniyor(true);
     setTanimHatasi("");
     try {
@@ -813,7 +834,7 @@ const Page = () => {
   };
 
   const kgkFormulFarklariniTaslagAktar = async () => {
-    if (!user.token || !secilenSurum || secilenSurum.durum !== 1 || !kgkWorkbookSonucu?.formulDegisikligiVarMi) return;
+    if (!user.token || !secilenSurum || surumDurumKodu(secilenSurum.durum) !== 1 || !kgkWorkbookSonucu?.formulDegisikligiVarMi) return;
     const hataliFormuller = kgkWorkbookSonucu.formulFarklari
       .map((fark) => fark.yeniFormul)
       .filter((formul) => formul && formul.dogrulamaHatalari.length > 0);
@@ -1043,8 +1064,8 @@ const Page = () => {
       setTanimHatasi("Üretim için yayımlanmış sürüm, tablo ve dönem kolonu seçilmelidir.");
       return null;
     }
-    if (surum.durum !== 2) {
-      setTanimHatasi("Üretim ve önizleme yalnızca yayımlanmış sürüm üzerinden başlatılabilir.");
+    if (surumDurumKodu(surum.durum) !== 3 && !seciliTestMizani) {
+      setTanimHatasi("Gerçek mizan önizlemesi ve üretim yalnızca yayımlanmış sürüm üzerinden başlatılabilir. Taslağı sınamak için önce izole test mizanı oluşturun.");
       return null;
     }
     if (uretimGirdiSha256.trim().length !== 64 || !uretimDenetlenenId || !uretimYil || !uretimBaslangic || !uretimBitis) {
@@ -1062,7 +1083,7 @@ const Page = () => {
     return {
       yeniMotorSurumu: "finansal-tablo-yeni-motor-v1",
       tanimSetiSabitAnahtari: set.kod,
-      tanimSurumu: String(surum.surumNo),
+      tanimSurumu: surum.etiket,
       girdiSabitAnahtari: uretimGirdiAnahtari.trim() || "MIZAN",
       girdiSha256: uretimGirdiSha256.trim().toLowerCase(),
       calistirmaBaglami: {
@@ -1393,7 +1414,7 @@ const Page = () => {
   return (
     <PageContainer
       title="Finansal Tablo Yönetimi"
-      description="Legacy finansal tablo paketlerini önizleme ve kontrollü uygulama"
+      description="Finansal tablo tanımlarını yönetme ve yeni üretim motorunu kontrollü test etme"
     >
       <Breadcrumb title="Finansal Tablo Yönetimi" items={breadcrumbItems} />
       <Paper variant="outlined" sx={{ p: { xs: 1.5, md: 2 }, mb: 2 }}>
@@ -1403,7 +1424,7 @@ const Page = () => {
               Finansal tablo hazırlama adımları
             </Typography>
             <Typography variant="body2" color="text.secondary">
-              Soldan sağa ilerleyin. Önce tanımı seçin; ardından paket, test üretimi ve KGK kontrolünü tamamlayın.
+              Tanımı seçin, örnek mizanla üretimi test edin ve gerektiğinde KGK güncellemelerini kontrol edin.
             </Typography>
           </Box>
           <Stepper activeStep={aktifAdim} nonLinear alternativeLabel sx={{ overflowX: "auto", pb: 0.5 }}>
@@ -1426,7 +1447,7 @@ const Page = () => {
           </Alert>
         </Stack>
       </Paper>
-      <Box sx={{ display: aktifAdim === 3 ? "block" : "none" }}>
+      <Box sx={{ display: aktifAdim === 2 ? "block" : "none" }}>
       <ParentCard title="KGK format güncelleme kontrolü">
         <Stack spacing={1.5}>
           <Typography variant="body2" color="text.secondary">
@@ -1525,8 +1546,8 @@ const Page = () => {
               <Stack direction="row" spacing={1} alignItems="center" sx={{ mb: 1 }}>
                 <Chip size="small" color={kgkWorkbookSonucu.yapisalDegisiklikVarMi ? "warning" : "success"} label={kgkWorkbookSonucu.yapisalDegisiklikVarMi ? `${kgkWorkbookSonucu.farkSayisi} yapısal fark` : "Yapısal fark yok"} />
                 {kgkWorkbookSonucu.makroVarMi && <Chip size="small" color="info" label="Makro bulundu; çalıştırılmadı" />}
-                {(kgkWorkbookSonucu.semantikDegisiklikVarMi || kgkWorkbookSonucu.formulDegisikligiVarMi) && secilenSurum && secilenSurum.durum !== 1 && <Button size="small" variant="outlined" onClick={kgkFarktanTaslakOlustur} disabled={surumIslemiYukleniyor}>KGK farkından taslak oluştur</Button>}
-                {kgkWorkbookSonucu.formulDegisikligiVarMi && secilenSurum?.durum === 1 && <Button size="small" variant="contained" color="secondary" onClick={kgkFormulFarklariniTaslagAktar} disabled={surumIslemiYukleniyor}>KGK formül farklarını taslağa aktar</Button>}
+                {(kgkWorkbookSonucu.semantikDegisiklikVarMi || kgkWorkbookSonucu.formulDegisikligiVarMi) && secilenSurum && surumDurumKodu(secilenSurum.durum) !== 1 && <Button size="small" variant="outlined" onClick={kgkFarktanTaslakOlustur} disabled={surumIslemiYukleniyor}>KGK farkından taslak oluştur</Button>}
+                {kgkWorkbookSonucu.formulDegisikligiVarMi && secilenSurum && surumDurumKodu(secilenSurum.durum) === 1 && <Button size="small" variant="contained" color="secondary" onClick={kgkFormulFarklariniTaslagAktar} disabled={surumIslemiYukleniyor}>KGK formül farklarını taslağa aktar</Button>}
               </Stack>
               {kgkWorkbookSonucu.farklar.length > 0 && <Table size="small"><TableHead><TableRow><TableCell>Tür</TableCell><TableCell>Anahtar</TableCell><TableCell>Değişiklik</TableCell></TableRow></TableHead><TableBody>{kgkWorkbookSonucu.farklar.map((fark) => <TableRow key={`${fark.degisiklikTuru}-${fark.anahtar}`}><TableCell>{fark.nesneTuru}</TableCell><TableCell>{fark.anahtar}</TableCell><TableCell>{fark.degisiklikTuru}</TableCell></TableRow>)}</TableBody></Table>}
               <Divider sx={{ my: 1 }} />
@@ -1546,7 +1567,7 @@ const Page = () => {
         </Stack>
       </ParentCard>
       </Box>
-      <Box sx={{ display: aktifAdim === 2 ? "block" : "none" }}>
+      <Box sx={{ display: aktifAdim === 1 ? "block" : "none" }}>
       <ParentCard title="Sürümlü finansal tablo üretimi">
         <Stack spacing={1.5}>
           <Alert severity="info">
@@ -1919,7 +1940,7 @@ const Page = () => {
               <Grid item xs={12} md={4}>
                 <FormControl fullWidth size="small">
                   <InputLabel>Tanım seti</InputLabel>
-                  <Select label="Tanım seti" value={secilenSetId} onChange={(event) => { const id = Number(event.target.value); const set = tanimSetleri.find((aday) => aday.id === id); const surum = set?.surumler?.[0]; setSecilenSetId(id); setSecilenSurumId(surum?.id || 0); setSurumId(surum ? String(surum.id) : ""); setEszamanlilikSurumu(surum ? String(surum.eszamanlilikSurumu) : ""); }}>
+                  <Select label="Tanım seti" value={secilenSetId} onChange={(event) => { const id = Number(event.target.value); const set = tanimSetleri.find((aday) => aday.id === id); const surum = set?.surumler?.find((aday) => surumDurumKodu(aday.durum) === 3) || set?.surumler?.[0]; setSecilenSetId(id); setSecilenSurumId(surum?.id || 0); setSurumId(surum ? String(surum.id) : ""); setEszamanlilikSurumu(surum ? String(surum.eszamanlilikSurumu) : ""); }}>
                     {tanimSetleri.map((set) => <MenuItem key={set.id} value={set.id}>{set.kod} — {set.ad}</MenuItem>)}
                   </Select>
                 </FormControl>
@@ -1928,7 +1949,7 @@ const Page = () => {
                 <FormControl fullWidth size="small">
                   <InputLabel>Sürüm</InputLabel>
                   <Select label="Sürüm" value={secilenSurumId} onChange={(event) => { const id = Number(event.target.value); const surum = secilenSet?.surumler.find((aday) => aday.id === id); setSecilenSurumId(id); setSurumId(surum ? String(surum.id) : ""); setEszamanlilikSurumu(surum ? String(surum.eszamanlilikSurumu) : ""); }}>
-                    {(secilenSet?.surumler || []).map((surum) => <MenuItem key={surum.id} value={surum.id}>{surum.etiket} · #{surum.surumNo} · {surum.durum === 3 ? "Yayında" : surum.durum === 1 ? "Taslak" : surum.durum === 2 ? "Doğrulandı" : "Kaldırıldı"}</MenuItem>)}
+                    {(secilenSet?.surumler || []).map((surum) => <MenuItem key={surum.id} value={surum.id}>{surum.etiket} · #{surum.surumNo} · {surumDurumKodu(surum.durum) === 3 ? "Yayında" : surumDurumKodu(surum.durum) === 1 ? "Taslak" : surumDurumKodu(surum.durum) === 2 ? "Doğrulandı" : "Kaldırıldı"}</MenuItem>)}
                   </Select>
                 </FormControl>
               </Grid>
@@ -1938,11 +1959,11 @@ const Page = () => {
             <Paper variant="outlined" sx={{ p: 1.5 }}>
               <Stack spacing={1.5}>
                 <Stack direction="row" spacing={1} flexWrap="wrap" useFlexGap>
-                  <Chip label={`Sürüm ${secilenSurum.surumNo} · ${secilenSurum.etiket}`} color={secilenSurum.durum === 3 ? "success" : "default"} />
+                  <Chip label={`Sürüm ${secilenSurum.surumNo} · ${secilenSurum.etiket}`} color={surumDurumKodu(secilenSurum.durum) === 3 ? "success" : "default"} />
                   <Chip label={`Eşzamanlılık ${secilenSurum.eszamanlilikSurumu}`} variant="outlined" />
                   <Chip label={`${secilenSurum.tabloSayisi} tablo · ${secilenSurum.kalemSayisi} kalem · ${secilenSurum.formulSayisi} formül`} variant="outlined" />
                   <Button size="small" variant="outlined" onClick={taslakKlonla} disabled={surumIslemiYukleniyor}>Taslağa klonla</Button>
-                  {secilenSurum.durum === 1 && <>
+                  {surumDurumKodu(secilenSurum.durum) === 1 && <>
                     <Button size="small" variant="outlined" onClick={() => setMetaDuzenleme((onceki) => !onceki)}>{metaDuzenleme ? "Düzenlemeyi kapat" : "Sürüm metadata düzenle"}</Button>
                     <Button size="small" variant="contained" color="secondary" onClick={teknikDogrula} disabled={dogrulamaYukleniyor}>
                       {dogrulamaYukleniyor ? <CircularProgress size={16} color="inherit" /> : "Teknik doğrula"}
@@ -1950,7 +1971,7 @@ const Page = () => {
                     <Button size="small" variant="contained" color="success" onClick={taslagiYayinla} disabled={surumIslemiYukleniyor}>Yayınla</Button>
                   </>}
                 </Stack>
-                {metaDuzenleme && secilenSurum.durum === 1 && (
+                {metaDuzenleme && surumDurumKodu(secilenSurum.durum) === 1 && (
                   <Paper variant="outlined" sx={{ p: 1.5, bgcolor: "action.hover" }}>
                     <Grid container spacing={1.5}>
                       <Grid item xs={12} md={4}><TextField fullWidth size="small" label="Sürüm etiketi" value={metaEtiket} onChange={(event) => setMetaEtiket(event.target.value)} inputProps={{ maxLength: 100 }} /></Grid>
@@ -2016,11 +2037,11 @@ const Page = () => {
                 {surumDetayi && (
                   <Box sx={{ overflowX: "auto" }}>
                     <Table size="small"><TableHead><TableRow><TableCell>Tablo</TableCell><TableCell>Tür</TableCell><TableCell align="right">Dönem</TableCell><TableCell align="right">Kalem</TableCell><TableCell align="right">Formül</TableCell><TableCell align="right">Kontrol</TableCell></TableRow></TableHead>
-                      <TableBody>{surumDetayi.tablolar.map((tablo) => <TableRow key={tablo.id} hover><TableCell><strong>{tablo.kod}</strong><br /><Typography variant="caption" color="text.secondary">{tablo.ad}</Typography></TableCell><TableCell>{tablo.tabloTuru === 1 ? "Finansal durum" : tablo.tabloTuru === 2 ? "Kâr/zarar" : tablo.tabloTuru === 4 ? "Nakit akış" : tablo.tabloTuru === 5 ? "Özkaynak" : "Kapsamlı gelir"}</TableCell><TableCell align="right">{tablo.donemKolonlari.length}</TableCell><TableCell align="right">{tablo.kalemler.length}</TableCell><TableCell align="right">{tablo.kurallar.length}</TableCell><TableCell align="right">{tablo.kontrolKurallari.length}</TableCell></TableRow>)}</TableBody>
+                      <TableBody>{surumDetayi.tablolar.map((tablo) => <TableRow key={tablo.id} hover><TableCell><strong>{tablo.kod}</strong><br /><Typography variant="caption" color="text.secondary">{tablo.ad}</Typography></TableCell><TableCell>{tabloTuruEtiketi(tablo.tabloTuru)}</TableCell><TableCell align="right">{tablo.donemKolonlari.length}</TableCell><TableCell align="right">{tablo.kalemler.length}</TableCell><TableCell align="right">{tablo.kurallar.length}</TableCell><TableCell align="right">{tablo.kontrolKurallari.length}</TableCell></TableRow>)}</TableBody>
                     </Table>
                   </Box>
                 )}
-                {surumDetayi && secilenSurum.durum === 1 && secilenKalemTablosu && (
+                {surumDetayi && surumDurumKodu(secilenSurum.durum) === 1 && secilenKalemTablosu && (
                   <Paper variant="outlined" sx={{ p: 1.5, bgcolor: "action.hover" }}>
                     <Stack spacing={1.5}>
                       <Stack direction="row" spacing={1} alignItems="center">
@@ -2072,7 +2093,7 @@ const Page = () => {
                     </Stack>
                   </Paper>
                 )}
-                {surumDetayi && secilenSurum.durum === 1 && secilenKalemTablosu && (
+                {surumDetayi && surumDurumKodu(secilenSurum.durum) === 1 && secilenKalemTablosu && (
                   <Paper variant="outlined" sx={{ p: 1.5, bgcolor: "action.hover" }}>
                     <Stack spacing={1.5}>
                       <Stack direction="row" spacing={1} alignItems="center">
@@ -2125,7 +2146,17 @@ const Page = () => {
         </Stack>
       </ParentCard>
       </Box>
-      <Box sx={{ display: aktifAdim === 1 ? "block" : "none" }}>
+      {aktifAdim === 0 && (
+        <Stack direction={{ xs: "column", sm: "row" }} spacing={1} alignItems={{ sm: "center" }} sx={{ mt: 2 }}>
+          <Alert severity="success" variant="outlined" sx={{ flexGrow: 1 }}>
+            Başlangıç finansal tablo tanımları uygulamada hazırdır. Normal kullanımda JSON paketi veya manifest seçmeniz gerekmez.
+          </Alert>
+          <Button size="small" variant="text" onClick={() => setGelismisPaketAraclariAcik((onceki) => !onceki)}>
+            {gelismisPaketAraclariAcik ? "Gelişmiş paket araçlarını gizle" : "Gelişmiş paket araçlarını göster"}
+          </Button>
+        </Stack>
+      )}
+      <Box sx={{ display: aktifAdim === 0 && gelismisPaketAraclariAcik ? "block" : "none", mt: 2 }}>
       <ParentCard title="Legacy paket önizleme ve uygulama">
         <Stack spacing={3}>
           <Alert severity="info">

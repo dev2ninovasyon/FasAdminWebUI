@@ -16,7 +16,7 @@ export type FinansalSurum = {
   tanimSetiId: number;
   surumNo: number;
   etiket: string;
-  durum: number;
+  durum: number | string;
   gecerlilikBaslangici: string;
   gecerlilikBitisi?: string | null;
   kaynakSurumId?: number | null;
@@ -40,8 +40,8 @@ export type FinansalSurumDetay = {
     id: number;
     kod: string;
     ad: string;
-    tabloTuru: number;
-    nakitAkisYontemi: number;
+    tabloTuru: number | string;
+    nakitAkisYontemi: number | string;
     paraBirimi: string;
     yuvarlamaBasamagi: number;
     sira: number;
@@ -154,8 +154,8 @@ export type FinansalTabloUretimIstegi = {
   raporlamaStandardi: number;
   kapsam: number;
   donusumTipi: number;
-  tabloTuru: number;
-  nakitAkisYontemi: number;
+  tabloTuru: number | string;
+  nakitAkisYontemi: number | string;
   gecerlilikTarihi?: string | null;
   tanimSnapshotSha256?: string;
   uretimId?: string;
@@ -713,7 +713,7 @@ export const publishFinansalSurum = async (
   if (!response.ok) {
     throw new Error(payload?.message || payload?.Message || "Sürüm yayınlanamadı.");
   }
-  return payload as { success: boolean; surumId: number; durum: number; eszamanlilikSurumu: number; onayTarihi: string };
+  return payload as { success: boolean; surumId: number; durum: number | string; eszamanlilikSurumu: number; onayTarihi: string };
 };
 
 export const cloneFinansalSurum = async (
