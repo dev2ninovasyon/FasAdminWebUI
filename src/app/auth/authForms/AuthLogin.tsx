@@ -3,7 +3,7 @@ import { useState } from "react";
 import { useRouter } from "next/navigation";
 import Link from "next/link";
 import { LoadingButton } from "@mui/lab";
-import { IconMail, IconLock } from "@tabler/icons-react";
+import { IconMail, IconLock, IconShieldLock } from "@tabler/icons-react";
 import { useDispatch, useSelector } from "@/store/hooks";
 import { useGoogleReCaptcha } from "react-google-recaptcha-v3";
 import { setUserData, setBddkmi } from "@/store/user/UserSlice";
@@ -27,6 +27,8 @@ const AuthLogin: React.FC<LoginType> = ({ title, subtitle, subtext }) => {
   const theme = useTheme();
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
+  const [otpCode, setOtpCode] = useState("");
+  const [requiresOtp, setRequiresOtp] = useState(false);
   const [isLoggedIn, setIsLoggedIn] = useState(false);
   const [isVerifyingCaptcha, setIsVerifyingCaptcha] = useState(false);
   const { executeRecaptcha } = useGoogleReCaptcha();
@@ -93,12 +95,33 @@ const AuthLogin: React.FC<LoginType> = ({ title, subtitle, subtext }) => {
           accept: "*/*",
           "Content-Type": "application/json",
         },
-        body: JSON.stringify({ email, password, CaptchaToken: token }),
+        body: JSON.stringify({
+          email,
+          password,
+          otpCode: requiresOtp ? otpCode : undefined,
+          CaptchaToken: token,
+        }),
       });
 
       if (response.ok) {
         const data = await response.json();
+
+        if (data.requiresOtp) {
+          setRequiresOtp(true);
+          setOtpCode("");
+          setIsLoggedIn(false);
+          enqueueSnackbar(
+            data.message || "E-posta adresinize gönderilen güvenlik kodunu girin.",
+            { variant: "info", autoHideDuration: 5000 },
+          );
+          return;
+        }
+
         const userToken = data.token;
+        if (!userToken) {
+          throw new Error("Sunucu geçerli bir oturum anahtarı döndürmedi.");
+        }
+
         const userRefreshToken = data.refreshToken;
         const userId = data.userId || data.kullaniciId || data.Id || 0;
         const userDenetciId = data.denetciId || 0;
@@ -111,6 +134,7 @@ const AuthLogin: React.FC<LoginType> = ({ title, subtitle, subtext }) => {
           denetciFirmaAdi: userDenetciFirmaAdi,
           yetki: data.yetki,
           rol: data.rol,
+          claims: data.claims,
           kullaniciAdi: data.kullaniciAdi,
           mail: email,
           unvan: data.unvan,
@@ -218,6 +242,14 @@ const AuthLogin: React.FC<LoginType> = ({ title, subtitle, subtext }) => {
       return;
     }
 
+    if (requiresOtp && !/^\d{8}$/.test(otpCode)) {
+      enqueueSnackbar("8 haneli güvenlik kodunu girin.", {
+        variant: "warning",
+        autoHideDuration: 3000,
+      });
+      return;
+    }
+
     setIsLoggedIn(true);
     void handleLogin();
   };
@@ -241,6 +273,7 @@ const AuthLogin: React.FC<LoginType> = ({ title, subtitle, subtext }) => {
               variant="outlined"
               fullWidth
               placeholder="Email adresiniz"
+              disabled={requiresOtp}
               onChange={(event: any) => setEmail(event.target.value)}
               InputProps={{
                 startAdornment: (
@@ -259,6 +292,7 @@ const AuthLogin: React.FC<LoginType> = ({ title, subtitle, subtext }) => {
               variant="outlined"
               fullWidth
               placeholder="Şifreniz"
+              disabled={requiresOtp}
               onChange={(event: any) => setPassword(event.target.value)}
               InputProps={{
                 startAdornment: (
@@ -270,21 +304,65 @@ const AuthLogin: React.FC<LoginType> = ({ title, subtitle, subtext }) => {
             />
           </Box>
 
+          {requiresOtp ? (
+            <Box>
+              <CustomFormLabel htmlFor="otpCode">Güvenlik kodu</CustomFormLabel>
+              <CustomTextField
+                id="otpCode"
+                type="text"
+                variant="outlined"
+                fullWidth
+                autoFocus
+                value={otpCode}
+                placeholder="8 haneli kod"
+                onChange={(event: React.ChangeEvent<HTMLInputElement>) =>
+                  setOtpCode(event.target.value.replace(/\D/g, "").slice(0, 8))
+                }
+                inputProps={{ maxLength: 8, inputMode: "numeric", pattern: "[0-9]*" }}
+                InputProps={{
+                  startAdornment: (
+                    <InputAdornment position="start">
+                      <IconShieldLock size={20} />
+                    </InputAdornment>
+                  ),
+                }}
+              />
+              <Typography variant="caption" color="text.secondary" mt={0.75} display="block">
+                E-posta adresinize gönderilen 8 haneli kodu girin.
+              </Typography>
+            </Box>
+          ) : null}
+
           <Box display="flex" justifyContent="center" />
         </Stack>
 
         <Box display="flex" justifyContent="flex-end" mb={3}>
-          <MuiLink
-            component={Link}
-            href={`/auth/forgot-password${email ? `?email=${encodeURIComponent(email)}` : ""}`}
-            underline="hover"
-            sx={{
-              fontWeight: 600,
-              color: "primary.main",
-            }}
-          >
-            Şifremi unuttum
-          </MuiLink>
+          {requiresOtp ? (
+            <MuiLink
+              component="button"
+              type="button"
+              underline="hover"
+              onClick={() => {
+                setRequiresOtp(false);
+                setOtpCode("");
+              }}
+              sx={{ fontWeight: 600, color: "primary.main" }}
+            >
+              Giriş bilgilerini değiştir
+            </MuiLink>
+          ) : (
+            <MuiLink
+              component={Link}
+              href={`/auth/forgot-password${email ? `?email=${encodeURIComponent(email)}` : ""}`}
+              underline="hover"
+              sx={{
+                fontWeight: 600,
+                color: "primary.main",
+              }}
+            >
+              Şifremi unuttum
+            </MuiLink>
+          )}
         </Box>
 
         <Box>
@@ -296,9 +374,6 @@ const AuthLogin: React.FC<LoginType> = ({ title, subtitle, subtext }) => {
             fullWidth
             loading={isVerifyingCaptcha || isLoggedIn}
             sx={{
-              background: "linear-gradient(45deg, #2196F3 30%, #21CBF3 90%)",
-              boxShadow: "0 3px 5px 2px rgba(33, 203, 243, .3)",
-              color: "white",
               height: 48,
               padding: "0 30px",
               fontSize: "1.1rem",
@@ -306,7 +381,13 @@ const AuthLogin: React.FC<LoginType> = ({ title, subtitle, subtext }) => {
               borderRadius: "10px",
             }}
           >
-            {isVerifyingCaptcha ? "Guvenlik Dogrulamasi..." : isLoggedIn ? "Giris Yapiliyor..." : "Giris Yap"}
+            {isVerifyingCaptcha
+              ? "Güvenlik doğrulanıyor..."
+              : isLoggedIn
+                ? "Giriş yapılıyor..."
+                : requiresOtp
+                  ? "Kodu doğrula"
+                  : "Giriş yap"}
           </LoadingButton>
         </Box>
       </form>
