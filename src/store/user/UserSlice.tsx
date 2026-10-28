@@ -14,6 +14,7 @@ interface StateType {
   bddkmi?: boolean;
   yil?: number;
   rol?: string[];
+  claims?: string[];
   yetki?: string;
   unvan?: string;
   kullaniciAdi?: string;
@@ -50,6 +51,7 @@ const initialState: StateType = {
   bddkmi: false,
   yil: 0,
   rol: undefined,
+  claims: undefined,
   yetki: undefined,
   unvan: "",
   kullaniciAdi: "",
@@ -203,6 +205,7 @@ export const UserSlice = createSlice({
         state.bddkmi = undefined;
         state.yil = undefined;
         state.rol = undefined;
+        state.claims = undefined;
         state.yetki = undefined;
         state.unvan = undefined;
         state.kullaniciAdi = undefined;

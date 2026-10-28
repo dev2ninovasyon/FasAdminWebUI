@@ -43,6 +43,11 @@ export default function RootLayout({
   const router = useRouter();
   const user = useSelector((state: AppState) => state.userReducer);
   const [control, setControl] = useState(false);
+  const isFasAdmin =
+    user.yetki === "FasAdmin" ||
+    user.claims?.includes("FasAdmin") === true ||
+    user.rol?.includes("FasAdmin") === true;
+
   useEffect(() => {
     // Sadece client-side'da çalışmasını sağla
     if (typeof window !== "undefined") {
@@ -53,8 +58,8 @@ export default function RootLayout({
         setControl(true);
       }
     }
-  }, [user.token]);
-  return control && (user.id == 1 || user.id == 2) ? (
+  }, [router, user.token]);
+  return control && isFasAdmin ? (
     <MainWrapper>
       <title>Fas Admin</title>
       {/* ------------------------------------------- */}
