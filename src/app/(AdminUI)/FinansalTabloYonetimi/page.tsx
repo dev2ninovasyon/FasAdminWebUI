@@ -13,6 +13,9 @@ import {
   Paper,
   Select,
   Stack,
+  Step,
+  StepButton,
+  Stepper,
   Switch,
   Table,
   TableBody,
@@ -104,8 +107,32 @@ const breadcrumbItems = [
 const sayi = (value?: number) =>
   new Intl.NumberFormat("tr-TR").format(value ?? 0);
 
+const finansalTabloAdimlari = [
+  {
+    baslik: "Tanımı seç",
+    aciklama: "Raporlama standardını seçin, taslak veya yayımlanmış sürümün içeriğini kontrol edin.",
+    ipucu: "İlk kullanımda mevcut tanım setini ve sürümü seçmeniz yeterlidir. Kalem ve formül düzenleme yalnız taslak sürümlerde yapılır.",
+  },
+  {
+    baslik: "Paketi aktar",
+    aciklama: "Legacy paket ve manifest dosyalarını önce önizleyin, doğrulama sonucuna göre taslağa uygulayın.",
+    ipucu: "Önce Paket JSON ve Manifest JSON dosyalarını seçin. Önizleme başarılı olmadan “Paketi uygula” işlemini kullanmayın.",
+  },
+  {
+    baslik: "Üretimi test et",
+    aciklama: "İzole test mizanı oluşturun, yeni motor sonucunu ve legacy karşılaştırmasını inceleyin.",
+    ipucu: "Test mizanı gerçek mizanı veya üretim arşivini değiştirmez. Önce test mizanını oluşturup ardından önizleme çalıştırın.",
+  },
+  {
+    baslik: "KGK kontrolü",
+    aciklama: "KGK dosya güncellemelerini kontrol edin, farkları inceleyin ve onaylı çıktıyı üretin.",
+    ipucu: "Önce KGK’yı kontrol edin. Değişiklik varsa workbook karşılaştırmasını tamamladıktan sonra çıktı oluşturun.",
+  },
+] as const;
+
 const Page = () => {
   const user = useSelector((state: AppState) => state.userReducer);
+  const [aktifAdim, setAktifAdim] = useState(0);
   const [surumId, setSurumId] = useState("");
   const [eszamanlilikSurumu, setEszamanlilikSurumu] = useState("");
   const [kaynakSha256, setKaynakSha256] = useState("");
@@ -1369,6 +1396,37 @@ const Page = () => {
       description="Legacy finansal tablo paketlerini önizleme ve kontrollü uygulama"
     >
       <Breadcrumb title="Finansal Tablo Yönetimi" items={breadcrumbItems} />
+      <Paper variant="outlined" sx={{ p: { xs: 1.5, md: 2 }, mb: 2 }}>
+        <Stack spacing={1.5}>
+          <Box>
+            <Typography variant="subtitle1" fontWeight={700}>
+              Finansal tablo hazırlama adımları
+            </Typography>
+            <Typography variant="body2" color="text.secondary">
+              Soldan sağa ilerleyin. Önce tanımı seçin; ardından paket, test üretimi ve KGK kontrolünü tamamlayın.
+            </Typography>
+          </Box>
+          <Stepper activeStep={aktifAdim} nonLinear alternativeLabel sx={{ overflowX: "auto", pb: 0.5 }}>
+            {finansalTabloAdimlari.map((adim, index) => (
+              <Step key={adim.baslik} completed={index < aktifAdim}>
+                <StepButton color="inherit" onClick={() => setAktifAdim(index)}>
+                  {adim.baslik}
+                </StepButton>
+              </Step>
+            ))}
+          </Stepper>
+          <Alert severity="info" icon={false} sx={{ py: 0.75 }}>
+            <Typography variant="subtitle2">
+              {aktifAdim + 1}. {finansalTabloAdimlari[aktifAdim].baslik}
+            </Typography>
+            <Typography variant="body2">{finansalTabloAdimlari[aktifAdim].aciklama}</Typography>
+            <Typography variant="caption" color="text.secondary">
+              {finansalTabloAdimlari[aktifAdim].ipucu}
+            </Typography>
+          </Alert>
+        </Stack>
+      </Paper>
+      <Box sx={{ display: aktifAdim === 3 ? "block" : "none" }}>
       <ParentCard title="KGK format güncelleme kontrolü">
         <Stack spacing={1.5}>
           <Typography variant="body2" color="text.secondary">
@@ -1487,6 +1545,8 @@ const Page = () => {
           )}
         </Stack>
       </ParentCard>
+      </Box>
+      <Box sx={{ display: aktifAdim === 2 ? "block" : "none" }}>
       <ParentCard title="Sürümlü finansal tablo üretimi">
         <Stack spacing={1.5}>
           <Alert severity="info">
@@ -1810,6 +1870,8 @@ const Page = () => {
           />
         </Stack>
       </ParentCard>
+      </Box>
+      <Box sx={{ display: aktifAdim === 0 ? "block" : "none" }}>
       <ParentCard title="Sürüm ve tanım görünümü">
         <Stack spacing={2}>
           <Typography variant="body2" color="text.secondary">
@@ -2062,6 +2124,8 @@ const Page = () => {
           )}
         </Stack>
       </ParentCard>
+      </Box>
+      <Box sx={{ display: aktifAdim === 1 ? "block" : "none" }}>
       <ParentCard title="Legacy paket önizleme ve uygulama">
         <Stack spacing={3}>
           <Alert severity="info">
@@ -2199,6 +2263,41 @@ const Page = () => {
           )}
         </Stack>
       </ParentCard>
+      </Box>
+      <Paper
+        variant="outlined"
+        sx={{
+          mt: 2,
+          p: 1.5,
+          position: "sticky",
+          bottom: 12,
+          zIndex: 4,
+          bgcolor: "background.paper",
+          boxShadow: 2,
+        }}
+      >
+        <Stack direction="row" justifyContent="space-between" alignItems="center" spacing={1}>
+          <Button
+            variant="text"
+            disabled={aktifAdim === 0}
+            onClick={() => setAktifAdim((onceki) => Math.max(0, onceki - 1))}
+          >
+            Geri
+          </Button>
+          <Typography variant="caption" color="text.secondary" textAlign="center">
+            {aktifAdim + 1} / {finansalTabloAdimlari.length}
+          </Typography>
+          <Button
+            variant="contained"
+            disabled={aktifAdim === finansalTabloAdimlari.length - 1}
+            onClick={() => setAktifAdim((onceki) => Math.min(finansalTabloAdimlari.length - 1, onceki + 1))}
+          >
+            {aktifAdim < finansalTabloAdimlari.length - 1
+              ? `Sonraki: ${finansalTabloAdimlari[aktifAdim + 1].baslik}`
+              : "Akış tamamlandı"}
+          </Button>
+        </Stack>
+      </Paper>
     </PageContainer>
   );
 };
