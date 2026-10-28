@@ -147,7 +147,7 @@ export type FinansalTabloUretimIstegi = {
     }>;
     yuvarlamaBasamagi: number;
     yuvarlamaModu: number;
-    degerKaynagiBaglami?: { denetlenenId: number; yil: number; konsolidasyonMu: boolean; denetciId: number } | null;
+    degerKaynagiBaglami?: { denetlenenId: number; yil: number; konsolidasyonMu: boolean; denetciId: number; testMizanId?: string | null } | null;
   };
   tabloSabitAnahtari: string;
   donemSabitAnahtari: string;
@@ -182,6 +182,51 @@ export const createFinansalTabloUretimi = async (
   return payload as FinansalTabloUretimSonucu;
 };
 
+export type FinansalTabloUretimOnizlemeSonucu = {
+  saltOkunur: boolean;
+  arsivlendiMi: boolean;
+  basariliMi: boolean;
+  durum: number;
+  motorSurumu: string;
+  girdiSabitAnahtari: string;
+  girdiSha256: string;
+  sonuclar: Array<{
+    anahtar: {
+      tabloSabitAnahtari: string;
+      hedefTuru: number;
+      hedefSabitAnahtari: string;
+      donemSabitAnahtari: string;
+    };
+    durum: number;
+    deger?: number | null;
+    izAnahtari?: string | null;
+    hataKodu?: string | null;
+    aciklama?: string | null;
+  }>;
+  hataKodu?: string | null;
+  aciklama?: string | null;
+};
+
+export const previewFinansalTabloUretimi = async (
+  token: string,
+  istek: FinansalTabloUretimIstegi
+) => {
+  const response = await fetch(`${url}/FinansalTabloYonetimi/Uretimler/Onizle`, {
+    method: "POST",
+    headers: {
+      accept: "application/json",
+      "Content-Type": "application/json",
+      Authorization: `Bearer ${token}`,
+    },
+    body: JSON.stringify(istek),
+  });
+  const payload = await response.json().catch(() => ({}));
+  if (!response.ok) {
+    throw new Error(payload?.detail || payload?.message || payload?.Message || "Finansal tablo önizlemesi tamamlanamadı.");
+  }
+  return payload as FinansalTabloUretimOnizlemeSonucu;
+};
+
 export const getFinansalTabloUretimi = (token: string, uretimId: string) =>
   jsonGet<FinansalTabloUretimArsivSonucu>(token, `/Uretimler/${uretimId}`);
 
@@ -190,6 +235,7 @@ export const getFinansalTabloUretimGecmisi = (token: string, limit = 100) =>
 
 export type FinansalTabloPilotDurumApiSonucu = {
   yeniMotorEtkin: boolean;
+  kontrolluPilotOnayi: boolean;
   kgkTaramaZamanlayiciEtkin: boolean;
   hangfireDevreDisi: boolean;
   hangfireGelistirmedeDevreDisi: boolean;
@@ -709,6 +755,7 @@ export type KgkFormatKontrolSonucu = {
     sonDegistirmeTarihi?: string | null;
     icerikUzunlugu?: number | null;
     sha256?: string | null;
+    oncekiSha256?: string | null;
     degistiMi: boolean;
     karsilastirmaVarMi: boolean;
     hata?: string | null;
@@ -840,7 +887,7 @@ export const scanAndArchiveKgkFormats = async (
   });
   const payload = await response.json().catch(() => ({}));
   if (!response.ok) {
-    throw new Error(payload?.detail || payload?.message || payload?.Message || "KGK taramasÄ± tamamlanamadÄ±.");
+    throw new Error(payload?.detail || payload?.message || payload?.Message || "KGK taraması tamamlanamadı.");
   }
   return payload as KgkTaramaSonucu;
 };
@@ -851,7 +898,7 @@ export const getKgkScanHistory = async (token: string, limit = 20) => {
   });
   const payload = await response.json().catch(() => ({}));
   if (!response.ok) {
-    throw new Error(payload?.detail || payload?.message || payload?.Message || "KGK tarama geÃ§miÅŸi okunamadÄ±.");
+    throw new Error(payload?.detail || payload?.message || payload?.Message || "KGK tarama geçmişi okunamadı.");
   }
   return payload as KgkTaramaGecmisi[];
 };
@@ -942,6 +989,30 @@ export const compareKgkWorkbooks = async (
   const payload = await response.json().catch(() => ({}));
   if (!response.ok) {
     throw new Error(payload?.detail || payload?.message || payload?.Message || "KGK workbook karşılaştırılamadı.");
+  }
+  return payload as KgkWorkbookFarkSonucu;
+};
+
+export const compareArchivedKgkWorkbooks = async (
+  token: string,
+  istek: { url: string; oncekiSha256: string; yeniSha256: string }
+) => {
+  const response = await fetch(`${url}/FinansalTabloYonetimi/Kgk/ArsivWorkbookKarsilastir`, {
+    method: "POST",
+    headers: {
+      accept: "application/json",
+      "Content-Type": "application/json",
+      Authorization: `Bearer ${token}`,
+    },
+    body: JSON.stringify({
+      url: istek.url,
+      oncekiSha256: istek.oncekiSha256,
+      yeniSha256: istek.yeniSha256,
+    }),
+  });
+  const payload = await response.json().catch(() => ({}));
+  if (!response.ok) {
+    throw new Error(payload?.detail || payload?.message || payload?.Message || "Arşivlenmiş KGK workbook karşılaştırılamadı.");
   }
   return payload as KgkWorkbookFarkSonucu;
 };
