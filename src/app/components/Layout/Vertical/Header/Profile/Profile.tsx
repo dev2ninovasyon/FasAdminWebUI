@@ -14,6 +14,7 @@ import { IconMail } from "@tabler/icons-react";
 import { Stack } from "@mui/system";
 import ProfileItems from "./ProfileItems";
 import { resetToNull } from "@/store/user/UserSlice";
+import { apiFetch } from "@/api/apiBase";
 
 const Profile = () => {
   const dispatch = useDispatch();
@@ -27,8 +28,19 @@ const Profile = () => {
   const handleClose2 = () => {
     setAnchorEl2(null);
   };
-  const handleLogOut = () => {
-    dispatch(resetToNull(""));
+  const handleLogOut = async () => {
+    try {
+      if (user.token) {
+        await apiFetch("/Auth/logout", {
+          method: "POST",
+          token: user.token,
+        });
+      }
+    } catch (error) {
+      console.error("Çıkış yapılırken hata oluştu:", error);
+    } finally {
+      dispatch(resetToNull(""));
+    }
   };
 
   return (

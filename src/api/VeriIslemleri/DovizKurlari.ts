@@ -1,13 +1,10 @@
-import { url } from "@/api/apiBase";
+import { apiFetch } from "@/api/apiBase";
 
 export const getDovizKurlariOtuzBirAralik = async (token: string) => {
   try {
-    const response = await fetch(`${url}/Evds/DovizKurlariOtuzBirAralik`, {
+    const response = await apiFetch(`/Evds/DovizKurlariOtuzBirAralik`, {
       method: "GET",
-      headers: {
-        accept: "application/json",
-        Authorization: `Bearer ${token}`,
-      },
+      token: token
     });
     if (response.ok) {
       return response.json();
@@ -21,12 +18,9 @@ export const getDovizKurlariOtuzBirAralik = async (token: string) => {
 
 export const getDovizKurlariOtuzAralik = async (token: string) => {
   try {
-    const response = await fetch(`${url}/Evds/DovizKurlariOtuzAralik`, {
+    const response = await apiFetch(`/Evds/DovizKurlariOtuzAralik`, {
       method: "GET",
-      headers: {
-        accept: "application/json",
-        Authorization: `Bearer ${token}`,
-      },
+      token: token
     });
     if (response.ok) {
       return response.json();
@@ -40,21 +34,14 @@ export const getDovizKurlariOtuzAralik = async (token: string) => {
 
 export const createDovizKurlari = async (token: string) => {
   try {
-    const response = await fetch(`${url}/Evds/DovizKurlari`, {
+    const response = await apiFetch(`/Evds/DovizKurlari`, {
       method: "POST",
-      headers: {
-        accept: "*/*",
-        "Content-Type": "application/json",
-        Authorization: `Bearer ${token}`,
-      },
+      token: token
     });
 
-    if (response.ok) {
-      return true;
-    } else {
-      return false;
-    }
+    return response.ok;
   } catch (error) {
     console.error("Bir hata oluştu:", error);
+    return false;
   }
 };

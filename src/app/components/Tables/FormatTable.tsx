@@ -69,18 +69,19 @@ const FormatTable = () => {
     }
   };
 
-  const [rows, setRows] = useState([]);
+  const [rows, setRows] = useState<any[]>([]);
 
   const fetchData = async () => {
     try {
       const formatVerileri = await getFormatlar(user.token || "");
-
-      const newRows = formatVerileri.map((format: any) => ({
-        id: format.id,
-        adi: format.adi,
-        satirSayisi: format.satirSayisi,
-      }));
-      setRows(newRows);
+      if (formatVerileri && Array.isArray(formatVerileri)) {
+        const newRows = formatVerileri.map((format: any) => ({
+          id: format.id,
+          adi: format.adi,
+          satirSayisi: format.satirSayisi,
+        }));
+        setRows(newRows);
+      }
     } catch (error) {
       console.error("Bir hata oluştu:", error);
     }

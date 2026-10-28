@@ -1,7 +1,7 @@
 import { Box } from '@mui/material';
 
 type Props = {
-  children: JSX.Element|JSX.Element[];
+  children: React.ReactNode;
 };
 
 const InlineItemCard = ({ children }: Props) => (

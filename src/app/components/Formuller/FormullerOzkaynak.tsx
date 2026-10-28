@@ -1,7 +1,9 @@
-import { HotTable } from "@handsontable/react";
+﻿import { dictionary } from "@/utils/languages/handsontable.tr-TR";
+import "@/lib/handsontableSetup";
+
+import CustomHotTable from "@/components/HotTableWrapper";
 import { registerAllModules } from "handsontable/registry";
-import { dictionary } from "@/utils/languages/handsontable.tr-TR";
-import "handsontable/dist/handsontable.full.min.css";
+
 import { plus } from "@/utils/theme/Typography";
 import { useDispatch, useSelector } from "@/store/hooks";
 import { AppState } from "@/store/store";
@@ -454,21 +456,21 @@ const FormullerOzkaynak: React.FC<Props> = ({
       const diff = customizer.isCollapse
         ? 0
         : customizer.SidebarWidth && customizer.MiniSidebarWidth
-        ? customizer.SidebarWidth - customizer.MiniSidebarWidth
-        : 0;
+          ? customizer.SidebarWidth - customizer.MiniSidebarWidth
+          : 0;
 
       hotTableComponent.current.hotInstance.updateSettings({
         width: customizer.isCollapse
           ? "100%"
           : hotTableComponent.current.hotInstance.rootElement.clientWidth -
-            diff,
+          diff,
       });
     }
   }, [customizer.isCollapse]);
 
   return (
     <>
-      <HotTable
+      <CustomHotTable 
         style={{
           height: "100%",
           width: "100%",
@@ -508,11 +510,9 @@ const FormullerOzkaynak: React.FC<Props> = ({
         contextMenu={["alignment", "copy"]}
       />
       <Grid container marginTop={2} marginBottom={1}>
-        <Grid item xs={12} lg={10}></Grid>
+        <Grid size={{ xs: 12, lg: 10 }}></Grid>
         <Grid
-          item
-          xs={12}
-          lg={2}
+          size={{ xs: 12, lg: 2 }}
           sx={{
             display: "flex",
             justifyContent: "flex-end",
@@ -528,3 +528,5 @@ const FormullerOzkaynak: React.FC<Props> = ({
 };
 
 export default FormullerOzkaynak;
+
+

@@ -1,5 +1,6 @@
 "use client";
 
+import { usePageTitle } from "@/hooks/usePageTitle";
 import PageContainer from "@/app/components/Container/PageContainer";
 import { useDispatch, useSelector } from "@/store/hooks";
 import { AppState } from "@/store/store";
@@ -24,6 +25,7 @@ interface colors {
   disp?: string;
 }
 const Page = () => {
+  usePageTitle("Tema Ayarları");
   const customizer = useSelector((state: AppState) => state.customizer);
 
   const dispatch = useDispatch();
@@ -119,7 +121,7 @@ const Page = () => {
           </Typography>
           <Grid container spacing={2}>
             {thColors.map((thcolor) => (
-              <Grid item xs={4} key={thcolor.id}>
+              <Grid size={{ xs: 4 }} key={thcolor.id}>
                 <StyledBox onClick={() => dispatch(setTheme(thcolor.disp))}>
                   <Tooltip title={`${thcolor.disp}`} placement="top">
                     <Box
@@ -153,3 +155,4 @@ const Page = () => {
 };
 
 export default Page;
+

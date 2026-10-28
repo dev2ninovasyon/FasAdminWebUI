@@ -1,4 +1,5 @@
 "use client";
+import { usePageTitle } from "@/hooks/usePageTitle";
 import {
   Box,
   Grid,
@@ -33,6 +34,7 @@ const BCrumb = [
 ];
 
 const Page = () => {
+  usePageTitle("Genel Hesap Planı");
   const [uploading, setUploading] = useState(false);
   const [dosyaYuklendiMi, setDosyaYuklendiMi] = useState(true);
   const [progressInfos, setProgressInfos] = useState<any[]>([]);
@@ -110,7 +112,7 @@ const Page = () => {
     >
       <Breadcrumb title="Genel Hesap Planı" items={BCrumb} />
       <Grid container spacing={3}>
-        <Grid item xs={12} lg={5}>
+        <Grid size={{ xs: 12, lg: 5 }}>
           <Box
             sx={{
               height: "550px",
@@ -163,7 +165,7 @@ const Page = () => {
                   alignItems="center"
                   justifyContent="center"
                 >
-                  <Grid item sm={12} lg={12} style={{ textAlign: "center" }}>
+                  <Grid size={{ sm: 12, lg: 12 }} style={{ textAlign: "center" }}>
                     <Typography>Dosyaları buraya bırakın...</Typography>
                   </Grid>
                 </Grid>
@@ -174,7 +176,7 @@ const Page = () => {
                   alignItems="center"
                   justifyContent="center"
                 >
-                  <Grid item sm={12} lg={12} style={{ textAlign: "center" }}>
+                  <Grid size={{ sm: 12, lg: 12 }} style={{ textAlign: "center" }}>
                     {uploading ? (
                       <Stack
                         spacing={2}
@@ -210,7 +212,7 @@ const Page = () => {
             </Box>
           </Box>
         </Grid>
-        <Grid item xs={12} lg={7}>
+        <Grid size={{ xs: 12, lg: 7 }}>
           <Box
             sx={{
               height: smDown ? "610px" : "550px",
@@ -227,7 +229,7 @@ const Page = () => {
         </Grid>
       </Grid>
       <Grid container marginTop={3}>
-        <Grid item xs={12} lg={12}>
+        <Grid size={{ xs: 12, lg: 12 }}>
           <GenelHesapPlani fileType={fileType} />
         </Grid>
       </Grid>
@@ -236,3 +238,4 @@ const Page = () => {
 };
 
 export default Page;
+

@@ -1,4 +1,5 @@
 "use client";
+import { usePageTitle } from "@/hooks/usePageTitle";
 import { Button, Grid, useTheme } from "@mui/material";
 import PageContainer from "@/app/components/Container/PageContainer";
 import Breadcrumb from "@/app/components/Layout/Shared/Breadcrumb/Breadcrumb";
@@ -23,6 +24,7 @@ const BCrumb = [
 ];
 
 const Page = () => {
+  usePageTitle("Döviz Kurları");
   const user = useSelector((state: AppState) => state.userReducer);
   const customizer = useSelector((state: AppState) => state.customizer);
   const theme = useTheme();
@@ -77,9 +79,10 @@ const Page = () => {
       <Breadcrumb title="Döviz Kurları" items={BCrumb} />
       <Grid container>
         <Grid
-          item
-          xs={12}
-          lg={12}
+          size={{
+            xs: 12,
+            lg: 12
+          }}
           sx={{
             display: "flex",
             alignItems: "center",
@@ -102,12 +105,12 @@ const Page = () => {
             Verileri Çek
           </Button>
         </Grid>
-        <Grid item xs={12} marginBottom={3}>
+        <Grid size={{ xs: 12 }} marginBottom={3}>
           <DovizKurlariOtuzBirAralik
             verileriCekTiklandimi={verileriCekTiklandimi}
           />
         </Grid>
-        <Grid item xs={12}>
+        <Grid size={{ xs: 12 }}>
           <DovizKurlariOtuzAralik
             verileriCekTiklandimi={verileriCekTiklandimi}
           />
@@ -124,3 +127,4 @@ const Page = () => {
 };
 
 export default Page;
+

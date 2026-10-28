@@ -1,0 +1,44 @@
+.handsontableInput {
+  color: #2a3547 !important;
+}
+
+.htDropdownMenu,
+.htMenu {
+  z-index: 2000 !important;
+}
+
+/* Hücre dikey hizalama ve ikonlar için göreceli konumlandırma */
+.handsontable td {
+  position: relative !important;
+  vertical-align: middle !important;
+  padding-right: 25px !important;
+  /* İkonun yazıya binmesini engeller */
+}
+
+/* Açılır menü ikonu */
+.htAutocompleteArrow {
+  position: absolute !important;
+  right: 5px !important;
+  top: 50% !important;
+  transform: translateY(-50%) !important;
+  color: #2a3547 !important;
+  font-size: 0 !important;
+  cursor: pointer !important;
+  display: block !important;
+  z-index: 10 !important;
+  width: 20px !important;
+  height: 20px !important;
+  display: flex !important;
+  align-items: center !important;
+  justify-content: center !important;
+}
+
+.htAutocompleteArrow:after {
+  content: '▽' !important;
+  /* Outline üçgen */
+  font-size: 18px !important;
+  /* Biraz büyütüldü */
+  color: #2a3547 !important;
+  display: block !important;
+  line-height: 1 !important;
+}

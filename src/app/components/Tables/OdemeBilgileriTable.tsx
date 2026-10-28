@@ -86,7 +86,7 @@ function createData(
   };
 }
 
-function Row(props: { row: ReturnType<typeof createData> }) {
+const Row = (props: { row: ReturnType<typeof createData>, id?: string }) => {
   const [anchorEl, setAnchorEl] = React.useState<null | HTMLElement>(null);
   const isAnchorOpen = Boolean(anchorEl);
 
@@ -98,14 +98,9 @@ function Row(props: { row: ReturnType<typeof createData> }) {
     setAnchorEl(null);
   };
 
-  const { row } = props;
+  const { row, id: pathId } = props;
 
   const [open, setOpen] = React.useState(false);
-
-  const pathname = usePathname();
-  const segments = pathname.split("/");
-  const idIndex = segments.indexOf("DenetciOdemeBilgileri") + 1;
-  const pathId = segments[idIndex];
 
   const router = useRouter();
 
@@ -210,10 +205,9 @@ function Row(props: { row: ReturnType<typeof createData> }) {
                       : theme.palette.grey.A200,
                   p: "5px 15px",
                   color: (theme) =>
-                    `${
-                      theme.palette.mode === "dark"
-                        ? theme.palette.primary.dark
-                        : "rgba(0, 0, 0, 0.87)"
+                    `${theme.palette.mode === "dark"
+                      ? theme.palette.primary.dark
+                      : "rgba(0, 0, 0, 0.87)"
                     }`,
                 }}
               >
@@ -323,15 +317,12 @@ function Row(props: { row: ReturnType<typeof createData> }) {
   );
 }
 
-const OdemeBilgileriTable = () => {
+const OdemeBilgileriTable = ({ id }: { id?: string }) => {
   const user = useSelector((state: AppState) => state.userReducer);
 
   const theme = useTheme();
 
-  const pathname = usePathname();
-  const segments = pathname.split("/");
-  const idIndex = segments.indexOf("DenetciOdemeBilgileri") + 1;
-  const pathId = segments[idIndex];
+  const pathId = id;
 
   const [rows, setRows] = React.useState<ReturnType<typeof createData>[]>([]);
 
@@ -347,47 +338,55 @@ const OdemeBilgileriTable = () => {
       );
 
       const row = createData(
-        denetciOdemeBilgileri.denetci.firmaAdi,
-        denetciOdemeBilgileri.baslangicTarihi
-          .split("T")[0]
-          .split("-")
-          .reverse()
-          .join("."),
-        denetciOdemeBilgileri.bitisTarihi
-          .split("T")[0]
-          .split("-")
-          .reverse()
-          .join("."),
-        denetciOdemeBilgileri.satisTarihi
-          .split("T")[0]
-          .split("-")
-          .reverse()
-          .join("."),
-        denetciOdemeBilgileri.sirketKota,
-        denetciOdemeBilgileri.diskKota,
-        denetciOdemeBilgileri.enflasyonKota,
-        denetciOdemeBilgileri.ekKota,
-        denetciOdemeBilgileri.bobiModulu,
-        denetciOdemeBilgileri.tfrsModulu,
-        denetciOdemeBilgileri.kumiModulu,
-        denetciOdemeBilgileri.konsolideModulu,
-        denetciOdemeBilgileri.bddkModulu,
-        denetciOdemeBilgileri.enflasyonModulu,
-        denetciOdemeBilgileri.mevcutFirmaSayisi,
-        denetciOdemeBilgileri.soloFirmaSayisi,
-        denetciOdemeBilgileri.konsolideAnaFirmaSayisi,
-        denetciOdemeBilgileri.konsolideYavruFirmaSayisi
+        denetciOdemeBilgileri?.denetci?.firmaAdi || "Bilinmiyor",
+        denetciOdemeBilgileri?.baslangicTarihi
+          ? denetciOdemeBilgileri.baslangicTarihi
+            .split("T")[0]
+            .split("-")
+            .reverse()
+            .join(".")
+          : "-",
+        denetciOdemeBilgileri?.bitisTarihi
+          ? denetciOdemeBilgileri.bitisTarihi
+            .split("T")[0]
+            .split("-")
+            .reverse()
+            .join(".")
+          : "-",
+        denetciOdemeBilgileri?.satisTarihi
+          ? denetciOdemeBilgileri.satisTarihi
+            .split("T")[0]
+            .split("-")
+            .reverse()
+            .join(".")
+          : "-",
+        denetciOdemeBilgileri?.sirketKota || 0,
+        denetciOdemeBilgileri?.diskKota || 0,
+        denetciOdemeBilgileri?.enflasyonKota || 0,
+        denetciOdemeBilgileri?.ekKota || 0,
+        denetciOdemeBilgileri?.bobiModulu || false,
+        denetciOdemeBilgileri?.tfrsModulu || false,
+        denetciOdemeBilgileri?.kumiModulu || false,
+        denetciOdemeBilgileri?.konsolideModulu || false,
+        denetciOdemeBilgileri?.bddkModulu || false,
+        denetciOdemeBilgileri?.enflasyonModulu || false,
+        denetciOdemeBilgileri?.mevcutFirmaSayisi || 0,
+        denetciOdemeBilgileri?.soloFirmaSayisi || 0,
+        denetciOdemeBilgileri?.konsolideAnaFirmaSayisi || 0,
+        denetciOdemeBilgileri?.konsolideYavruFirmaSayisi || 0
       );
 
-      row.kotaGecmisi = denetciKotaGecmisi.map((kota: any) => ({
-        id: kota.id,
-        tarih: kota.tarih.split("T")[0].split("-").reverse().join("."),
-        sirketKota: kota.sirketKota,
-        diskKota: kota.diskKota,
-        enflasyonKota: kota.enflasyonKota,
-        ekKota: kota.ekKota,
-        aciklama: kota.aciklama,
-      }));
+      if (denetciKotaGecmisi && Array.isArray(denetciKotaGecmisi)) {
+        row.kotaGecmisi = denetciKotaGecmisi.map((kota: any) => ({
+          id: kota.id,
+          tarih: kota.tarih ? kota.tarih.split("T")[0].split("-").reverse().join(".") : "-",
+          sirketKota: kota.sirketKota || 0,
+          diskKota: kota.diskKota || 0,
+          enflasyonKota: kota.enflasyonKota || 0,
+          ekKota: kota.ekKota || 0,
+          aciklama: kota.aciklama || "",
+        }));
+      }
 
       setRows([row]);
     } catch (error) {
@@ -455,21 +454,19 @@ const OdemeBilgileriTable = () => {
             </TableHead>
             <TableBody>
               {rows.map((row) => (
-                <Row key={row.denetciFirmaAdi} row={row} />
+                <Row key={row.denetciFirmaAdi} row={row} id={pathId} />
               ))}
             </TableBody>
           </Table>
         </TableContainer>
         {rows.map((row) => (
           <Grid container rowSpacing={3} key={row.denetciFirmaAdi}>
-            <Grid item xs={12} sm={3} display="flex" alignItems="center">
-              <Typography variant="h6">Modüller: {}</Typography>
+            <Grid size={{ xs: 12, sm: 3 }} display="flex" alignItems="center">
+              <Typography variant="h6">Modüller: { }</Typography>
             </Grid>
 
             <Grid
-              item
-              xs={1.5}
-              sm={9}
+              size={{ xs: 1.5, sm: 9 }}
               display="flex"
               alignItems="center"
               justifyContent={"space-between"}
@@ -556,39 +553,33 @@ const OdemeBilgileriTable = () => {
               />
             </Grid>
 
-            <Grid item xs={12} sm={3} display="flex" alignItems="center">
+            <Grid size={{ xs: 12, sm: 3 }} display="flex" alignItems="center">
               <Typography variant="h6">Mevcut Firma Sayısı:</Typography>
             </Grid>
             <Grid
-              item
-              xs={12}
-              sm={9}
+              size={{ xs: 12, sm: 9 }}
               pl={1.5}
               display="flex"
               alignItems="center"
             >
               <Typography variant="h6">{row.mevcutFirmaSayisi}</Typography>
             </Grid>
-            <Grid item xs={12} sm={3} display="flex" alignItems="center">
+            <Grid size={{ xs: 12, sm: 3 }} display="flex" alignItems="center">
               <Typography variant="h6">Solo Firma Sayısı:</Typography>
             </Grid>
             <Grid
-              item
-              xs={12}
-              sm={9}
+              size={{ xs: 12, sm: 9 }}
               pl={1.5}
               display="flex"
               alignItems="center"
             >
               <Typography variant="h6">{row.soloFirmaSayisi}</Typography>
             </Grid>
-            <Grid item xs={12} sm={3} display="flex" alignItems="center">
+            <Grid size={{ xs: 12, sm: 3 }} display="flex" alignItems="center">
               <Typography variant="h6">Konsolide Ana Şirket Sayısı:</Typography>
             </Grid>
             <Grid
-              item
-              xs={12}
-              sm={9}
+              size={{ xs: 12, sm: 9 }}
               pl={1.5}
               display="flex"
               alignItems="center"
@@ -597,15 +588,13 @@ const OdemeBilgileriTable = () => {
                 {row.konsolideAnaFirmaSayisi}
               </Typography>
             </Grid>
-            <Grid item xs={12} sm={3} display="flex" alignItems="center">
+            <Grid size={{ xs: 12, sm: 3 }} display="flex" alignItems="center">
               <Typography variant="h6">
                 Konsolide Yavru Şirket Firma Sayısı:
               </Typography>
             </Grid>
             <Grid
-              item
-              xs={12}
-              sm={9}
+              size={{ xs: 12, sm: 9 }}
               pl={1.5}
               display="flex"
               alignItems="center"

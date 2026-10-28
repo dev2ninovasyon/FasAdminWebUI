@@ -10,7 +10,7 @@ interface BreadCrumbType {
   subtitle?: string;
   items?: any[];
   title: string;
-  children?: JSX.Element;
+  children?: React.ReactNode;
 }
 
 const Breadcrumb = ({ subtitle, items, title, children }: BreadCrumbType) => (
@@ -18,14 +18,14 @@ const Breadcrumb = ({ subtitle, items, title, children }: BreadCrumbType) => (
     container
     sx={{
       backgroundColor: "primary.light",
-      borderRadius: (theme: Theme) => theme.shape.borderRadius / 4,
+      borderRadius: (theme: Theme) => (theme.shape.borderRadius as number) / 4,
       p: "30px 25px 20px",
       marginBottom: "30px",
       position: "relative",
       overflow: "hidden",
     }}
   >
-    <Grid item xs={12} sm={6} lg={8} mb={1}>
+    <Grid size={{ xs: 12, sm: 6, lg: 8 }} mb={1}>
       <Typography variant="h4">{title}</Typography>
       <Typography
         color="textSecondary"
@@ -50,20 +50,20 @@ const Breadcrumb = ({ subtitle, items, title, children }: BreadCrumbType) => (
       >
         {items
           ? items.map((item) => (
-              <div key={item.title}>
-                {item.to ? (
-                  <NextLink href={item.to} passHref>
-                    <Typography color="textSecondary">{item.title}</Typography>
-                  </NextLink>
-                ) : (
-                  <Typography color="textPrimary">{item.title}</Typography>
-                )}
-              </div>
-            ))
+            <div key={item.title}>
+              {item.to ? (
+                <NextLink href={item.to} passHref>
+                  <Typography color="textSecondary">{item.title}</Typography>
+                </NextLink>
+              ) : (
+                <Typography color="textPrimary">{item.title}</Typography>
+              )}
+            </div>
+          ))
           : ""}
       </Breadcrumbs>
     </Grid>
-    <Grid item xs={12} sm={6} lg={4} display="flex" alignItems="flex-end">
+    <Grid size={{ xs: 12, sm: 6, lg: 4 }} display="flex" alignItems="flex-end">
       <Box
         sx={{
           display: { xs: "none", md: "block", lg: "flex" },

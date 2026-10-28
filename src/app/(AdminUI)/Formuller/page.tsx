@@ -1,4 +1,5 @@
 "use client";
+import { usePageTitle } from "@/hooks/usePageTitle";
 import { Box, Button, Grid, MenuItem, useMediaQuery } from "@mui/material";
 import { useState } from "react";
 import PageContainer from "@/app/components/Container/PageContainer";
@@ -19,6 +20,7 @@ const BCrumb = [
 ];
 
 const Page = () => {
+  usePageTitle("Formüller");
   const smDown = useMediaQuery((theme: any) => theme.breakpoints.down("sm"));
 
   const [denetimTuru, setDenetimTuru] = useState("Bobi");
@@ -42,9 +44,10 @@ const Page = () => {
       <Breadcrumb title="Formüller" items={BCrumb} />
       <Grid container spacing={3}>
         <Grid
-          item
-          xs={12}
-          lg={12}
+          size={{
+            xs: 12,
+            lg: 12,
+          }}
           sx={{
             display: "flex",
             flexDirection: smDown ? "column" : "row",
@@ -131,7 +134,7 @@ const Page = () => {
             </Button>
           </Box>
         </Grid>
-        <Grid item xs={12} lg={12}>
+        <Grid size={{ xs: 12, lg: 12 }}>
           {finansalTabloAdi == "ozkaynak" ? (
             <FormullerOzkaynak
               denetimTuru={denetimTuru}

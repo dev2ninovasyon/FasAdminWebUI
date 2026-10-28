@@ -10,15 +10,10 @@ import {
 import { useSelector } from "@/store/hooks";
 import { AppState } from "@/store/store";
 
-const DenetciDuzenleForm = () => {
+const DenetciDuzenleForm = ({ id }: { id?: string }) => {
   const user = useSelector((state: AppState) => state.userReducer);
 
-  const pathname = usePathname();
-  const segments = pathname.split("/");
-  const idIndex = segments.indexOf("DenetciDuzenle") + 1;
-  const pathId = segments[idIndex];
-
-  const id = pathId;
+  const pathId = id;
   const [firmaAdi, setFirmaAdi] = useState(0);
   const [firmaUnvani, setFirmaUnvani] = useState("");
   const [adres, setAdres] = useState("");
@@ -87,7 +82,7 @@ const DenetciDuzenleForm = () => {
 
   return (
     <Grid container spacing={3}>
-      <Grid item xs={12} sm={3} display="flex" alignItems="center">
+      <Grid size={{ xs: 12, sm: 3 }} display="flex" alignItems="center">
         <CustomFormLabel
           htmlFor="firmaAdi"
           sx={{ mt: 0, mb: { xs: "-10px", sm: 0 } }}
@@ -95,7 +90,7 @@ const DenetciDuzenleForm = () => {
           Firma Adı
         </CustomFormLabel>
       </Grid>
-      <Grid item xs={12} sm={9}>
+      <Grid size={{ xs: 12, sm: 9 }}>
         <CustomTextField
           id="firmaAdi"
           value={firmaAdi}
@@ -103,7 +98,7 @@ const DenetciDuzenleForm = () => {
           onChange={(e: any) => setFirmaAdi(e.target.value)}
         />
       </Grid>
-      <Grid item xs={12} sm={3} display="flex" alignItems="center">
+      <Grid size={{ xs: 12, sm: 3 }} display="flex" alignItems="center">
         <CustomFormLabel
           htmlFor="firmaUnvani"
           sx={{ mt: 0, mb: { xs: "-10px", sm: 0 } }}
@@ -111,7 +106,7 @@ const DenetciDuzenleForm = () => {
           Firma Ünvanı
         </CustomFormLabel>
       </Grid>
-      <Grid item xs={12} sm={9}>
+      <Grid size={{ xs: 12, sm: 9 }}>
         <CustomTextField
           id="firmaUnvani"
           value={firmaUnvani}
@@ -119,7 +114,7 @@ const DenetciDuzenleForm = () => {
           onChange={(e: any) => setFirmaUnvani(e.target.value)}
         />
       </Grid>
-      <Grid item xs={12} sm={3} display="flex" alignItems="center">
+      <Grid size={{ xs: 12, sm: 3 }} display="flex" alignItems="center">
         <CustomFormLabel
           htmlFor="adres"
           sx={{ mt: 0, mb: { xs: "-10px", sm: 0 } }}
@@ -127,7 +122,7 @@ const DenetciDuzenleForm = () => {
           Adres
         </CustomFormLabel>
       </Grid>
-      <Grid item xs={12} sm={9}>
+      <Grid size={{ xs: 12, sm: 9 }}>
         <CustomTextField
           id="adres"
           value={adres}
@@ -135,7 +130,7 @@ const DenetciDuzenleForm = () => {
           onChange={(e: any) => setAdres(e.target.value)}
         />
       </Grid>
-      <Grid item xs={12} sm={3} display="flex" alignItems="center">
+      <Grid size={{ xs: 12, sm: 3 }} display="flex" alignItems="center">
         <CustomFormLabel
           htmlFor="il"
           sx={{ mt: 0, mb: { xs: "-10px", sm: 0 } }}
@@ -143,7 +138,7 @@ const DenetciDuzenleForm = () => {
           İl
         </CustomFormLabel>
       </Grid>
-      <Grid item xs={12} sm={9}>
+      <Grid size={{ xs: 12, sm: 9 }}>
         <CustomTextField
           id="il"
           value={il}
@@ -151,7 +146,7 @@ const DenetciDuzenleForm = () => {
           onChange={(e: any) => setIl(e.target.value)}
         />
       </Grid>
-      <Grid item xs={12} sm={3} display="flex" alignItems="center">
+      <Grid size={{ xs: 12, sm: 3 }} display="flex" alignItems="center">
         <CustomFormLabel
           htmlFor="tel"
           sx={{ mt: 0, mb: { xs: "-10px", sm: 0 } }}
@@ -159,7 +154,7 @@ const DenetciDuzenleForm = () => {
           Tel
         </CustomFormLabel>
       </Grid>
-      <Grid item xs={12} sm={9}>
+      <Grid size={{ xs: 12, sm: 9 }}>
         <CustomTextField
           id="tel"
           value={tel}
@@ -167,7 +162,7 @@ const DenetciDuzenleForm = () => {
           onChange={(e: any) => setTel(e.target.value)}
         />
       </Grid>
-      <Grid item xs={12} sm={3} display="flex" alignItems="center">
+      <Grid size={{ xs: 12, sm: 3 }} display="flex" alignItems="center">
         <CustomFormLabel
           htmlFor="fax"
           sx={{ mt: 0, mb: { xs: "-10px", sm: 0 } }}
@@ -175,7 +170,7 @@ const DenetciDuzenleForm = () => {
           Fax
         </CustomFormLabel>
       </Grid>
-      <Grid item xs={12} sm={9}>
+      <Grid size={{ xs: 12, sm: 9 }}>
         <CustomTextField
           id="fax"
           value={fax}
@@ -183,7 +178,7 @@ const DenetciDuzenleForm = () => {
           onChange={(e: any) => setFax(e.target.value)}
         />
       </Grid>
-      <Grid item xs={12} sm={3} display="flex" alignItems="center">
+      <Grid size={{ xs: 12, sm: 3 }} display="flex" alignItems="center">
         <CustomFormLabel
           htmlFor="email"
           sx={{ mt: 0, mb: { xs: "-10px", sm: 0 } }}
@@ -191,7 +186,7 @@ const DenetciDuzenleForm = () => {
           Email
         </CustomFormLabel>
       </Grid>
-      <Grid item xs={12} sm={9}>
+      <Grid size={{ xs: 12, sm: 9 }}>
         <CustomTextField
           id="email"
           value={email}
@@ -199,7 +194,7 @@ const DenetciDuzenleForm = () => {
           onChange={(e: any) => setEmail(e.target.value)}
         />
       </Grid>
-      <Grid item xs={12} sm={3} display="flex" alignItems="center">
+      <Grid size={{ xs: 12, sm: 3 }} display="flex" alignItems="center">
         <CustomFormLabel
           htmlFor="web"
           sx={{ mt: 0, mb: { xs: "-10px", sm: 0 } }}
@@ -207,7 +202,7 @@ const DenetciDuzenleForm = () => {
           Web Sitesi
         </CustomFormLabel>
       </Grid>
-      <Grid item xs={12} sm={9}>
+      <Grid size={{ xs: 12, sm: 9 }}>
         <CustomTextField
           id="web"
           value={web}
@@ -215,7 +210,7 @@ const DenetciDuzenleForm = () => {
           onChange={(e: any) => setWeb(e.target.value)}
         />
       </Grid>
-      <Grid item xs={12} sm={3} display="flex" alignItems="center">
+      <Grid size={{ xs: 12, sm: 3 }} display="flex" alignItems="center">
         <CustomFormLabel
           htmlFor="vergiNo"
           sx={{ mt: 0, mb: { xs: "-10px", sm: 0 } }}
@@ -223,7 +218,7 @@ const DenetciDuzenleForm = () => {
           Vergi Numarası
         </CustomFormLabel>
       </Grid>
-      <Grid item xs={12} sm={9}>
+      <Grid size={{ xs: 12, sm: 9 }}>
         <CustomTextField
           id="vergiNo"
           value={vergiNo}
@@ -232,7 +227,7 @@ const DenetciDuzenleForm = () => {
         />
       </Grid>
 
-      <Grid item xs={12} sm={3} display="flex" alignItems="center">
+      <Grid size={{ xs: 12, sm: 3 }} display="flex" alignItems="center">
         <CustomFormLabel
           htmlFor="vergiDairesi"
           sx={{ mt: 0, mb: { xs: "-10px", sm: 0 } }}
@@ -240,7 +235,7 @@ const DenetciDuzenleForm = () => {
           Vergi Dairesi
         </CustomFormLabel>
       </Grid>
-      <Grid item xs={12} sm={9}>
+      <Grid size={{ xs: 12, sm: 9 }}>
         <CustomTextField
           id="vergiDairesi"
           value={vergiDairesi}
@@ -248,7 +243,7 @@ const DenetciDuzenleForm = () => {
           onChange={(e: any) => setVergidairesi(e.target.value)}
         />
       </Grid>
-      <Grid item xs={12} sm={3} display="flex" alignItems="center">
+      <Grid size={{ xs: 12, sm: 3 }} display="flex" alignItems="center">
         <CustomFormLabel
           htmlFor="ticaretSicilNo"
           sx={{ mt: 0, mb: { xs: "-10px", sm: 0 } }}
@@ -256,7 +251,7 @@ const DenetciDuzenleForm = () => {
           Ticaret Sicil Numarası
         </CustomFormLabel>
       </Grid>
-      <Grid item xs={12} sm={9}>
+      <Grid size={{ xs: 12, sm: 9 }}>
         <CustomTextField
           id="ticaretSicilNo"
           value={ticaretSicilNo}
@@ -265,8 +260,8 @@ const DenetciDuzenleForm = () => {
         />
       </Grid>
 
-      <Grid item xs={12} sm={3}></Grid>
-      <Grid item xs={12} sm={9}>
+      <Grid size={{ xs: 12, sm: 3 }}></Grid>
+      <Grid size={{ xs: 12, sm: 9 }}>
         <Button variant="contained" color="primary" onClick={handleButtonClick}>
           Denetçi Düzenle
         </Button>

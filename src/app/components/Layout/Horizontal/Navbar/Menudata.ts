@@ -178,5 +178,19 @@ const Menuitems = [
       },
     ],
   },
+   {
+    id: uniqueId(),
+    title: "Çalışma Kağıtları",
+    icon: IconFileAnalytics,
+    href: "//",
+       children: [
+          {
+            id: uniqueId(),
+            title: "Bağımsız Denetim Metodolojisi",
+            icon: IconPoint,
+            href: "/StandartCalismaKagitlari/BagimsizDenetimMetodolojisi",
+          },
+    ],
+  },
 ];
 export default Menuitems;

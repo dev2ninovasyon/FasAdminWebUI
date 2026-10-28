@@ -10,17 +10,13 @@ import {
 import { useSelector } from "@/store/hooks";
 import { AppState } from "@/store/store";
 
-const FormatDuzenleForm = () => {
+const FormatDuzenleForm = ({ id }: { id?: string }) => {
   const user = useSelector((state: AppState) => state.userReducer);
 
-  const pathname = usePathname();
-  const segments = pathname.split("/");
-  const idIndex = segments.indexOf("FormatDuzenle") + 1;
-  const pathId = segments[idIndex];
+  const pathId = id;
 
   const router = useRouter();
 
-  const id = pathId;
   const [adi, setAdi] = useState("");
   const [satirSayisi, setSatirSayisi] = useState(0);
 
@@ -57,7 +53,7 @@ const FormatDuzenleForm = () => {
 
   return (
     <Grid container spacing={3}>
-      <Grid item xs={12} sm={3} display="flex" alignItems="center">
+      <Grid size={{ xs: 12, sm: 3 }} display="flex" alignItems="center">
         <CustomFormLabel
           htmlFor="formatAdi"
           sx={{ mt: 0, mb: { xs: "-10px", sm: 0 } }}
@@ -65,7 +61,7 @@ const FormatDuzenleForm = () => {
           Format Adı
         </CustomFormLabel>
       </Grid>
-      <Grid item xs={12} sm={9}>
+      <Grid size={{ xs: 12, sm: 9 }}>
         <CustomTextField
           id="formatAdi"
           value={adi}
@@ -73,7 +69,7 @@ const FormatDuzenleForm = () => {
           onChange={(e: any) => setAdi(e.target.value)}
         />
       </Grid>
-      <Grid item xs={12} sm={3} display="flex" alignItems="center">
+      <Grid size={{ xs: 12, sm: 3 }} display="flex" alignItems="center">
         <CustomFormLabel
           htmlFor="satirSayisi"
           sx={{ mt: 0, mb: { xs: "-10px", sm: 0 } }}
@@ -81,7 +77,7 @@ const FormatDuzenleForm = () => {
           Satır Sayısı
         </CustomFormLabel>
       </Grid>
-      <Grid item xs={12} sm={9}>
+      <Grid size={{ xs: 12, sm: 9 }}>
         <CustomTextField
           id="satirSayisi"
           value={satirSayisi}
@@ -90,8 +86,8 @@ const FormatDuzenleForm = () => {
         />
       </Grid>
 
-      <Grid item xs={12} sm={3}></Grid>
-      <Grid item xs={12} sm={9}>
+      <Grid size={{ xs: 12, sm: 3 }}></Grid>
+      <Grid size={{ xs: 12, sm: 9 }}>
         <Button variant="contained" color="primary" onClick={handleButtonClick}>
           Format Düzenle
         </Button>

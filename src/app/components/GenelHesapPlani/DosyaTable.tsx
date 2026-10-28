@@ -19,7 +19,7 @@ import {
 import { Stack } from "@mui/system";
 import { useSelector } from "@/store/hooks";
 import { AppState } from "@/store/store";
-import TablePaginationActions from "@mui/material/TablePagination/TablePaginationActions";
+import TablePaginationActions from "@mui/material/TablePaginationActions";
 import { ConfirmPopUpComponent } from "@/app/components/PopUps/ConfirmPopUpComponent";
 import {
   deleteDosyaBilgileri,
@@ -68,7 +68,13 @@ const DosyaTable: React.FC<Props> = ({
 
   const fetchData = async () => {
     try {
-      const dosyaBilgileri = await getDosyaBilgileri(user.token || "");
+      const dosyaBilgileri = await getDosyaBilgileri(
+        user.token || "",
+        user.denetciId || 0,
+        user.yil || 0,
+        user.denetlenenId || 0,
+        fileType
+      );
       const newRows = dosyaBilgileri.map((dosya: DosyaType) => ({
         id: dosya.id,
         adi: dosya.adi,
@@ -224,9 +230,9 @@ const DosyaTable: React.FC<Props> = ({
           <TableBody>
             {(rowsPerPage > 0
               ? filteredRows.slice(
-                  page * rowsPerPage,
-                  page * rowsPerPage + rowsPerPage
-                )
+                page * rowsPerPage,
+                page * rowsPerPage + rowsPerPage
+              )
               : filteredRows
             ).map((row, index) => {
               const isItemSelected = isSelected(row.id);
@@ -251,7 +257,7 @@ const DosyaTable: React.FC<Props> = ({
                   <TableCell scope="row">
                     <Typography variant="h6" color="textSecondary">
                       {fileType == "E-DefterKebir" ||
-                      fileType == "E-DefterYevmiye"
+                        fileType == "E-DefterYevmiye"
                         ? row.adi.split("-").slice(1).join("-")
                         : row.adi}
                     </Typography>
@@ -273,18 +279,18 @@ const DosyaTable: React.FC<Props> = ({
                           row.durum === "Tamamlandı"
                             ? (theme) => theme.palette.success.light
                             : row.durum === "İşleniyor"
-                            ? (theme) => theme.palette.info.light
-                            : row.durum === "Sıraya Alındı."
-                            ? (theme) => theme.palette.warning.light
-                            : (theme) => theme.palette.error.light,
+                              ? (theme) => theme.palette.info.light
+                              : row.durum === "Sıraya Alındı."
+                                ? (theme) => theme.palette.warning.light
+                                : (theme) => theme.palette.error.light,
                         color:
                           row.durum === "Tamamlandı"
                             ? (theme) => theme.palette.success.main
                             : row.durum === "İşleniyor"
-                            ? (theme) => theme.palette.info.main
-                            : row.durum === "Sıraya Alındı."
-                            ? (theme) => theme.palette.warning.main
-                            : (theme) => theme.palette.error.main,
+                              ? (theme) => theme.palette.info.main
+                              : row.durum === "Sıraya Alındı."
+                                ? (theme) => theme.palette.warning.main
+                                : (theme) => theme.palette.error.main,
                       }}
                     />
                   </TableCell>
@@ -340,8 +346,7 @@ const DosyaTable: React.FC<Props> = ({
               ActionsComponent={TablePaginationActions}
               labelRowsPerPage="Sayfa başına satır sayısı:"
               labelDisplayedRows={({ from, to, count }) =>
-                `${from}-${to} arası / ${
-                  count !== -1 ? count : `daha fazla`
+                `${from}-${to} arası / ${count !== -1 ? count : `daha fazla`
                 } satır`
               }
               sx={{ mt: 0.5, mr: "2px", border: 0 }}
