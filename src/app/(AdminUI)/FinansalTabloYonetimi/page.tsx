@@ -154,6 +154,7 @@ const Page = () => {
   const user = useSelector((state: AppState) => state.userReducer);
   const [aktifAdim, setAktifAdim] = useState(0);
   const [gelismisPaketAraclariAcik, setGelismisPaketAraclariAcik] = useState(false);
+  const [teknikDuzenlemeAraclariAcik, setTeknikDuzenlemeAraclariAcik] = useState(false);
   const [surumId, setSurumId] = useState("");
   const [eszamanlilikSurumu, setEszamanlilikSurumu] = useState("");
   const [kaynakSha256, setKaynakSha256] = useState("");
@@ -208,7 +209,7 @@ const Page = () => {
   const [uretimGirdiSha256, setUretimGirdiSha256] = useState("");
   const [uretimSnapshotSha256, setUretimSnapshotSha256] = useState("");
   const [uretimGirdiAnahtari, setUretimGirdiAnahtari] = useState("MIZAN");
-  const [uretimDenetlenenId, setUretimDenetlenenId] = useState("");
+  const [uretimDenetlenenId, setUretimDenetlenenId] = useState("999999");
   const [uretimYil, setUretimYil] = useState(String(new Date().getFullYear()));
   const [uretimDenetciId, setUretimDenetciId] = useState("");
   const [uretimKonsolide, setUretimKonsolide] = useState(false);
@@ -414,7 +415,7 @@ const Page = () => {
   };
 
   const teknikDogrula = async () => {
-    if (!user.token || !secilenSurum || surumDurumKodu(secilenSurum.durum) !== 1) return;
+    if (!user.token || !secilenSurum || surumDurumKodu(secilenSurum.durum) !== 1) return null;
     setDogrulamaYukleniyor(true);
     setTanimHatasi("");
     try {
@@ -424,11 +425,13 @@ const Page = () => {
         secilenSurum.eszamanlilikSurumu
       );
       setDogrulamaSonucu(data);
+      return data;
     } catch (error) {
       setTanimHatasi(error instanceof Error ? error.message : "Taslak sürüm teknik olarak doğrulanamadı.");
     } finally {
       setDogrulamaYukleniyor(false);
     }
+    return null;
   };
 
   const kalemDuzenle = (kalem: NonNullable<FinansalSurumDetay>["tablolar"][number]["kalemler"][number]) => {
@@ -1411,6 +1414,54 @@ const Page = () => {
     }
   };
 
+  const seciliSurumTaslakMi = surumDurumKodu(secilenSurum?.durum ?? 0) === 1;
+  const seciliSurumYayindaMi = surumDurumKodu(secilenSurum?.durum ?? 0) === 3;
+  const teknikDogrulamaGuncelMi = Boolean(
+    dogrulamaSonucu && secilenSurum &&
+    dogrulamaSonucu.surumId === secilenSurum.id &&
+    dogrulamaSonucu.eszamanlilikSurumu === secilenSurum.eszamanlilikSurumu
+  );
+  const teknikDogrulamaBasariliMi = teknikDogrulamaGuncelMi && dogrulamaSonucu?.gecerliMi === true;
+  const onizlemeBasariliMi = uretimOnizlemeSonucu?.basariliMi === true;
+  const yonlendirmeYukleniyor = tanimYukleniyor || dogrulamaYukleniyor || testMizanYukleniyor || uretimOnizlemeYukleniyor;
+
+  const akilliYonlendirme = useMemo(() => {
+    if (tanimYukleniyor) return { seviye: "info" as const, baslik: "Tanımlar kontrol ediliyor", aciklama: "Uygun tanım seti ve sürüm otomatik seçiliyor.", eylem: "bekle", dugme: "Kontrol ediliyor" };
+    if (!secilenSet || !secilenSurum) return { seviye: "error" as const, baslik: "Kullanılabilir tanım bulunamadı", aciklama: "Filtreleri temizleyin veya aktif tanım setlerini kontrol edin.", eylem: "tanim", dugme: "Tanım seçimine dön" };
+    if (seciliSurumTaslakMi && !teknikDogrulamaGuncelMi) return { seviye: "warning" as const, baslik: "Taslak doğrulanmalı", aciklama: "Sistem tablo, kalem ve formülleri teknik olarak kontrol edecek. Bu işlem veri değiştirmez.", eylem: "dogrula", dugme: "Otomatik doğrula ve devam et" };
+    if (seciliSurumTaslakMi && !teknikDogrulamaBasariliMi) return { seviye: "error" as const, baslik: "Düzeltilmesi gereken tanımlar var", aciklama: "Sorunlu tablo ve formüller aşağıda gösterildi. Düzeltmeden yayınlama yapılamaz.", eylem: "tanim", dugme: "Sorunları incele" };
+    if (!seciliTestMizani) return { seviye: "info" as const, baslik: "İzole test mizanı hazırlanmalı", aciklama: "Varsayılan dengeli örnek mizan oluşturulacak; gerçek mizan ve eski finansal tablolar etkilenmeyecek.", eylem: "test", dugme: "Test verisini otomatik hazırla" };
+    if (!onizlemeBasariliMi) return { seviye: uretimOnizlemeSonucu ? "warning" as const : "info" as const, baslik: uretimOnizlemeSonucu ? "Önizleme yeniden çalıştırılmalı" : "Yeni motor önizlemeye hazır", aciklama: uretimOnizlemeSonucu?.aciklama || "Seçili tanım ve test mizanıyla salt-okunur finansal tablo üretilecek.", eylem: "onizle", dugme: "Önizlemeyi çalıştır" };
+    return { seviye: "success" as const, baslik: "Admin testi başarıyla tamamlandı", aciklama: `${uretimOnizlemeSonucu?.sonuclar.length ?? 0} finansal tablo sonucu üretildi; eski akış ve üretim arşivi değiştirilmedi.`, eylem: "kgk", dugme: "KGK kontrolüne geç" };
+  }, [tanimYukleniyor, secilenSet, secilenSurum, seciliSurumTaslakMi, teknikDogrulamaGuncelMi, teknikDogrulamaBasariliMi, seciliTestMizani, onizlemeBasariliMi, uretimOnizlemeSonucu]);
+
+  const onerilenIslemiCalistir = async () => {
+    if (akilliYonlendirme.eylem === "tanim") return setAktifAdim(0);
+    if (akilliYonlendirme.eylem === "dogrula") {
+      setAktifAdim(0);
+      const sonuc = await teknikDogrula();
+      if (sonuc?.gecerliMi) setAktifAdim(1);
+      return;
+    }
+    if (akilliYonlendirme.eylem === "test") {
+      setAktifAdim(1);
+      await testMizaniOlustur();
+      return;
+    }
+    if (akilliYonlendirme.eylem === "onizle") {
+      setAktifAdim(1);
+      await finansalTabloOnizle();
+      return;
+    }
+    if (akilliYonlendirme.eylem === "kgk") setAktifAdim(2);
+  };
+
+  const tamamlananAdimlar = [
+    Boolean(secilenSurum && (seciliSurumYayindaMi || teknikDogrulamaBasariliMi)),
+    onizlemeBasariliMi,
+    Boolean(kgkKontrolSonucu),
+  ];
+
   return (
     <PageContainer
       title="Finansal Tablo Yönetimi"
@@ -1429,7 +1480,7 @@ const Page = () => {
           </Box>
           <Stepper activeStep={aktifAdim} nonLinear alternativeLabel sx={{ overflowX: "auto", pb: 0.5 }}>
             {finansalTabloAdimlari.map((adim, index) => (
-              <Step key={adim.baslik} completed={index < aktifAdim}>
+              <Step key={adim.baslik} completed={tamamlananAdimlar[index]}>
                 <StepButton color="inherit" onClick={() => setAktifAdim(index)}>
                   {adim.baslik}
                 </StepButton>
@@ -1445,6 +1496,45 @@ const Page = () => {
               {finansalTabloAdimlari[aktifAdim].ipucu}
             </Typography>
           </Alert>
+        </Stack>
+      </Paper>
+      <Paper
+        variant="outlined"
+        sx={{
+          p: 1.5,
+          mb: 2,
+          borderColor: akilliYonlendirme.seviye === "error" ? "error.main" : akilliYonlendirme.seviye === "warning" ? "warning.main" : akilliYonlendirme.seviye === "success" ? "success.main" : "primary.main",
+        }}
+      >
+        <Stack direction={{ xs: "column", md: "row" }} spacing={1.5} alignItems={{ md: "center" }}>
+          <Box sx={{ flexGrow: 1 }}>
+            <Stack direction="row" spacing={1} alignItems="center" flexWrap="wrap" useFlexGap>
+              <Typography variant="subtitle2">{akilliYonlendirme.baslik}</Typography>
+              <Chip
+                size="small"
+                variant="outlined"
+                color={akilliYonlendirme.seviye}
+                label={secilenSurum ? `${secilenSet?.ad} · ${seciliSurumYayindaMi ? "Yayında" : "Taslak"}` : "Tanım bekleniyor"}
+              />
+            </Stack>
+            <Typography variant="body2" color="text.secondary" sx={{ mt: 0.5 }}>
+              {akilliYonlendirme.aciklama}
+            </Typography>
+            <Stack direction="row" spacing={0.75} flexWrap="wrap" useFlexGap sx={{ mt: 1 }}>
+              <Chip size="small" color={tamamlananAdimlar[0] ? "success" : "default"} label={tamamlananAdimlar[0] ? "Tanım hazır" : "Tanım kontrolü bekliyor"} />
+              <Chip size="small" color={seciliTestMizani ? "success" : "default"} label={seciliTestMizani ? "Test mizanı hazır" : "Test mizanı bekliyor"} />
+              <Chip size="small" color={onizlemeBasariliMi ? "success" : "default"} label={onizlemeBasariliMi ? "Önizleme başarılı" : "Önizleme bekliyor"} />
+            </Stack>
+          </Box>
+          <Button
+            variant="contained"
+            color={akilliYonlendirme.seviye === "error" ? "error" : akilliYonlendirme.seviye === "warning" ? "warning" : akilliYonlendirme.seviye === "success" ? "success" : "primary"}
+            onClick={onerilenIslemiCalistir}
+            disabled={yonlendirmeYukleniyor || akilliYonlendirme.eylem === "bekle"}
+            sx={{ minWidth: { md: 230 } }}
+          >
+            {yonlendirmeYukleniyor ? <CircularProgress size={18} color="inherit" /> : akilliYonlendirme.dugme}
+          </Button>
         </Stack>
       </Paper>
       <Box sx={{ display: aktifAdim === 2 ? "block" : "none" }}>
@@ -1968,7 +2058,10 @@ const Page = () => {
                     <Button size="small" variant="contained" color="secondary" onClick={teknikDogrula} disabled={dogrulamaYukleniyor}>
                       {dogrulamaYukleniyor ? <CircularProgress size={16} color="inherit" /> : "Teknik doğrula"}
                     </Button>
-                    <Button size="small" variant="contained" color="success" onClick={taslagiYayinla} disabled={surumIslemiYukleniyor}>Yayınla</Button>
+                    <Button size="small" variant="contained" color="success" onClick={taslagiYayinla} disabled={surumIslemiYukleniyor || !teknikDogrulamaBasariliMi}>Yayınla</Button>
+                    <Button size="small" variant="text" onClick={() => setTeknikDuzenlemeAraclariAcik((onceki) => !onceki)}>
+                      {teknikDuzenlemeAraclariAcik ? "Teknik araçları gizle" : "Teknik düzenleme araçlarını göster"}
+                    </Button>
                   </>}
                 </Stack>
                 {metaDuzenleme && surumDurumKodu(secilenSurum.durum) === 1 && (
@@ -2009,7 +2102,7 @@ const Page = () => {
                     </Stack>
                   </Paper>
                 )}
-                {secilenSet && secilenSet.surumler.length > 1 && (
+                {teknikDuzenlemeAraclariAcik && secilenSet && secilenSet.surumler.length > 1 && (
                   <Paper variant="outlined" sx={{ p: 1.5, bgcolor: "action.hover" }}>
                     <Stack spacing={1.5}>
                       <Typography variant="subtitle2">Sürüm karşılaştırma</Typography>
@@ -2041,7 +2134,7 @@ const Page = () => {
                     </Table>
                   </Box>
                 )}
-                {surumDetayi && surumDurumKodu(secilenSurum.durum) === 1 && secilenKalemTablosu && (
+                {teknikDuzenlemeAraclariAcik && surumDetayi && surumDurumKodu(secilenSurum.durum) === 1 && secilenKalemTablosu && (
                   <Paper variant="outlined" sx={{ p: 1.5, bgcolor: "action.hover" }}>
                     <Stack spacing={1.5}>
                       <Stack direction="row" spacing={1} alignItems="center">
@@ -2093,7 +2186,7 @@ const Page = () => {
                     </Stack>
                   </Paper>
                 )}
-                {surumDetayi && surumDurumKodu(secilenSurum.durum) === 1 && secilenKalemTablosu && (
+                {teknikDuzenlemeAraclariAcik && surumDetayi && surumDurumKodu(secilenSurum.durum) === 1 && secilenKalemTablosu && (
                   <Paper variant="outlined" sx={{ p: 1.5, bgcolor: "action.hover" }}>
                     <Stack spacing={1.5}>
                       <Stack direction="row" spacing={1} alignItems="center">
