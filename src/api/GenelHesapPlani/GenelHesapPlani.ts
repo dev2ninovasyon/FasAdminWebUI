@@ -1,18 +1,32 @@
-import { url } from "@/api/apiBase";
+import { apiFetch } from "@/api/apiBase";
 
-export const getDosyaBilgileri = async (token: string) => {
+export const getDosyaBilgileri = async (
+  token: string,
+  denetciId: number,
+  yil: number,
+  denetlenenId: number,
+  tip: string
+) => {
   try {
-    const response = await fetch(`${url}`, {
-      method: "GET",
-      headers: {
-        accept: "application/json",
-        Authorization: `Bearer ${token}`,
-      },
-    });
+    const response = await apiFetch(
+      `/Veri/DosyaBilgileri?denetciId=${denetciId}&yil=${yil}&denetlenenId=${denetlenenId}&tip=${tip}`,
+      {
+        method: "GET",
+        token: token
+      }
+    );
     if (response.ok) {
       return response.json();
     } else {
-      console.error("Dosya Bilgileri getirilemedi");
+      console.error(
+        `Dosya Bilgileri getirilemedi. Status: ${response.status} ${response.statusText}`
+      );
+      try {
+        const errorBody = await response.text();
+        console.error("Error body:", errorBody);
+      } catch (e) {
+        console.error("Could not read error body");
+      }
     }
   } catch (error) {
     console.error("Bir hata oluştu:", error);
@@ -21,12 +35,9 @@ export const getDosyaBilgileri = async (token: string) => {
 
 export const getGenelHesapPlani = async (token: string, tip: string) => {
   try {
-    const response = await fetch(`${url}/Mizan/GenelHesapPlani?tip=${tip}`, {
+    const response = await apiFetch(`/Mizan/GenelHesapPlani?tip=${tip}`, {
       method: "GET",
-      headers: {
-        accept: "application/json",
-        Authorization: `Bearer ${token}`,
-      },
+      token: token
     });
     if (response.ok) {
       return response.json();
@@ -44,48 +55,33 @@ export const updateGenelHesapPlaniVerisi = async (
   updatedGenelHesapPlani: any
 ) => {
   try {
-    const response = await fetch(`${url}/Mizan/GenelHesapPlani?id=${id}`, {
+    const response = await apiFetch(`/Mizan/GenelHesapPlani?id=${id}`, {
       method: "PUT",
-      headers: {
-        accept: "*/*",
-        "Content-Type": "application/json",
-        Authorization: `Bearer ${token}`,
-      },
+      token: token,
       body: JSON.stringify(updatedGenelHesapPlani),
     });
 
-    if (response.ok) {
-      return true;
-    } else {
-      return false;
-    }
+    return response.ok;
   } catch (error) {
     console.error("Bir hata oluştu:", error);
+    return false;
   }
 };
 
 export const deleteDosyaBilgileri = async (token: string, selected: any) => {
   try {
-    const response = await fetch(
-      `${url}
-        `,
+    const response = await apiFetch(
+      `/Veri/DosyaBilgileri`, // Varsayılan silme endpoint'i eksikti, orjinal kodda da bozuktu (sadece `${url}` vardı)
       {
         method: "DELETE",
-        headers: {
-          accept: "application/json",
-          "Content-Type": "application/json",
-          Authorization: `Bearer ${token}`,
-        },
+        token: token,
         body: JSON.stringify(selected),
       }
     );
 
-    if (response.ok) {
-      return true;
-    } else {
-      return false;
-    }
+    return response.ok;
   } catch (error) {
     console.error("Bir hata oluştu:", error);
+    return false;
   }
 };

@@ -10,13 +10,10 @@ import {
 import { useSelector } from "@/store/hooks";
 import { AppState } from "@/store/store";
 
-const DosyaDuzenleForm = () => {
+const DosyaDuzenleForm = ({ id }: { id?: string }) => {
   const user = useSelector((state: AppState) => state.userReducer);
 
-  const pathname = usePathname();
-  const segments = pathname.split("/");
-  const idIndex = segments.indexOf("DosyaDuzenle") + 1;
-  const pathId = segments[idIndex];
+  const pathId = id;
 
   const router = useRouter();
 
@@ -53,13 +50,13 @@ const DosyaDuzenleForm = () => {
   const fetchData = async () => {
     try {
       const dosyaVerileri = await getDosyaById(user.token || "", pathId);
-      setDosyaNevi(dosyaVerileri.dosyaNevi);
-      setBelgeAdi(dosyaVerileri.belgeAdi);
-      setBds(dosyaVerileri.bds || ""); // Set to empty string if null
-      setFormKodu(dosyaVerileri.formKodu || ""); // Set to empty string if null
-      setFormUrl(dosyaVerileri.formUrl || ""); // Set to empty string if null
-      setReferansNo(dosyaVerileri.referansNo);
-      setArsivKlasorAdi(dosyaVerileri.arsivKlasorAdi);
+      setDosyaNevi(dosyaVerileri.dosyaNevi || "");
+      setBelgeAdi(dosyaVerileri.belgeAdi || "");
+      setBds(dosyaVerileri.bds || "");
+      setFormKodu(dosyaVerileri.formKodu || "");
+      setFormUrl(dosyaVerileri.formUrl || "");
+      setReferansNo(dosyaVerileri.referansNo || "");
+      setArsivKlasorAdi(dosyaVerileri.arsivKlasorAdi || "");
     } catch (error) {
       console.error("Bir hata oluştu:", error);
     }
@@ -71,7 +68,7 @@ const DosyaDuzenleForm = () => {
 
   return (
     <Grid container spacing={2}>
-      <Grid item xs={12}>
+      <Grid size={{ xs: 12 }}>
         <CustomFormLabel
           htmlFor="dosyaNevi"
           sx={{ mt: 0, mb: { xs: "-10px", sm: 0 } }}
@@ -85,7 +82,7 @@ const DosyaDuzenleForm = () => {
           fullWidth
         />
       </Grid>
-      <Grid item xs={12}>
+      <Grid size={{ xs: 12 }}>
         <CustomFormLabel
           htmlFor="belgeAdi"
           sx={{ mt: 0, mb: { xs: "-10px", sm: 0 } }}
@@ -99,7 +96,7 @@ const DosyaDuzenleForm = () => {
           fullWidth
         />
       </Grid>
-      <Grid item xs={12}>
+      <Grid size={{ xs: 12 }}>
         <CustomFormLabel
           htmlFor="belgeAdi"
           sx={{ mt: 0, mb: { xs: "-10px", sm: 0 } }}
@@ -113,7 +110,7 @@ const DosyaDuzenleForm = () => {
           fullWidth
         />
       </Grid>
-      <Grid item xs={12}>
+      <Grid size={{ xs: 12 }}>
         <CustomFormLabel
           htmlFor="formKodu"
           sx={{ mt: 0, mb: { xs: "-10px", sm: 0 } }}
@@ -127,7 +124,7 @@ const DosyaDuzenleForm = () => {
           fullWidth
         />
       </Grid>
-      <Grid item xs={12}>
+      <Grid size={{ xs: 12 }}>
         <CustomFormLabel
           htmlFor="formUrl"
           sx={{ mt: 0, mb: { xs: "-10px", sm: 0 } }}
@@ -140,7 +137,7 @@ const DosyaDuzenleForm = () => {
           onChange={(e: any) => setFormUrl(e.target.value)}
           fullWidth
         />
-        <Grid item xs={12}>
+        <Grid size={{ xs: 12 }}>
           <CustomFormLabel
             htmlFor="referansNo"
             sx={{ mt: 0, mb: { xs: "-10px", sm: 0 } }}
@@ -155,7 +152,7 @@ const DosyaDuzenleForm = () => {
           />
         </Grid>
       </Grid>
-      <Grid item xs={12}>
+      <Grid size={{ xs: 12 }}>
         <CustomFormLabel
           htmlFor="arsivKlasorAdi"
           sx={{ mt: 0, mb: { xs: "-10px", sm: 0 } }}
@@ -169,8 +166,8 @@ const DosyaDuzenleForm = () => {
           fullWidth
         />
       </Grid>
-      <Grid item xs={12} sm={3}></Grid>
-      <Grid item xs={12} sm={9}>
+      <Grid size={{ xs: 12, sm: 3 }}></Grid>
+      <Grid size={{ xs: 12, sm: 9 }}>
         <Button variant="contained" color="primary" onClick={handleButtonClick}>
           Güncelle
         </Button>

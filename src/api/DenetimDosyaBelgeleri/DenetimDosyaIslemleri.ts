@@ -1,13 +1,10 @@
-import { url } from "@/api/apiBase";
+import { apiFetch } from "@/api/apiBase";
 
 export const getDosya = async (token: string) => {
   try {
-    const response = await fetch(`${url}/DenetimDosyaBelgeleri/Hepsi`, {
+    const response = await apiFetch(`/DenetimDosyaBelgeleri/Hepsi`, {
       method: "GET",
-      headers: {
-        accept: "application/json",
-        Authorization: `Bearer ${token}`,
-      },
+      token: token
     });
     if (response.ok) {
       return response.json();
@@ -21,12 +18,9 @@ export const getDosya = async (token: string) => {
 
 export const getDosyaById = async (token: string, id: any) => {
   try {
-    const response = await fetch(`${url}/DenetimDosyaBelgeleri/${id}`, {
+    const response = await apiFetch(`/DenetimDosyaBelgeleri/${id}`, {
       method: "GET",
-      headers: {
-        accept: "application/json",
-        Authorization: `Bearer ${token}`,
-      },
+      token: token
     });
     if (response.ok) {
       return response.json();
@@ -40,23 +34,16 @@ export const getDosyaById = async (token: string, id: any) => {
 
 export const createDosya = async (token: string, createdDosya: any) => {
   try {
-    const response = await fetch(`${url}/DenetimDosyaBelgeleri`, {
+    const response = await apiFetch(`/DenetimDosyaBelgeleri`, {
       method: "POST",
-      headers: {
-        accept: "*/*",
-        "Content-Type": "application/json",
-        Authorization: `Bearer ${token}`,
-      },
+      token: token,
       body: JSON.stringify(createdDosya),
     });
 
-    if (response.ok) {
-      return true;
-    } else {
-      return false;
-    }
+    return response.ok;
   } catch (error) {
     console.error("Bir hata oluştu:", error);
+    return false;
   }
 };
 
@@ -66,22 +53,15 @@ export const updateDosya = async (
   updatedDosya: any
 ) => {
   try {
-    const response = await fetch(`${url}/DenetimDosyaBelgeleri/${id}`, {
+    const response = await apiFetch(`/DenetimDosyaBelgeleri/${id}`, {
       method: "PUT",
-      headers: {
-        accept: "*/*",
-        "Content-Type": "application/json",
-        Authorization: `Bearer ${token}`,
-      },
+      token: token,
       body: JSON.stringify(updatedDosya),
     });
 
-    if (response.ok) {
-      return true;
-    } else {
-      return false;
-    }
+    return response.ok;
   } catch (error) {
     console.error("Bir hata oluştu:", error);
+    return false;
   }
 };

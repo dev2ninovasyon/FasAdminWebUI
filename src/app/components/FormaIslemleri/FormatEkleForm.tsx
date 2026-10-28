@@ -33,7 +33,7 @@ const FormatEkleForm = () => {
   };
   return (
     <Grid container spacing={3}>
-      <Grid item xs={12} sm={3} display="flex" alignItems="center">
+      <Grid size={{ xs: 12, sm: 3 }} display="flex" alignItems="center">
         <CustomFormLabel
           htmlFor="formatAdi"
           sx={{ mt: 0, mb: { xs: "-10px", sm: 0 } }}
@@ -41,14 +41,14 @@ const FormatEkleForm = () => {
           Format Adı
         </CustomFormLabel>
       </Grid>
-      <Grid item xs={12} sm={9}>
+      <Grid size={{ xs: 12, sm: 9 }}>
         <CustomTextField
           id="formatAdi"
           fullWidth
           onChange={(e: any) => setAdi(e.target.value)}
         />
       </Grid>
-      <Grid item xs={12} sm={3} display="flex" alignItems="center">
+      <Grid size={{ xs: 12, sm: 3 }} display="flex" alignItems="center">
         <CustomFormLabel
           htmlFor="satirSayisi"
           sx={{ mt: 0, mb: { xs: "-10px", sm: 0 } }}
@@ -56,7 +56,7 @@ const FormatEkleForm = () => {
           Satır Sayısı
         </CustomFormLabel>
       </Grid>
-      <Grid item xs={12} sm={9}>
+      <Grid size={{ xs: 12, sm: 9 }}>
         <CustomTextField
           id="satirSayisi"
           fullWidth
@@ -64,8 +64,8 @@ const FormatEkleForm = () => {
         />
       </Grid>
 
-      <Grid item xs={12} sm={3}></Grid>
-      <Grid item xs={12} sm={9}>
+      <Grid size={{ xs: 12, sm: 3 }}></Grid>
+      <Grid size={{ xs: 12, sm: 9 }}>
         <Button variant="contained" color="primary" onClick={handleButtonClick}>
           Format Ekle
         </Button>

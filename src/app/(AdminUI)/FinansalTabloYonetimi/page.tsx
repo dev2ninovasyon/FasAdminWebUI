@@ -8,7 +8,6 @@ import {
   CircularProgress,
   Divider,
   FormControl,
-  Grid,
   InputLabel,
   MenuItem,
   Paper,
@@ -23,6 +22,7 @@ import {
   TextField,
   Typography,
 } from "@mui/material";
+import Grid from "@mui/material/GridLegacy";
 import { ChangeEvent, useEffect, useMemo, useState } from "react";
 import PageContainer from "@/app/components/Container/PageContainer";
 import Breadcrumb from "@/app/components/Layout/Shared/Breadcrumb/Breadcrumb";

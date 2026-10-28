@@ -1,0 +1,287 @@
+"use client";
+
+import PageContainer from "@/app/(AdminUI)/components/Container/PageContainer";
+import Breadcrumb from "@/app/(AdminUI)/components/Layout/Shared/Breadcrumb/Breadcrumb";
+import { Box, Button, Grid, Typography } from "@mui/material";
+import { AppState } from "@/store/store";
+import { useSelector } from "@/store/hooks";
+import { useState } from "react";
+import dynamic from "next/dynamic";
+import { CreateGroupPopUp } from "@/app/(AdminUI)/components/CalismaKagitlari/CreateGroupPopUp";
+import { createCalismaKagidiVerisi } from "@/api/CalismaKagitlari/CalismaKagitlari";
+import BelgeKontrolCard from "@/app/(AdminUI)/components/CalismaKagitlari/Cards/BelgeKontrolCard";
+import IslemlerCard from "@/app/(AdminUI)/components/CalismaKagitlari/Cards/IslemlerCard";
+import EkBelgeYukleButton from "@/app/(AdminUI)/components/CalismaKagitlari/Cards/EkBelgeYukleButton";
+
+const CustomEditor = dynamic(
+  () => import("@/app/(AdminUI)/components/Editor/CustomEditor"),
+  { ssr: false }
+);
+
+const BCrumb = [
+  {
+    to: "/DenetimKanitlari",
+    title: "Denetim Kanıtları",
+  },
+  {
+    to: "/DenetimKanitlari/YonetimTavsiyeMektubu",
+    title: "Yönetim Tavsiye Mektubu",
+  },
+];
+
+const Page = () => {
+  const [islem, setIslem] = useState("");
+  const [isCreatePopUpOpen, setIsCreatePopUpOpen] = useState(false);
+
+  const [isClickedYeniGrupEkle, setIsClickedYeniGrupEkle] = useState(false);
+  const [isClickedVarsayilanaDon, setIsClickedVarsayilanaDon] = useState(false);
+
+  const [tamamlanan, setTamamlanan] = useState(0);
+  const [toplam, setToplam] = useState(0);
+
+  const user = useSelector((state: AppState) => state.userReducer);
+  const controller = "YonetimTavsiyeMektubu";
+  const grupluMu = false;
+
+  const handleOpen = () => {
+    setIsCreatePopUpOpen(true);
+    setIsClickedYeniGrupEkle(true);
+  };
+
+  const handleCreateGroup = async (metin: string) => {
+    const createdCalismaKagidiGrubu = {
+      denetlenenId: user.denetlenenId,
+      denetciId: user.denetciId,
+      yil: user.yil,
+      metin: metin,
+    };
+
+    try {
+      const result = await createCalismaKagidiVerisi(
+        controller || "",
+        createdCalismaKagidiGrubu
+      );
+      if (result) {
+        setIsCreatePopUpOpen(false);
+        setIsClickedYeniGrupEkle(false);
+      } else {
+        console.log("Çalışma Kağıdı Verisi ekleme başarısız");
+      }
+    } catch (error) {
+      console.log("Bir hata oluştu:", error);
+    }
+  };
+  return (
+    <>
+      <Breadcrumb title="Yönetim Tavsiye Mektubu" items={BCrumb}>
+        <>
+          <Grid
+            container
+            sx={{
+              width: "95%",
+              height: "100%",
+              margin: "0 auto",
+              justifyContent: "space-between",
+            }}
+          >
+            <Grid
+              sx={{
+                display: "flex",
+                alignItems: "center",
+                justifyContent: "flex-end",
+              }}
+              size={{
+                xs: 12,
+                md: grupluMu ? 2.8 : 3.8,
+                lg: grupluMu ? 2.8 : 3.8
+              }}>
+              <Typography
+                variant="body1"
+                sx={{
+                  overflowWrap: "break-word",
+                  wordWrap: "break-word",
+                  textAlign: "center",
+                }}
+              >
+                {tamamlanan}/{toplam} Tamamlandı
+              </Typography>
+            </Grid>
+            {grupluMu && (
+              <Grid
+                sx={{
+                  display: "flex",
+                  alignItems: "center",
+                  justifyContent: "center",
+                }}
+                size={{
+                  xs: 3.8,
+                  md: grupluMu ? 2.8 : 3.8,
+                  lg: grupluMu ? 2.8 : 3.8
+                }}>
+                <Button
+                  size="medium"
+                  variant="outlined"
+                  color="primary"
+                  onClick={() => handleOpen()}
+                  sx={{ width: "100%" }}
+                >
+                  <Typography
+                    variant="body1"
+                    sx={{
+                      overflowWrap: "break-word",
+                      wordWrap: "break-word",
+                    }}
+                  >
+                    Yeni Grup Ekle
+                  </Typography>{" "}
+                </Button>
+              </Grid>
+            )}
+            <Grid
+              sx={{
+                display: "flex",
+                alignItems: "center",
+                justifyContent: "center",
+              }}
+              size={{
+                xs: 5.8,
+                md: grupluMu ? 2.8 : 3.8,
+                lg: grupluMu ? 2.8 : 3.8
+              }}>
+              <EkBelgeYukleButton
+                formKodu={controller}
+                fullWidth={false}           // sağda küçük buton
+                text="Belge Yükle"
+              />
+            </Grid>
+            <Grid
+              sx={{
+                display: "flex",
+                alignItems: "center",
+                justifyContent: "center",
+              }}
+              size={{
+                xs: 5.8,
+                md: grupluMu ? 2.8 : 3.8,
+                lg: grupluMu ? 2.8 : 3.8
+              }}>
+              <Button
+                size="medium"
+                variant="outlined"
+                color="primary"
+                disabled={isClickedVarsayilanaDon}
+                onClick={() => setIsClickedVarsayilanaDon(true)}
+                sx={{ width: "100%" }}
+              >
+                <Typography
+                  variant="body1"
+                  sx={{ overflowWrap: "break-word", wordWrap: "break-word" }}
+                >
+                  Varsayılana Dön
+                </Typography>
+              </Button>
+            </Grid>
+          </Grid>
+          {isCreatePopUpOpen && (
+            <CreateGroupPopUp
+              islem={islem}
+              setIslem={setIslem}
+              isPopUpOpen={isCreatePopUpOpen}
+              setIsPopUpOpen={setIsCreatePopUpOpen}
+              handleCreateGroup={handleCreateGroup}
+            />
+          )}
+        </>
+      </Breadcrumb>
+      <PageContainer
+        title="Yönetim Tavsiye Mektubu"
+        description="this is Yönetim Tavsiye Mektubu"
+      >
+        <Box>
+          <CustomEditor
+            controller={controller}
+            isClickedVarsayilanaDon={isClickedVarsayilanaDon}
+            setIsClickedVarsayilanaDon={setIsClickedVarsayilanaDon}
+          />
+        </Box>
+      </PageContainer>
+      <Box>
+        {(user.rol?.includes("KaliteKontrolSorumluDenetci") ||
+          user.rol?.includes("SorumluDenetci") ||
+          user.rol?.includes("Denetci") ||
+          user.rol?.includes("DenetciYardimcisi")) && (
+            <Grid
+              container
+              sx={{
+                width: "95%",
+                margin: "0 auto",
+                justifyContent: "space-between",
+              }}
+            >
+              <Grid
+                mt={3}
+                size={{
+                  xs: 12,
+                  md: 3.9,
+                  lg: 3.9
+                }}>
+                <BelgeKontrolCard
+                  fetch={() => { }}
+                  hazirlayan="Denetçi - Yardımcı Denetçi"
+                  controller={controller}
+                ></BelgeKontrolCard>
+              </Grid>
+              <Grid
+                mt={3}
+                size={{
+                  xs: 12,
+                  md: 3.9,
+                  lg: 3.9
+                }}>
+                <BelgeKontrolCard
+                  fetch={() => { }}
+                  onaylayan="Sorumlu Denetçi"
+                  controller={controller}
+                ></BelgeKontrolCard>
+              </Grid>
+              <Grid
+                mt={3}
+                size={{
+                  xs: 12,
+                  md: 3.9,
+                  lg: 3.9
+                }}>
+                <BelgeKontrolCard
+                  fetch={() => { }}
+                  kaliteKontrol="Kalite Kontrol Sorumlu Denetçi"
+                  controller={controller}
+                ></BelgeKontrolCard>
+              </Grid>
+            </Grid>
+          )}
+        <Grid
+          container
+          sx={{
+            width: "95%",
+            margin: "0 auto",
+            justifyContent: "space-between",
+            gap: 1,
+          }}
+        >
+          <Grid
+            mt={5}
+            size={{
+              xs: 12,
+              lg: 12
+            }}>
+            <IslemlerCard controller={controller} />
+          </Grid>
+        </Grid>
+      </Box>
+    </>
+  );
+};
+
+export default Page;
+
+

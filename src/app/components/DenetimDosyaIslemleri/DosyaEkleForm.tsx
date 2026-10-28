@@ -97,7 +97,7 @@ const DosyaEkleForm: React.FC = () => {
   return (
     <Grid container spacing={2}>
       {/* Parent Id */}
-      <Grid item xs={12} sm={3} display="flex" alignItems="center">
+      <Grid size={{ xs: 12, sm: 3 }} display="flex" alignItems="center">
         <CustomFormLabel
           htmlFor="bagliOlduguDosya"
           sx={{ mt: 0, mb: { xs: "-10px", sm: 0 } }}
@@ -105,7 +105,7 @@ const DosyaEkleForm: React.FC = () => {
           Bağlı Olduğu Dosya
         </CustomFormLabel>
       </Grid>
-      <Grid item xs={12} sm={9}>
+      <Grid size={{ xs: 12, sm: 9 }}>
         <CustomSelect
           labelId="bagliOlduguDosya"
           id="bagliOlduguDosya"
@@ -136,7 +136,7 @@ const DosyaEkleForm: React.FC = () => {
         </CustomSelect>
       </Grid>
       {/* Dosya Nevi */}
-      <Grid item xs={12} sm={3} display="flex" alignItems="center">
+      <Grid size={{ xs: 12, sm: 3 }} display="flex" alignItems="center">
         <CustomFormLabel
           htmlFor="dosyaNevi"
           sx={{ mt: 0, mb: { xs: "-10px", sm: 0 } }}
@@ -144,7 +144,7 @@ const DosyaEkleForm: React.FC = () => {
           Dosya Nevi
         </CustomFormLabel>
       </Grid>
-      <Grid item xs={12} sm={9}>
+      <Grid size={{ xs: 12, sm: 9 }}>
         <CustomTextField
           id="dosyaNevi"
           value={dosyaNevi}
@@ -155,7 +155,7 @@ const DosyaEkleForm: React.FC = () => {
         />
       </Grid>
       {/* Belge Adı */}
-      <Grid item xs={12} sm={3} display="flex" alignItems="center">
+      <Grid size={{ xs: 12, sm: 3 }} display="flex" alignItems="center">
         <CustomFormLabel
           htmlFor="belgeAdi"
           sx={{ mt: 0, mb: { xs: "-10px", sm: 0 } }}
@@ -163,7 +163,7 @@ const DosyaEkleForm: React.FC = () => {
           Belge Adı
         </CustomFormLabel>
       </Grid>
-      <Grid item xs={12} sm={9}>
+      <Grid size={{ xs: 12, sm: 9 }}>
         <CustomTextField
           id="belgeAdi"
           value={belgeAdi}
@@ -174,7 +174,7 @@ const DosyaEkleForm: React.FC = () => {
         />
       </Grid>
       {/* Bds */}
-      <Grid item xs={12} sm={3} display="flex" alignItems="center">
+      <Grid size={{ xs: 12, sm: 3 }} display="flex" alignItems="center">
         <CustomFormLabel
           htmlFor="belgeAdi"
           sx={{ mt: 0, mb: { xs: "-10px", sm: 0 } }}
@@ -182,7 +182,7 @@ const DosyaEkleForm: React.FC = () => {
           İlgili BDS
         </CustomFormLabel>
       </Grid>
-      <Grid item xs={12} sm={9}>
+      <Grid size={{ xs: 12, sm: 9 }}>
         <CustomTextField
           id="bds"
           value={bds}
@@ -193,7 +193,7 @@ const DosyaEkleForm: React.FC = () => {
         />
       </Grid>
       {/* Form Kodu */}
-      <Grid item xs={12} sm={3} display="flex" alignItems="center">
+      <Grid size={{ xs: 12, sm: 3 }} display="flex" alignItems="center">
         <CustomFormLabel
           htmlFor="formKodu"
           sx={{ mt: 0, mb: { xs: "-10px", sm: 0 } }}
@@ -201,7 +201,7 @@ const DosyaEkleForm: React.FC = () => {
           Form Kodu
         </CustomFormLabel>
       </Grid>
-      <Grid item xs={12} sm={9}>
+      <Grid size={{ xs: 12, sm: 9 }}>
         <CustomTextField
           id="formKodu"
           value={formKodu}
@@ -212,7 +212,7 @@ const DosyaEkleForm: React.FC = () => {
         />
       </Grid>
       {/* Form Url */}
-      <Grid item xs={12} sm={3} display="flex" alignItems="center">
+      <Grid size={{ xs: 12, sm: 3 }} display="flex" alignItems="center">
         <CustomFormLabel
           htmlFor="formUrl"
           sx={{ mt: 0, mb: { xs: "-10px", sm: 0 } }}
@@ -220,7 +220,7 @@ const DosyaEkleForm: React.FC = () => {
           Form Url
         </CustomFormLabel>
       </Grid>
-      <Grid item xs={12} sm={9}>
+      <Grid size={{ xs: 12, sm: 9 }}>
         <CustomTextField
           id="formUrl"
           value={formUrl}
@@ -231,7 +231,7 @@ const DosyaEkleForm: React.FC = () => {
         />
       </Grid>
       {/* Referans No */}
-      <Grid item xs={12} sm={3} display="flex" alignItems="center">
+      <Grid size={{ xs: 12, sm: 3 }} display="flex" alignItems="center">
         <CustomFormLabel
           htmlFor="referansNo"
           sx={{ mt: 0, mb: { xs: "-10px", sm: 0 } }}
@@ -239,7 +239,7 @@ const DosyaEkleForm: React.FC = () => {
           Referans No
         </CustomFormLabel>
       </Grid>
-      <Grid item xs={12} sm={9}>
+      <Grid size={{ xs: 12, sm: 9 }}>
         <CustomTextField
           id="referansNo"
           value={referansNo}
@@ -250,7 +250,7 @@ const DosyaEkleForm: React.FC = () => {
         />
       </Grid>
       {/* Arşiv Klasör Adı */}
-      <Grid item xs={12} sm={3} display="flex" alignItems="center">
+      <Grid size={{ xs: 12, sm: 3 }} display="flex" alignItems="center">
         <CustomFormLabel
           htmlFor="arsivKlasorAdi"
           sx={{ mt: 0, mb: { xs: "-10px", sm: 0 } }}
@@ -258,7 +258,7 @@ const DosyaEkleForm: React.FC = () => {
           Arşiv Klasör Adı
         </CustomFormLabel>
       </Grid>
-      <Grid item xs={12} sm={9}>
+      <Grid size={{ xs: 12, sm: 9 }}>
         <CustomTextField
           id="arsivKlasorAdi"
           value={arsivKlasorAdi}
@@ -269,7 +269,7 @@ const DosyaEkleForm: React.FC = () => {
         />
       </Grid>
       {/* Bobi mi */}
-      <Grid item xs={12} sm={3} display="flex" alignItems="center">
+      <Grid size={{ xs: 12, sm: 3 }} display="flex" alignItems="center">
         <CustomFormLabel
           htmlFor="bobimi"
           sx={{ mt: 0, mb: { xs: "-10px", sm: 0 } }}
@@ -277,7 +277,7 @@ const DosyaEkleForm: React.FC = () => {
           Bobi mi
         </CustomFormLabel>
       </Grid>
-      <Grid item xs={12} sm={9}>
+      <Grid size={{ xs: 12, sm: 9 }}>
         <CustomTextField
           id="bobimi"
           type="checkbox"
@@ -286,7 +286,7 @@ const DosyaEkleForm: React.FC = () => {
         />
       </Grid>
       {/* Tfrs mi */}
-      <Grid item xs={12} sm={3} display="flex" alignItems="center">
+      <Grid size={{ xs: 12, sm: 3 }} display="flex" alignItems="center">
         <CustomFormLabel
           htmlFor="tfrsmi"
           sx={{ mt: 0, mb: { xs: "-10px", sm: 0 } }}
@@ -294,7 +294,7 @@ const DosyaEkleForm: React.FC = () => {
           Tfrs mi
         </CustomFormLabel>
       </Grid>
-      <Grid item xs={12} sm={9}>
+      <Grid size={{ xs: 12, sm: 9 }}>
         <CustomTextField
           id="tfrsmi"
           type="checkbox"
@@ -302,8 +302,8 @@ const DosyaEkleForm: React.FC = () => {
           onChange={(e: any) => setTfrsmi(e.target.checked)}
         />
       </Grid>
-      <Grid item xs={12} sm={3}></Grid>
-      <Grid item xs={12} sm={9}>
+      <Grid size={{ xs: 12, sm: 3 }}></Grid>
+      <Grid size={{ xs: 12, sm: 9 }}>
         <Button variant="contained" color="primary" onClick={handleButtonClick}>
           Dosyayı Oluştur
         </Button>

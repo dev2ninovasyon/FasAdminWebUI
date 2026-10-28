@@ -112,7 +112,7 @@ const RaporGorus: React.FC<RaporDipnotProps> = ({ denetimTuru }) => {
   return (
     <>
       <Grid container>
-        <Grid item xs={12} lg={12}>
+        <Grid size={{ xs: 12, lg: 12 }}>
           <Grid
             container
             sx={{
@@ -124,9 +124,7 @@ const RaporGorus: React.FC<RaporDipnotProps> = ({ denetimTuru }) => {
             {veriler.map((veri) => (
               <Grid
                 key={veri.id}
-                item
-                xs={12}
-                lg={12}
+                size={{ xs: 12, lg: 12 }}
                 mt="20px"
                 onClick={() => handleCardClick(veri)}
               >

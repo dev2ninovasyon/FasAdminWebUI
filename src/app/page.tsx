@@ -1,58 +1,35 @@
 "use client";
-import { Grid, Box, Card } from "@mui/material";
 
-// components
+import { useEffect } from "react";
+import { useRouter } from "next/navigation";
+import { useSelector } from "@/store/hooks";
+import { AppState } from "@/store/store";
 import AuthLogin from "./auth/authForms/AuthLogin";
-import PageContainer from "./components/Container/PageContainer";
-import Logo from "./components/Layout/Shared/Logo/Logo";
+import AuthPageShell from "./auth/AuthPageShell";
 
 export default function Page() {
+  const router = useRouter();
+  const user = useSelector((state: AppState) => state.userReducer);
+
+  useEffect(() => {
+    if (user?.token) {
+      router.push("/Anasayfa");
+    }
+  }, [user?.token, router]);
+
+  useEffect(() => {
+    router.prefetch("/Anasayfa");
+  }, [router]);
+
   return (
-    <PageContainer title="Giriş" description="this is Giriş">
-      <Box
-        sx={{
-          position: "relative",
-          "&:before": {
-            content: '""',
-            background: "radial-gradient(#d2f1df, #d3d7fa, #bad8f4)",
-            backgroundSize: "400% 400%",
-            animation: "gradient 15s ease infinite",
-            position: "absolute",
-            height: "100%",
-            width: "100%",
-            opacity: "0.3",
-          },
-        }}
-      >
-        <Grid
-          container
-          spacing={0}
-          justifyContent="center"
-          sx={{ height: "100vh" }}
-        >
-          <Grid
-            item
-            xs={12}
-            sm={12}
-            lg={5}
-            xl={4}
-            display="flex"
-            justifyContent="center"
-            alignItems="center"
-          >
-            <Card
-              elevation={9}
-              sx={{ p: 4, zIndex: 1, width: "100%", maxWidth: "450px" }}
-            >
-              <Box display="flex" alignItems="center" justifyContent="center">
-                <Logo />
-              </Box>
-              <AuthLogin />
-            </Card>
-          </Grid>
-        </Grid>
-      </Box>
-    </PageContainer>
+    <AuthPageShell
+      title="Hos Geldiniz"
+      description="Devam etmek icin lutfen giris yapin. Admin"
+      pageTitle="Giris"
+      pageDescription="Giris Yap"
+    >
+      <AuthLogin />
+    </AuthPageShell>
   );
 }
 

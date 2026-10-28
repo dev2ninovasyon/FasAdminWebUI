@@ -3,7 +3,7 @@ import { useSelector } from '@/store/hooks';
 import { AppState } from '@/store/store';
 
 type Props = {
-  children: JSX.Element | JSX.Element[];
+  children: React.ReactNode;
 };
 
 const AppCard = ({ children }: Props) => {

@@ -1,4 +1,5 @@
 "use client";
+import { usePageTitle } from "@/hooks/usePageTitle";
 import { Grid, MenuItem } from "@mui/material";
 import { useState } from "react";
 import PageContainer from "@/app/components/Container/PageContainer";
@@ -18,6 +19,7 @@ const BCrumb = [
 ];
 
 const Page = () => {
+  usePageTitle("Görüşler");
   const [denetimTuru, setDenetimTuru] = useState("Bobi");
 
   const handleChangeDenetimTuru = (
@@ -30,7 +32,7 @@ const Page = () => {
     <PageContainer title="Görüşler" description="this is Görüşler">
       <Breadcrumb title="Görüşler" items={BCrumb} />
       <Grid container spacing={3}>
-        <Grid item xs={12} lg={12}>
+        <Grid size={{ xs: 12, lg: 12 }}>
           <CustomSelect
             labelId="denetimTuru"
             id="denetimTuru"
@@ -51,7 +53,7 @@ const Page = () => {
             </MenuItem>
           </CustomSelect>
         </Grid>
-        <Grid item xs={12} lg={12}>
+        <Grid size={{ xs: 12, lg: 12 }}>
           <RaporGorus denetimTuru={denetimTuru} />
         </Grid>
       </Grid>
@@ -60,3 +62,4 @@ const Page = () => {
 };
 
 export default Page;
+

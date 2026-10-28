@@ -1,7 +1,9 @@
-import { HotTable } from "@handsontable/react";
+﻿import { dictionary } from "@/utils/languages/handsontable.tr-TR";
+import "@/lib/handsontableSetup";
+
+import CustomHotTable from "@/components/HotTableWrapper";
 import { registerAllModules } from "handsontable/registry";
-import { dictionary } from "@/utils/languages/handsontable.tr-TR";
-import "handsontable/dist/handsontable.full.min.css";
+
 import { plus } from "@/utils/theme/Typography";
 import { useDispatch, useSelector } from "@/store/hooks";
 import { AppState } from "@/store/store";
@@ -365,17 +367,19 @@ const Formuller: React.FC<Props> = ({
       );
 
       const rowsAll: any = [];
-      FormulVerileri.forEach((veri: any) => {
-        const newRow: any = [
-          veri.formulId,
-          veri.kalemAdi,
-          veri.formul,
-          veri.dipnot,
-          veri.kirilim,
-          veri.kgkExcelSatirNo,
-        ];
-        rowsAll.push(newRow);
-      });
+      if (FormulVerileri && Array.isArray(FormulVerileri)) {
+        FormulVerileri.forEach((veri: any) => {
+          const newRow: any = [
+            veri.formulId,
+            veri.kalemAdi,
+            veri.formul,
+            veri.dipnot,
+            veri.kirilim,
+            veri.kgkExcelSatirNo,
+          ];
+          rowsAll.push(newRow);
+        });
+      }
       rowsAll.sort((a: any, b: any) => (a[5] > b[5] ? 1 : -1));
 
       setRowCount(rowsAll.length);
@@ -455,21 +459,21 @@ const Formuller: React.FC<Props> = ({
       const diff = customizer.isCollapse
         ? 0
         : customizer.SidebarWidth && customizer.MiniSidebarWidth
-        ? customizer.SidebarWidth - customizer.MiniSidebarWidth
-        : 0;
+          ? customizer.SidebarWidth - customizer.MiniSidebarWidth
+          : 0;
 
       hotTableComponent.current.hotInstance.updateSettings({
         width: customizer.isCollapse
           ? "100%"
           : hotTableComponent.current.hotInstance.rootElement.clientWidth -
-            diff,
+          diff,
       });
     }
   }, [customizer.isCollapse]);
 
   return (
     <>
-      <HotTable
+      <CustomHotTable 
         style={{
           height: "100%",
           width: "100%",
@@ -509,11 +513,9 @@ const Formuller: React.FC<Props> = ({
         contextMenu={["alignment", "copy"]}
       />
       <Grid container marginTop={2} marginBottom={1}>
-        <Grid item xs={12} lg={10}></Grid>
+        <Grid size={{ xs: 12, lg: 10 }}></Grid>
         <Grid
-          item
-          xs={12}
-          lg={2}
+          size={{ xs: 12, lg: 2 }}
           sx={{
             display: "flex",
             justifyContent: "flex-end",
@@ -529,3 +531,5 @@ const Formuller: React.FC<Props> = ({
 };
 
 export default Formuller;
+
+

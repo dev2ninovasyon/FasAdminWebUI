@@ -1,4 +1,5 @@
 "use client";
+import { usePageTitle } from "@/hooks/usePageTitle";
 import { Box, Grid } from "@mui/material";
 import PageContainer from "@/app/components/Container/PageContainer";
 import Breadcrumb from "@/app/components/Layout/Shared/Breadcrumb/Breadcrumb";
@@ -18,12 +19,13 @@ const BCrumb = [
 ];
 
 const Page = () => {
+  usePageTitle("Formatlar");
   return (
     <PageContainer title="Formatlar" description="this is Formatlar">
       <Breadcrumb title="Formatlar" items={BCrumb} />
       <ParentCard title="Formatlar">
         <Grid container spacing={3}>
-          <Grid item xs={12}>
+          <Grid size={{ xs: 12 }}>
             <FormatEkleButton />
             <Box>
               <FormatTable />
@@ -36,3 +38,4 @@ const Page = () => {
 };
 
 export default Page;
+

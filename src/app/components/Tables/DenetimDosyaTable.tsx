@@ -20,6 +20,7 @@ import {
   IconEdit,
   IconPlus,
   IconTrash,
+  IconFileText,
 } from "@tabler/icons-react";
 import { getDosya } from "@/api/DenetimDosyaBelgeleri/DenetimDosyaIslemleri";
 import { useRouter } from "next/navigation";
@@ -33,6 +34,7 @@ interface RowData {
   formKodu: string;
   referansNo: string;
   arsivKlasorAdi: string;
+  formUrl?: string;
 }
 
 const DenetimDosyaTable = () => {
@@ -65,6 +67,13 @@ const DenetimDosyaTable = () => {
     handleClose();
     router.push(`/DenetimDosyaBelgeleri/DosyaDuzenle/${selectedId}`);
   };
+
+  const handleOpenForm = (formUrl?: string) => {
+    if (formUrl) {
+      router.push(formUrl);
+    }
+  };
+
   /*
   const handleDelete = async () => {
     handleClose();
@@ -159,6 +168,11 @@ const DenetimDosyaTable = () => {
                   Arşiv Klasör Adı
                 </Typography>
               </TableCell>
+              <TableCell>
+                <Typography textAlign="center" variant="h6">
+                  Form
+                </Typography>
+              </TableCell>
               <TableCell></TableCell>
             </TableRow>
           </TableHead>
@@ -214,6 +228,18 @@ const DenetimDosyaTable = () => {
                     >
                       {row.arsivKlasorAdi}
                     </Typography>
+                  </TableCell>
+                  <TableCell>
+                    <IconButton
+                      onClick={(event) => {
+                        event.stopPropagation();
+                        handleOpenForm(row.formUrl);
+                      }}
+                      title="Formu Aç"
+                      disabled={!row.formUrl}
+                    >
+                      <IconFileText width={18} />
+                    </IconButton>
                   </TableCell>
                   <TableCell>
                     <IconButton

@@ -1,50 +1,157 @@
-const APP_IDENTITY_HEADER = "X-App-Identity";
-const APP_IDENTITY_SECRET = "Fas-VG-Secure-9x2PZQ-7vR8-KmLn-41Nb-Ty6S-2026-N2Dev";
+import { decodeUTF8Deep } from "@/utils/utf8Support";
 
-const LOCAL_API_URL = "http://localhost:5080/api";
-const BETA_API_URL = "https://betaapi.fasmart.app/api";
-const ENV_API_URL =
-  typeof process !== "undefined"
-    ? process.env.NEXT_PUBLIC_API_BASE_URL?.trim()
-    : undefined;
+const normalizeApiUrl = (value: string) => value.replace(/\/+$/, "");
 
-const normalizeApiBaseUrl = (baseUrl: string) =>
-  (baseUrl || "").trim().replace(/\/+$/, "");
+const sanitizeHeadersForLog = (headers: HeadersInit) => {
+  const safeHeaders: Record<string, string> = {};
 
-export const url = normalizeApiBaseUrl(
-  ENV_API_URL ||
-    (typeof window !== "undefined" &&
-    (window.location.hostname === "localhost" ||
-      window.location.hostname === "127.0.0.1")
-      ? LOCAL_API_URL
-      : BETA_API_URL)
+  Object.entries(headers as Record<string, string>).forEach(([key, value]) => {
+    safeHeaders[key] =
+      key.toLowerCase() === "authorization" ? "[REDACTED]" : value;
+  });
+
+  return safeHeaders;
+};
+
+const sanitizeBodyForLog = (body: RequestInit["body"]) => {
+  if (!body || typeof body !== "string") {
+    return body ? "[BODY_PRESENT]" : undefined;
+  }
+
+  try {
+    const parsedBody = JSON.parse(body);
+    if (!parsedBody || typeof parsedBody !== "object") {
+      return "[BODY_PRESENT]";
+    }
+
+    const sensitiveKeys = [
+      "password",
+      "token",
+      "refreshToken",
+      "RefreshToken",
+      "CaptchaToken",
+    ];
+
+    sensitiveKeys.forEach((key) => {
+      if (key in parsedBody) {
+        parsedBody[key] = "[REDACTED]";
+      }
+    });
+
+    return parsedBody;
+  } catch {
+    return "[BODY_PRESENT]";
+  }
+};
+
+const getDefaultApiUrl = () => {
+  if (typeof window === "undefined") {
+    return "http://localhost:5000/api";
+  }
+
+  const { hostname } = window.location;
+  const isLocalhost = hostname === "localhost" || hostname === "127.0.0.1";
+
+  return isLocalhost
+    ? "http://localhost:5080/api"
+    : "https://betaapi.fasmart.app/api";
+};
+
+export const url = normalizeApiUrl(
+  process.env.NEXT_PUBLIC_API_URL || getDefaultApiUrl()
 );
 
-// Otomatik fetch interceptor: X-App-Identity ve URL yonlendirmesi
-if (typeof window !== "undefined" && !(window as any).__FAS_FETCH_PATCHED__) {
-  (window as any).__FAS_FETCH_PATCHED__ = true;
-  const originalFetch = window.fetch;
+export async function apiFetch(
+  path: string,
+  options: RequestInit & {
+    timeout?: number;
+    ignoreCustomHeaders?: boolean;
+    token?: string;
+    includeCredentials?: boolean;
+    suppressErrorLog?: boolean;
+  } = {}
+) {
+  const {
+    headers,
+    timeout = 30000,
+    ignoreCustomHeaders = false,
+    token,
+    includeCredentials = true,
+    suppressErrorLog = false,
+    ...rest
+  } = options;
 
-  window.fetch = async (input: RequestInfo | URL, init?: RequestInit) => {
-    let requestUrl = typeof input === "string" ? input : input instanceof URL ? input.href : input.url;
+  const clientUrl =
+    typeof window !== "undefined"
+      ? window.location.pathname + window.location.search
+      : "";
 
-    // Eski sabit url varsa aktif dinamik api url ile degistir
-    if (requestUrl.includes("2ninovasyon.online/api")) {
-      requestUrl = requestUrl.replace(/https?:\/\/2ninovasyon\.online\/api/g, url);
-    }
-
-    const modifiedInit: RequestInit = { ...(init || {}) };
-    const headers = new Headers(modifiedInit.headers || (input instanceof Request ? input.headers : {}));
-
-    if (!headers.has(APP_IDENTITY_HEADER)) {
-      headers.set(APP_IDENTITY_HEADER, APP_IDENTITY_SECRET);
-    }
-
-    modifiedInit.headers = headers;
-    modifiedInit.credentials = modifiedInit.credentials || "include";
-
-    return originalFetch(requestUrl, modifiedInit);
+  const baseHeaders: HeadersInit = {
+    accept: "application/json; charset=utf-8",
+    "Content-Type": "application/json; charset=utf-8",
+    "Accept-Charset": "utf-8",
+    "Accept-Language": "tr-TR,tr;q=0.9",
+    ...(token ? { Authorization: `Bearer ${token}` } : {}),
+    "X-Client-Url": clientUrl,
   };
-}
 
-export { APP_IDENTITY_HEADER, APP_IDENTITY_SECRET };
+  const mergedHeaders: HeadersInit = ignoreCustomHeaders
+    ? { ...(headers || {}) }
+    : { ...baseHeaders, ...(headers || {}) };
+
+  const normalizedPath = path.startsWith("/") ? path : `/${path}`;
+  const fullUrl = `${url}${normalizedPath}`;
+
+  const controller = new AbortController();
+  const timeoutId = setTimeout(() => {
+    const timeoutMsg = `API Timeout: ${fullUrl} (${timeout}ms suresini asti)`;
+    console.error(timeoutMsg);
+    controller.abort("timeout");
+  }, timeout);
+
+  try {
+    const requestStartTime = Date.now();
+    console.log(`[API Istek] ${fullUrl}`, {
+      method: rest.method || "GET",
+      credentials: includeCredentials ? "include" : "omit",
+      headers: sanitizeHeadersForLog(mergedHeaders),
+      body: sanitizeBodyForLog(rest.body),
+    });
+
+    const response = await fetch(fullUrl, {
+      ...rest,
+      headers: mergedHeaders,
+      signal: controller.signal,
+      credentials: includeCredentials ? "include" : "omit",
+    });
+
+    const originalJson = response.json.bind(response);
+    (response as Response & { json: () => Promise<unknown> }).json = async () => {
+      const data = await originalJson();
+      return decodeUTF8Deep(data);
+    };
+
+    const duration = Date.now() - requestStartTime;
+    console.log(`[API Yanit] ${fullUrl} (${duration}ms)`, {
+      status: response.status,
+      statusText: response.statusText,
+    });
+
+    return response;
+  } catch (error: any) {
+    if (error?.name === "AbortError") {
+      const isTimeout = controller.signal.reason === "timeout";
+      if (!suppressErrorLog) {
+        console.warn(
+          `[API Hata] ${fullUrl} -> ${isTimeout ? "TIMED OUT" : "CANCELLED"}`
+        );
+      }
+    } else if (!suppressErrorLog) {
+      console.error(`[API Hata] (${fullUrl}):`, error);
+    }
+
+    throw error;
+  } finally {
+    clearTimeout(timeoutId);
+  }
+}

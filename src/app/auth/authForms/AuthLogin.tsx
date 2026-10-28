@@ -1,137 +1,254 @@
-import CustomFormLabel from "@/app/components/Forms/ThemeElements/CustomFormLabel";
-import CustomTextField from "@/app/components/Forms/ThemeElements/CustomTextField";
-import { Box, Typography, Button, Stack, useTheme } from "@mui/material";
+import { Box, Typography, Stack, useTheme, InputAdornment, Link as MuiLink } from "@mui/material";
 import { useState } from "react";
 import { useRouter } from "next/navigation";
+import Link from "next/link";
 import { LoadingButton } from "@mui/lab";
-import { IconTrash } from "@tabler/icons-react";
+import { IconMail, IconLock } from "@tabler/icons-react";
 import { useDispatch, useSelector } from "@/store/hooks";
-import { setId, setToken } from "@/store/user/UserSlice";
-import { url } from "@/api/apiBase";
+import { useGoogleReCaptcha } from "react-google-recaptcha-v3";
+import { setUserData, setBddkmi } from "@/store/user/UserSlice";
+import { apiFetch } from "@/api/apiBase";
 import { enqueueSnackbar } from "notistack";
 import { AppState } from "@/store/store";
+import { getDenetciOdemeBilgileri } from "@/api/DenetciIslemleri/DenetciIslemleri";
+import CustomFormLabel from "@/app/components/Forms/ThemeElements/CustomFormLabel";
+import CustomTextField from "@/app/components/Forms/ThemeElements/CustomTextField";
 
-interface loginType {
+interface LoginType {
   title?: string;
-  subtitle?: JSX.Element | JSX.Element[];
-  subtext?: JSX.Element | JSX.Element[];
+  subtitle?: React.ReactNode;
+  subtext?: React.ReactNode;
 }
 
-const AuthLogin: React.FC<loginType> = ({ title, subtitle, subtext }) => {
+const AuthLogin: React.FC<LoginType> = ({ title, subtitle, subtext }) => {
   const router = useRouter();
   const dispatch = useDispatch();
-
   const customizer = useSelector((state: AppState) => state.customizer);
   const theme = useTheme();
-
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
-  const [step, setStep] = useState<"credentials" | "otp">("credentials");
-  const [otpCode, setOtpCode] = useState("");
-
   const [isLoggedIn, setIsLoggedIn] = useState(false);
+  const [isVerifyingCaptcha, setIsVerifyingCaptcha] = useState(false);
+  const { executeRecaptcha } = useGoogleReCaptcha();
+  const isLocalHost =
+    typeof window !== "undefined" &&
+    (window.location.hostname === "localhost" || window.location.hostname === "127.0.0.1");
 
   const handleLogin = async () => {
+    if (!isLocalHost && !executeRecaptcha) {
+      enqueueSnackbar("Recaptcha yuklenemedi, lutfen sayfayi yenileyin.", {
+        variant: "warning",
+        autoHideDuration: 3000,
+      });
+      setIsLoggedIn(false);
+      return;
+    }
+
+    setIsVerifyingCaptcha(true);
+    let token = "";
+
     try {
-      const captchaToken = "BYPASS_RECAPTCHA_TEST";
-      const payload: any = { email, password, captchaToken };
-      if (step === "otp") {
-        payload.otpCode = otpCode.trim();
+      if (isLocalHost) {
+        token = "BYPASS_RECAPTCHA_TEST";
+      } else {
+        const runRecaptcha = executeRecaptcha;
+        if (!runRecaptcha) {
+          throw new Error("Recaptcha fonksiyonu hazir degil.");
+        }
+
+        token = await runRecaptcha("login");
+      }
+    } catch (error: any) {
+      let errorMessage = "Güvenlik doğrulaması sırasında bir hata oluştu.";
+
+      if (error?.message?.includes("message channel closed")) {
+        errorMessage =
+          "Tarayıcı eklentileriniz güvenlik doğrulamasını engelliyor olabilir. Lütfen reklam engelleyici veya benzeri eklentileri kapatıp tekrar deneyin.";
       }
 
-      // Once AdminLogin dene, endpoint bulunamazsa standart login dene
-      let response = await fetch(`${url}/Auth/AdminLogin`, {
+      enqueueSnackbar(errorMessage, {
+        variant: "error",
+        autoHideDuration: 5000,
+      });
+      setIsVerifyingCaptcha(false);
+      setIsLoggedIn(false);
+      return;
+    }
+
+    setIsVerifyingCaptcha(false);
+
+    if (!token) {
+      enqueueSnackbar("Recaptcha doğrulaması başarısız.", {
+        variant: "warning",
+        autoHideDuration: 3000,
+      });
+      setIsLoggedIn(false);
+      return;
+    }
+
+    try {
+      const response = await apiFetch("/Auth/AdminLogin", {
         method: "POST",
         headers: {
           accept: "*/*",
           "Content-Type": "application/json",
         },
-        body: JSON.stringify(payload),
+        body: JSON.stringify({ email, password, CaptchaToken: token }),
       });
-
-      if (response.status === 404) {
-        response = await fetch(`${url}/Auth/login`, {
-          method: "POST",
-          headers: {
-            accept: "*/*",
-            "Content-Type": "application/json",
-          },
-          body: JSON.stringify(payload),
-        });
-      }
 
       if (response.ok) {
         const data = await response.json();
+        const userToken = data.token;
+        const userRefreshToken = data.refreshToken;
+        const userId = data.userId || data.kullaniciId || data.Id || 0;
+        const userDenetciId = data.denetciId || 0;
+        const userDenetciFirmaAdi = data.denetciFirmaAdi || "";
+        const userData = {
+          token: userToken,
+          refreshToken: userRefreshToken,
+          id: userId,
+          denetciId: userDenetciId,
+          denetciFirmaAdi: userDenetciFirmaAdi,
+          yetki: data.yetki,
+          rol: data.rol,
+          kullaniciAdi: data.kullaniciAdi,
+          mail: email,
+          unvan: data.unvan,
+          kurulumTamamlandi: data.kurulumTamamlandi,
+          kurulumAdimi: data.kurulumAdimi,
+          setupWizardProgress: data.setupWizardProgress,
+          sonSecilenDenetlenenId: data.sonSecilenDenetlenenId,
+          sonSecilenYil: data.sonSecilenYil,
+          sonSecilenDenetlenenFirmaAdi: data.sonSecilenDenetlenenFirmaAdi,
+          sonSecilenDenetimTuru: data.sonSecilenDenetimTuru,
+          sonSecilenBobimi: data.sonSecilenBobimi,
+          sonSecilenTfrsmi: data.sonSecilenTfrsmi,
+          sonSecilenEnflasyonmu: data.sonSecilenEnflasyonmu,
+          sonSecilenKonsolidemi: data.sonSecilenKonsolidemi,
+          sonSecilenBddkmi: data.sonSecilenBddkmi,
+          turTamamlandi: data.turTamamlandi,
+          bddkmi: data.bddkmi,
+        };
 
-        // 2FA: Backend OTP istiyorsa OTP adimina gec
-        if (data.requiresOtp) {
-          setStep("otp");
-          enqueueSnackbar(data.message || "Doğrulama kodu e-posta adresinize gönderildi.", {
-            variant: "info",
-            autoHideDuration: 5000,
+        if (data.sonSecilenDenetlenenId && data.sonSecilenYil && data.sonSecilenDenetlenenFirmaAdi) {
+          Object.assign(userData, {
+            denetlenenId: data.sonSecilenDenetlenenId,
+            denetlenenFirmaAdi: data.sonSecilenDenetlenenFirmaAdi,
+            yil: data.sonSecilenYil,
+            denetimTuru: data.sonSecilenDenetimTuru,
+            bobimi: data.sonSecilenBobimi,
+            tfrsmi: data.sonSecilenTfrsmi,
+            enflasyonmu: data.sonSecilenEnflasyonmu,
+            konsolidemi: data.sonSecilenKonsolidemi,
+            bddkmi: data.sonSecilenBddkmi,
           });
-          return;
+
+          localStorage.setItem("fas_denetlenenId", data.sonSecilenDenetlenenId.toString());
+          localStorage.setItem("fas_yil", data.sonSecilenYil.toString());
+        } else {
+          localStorage.removeItem("fas_denetlenenId");
+          localStorage.removeItem("fas_yil");
         }
 
-        const userToken = data.token || data.Token;
-        const userId = data.kullaniciId || data.KullaniciId || 1;
+        dispatch(setUserData(userData));
 
-        dispatch(setToken(userToken));
-        dispatch(setId(userId));
+        if (data.bddkmi === undefined) {
+          const data2 = await getDenetciOdemeBilgileri(userToken, userDenetciId);
+          if (data2 && data2.bddkmi !== undefined) {
+            dispatch(setBddkmi(data2.bddkmi));
+          }
+        }
 
-        setIsLoggedIn(true);
         router.push("/Anasayfa");
-      } else {
-        setIsLoggedIn(false);
-        let errorMsg = "Giriş Başarısız";
-        try {
-          const errData = await response.json();
-          errorMsg = errData.message || errData.Message || errData.errorMessage || errorMsg;
-        } catch {
-          // ignore
-        }
-
-        enqueueSnackbar(errorMsg, {
-          variant: "error",
-          autoHideDuration: 5000,
-          style: {
-            backgroundColor:
-              customizer.activeMode === "dark"
-                ? theme.palette.error.light
-                : theme.palette.error.main,
-            maxWidth: "720px",
-          },
-        });
+        return;
       }
-    } catch (error) {
-      console.error("Bir hata oluştu:", error);
-      enqueueSnackbar("Sunucuya bağlanılamadı. Lütfen API servisinin çalıştığından emin olun.", {
+
+      setIsLoggedIn(false);
+
+      let errorMessage = "Giriş başarısız";
+      try {
+        const errorText = await response.text();
+        if (errorText) {
+          if (errorText.trim().startsWith("{")) {
+            const parsed = JSON.parse(errorText);
+            errorMessage = parsed.Message || parsed.message || errorText;
+          } else {
+            errorMessage = errorText;
+          }
+        }
+      } catch {
+        if (response.statusText) {
+          errorMessage = `${response.status} - ${response.statusText}`;
+        }
+      }
+
+      enqueueSnackbar(errorMessage, {
         variant: "error",
         autoHideDuration: 5000,
+        style: {
+          backgroundColor:
+            customizer.activeMode === "dark" ? theme.palette.error.light : theme.palette.error.main,
+          maxWidth: "720px",
+        },
       });
+    } catch (error: any) {
+      setIsLoggedIn(false);
+      const message =
+        error?.message === "Failed to fetch"
+          ? "Bağlantı hatası: sisteme şu an ulaşılamıyor. Lütfen daha sonra tekrar deneyin."
+          : `Giriş sırasında bir hata oluştu: ${error?.message || "Bilinmeyen hata"}`;
+
+      enqueueSnackbar(message, {
+        variant: "error",
+        autoHideDuration: 5000,
+        style: {
+          backgroundColor:
+            customizer.activeMode === "dark" ? theme.palette.error.light : theme.palette.error.main,
+          maxWidth: "720px",
+        },
+      });
+    } finally {
+      setIsVerifyingCaptcha(false);
     }
+  };
+
+  const handleSubmit = (event: React.FormEvent) => {
+    event.preventDefault();
+    if (isLoggedIn || isVerifyingCaptcha) {
+      return;
+    }
+
+    setIsLoggedIn(true);
+    void handleLogin();
   };
 
   return (
     <>
       {title ? (
-        <Typography fontWeight="700" variant="h3" mb={1}>
+        <Typography fontWeight="700" variant="h3" mb={1} color="primary.main">
           {title}
         </Typography>
       ) : null}
 
       {subtext}
 
-      {step === "credentials" ? (
-        <Stack mb={3}>
+      <form onSubmit={handleSubmit}>
+        <Stack mb={3} spacing={2}>
           <Box>
             <CustomFormLabel htmlFor="username">Email</CustomFormLabel>
             <CustomTextField
               id="username"
               variant="outlined"
               fullWidth
-              value={email}
-              onChange={(e: any) => setEmail(e.target.value)}
+              placeholder="Email adresiniz"
+              onChange={(event: any) => setEmail(event.target.value)}
+              InputProps={{
+                startAdornment: (
+                  <InputAdornment position="start">
+                    <IconMail size={20} />
+                  </InputAdornment>
+                ),
+              }}
             />
           </Box>
           <Box>
@@ -141,66 +258,58 @@ const AuthLogin: React.FC<loginType> = ({ title, subtitle, subtext }) => {
               type="password"
               variant="outlined"
               fullWidth
-              value={password}
-              onChange={(e: any) => setPassword(e.target.value)}
+              placeholder="Şifreniz"
+              onChange={(event: any) => setPassword(event.target.value)}
+              InputProps={{
+                startAdornment: (
+                  <InputAdornment position="start">
+                    <IconLock size={20} />
+                  </InputAdornment>
+                ),
+              }}
             />
           </Box>
-        </Stack>
-      ) : (
-        <Stack mb={3}>
-          <Typography variant="body2" color="textSecondary" mb={2}>
-            <strong>{email}</strong> adresine gönderilen 8 haneli güvenlik kodunu giriniz.
-          </Typography>
-          <Box>
-            <CustomFormLabel htmlFor="otp">Doğrulama Kodu (OTP)</CustomFormLabel>
-            <CustomTextField
-              id="otp"
-              variant="outlined"
-              fullWidth
-              placeholder="8 haneli kod"
-              value={otpCode}
-              onChange={(e: any) => setOtpCode(e.target.value)}
-              autoFocus
-            />
-          </Box>
-        </Stack>
-      )}
 
-      <Box>
-        {!isLoggedIn && (
-          <Button
+          <Box display="flex" justifyContent="center" />
+        </Stack>
+
+        <Box display="flex" justifyContent="flex-end" mb={3}>
+          <MuiLink
+            component={Link}
+            href={`/auth/forgot-password${email ? `?email=${encodeURIComponent(email)}` : ""}`}
+            underline="hover"
+            sx={{
+              fontWeight: 600,
+              color: "primary.main",
+            }}
+          >
+            Şifremi unuttum
+          </MuiLink>
+        </Box>
+
+        <Box>
+          <LoadingButton
+            type="submit"
             color="primary"
             variant="contained"
             size="large"
             fullWidth
-            onClick={handleLogin}
+            loading={isVerifyingCaptcha || isLoggedIn}
+            sx={{
+              background: "linear-gradient(45deg, #2196F3 30%, #21CBF3 90%)",
+              boxShadow: "0 3px 5px 2px rgba(33, 203, 243, .3)",
+              color: "white",
+              height: 48,
+              padding: "0 30px",
+              fontSize: "1.1rem",
+              textTransform: "none",
+              borderRadius: "10px",
+            }}
           >
-            {step === "otp" ? "Kodu Onayla ve Giriş Yap" : "Giriş"}
-          </Button>
-        )}
-        {step === "otp" && !isLoggedIn && (
-          <Button
-            color="inherit"
-            variant="text"
-            size="medium"
-            fullWidth
-            sx={{ mt: 1 }}
-            onClick={() => setStep("credentials")}
-          >
-            Geri Dön (Şifre Değiştir)
-          </Button>
-        )}
-        {isLoggedIn && (
-          <LoadingButton
-            loading
-            color="secondary"
-            variant="contained"
-            size="large"
-            fullWidth
-            endIcon={<IconTrash width={18} />}
-          ></LoadingButton>
-        )}
-      </Box>
+            {isVerifyingCaptcha ? "Guvenlik Dogrulamasi..." : isLoggedIn ? "Giris Yapiliyor..." : "Giris Yap"}
+          </LoadingButton>
+        </Box>
+      </form>
       {subtitle}
     </>
   );

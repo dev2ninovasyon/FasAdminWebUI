@@ -19,7 +19,7 @@ const Languages = [
     value: "en",
   },
   {
-    flagname: "中国人 (Chinese)",
+    flagname: "ä¸­å›½äºº (Chinese)",
     icon: "/images/flag/icon-flag-cn.svg",
     value: "ch",
   },
@@ -30,7 +30,7 @@ const Languages = [
   },
 
   {
-    flagname: "عربي (Arabic)",
+    flagname: "Ø¹Ø±Ø¨ÙŠ (Arabic)",
     icon: "/images/flag/icon-flag-sa.svg",
     value: "ar",
   },
