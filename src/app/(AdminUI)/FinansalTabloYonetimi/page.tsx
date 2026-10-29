@@ -155,6 +155,7 @@ const Page = () => {
   const [aktifAdim, setAktifAdim] = useState(0);
   const [gelismisPaketAraclariAcik, setGelismisPaketAraclariAcik] = useState(false);
   const [teknikDuzenlemeAraclariAcik, setTeknikDuzenlemeAraclariAcik] = useState(false);
+  const [testAyrintilariAcik, setTestAyrintilariAcik] = useState(false);
   const [surumId, setSurumId] = useState("");
   const [eszamanlilikSurumu, setEszamanlilikSurumu] = useState("");
   const [kaynakSha256, setKaynakSha256] = useState("");
@@ -1011,13 +1012,13 @@ const Page = () => {
     }
   };
 
-  const testMizaniOlustur = async () => {
-    if (!user.token) return;
+  const testMizaniOlustur = async (): Promise<FinansalTabloTestMizan | null> => {
+    if (!user.token) return null;
     const denetlenenId = Number(uretimDenetlenenId);
     const yil = Number(uretimYil);
     if (!Number.isInteger(denetlenenId) || denetlenenId <= 0 || !Number.isInteger(yil) || yil < 1900) {
       setTanimHatasi("Test mizanı için geçerli denetlenen ID ve yıl girilmelidir.");
-      return;
+      return null;
     }
     setTestMizanYukleniyor(true);
     setTanimHatasi("");
@@ -1039,8 +1040,10 @@ const Page = () => {
       setUretimBitis((onceki) => onceki || `${kayit.yil}-12-31`);
       setUretimOnizlemeSonucu(null);
       setTanimHatasi(`Test mizanı oluşturuldu: ${kayit.ad} · ${kayit.satirlar.length} satır · SHA-256 ${kayit.sha256.slice(0, 16)}…`);
+      return kayit;
     } catch (error) {
       setTanimHatasi(error instanceof Error ? error.message : "Test mizanı oluşturulamadı.");
+      return null;
     } finally {
       setTestMizanYukleniyor(false);
     }
@@ -1058,7 +1061,7 @@ const Page = () => {
     setUretimOnizlemeSonucu(null);
   };
 
-  const finansalTabloIstekOlustur = (): FinansalTabloUretimIstegi | null => {
+  const finansalTabloIstekOlustur = (testMizani: FinansalTabloTestMizan | null = seciliTestMizani): FinansalTabloUretimIstegi | null => {
     const tablo = secilenKalemTablosu;
     const set = secilenSet;
     const surum = secilenSurum;
@@ -1067,19 +1070,18 @@ const Page = () => {
       setTanimHatasi("Üretim için yayımlanmış sürüm, tablo ve dönem kolonu seçilmelidir.");
       return null;
     }
-    if (surumDurumKodu(surum.durum) !== 3 && !seciliTestMizani) {
+    if (surumDurumKodu(surum.durum) !== 3 && !testMizani) {
       setTanimHatasi("Gerçek mizan önizlemesi ve üretim yalnızca yayımlanmış sürüm üzerinden başlatılabilir. Taslağı sınamak için önce izole test mizanı oluşturun.");
       return null;
     }
-    if (uretimGirdiSha256.trim().length !== 64 || !uretimDenetlenenId || !uretimYil || !uretimBaslangic || !uretimBitis) {
+    const girdiSha256 = testMizani?.sha256 || uretimGirdiSha256.trim();
+    const denetlenenId = testMizani?.denetlenenId ?? Number(uretimDenetlenenId);
+    const yil = testMizani?.yil ?? Number(uretimYil);
+    const konsolidasyonMu = testMizani?.konsolidasyonMu ?? uretimKonsolide;
+    const baslangicTarihi = testMizani ? `${testMizani.yil}-01-01` : uretimBaslangic;
+    const bitisTarihi = testMizani ? `${testMizani.yil}-12-31` : uretimBitis;
+    if (girdiSha256.length !== 64 || !denetlenenId || !yil || !baslangicTarihi || !bitisTarihi) {
       setTanimHatasi("Girdi SHA-256, denetlenen, yıl ve dönem tarihleri zorunludur.");
-      return null;
-    }
-    if (seciliTestMizani &&
-        (seciliTestMizani.denetlenenId !== Number(uretimDenetlenenId) ||
-         seciliTestMizani.yil !== Number(uretimYil) ||
-         seciliTestMizani.konsolidasyonMu !== uretimKonsolide)) {
-      setTanimHatasi("Seçili test mizanının denetlenen, yıl ve konsolidasyon bilgileri değiştirilemez; yeni fixture oluşturun.");
       return null;
     }
     const snapshotSha256 = uretimSnapshotSha256.trim() || dogrulamaSonucu?.tablolar.find((aday) => aday.tabloId === tablo.id)?.snapshotSha256 || "";
@@ -1087,26 +1089,26 @@ const Page = () => {
       yeniMotorSurumu: "finansal-tablo-yeni-motor-v1",
       tanimSetiSabitAnahtari: set.kod,
       tanimSurumu: surum.etiket,
-      girdiSabitAnahtari: uretimGirdiAnahtari.trim() || "MIZAN",
-      girdiSha256: uretimGirdiSha256.trim().toLowerCase(),
+      girdiSabitAnahtari: testMizani ? `TEST-MIZAN-${testMizani.id.slice(0, 8).toUpperCase()}` : uretimGirdiAnahtari.trim() || "MIZAN",
+      girdiSha256: girdiSha256.toLowerCase(),
       calistirmaBaglami: {
         donemEslesmeleri: [{
           donemDavranisi: donem.donemDavranisi,
           donemOfseti: donem.donemOfseti,
           donem: {
             sabitAnahtar: donem.sabitAnahtar,
-            baslangicTarihi: uretimBaslangic,
-            bitisTarihi: uretimBitis,
+            baslangicTarihi,
+            bitisTarihi,
           },
         }],
         yuvarlamaBasamagi: tablo.yuvarlamaBasamagi,
         yuvarlamaModu: 1,
         degerKaynagiBaglami: {
-          denetlenenId: Number(uretimDenetlenenId),
-          yil: Number(uretimYil),
-          konsolidasyonMu: uretimKonsolide,
+          denetlenenId,
+          yil,
+          konsolidasyonMu,
           denetciId: Number(uretimDenetciId) || 0,
-          testMizanId: seciliTestMizani?.id || null,
+          testMizanId: testMizani?.id || null,
         },
       },
       tabloSabitAnahtari: tablo.kod,
@@ -1116,7 +1118,7 @@ const Page = () => {
       donusumTipi: set.donusumTipi,
       tabloTuru: tablo.tabloTuru,
       nakitAkisYontemi: tablo.nakitAkisYontemi,
-      gecerlilikTarihi: uretimBitis,
+      gecerlilikTarihi: bitisTarihi,
       tanimSnapshotSha256: snapshotSha256,
     };
   };
@@ -1137,9 +1139,9 @@ const Page = () => {
     }
   };
 
-  const finansalTabloOnizle = async () => {
-    const istek = finansalTabloIstekOlustur();
-    if (!istek || !user.token) return;
+  const finansalTabloOnizle = async (testMizani: FinansalTabloTestMizan | null = seciliTestMizani): Promise<FinansalTabloUretimOnizlemeSonucu | null> => {
+    const istek = finansalTabloIstekOlustur(testMizani);
+    if (!istek || !user.token) return null;
     setUretimOnizlemeYukleniyor(true);
     setUretimOnizlemeSonucu(null);
     setTanimHatasi("");
@@ -1147,8 +1149,10 @@ const Page = () => {
       const data = await previewFinansalTabloUretimi(user.token, istek);
       setUretimOnizlemeSonucu(data);
       setTanimHatasi(data.basariliMi ? "Salt-okunur örnek mizan önizlemesi tamamlandı; üretim arşivi değiştirilmedi." : data.aciklama || "Örnek mizan önizlemesi tamamlanamadı.");
+      return data;
     } catch (error) {
       setTanimHatasi(error instanceof Error ? error.message : "Örnek mizan önizlemesi tamamlanamadı.");
+      return null;
     } finally {
       setUretimOnizlemeYukleniyor(false);
     }
@@ -1428,29 +1432,25 @@ const Page = () => {
   const akilliYonlendirme = useMemo(() => {
     if (tanimYukleniyor) return { seviye: "info" as const, baslik: "Tanımlar kontrol ediliyor", aciklama: "Uygun tanım seti ve sürüm otomatik seçiliyor.", eylem: "bekle", dugme: "Kontrol ediliyor" };
     if (!secilenSet || !secilenSurum) return { seviye: "error" as const, baslik: "Kullanılabilir tanım bulunamadı", aciklama: "Filtreleri temizleyin veya aktif tanım setlerini kontrol edin.", eylem: "tanim", dugme: "Tanım seçimine dön" };
-    if (seciliSurumTaslakMi && !teknikDogrulamaGuncelMi) return { seviye: "warning" as const, baslik: "Taslak doğrulanmalı", aciklama: "Sistem tablo, kalem ve formülleri teknik olarak kontrol edecek. Bu işlem veri değiştirmez.", eylem: "dogrula", dugme: "Otomatik doğrula ve devam et" };
+    if (seciliSurumTaslakMi && !teknikDogrulamaGuncelMi) return { seviye: "warning" as const, baslik: "Otomatik test hazır", aciklama: "Sistem tanımları doğrulayacak, izole test mizanını hazırlayacak ve önizlemeyi tek işlemde çalıştıracak.", eylem: "otomatik-test", dugme: "Otomatik testi çalıştır" };
     if (seciliSurumTaslakMi && !teknikDogrulamaBasariliMi) return { seviye: "error" as const, baslik: "Düzeltilmesi gereken tanımlar var", aciklama: "Sorunlu tablo ve formüller aşağıda gösterildi. Düzeltmeden yayınlama yapılamaz.", eylem: "tanim", dugme: "Sorunları incele" };
-    if (!seciliTestMizani) return { seviye: "info" as const, baslik: "İzole test mizanı hazırlanmalı", aciklama: "Varsayılan dengeli örnek mizan oluşturulacak; gerçek mizan ve eski finansal tablolar etkilenmeyecek.", eylem: "test", dugme: "Test verisini otomatik hazırla" };
-    if (!onizlemeBasariliMi) return { seviye: uretimOnizlemeSonucu ? "warning" as const : "info" as const, baslik: uretimOnizlemeSonucu ? "Önizleme yeniden çalıştırılmalı" : "Yeni motor önizlemeye hazır", aciklama: uretimOnizlemeSonucu?.aciklama || "Seçili tanım ve test mizanıyla salt-okunur finansal tablo üretilecek.", eylem: "onizle", dugme: "Önizlemeyi çalıştır" };
+    if (!seciliTestMizani) return { seviye: "info" as const, baslik: "İzole test başlatılabilir", aciklama: "Sistem dengeli örnek mizanı hazırlayıp salt-okunur önizlemeyi kendisi çalıştıracak. Gerçek veriler ve eski tablolar etkilenmeyecek.", eylem: "otomatik-test", dugme: "Otomatik testi çalıştır" };
+    if (!onizlemeBasariliMi) return { seviye: uretimOnizlemeSonucu ? "warning" as const : "info" as const, baslik: uretimOnizlemeSonucu ? "Test yeniden çalıştırılmalı" : "Yeni motor önizlemeye hazır", aciklama: uretimOnizlemeSonucu?.aciklama || "Seçili tanım ve test mizanıyla salt-okunur finansal tablo üretilecek.", eylem: "otomatik-test", dugme: "Otomatik testi çalıştır" };
     return { seviye: "success" as const, baslik: "Admin testi başarıyla tamamlandı", aciklama: `${uretimOnizlemeSonucu?.sonuclar.length ?? 0} finansal tablo sonucu üretildi; eski akış ve üretim arşivi değiştirilmedi.`, eylem: "kgk", dugme: "KGK kontrolüne geç" };
   }, [tanimYukleniyor, secilenSet, secilenSurum, seciliSurumTaslakMi, teknikDogrulamaGuncelMi, teknikDogrulamaBasariliMi, seciliTestMizani, onizlemeBasariliMi, uretimOnizlemeSonucu]);
 
   const onerilenIslemiCalistir = async () => {
     if (akilliYonlendirme.eylem === "tanim") return setAktifAdim(0);
-    if (akilliYonlendirme.eylem === "dogrula") {
+    if (akilliYonlendirme.eylem === "otomatik-test") {
       setAktifAdim(0);
-      const sonuc = await teknikDogrula();
-      if (sonuc?.gecerliMi) setAktifAdim(1);
-      return;
-    }
-    if (akilliYonlendirme.eylem === "test") {
+      if (seciliSurumTaslakMi && !teknikDogrulamaGuncelMi) {
+        const dogrulama = await teknikDogrula();
+        if (!dogrulama?.gecerliMi) return;
+      }
       setAktifAdim(1);
-      await testMizaniOlustur();
-      return;
-    }
-    if (akilliYonlendirme.eylem === "onizle") {
-      setAktifAdim(1);
-      await finansalTabloOnizle();
+      const testMizani = seciliTestMizani || await testMizaniOlustur();
+      if (!testMizani) return;
+      await finansalTabloOnizle(testMizani);
       return;
     }
     if (akilliYonlendirme.eylem === "kgk") setAktifAdim(2);
@@ -1658,6 +1658,20 @@ const Page = () => {
       </ParentCard>
       </Box>
       <Box sx={{ display: aktifAdim === 1 ? "block" : "none" }}>
+      <Paper variant="outlined" sx={{ p: 1.5, mb: 2 }}>
+        <Stack direction={{ xs: "column", sm: "row" }} spacing={1.5} alignItems={{ sm: "center" }}>
+          <Box sx={{ flexGrow: 1 }}>
+            <Typography variant="subtitle2">Test ayrıntıları</Typography>
+            <Typography variant="body2" color="text.secondary">
+              Normal kullanımda yukarıdaki otomatik test yeterlidir. Mizan satırları, teknik üretim girdileri ve motor sonuçları yalnız inceleme gerektiğinde açılır.
+            </Typography>
+          </Box>
+          <Button size="small" variant="outlined" onClick={() => setTestAyrintilariAcik((onceki) => !onceki)}>
+            {testAyrintilariAcik ? "Ayrıntıları gizle" : "Ayrıntıları göster"}
+          </Button>
+        </Stack>
+      </Paper>
+      <Box sx={{ display: testAyrintilariAcik ? "block" : "none" }}>
       <ParentCard title="Sürümlü finansal tablo üretimi">
         <Stack spacing={1.5}>
           <Alert severity="info">
@@ -1698,7 +1712,7 @@ const Page = () => {
                 helperText="Her satırda detayKodu, borc ve alacak zorunludur; bakiye alanları boşsa otomatik hesaplanır."
               />
               <Stack direction="row" spacing={1} alignItems="center" flexWrap="wrap" useFlexGap>
-                <Button variant="contained" color="info" size="small" onClick={testMizaniOlustur} disabled={testMizanYukleniyor}>
+                <Button variant="contained" color="info" size="small" onClick={() => void testMizaniOlustur()} disabled={testMizanYukleniyor}>
                   {testMizanYukleniyor ? <CircularProgress size={18} color="inherit" /> : "Test mizanı oluştur"}
                 </Button>
                 <Button variant="outlined" color="info" size="small" onClick={mevcutMizaniEditoreYukle} disabled={mevcutMizanYukleniyor}>
@@ -1904,7 +1918,7 @@ const Page = () => {
             <Button variant="contained" size="small" onClick={finansalTabloUret} disabled={uretimYukleniyor || pilotDurumuYukleniyor || pilotDurumu?.yeniMotorEtkin !== true || !secilenSurum || !secilenKalemTablosu}>
               {uretimYukleniyor ? <CircularProgress size={18} color="inherit" /> : "Finansal tablo üret"}
             </Button>
-            <Button variant="outlined" color="info" size="small" onClick={finansalTabloOnizle} disabled={uretimOnizlemeYukleniyor || uretimYukleniyor || !secilenSurum || !secilenKalemTablosu}>
+            <Button variant="outlined" color="info" size="small" onClick={() => void finansalTabloOnizle()} disabled={uretimOnizlemeYukleniyor || uretimYukleniyor || !secilenSurum || !secilenKalemTablosu}>
               {uretimOnizlemeYukleniyor ? <CircularProgress size={18} /> : "Örnek mizanla önizle"}
             </Button>
             {uretimSonucu?.kayit.uretimId && <Button variant="outlined" size="small" onClick={finansalTabloyuTekrarUret} disabled={uretimTekrarYukleniyor}>
@@ -1981,6 +1995,7 @@ const Page = () => {
           />
         </Stack>
       </ParentCard>
+      </Box>
       </Box>
       <Box sx={{ display: aktifAdim === 0 ? "block" : "none" }}>
       <ParentCard title="Sürüm ve tanım görünümü">
