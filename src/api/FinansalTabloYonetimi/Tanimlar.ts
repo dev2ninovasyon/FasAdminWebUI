@@ -1057,26 +1057,6 @@ export type KgkWorkbookFormulu = {
   dogrulamaHatalari: string[];
 };
 
-export const compareKgkWorkbooks = async (
-  token: string,
-  oncekiDosya: File,
-  yeniDosya: File
-) => {
-  const formData = new FormData();
-  formData.append("onceki", oncekiDosya);
-  formData.append("yeni", yeniDosya);
-  const response = await fetch(`${url}/FinansalTabloYonetimi/Kgk/WorkbookKarsilastir`, {
-    method: "POST",
-    headers: { accept: "application/json", Authorization: `Bearer ${token}` },
-    body: formData,
-  });
-  const payload = await response.json().catch(() => ({}));
-  if (!response.ok) {
-    throw new Error(payload?.detail || payload?.message || payload?.Message || "KGK workbook karşılaştırılamadı.");
-  }
-  return payload as KgkWorkbookFarkSonucu;
-};
-
 export const compareArchivedKgkWorkbooks = async (
   token: string,
   istek: { url: string; oncekiSha256: string; yeniSha256: string }
@@ -1107,7 +1087,6 @@ export const applyKgkKalemFarklari = async (
   istek: {
     beklenenEszamanlilikSurumu: number;
     kalemFarklari: KgkWorkbookFarkSonucu["kalemFarklari"];
-    sayfaTabloEslestirmeleri?: Record<string, number>;
     aciklama?: string | null;
   }
 ) => {
@@ -1141,7 +1120,6 @@ export const applyKgkFormulFarklari = async (
   istek: {
     beklenenEszamanlilikSurumu: number;
     formulFarklari: KgkWorkbookFarkSonucu["formulFarklari"];
-    sayfaTabloEslestirmeleri?: Record<string, number>;
     aciklama?: string | null;
   }
 ) => {
