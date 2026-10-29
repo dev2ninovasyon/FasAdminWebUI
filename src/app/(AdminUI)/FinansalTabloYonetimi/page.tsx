@@ -66,7 +66,6 @@ import {
   getKgkScanHistory,
   KgkTaramaGecmisi,
   KgkWorkbookFarkSonucu,
-  compareKgkWorkbooks,
   compareArchivedKgkWorkbooks,
   applyKgkKalemFarklari,
   applyKgkFormulFarklari,
@@ -230,12 +229,8 @@ const Page = () => {
   const [kgkTaramaDenemesi, setKgkTaramaDenemesi] = useState(3);
   const [kgkTaramaGecmisi, setKgkTaramaGecmisi] = useState<KgkTaramaGecmisi[]>([]);
   const [kgkGecmisYukleniyor, setKgkGecmisYukleniyor] = useState(false);
-  const [kgkOncekiWorkbook, setKgkOncekiWorkbook] = useState<File | null>(null);
-  const [kgkYeniWorkbook, setKgkYeniWorkbook] = useState<File | null>(null);
   const [kgkWorkbookSonucu, setKgkWorkbookSonucu] = useState<KgkWorkbookFarkSonucu | null>(null);
-  const [kgkWorkbookYukleniyor, setKgkWorkbookYukleniyor] = useState(false);
   const [kgkArsivWorkbookYukleniyor, setKgkArsivWorkbookYukleniyor] = useState("");
-  const [kgkSayfaTabloEslestirmeleriJson, setKgkSayfaTabloEslestirmeleriJson] = useState("{}");
   const [uretimGirdiSha256, setUretimGirdiSha256] = useState("");
   const [uretimSnapshotSha256, setUretimSnapshotSha256] = useState("");
   const [uretimGirdiAnahtari, setUretimGirdiAnahtari] = useState("MIZAN");
@@ -909,19 +904,6 @@ const Page = () => {
     }
   };
 
-  const kgkWorkbookKarsilastir = async () => {
-    if (!user.token || !kgkOncekiWorkbook || !kgkYeniWorkbook) return;
-    setKgkWorkbookYukleniyor(true);
-    setTanimHatasi("");
-    try {
-      setKgkWorkbookSonucu(await compareKgkWorkbooks(user.token, kgkOncekiWorkbook, kgkYeniWorkbook));
-    } catch (error) {
-      setTanimHatasi(error instanceof Error ? error.message : "KGK workbook karşılaştırılamadı.");
-    } finally {
-      setKgkWorkbookYukleniyor(false);
-    }
-  };
-
   const kgkArsivWorkbookKarsilastir = async (dosya: KgkFormatKontrolSonucu["dosyalar"][number]) => {
     if (!user.token || !dosya.oncekiSha256 || !dosya.sha256) return;
     setKgkArsivWorkbookYukleniyor(dosya.url);
@@ -952,33 +934,10 @@ const Page = () => {
         aciklama,
         beklenenKaynakEszamanlilikSurumu: secilenSurum.eszamanlilikSurumu,
       });
-      const normalize = (value: string) => value.trim().toLocaleUpperCase("tr-TR")
-        .replace(/[ÇĞİÖŞÜ]/g, (karakter) => ({ Ç: "C", Ğ: "G", İ: "I", Ö: "O", Ş: "S", Ü: "U" }[karakter] || karakter))
-        .replace(/[^A-Z0-9]/g, "");
-      const sayfaTabloEslestirmeleri: Record<string, number> = {};
-      const sayfalar = Array.from(new Set(kgkWorkbookSonucu.kalemFarklari.map((fark) => (fark.yeniKalem || fark.oncekiKalem)?.sayfaAdi).filter((sayfa): sayfa is string => Boolean(sayfa))));
-      sayfalar.forEach((sayfa) => {
-        const adaylar = (surumDetayi?.tablolar || []).filter((tablo) => normalize(tablo.kod) === normalize(sayfa) || normalize(tablo.ad) === normalize(sayfa));
-        if (adaylar.length === 1) sayfaTabloEslestirmeleri[sayfa] = adaylar[0].id;
-      });
-      let manuelEslestirmeler: Record<string, number> = {};
-      try {
-        const parsed = JSON.parse(kgkSayfaTabloEslestirmeleriJson || "{}");
-        if (!parsed || Array.isArray(parsed) || typeof parsed !== "object") throw new Error("KGK sayfa–tablo eşleştirmesi bir JSON nesnesi olmalıdır.");
-        Object.entries(parsed).forEach(([sayfa, tabloId]) => {
-          const id = Number(tabloId);
-          if (!sayfa.trim() || !Number.isInteger(id) || id <= 0) throw new Error("KGK sayfa–tablo eşleştirmesinde sayfa adı ve pozitif tablo ID'si kullanılmalıdır.");
-          manuelEslestirmeler[sayfa] = id;
-        });
-      } catch (error) {
-        if (error instanceof Error) throw error;
-        throw new Error("KGK sayfa–tablo eşleştirmesi JSON olarak okunamadı.");
-      }
       const uygulama = kgkWorkbookSonucu.kalemFarklari.length > 0
         ? await applyKgkKalemFarklari(user.token, sonuc.surumId, {
           beklenenEszamanlilikSurumu: sonuc.eszamanlilikSurumu,
           kalemFarklari: kgkWorkbookSonucu.kalemFarklari,
-          sayfaTabloEslestirmeleri: { ...sayfaTabloEslestirmeleri, ...manuelEslestirmeler },
           aciklama,
         })
         : { eszamanlilikSurumu: sonuc.eszamanlilikSurumu, eklenenKalemSayisi: 0, pasifeAlinanKalemSayisi: 0, guncellenenKalemSayisi: 0 };
@@ -1008,29 +967,9 @@ const Page = () => {
     setSurumIslemiYukleniyor(true);
     setTanimHatasi("");
     try {
-      const normalize = (value: string) => value.trim().toLocaleUpperCase("tr-TR")
-        .replace(/[ÇĞİÖŞÜ]/g, (karakter) => ({ Ç: "C", Ğ: "G", İ: "I", Ö: "O", Ş: "S", Ü: "U" }[karakter] || karakter))
-        .replace(/[^A-Z0-9]/g, "");
-      const sayfaTabloEslestirmeleri: Record<string, number> = {};
-      const sayfalar = Array.from(new Set(kgkWorkbookSonucu.formulFarklari
-        .map((fark) => (fark.yeniFormul || fark.oncekiFormul)?.sayfaAdi)
-        .filter((sayfa): sayfa is string => Boolean(sayfa))));
-      sayfalar.forEach((sayfa) => {
-        const adaylar = (surumDetayi?.tablolar || []).filter((tablo) => normalize(tablo.kod) === normalize(sayfa) || normalize(tablo.ad) === normalize(sayfa));
-        if (adaylar.length === 1) sayfaTabloEslestirmeleri[sayfa] = adaylar[0].id;
-      });
-      const parsed = JSON.parse(kgkSayfaTabloEslestirmeleriJson || "{}");
-      if (!parsed || Array.isArray(parsed) || typeof parsed !== "object") throw new Error("KGK sayfa–tablo eşleştirmesi bir JSON nesnesi olmalıdır.");
-      Object.entries(parsed).forEach(([sayfa, tabloId]) => {
-        const id = Number(tabloId);
-        if (!sayfa.trim() || !Number.isInteger(id) || id <= 0) throw new Error("KGK sayfa–tablo eşleştirmesinde sayfa adı ve pozitif tablo ID'si kullanılmalıdır.");
-        sayfaTabloEslestirmeleri[sayfa] = id;
-      });
-
       const sonuc = await applyKgkFormulFarklari(user.token, secilenSurum.id, {
         beklenenEszamanlilikSurumu: secilenSurum.eszamanlilikSurumu,
         formulFarklari: kgkWorkbookSonucu.formulFarklari,
-        sayfaTabloEslestirmeleri,
         aciklama: `KGK workbook formül farkları: ${kgkWorkbookSonucu.oncekiDosyaAdi} → ${kgkWorkbookSonucu.yeniDosyaAdi}`,
       });
       setTanimSetleri((onceki) => onceki.map((set) => ({
@@ -1812,33 +1751,10 @@ const Page = () => {
             </Paper>
           )}
           <Divider />
-          <Typography variant="subtitle2">Workbook yapısal farkı</Typography>
+          <Typography variant="subtitle2">Otomatik workbook farkı</Typography>
           <Typography variant="caption" color="text.secondary">
-            İki KGK Excel dosyası makro çalıştırılmadan; sayfa, hücre, formül, stil, birleştirme ve adlandırılmış aralık anahtarlarıyla karşılaştırılır. Kalem ve formül farkları ayrı incelenir; yalnız seçili taslağa Admin onayıyla aktarılır ve otomatik yayın yapılmaz.
+            KGK kontrolünde değişen Excel için yukarıdaki “Arşivli farkı incele” işlemini kullanın. Sistem önceki ve yeni arşivi otomatik karşılaştırır, sayfaları tablo türleriyle eşleştirir; dosya veya JSON yüklemeniz gerekmez. Kalem ve formül farkları yalnız Admin onayıyla taslağa aktarılır, otomatik yayın yapılmaz.
           </Typography>
-          <Stack direction="row" spacing={1} alignItems="center" flexWrap="wrap" useFlexGap>
-            <Button component="label" size="small" variant="outlined">
-              {kgkOncekiWorkbook?.name || "Önceki workbook"}
-              <input hidden type="file" accept=".xlsx,.xlsm" onChange={(event) => setKgkOncekiWorkbook(event.target.files?.[0] || null)} />
-            </Button>
-            <Button component="label" size="small" variant="outlined">
-              {kgkYeniWorkbook?.name || "Yeni workbook"}
-              <input hidden type="file" accept=".xlsx,.xlsm" onChange={(event) => setKgkYeniWorkbook(event.target.files?.[0] || null)} />
-            </Button>
-            <Button size="small" variant="contained" onClick={kgkWorkbookKarsilastir} disabled={!kgkOncekiWorkbook || !kgkYeniWorkbook || kgkWorkbookYukleniyor}>
-              {kgkWorkbookYukleniyor ? <CircularProgress size={18} color="inherit" /> : "Workbook karşılaştır"}
-            </Button>
-          </Stack>
-          <TextField
-            fullWidth
-            size="small"
-            multiline
-            minRows={2}
-            label="KGK sayfa–tablo eşleştirmesi (JSON)"
-            value={kgkSayfaTabloEslestirmeleriJson}
-            onChange={(event) => setKgkSayfaTabloEslestirmeleriJson(event.target.value)}
-            helperText={'Otomatik eşleşmeyen sayfalar için örn. {"BOBİ FRS FDT Konsolide": 12}. Tablo ID\'si bu sürümdeki tanımdan alınır.'}
-          />
           {kgkWorkbookSonucu && (
             <Paper variant="outlined" sx={{ p: 1.5, maxHeight: 320, overflow: "auto" }}>
               <Stack direction="row" spacing={1} alignItems="center" sx={{ mb: 1 }}>
