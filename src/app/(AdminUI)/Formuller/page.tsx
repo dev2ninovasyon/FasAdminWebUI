@@ -1,6 +1,6 @@
 "use client";
 import { usePageTitle } from "@/hooks/usePageTitle";
-import { Box, Button, Grid, MenuItem, useMediaQuery } from "@mui/material";
+import { Alert, Box, Button, Grid, MenuItem, useMediaQuery } from "@mui/material";
 import { useState } from "react";
 import PageContainer from "@/app/components/Container/PageContainer";
 import Breadcrumb from "@/app/components/Layout/Shared/Breadcrumb/Breadcrumb";
@@ -15,12 +15,12 @@ const BCrumb = [
   },
   {
     to: "/Formuller",
-    title: "Formüller",
+    title: "Mevcut Sistem Formülleri",
   },
 ];
 
 const Page = () => {
-  usePageTitle("Formüller");
+  usePageTitle("Mevcut Sistem Formülleri");
   const smDown = useMediaQuery((theme: any) => theme.breakpoints.down("sm"));
 
   const [denetimTuru, setDenetimTuru] = useState("Bobi");
@@ -40,8 +40,15 @@ const Page = () => {
   const [kaydetTiklandimi, setKaydetTiklandimi] = useState(false);
 
   return (
-    <PageContainer title="Formüller" description="this is Formüller">
-      <Breadcrumb title="Formüller" items={BCrumb} />
+    <PageContainer title="Mevcut Sistem Formülleri" description="Canlıdaki mevcut finansal tablo üretiminde kullanılan formüller">
+      <Breadcrumb title="Mevcut Sistem Formülleri" items={BCrumb} />
+      <Alert
+        severity="info"
+        sx={{ mb: 2 }}
+        action={<Button color="inherit" size="small" href="/FinansalTabloYonetimi">Sürümlü yapıya git</Button>}
+      >
+        Bu ekran canlıdaki eski finansal tablo akışını yönetir. Yeni sürümlü tanım, formül ve test çalışmaları ayrı pilot ekranda yürütülür.
+      </Alert>
       <Grid container spacing={3}>
         <Grid
           size={{
@@ -135,7 +142,7 @@ const Page = () => {
           </Box>
         </Grid>
         <Grid size={{ xs: 12, lg: 12 }}>
-          {finansalTabloAdi == "ozkaynak" ? (
+          {finansalTabloAdi === "ozkaynak" ? (
             <FormullerOzkaynak
               denetimTuru={denetimTuru}
               kaydetTiklandimi={kaydetTiklandimi}

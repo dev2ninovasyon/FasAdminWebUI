@@ -96,9 +96,29 @@ const Menuitems = [
     children: [
       {
         id: uniqueId(),
-        title: "Formüller",
+        title: "Mevcut Sistem Formülleri",
         icon: IconPoint,
         href: "/Formuller",
+      },
+    ],
+  },
+  {
+    id: uniqueId(),
+    title: "Finansal Tablo Yönetimi",
+    icon: IconChartLine,
+    href: "//",
+    children: [
+      {
+        id: uniqueId(),
+        title: "Sürümlü Tanım ve Formüller",
+        icon: IconPoint,
+        href: "/FinansalTabloYonetimi",
+      },
+      {
+        id: uniqueId(),
+        title: "KGK Güncellemeleri",
+        icon: IconPoint,
+        href: "/FinansalTabloYonetimi/KgkGuncellemeleri",
       },
     ],
   },
