@@ -69,6 +69,7 @@ import {
   KgkWorkbookFarkSonucu,
   compareArchivedKgkWorkbooks,
   applyKgkKalemFarklari,
+  createKgkTaslakFromDifferences,
   applyKgkFormulFarklari,
   createFinansalTabloUretimi,
   previewFinansalTabloUretimi,
@@ -1038,48 +1039,40 @@ const Page = () => {
     setSurumIslemiYukleniyor(true);
     setTanimHatasi("");
     setSurumYonetimiMesaji("");
-    let olusturulanTaslakId = 0;
     try {
       const kaynakSurum = secilenSurum;
       const aciklama = `KGK workbook fark incelemesi: ${kgkWorkbookSonucu.oncekiDosyaAdi} → ${kgkWorkbookSonucu.yeniDosyaAdi}; önceki SHA-256 ${kgkWorkbookSonucu.oncekiSha256}; yeni SHA-256 ${kgkWorkbookSonucu.yeniSha256}; ${kgkWorkbookSonucu.farkSayisi} yapısal fark, ${kgkWorkbookSonucu.kalemFarklari.length} semantik kalem farkı, ${kgkWorkbookSonucu.formulFarklari.length} formül farkı. Otomatik yayınlanmaz.`;
-      const sonuc = await cloneFinansalSurum(user.token, kaynakSurum.id, {
+      const sonuc = await createKgkTaslakFromDifferences(user.token, kaynakSurum.id, {
         etiket: `${kaynakSurum.etiket} - KGK taslak`,
         gecerlilikBaslangici: kaynakSurum.gecerlilikBaslangici,
         gecerlilikBitisi: kaynakSurum.gecerlilikBitisi || null,
         aciklama,
         beklenenKaynakEszamanlilikSurumu: kaynakSurum.eszamanlilikSurumu,
+        kalemFarklari: kgkWorkbookSonucu.kalemFarklari,
       });
-      olusturulanTaslakId = sonuc.surumId;
-      const taslak = { ...kaynakSurum, id: sonuc.surumId, surumNo: sonuc.surumNo, etiket: `${kaynakSurum.etiket} - KGK taslak`, durum: sonuc.durum, kaynakSurumId: kaynakSurum.id, aciklama, olusturmaTarihi: new Date().toISOString(), guncellemeTarihi: new Date().toISOString(), onayTarihi: null, eszamanlilikSurumu: sonuc.eszamanlilikSurumu };
+      const taslak = {
+        ...kaynakSurum,
+        id: sonuc.surumId,
+        surumNo: sonuc.surumNo,
+        etiket: `${kaynakSurum.etiket} - KGK taslak`,
+        durum: sonuc.durum,
+        kaynakSurumId: kaynakSurum.id,
+        aciklama,
+        olusturmaTarihi: new Date().toISOString(),
+        guncellemeTarihi: new Date().toISOString(),
+        onayTarihi: null,
+        eszamanlilikSurumu: sonuc.eszamanlilikSurumu,
+        kalemSayisi: Math.max(0, kaynakSurum.kalemSayisi + sonuc.eklenenKalemSayisi - sonuc.pasifeAlinanKalemSayisi),
+      };
       setTanimSetleri((onceki) => onceki.map((set) => set.id === secilenSet.id ? { ...set, surumler: [taslak, ...set.surumler] } : set));
       setSecilenSurumId(sonuc.surumId);
       setSurumId(String(sonuc.surumId));
       setEszamanlilikSurumu(String(sonuc.eszamanlilikSurumu));
       setKgkFarkBaglami((onceki) => onceki ? { ...onceki, surumId: sonuc.surumId } : onceki);
-
-      const uygulama = kgkWorkbookSonucu.kalemFarklari.length > 0
-        ? await applyKgkKalemFarklari(user.token, sonuc.surumId, {
-          beklenenEszamanlilikSurumu: sonuc.eszamanlilikSurumu,
-          kalemFarklari: kgkWorkbookSonucu.kalemFarklari,
-          aciklama,
-        })
-        : { eszamanlilikSurumu: sonuc.eszamanlilikSurumu, eklenenKalemSayisi: 0, pasifeAlinanKalemSayisi: 0, guncellenenKalemSayisi: 0 };
-      setTanimSetleri((onceki) => onceki.map((set) => set.id !== secilenSet.id ? set : {
-        ...set,
-        surumler: set.surumler.map((surum) => surum.id === sonuc.surumId ? {
-          ...surum,
-          eszamanlilikSurumu: uygulama.eszamanlilikSurumu,
-          kalemSayisi: Math.max(0, kaynakSurum.kalemSayisi + uygulama.eklenenKalemSayisi - uygulama.pasifeAlinanKalemSayisi),
-        } : surum),
-      }));
-      setEszamanlilikSurumu(String(uygulama.eszamanlilikSurumu));
-      setKgkKalemFarkiUygulandiMi(true);
-      setSurumYonetimiMesaji(`KGK taslağı oluşturuldu: ${uygulama.eklenenKalemSayisi} yeni, ${uygulama.pasifeAlinanKalemSayisi} pasif, ${uygulama.guncellenenKalemSayisi} güncellenen kalem. Formül farkları ayrı Admin onayıyla aktarılır; taslak otomatik yayınlanmaz.`);
+      setKgkKalemFarkiUygulandiMi(kgkWorkbookSonucu.kalemFarklari.length > 0);
+      setSurumYonetimiMesaji(`KGK taslağı ve kalem farkları tek işlemde oluşturuldu: ${sonuc.eklenenKalemSayisi} yeni, ${sonuc.pasifeAlinanKalemSayisi} pasif, ${sonuc.guncellenenKalemSayisi} güncellenen kalem. Formül farkları ayrı Admin onayıyla aktarılır; taslak otomatik yayınlanmaz.`);
     } catch (error) {
-      const hata = error instanceof Error ? error.message : "KGK farkı için taslak oluşturulamadı.";
-      setTanimHatasi(olusturulanTaslakId
-        ? `Taslak #${olusturulanTaslakId} oluşturuldu ancak KGK kalem farkları tamamlanamadı: ${hata}`
-        : hata);
+      setTanimHatasi(error instanceof Error ? error.message : "KGK farkı için taslak oluşturulamadı; herhangi bir yarım taslak kaydedilmedi.");
     } finally {
       setSurumIslemiYukleniyor(false);
     }
