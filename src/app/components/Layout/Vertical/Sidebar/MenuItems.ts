@@ -73,7 +73,7 @@ const Menuitems: MenuitemsType[] = [
     children: [
       {
         id: uniqueId(),
-        title: "Formüller",
+        title: "Mevcut Sistem Formülleri",
         icon: IconPoint,
         href: "/Formuller",
       },
@@ -87,9 +87,23 @@ const Menuitems: MenuitemsType[] = [
   },
   {
     id: uniqueId(),
-    title: "Finansal Tablo Yonetimi",
+    title: "Finansal Tablo Yönetimi",
     icon: IconChartLine,
-    href: "/FinansalTabloYonetimi",
+    href: "/",
+    children: [
+      {
+        id: uniqueId(),
+        title: "Sürümlü Tanım ve Formüller",
+        icon: IconPoint,
+        href: "/FinansalTabloYonetimi",
+      },
+      {
+        id: uniqueId(),
+        title: "KGK Güncellemeleri",
+        icon: IconPoint,
+        href: "/FinansalTabloYonetimi/KgkGuncellemeleri",
+      },
+    ],
   },
   {
     id: uniqueId(),

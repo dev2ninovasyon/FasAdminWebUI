@@ -27,6 +27,7 @@ import {
 } from "@mui/material";
 import Grid from "@mui/material/GridLegacy";
 import { ChangeEvent, useEffect, useMemo, useState } from "react";
+import { usePathname, useRouter } from "next/navigation";
 import PageContainer from "@/app/components/Container/PageContainer";
 import Breadcrumb from "@/app/components/Layout/Shared/Breadcrumb/Breadcrumb";
 import ParentCard from "@/app/components/Shared/ParentCard";
@@ -103,13 +104,52 @@ import {
   getFinansalTabloTestMizanlari,
 } from "@/api/FinansalTabloYonetimi/TestMizan";
 
-const breadcrumbItems = [
-  { to: "/Anasayfa", title: "Admin Menüsü" },
-  { to: "/FinansalTabloYonetimi", title: "Finansal Tablo Yönetimi" },
-];
-
 const sayi = (value?: number) =>
   new Intl.NumberFormat("tr-TR").format(value ?? 0);
+
+const raporlamaStandardiAdi = (deger?: number) =>
+  deger === 1 ? "BOBİ FRS" : deger === 2 ? "TFRS" : deger === 3 ? "KÜMİ FRS" : "Belirsiz standart";
+
+const kapsamAdi = (deger?: number) =>
+  deger === 1 ? "Münferit" : deger === 2 ? "Konsolide" : "Belirsiz kapsam";
+
+type KgkDosyasi = KgkFormatKontrolSonucu["dosyalar"][number];
+
+type KgkFarkBaglami = {
+  dosya: KgkDosyasi;
+  tanimSetiId: number;
+  surumId: number;
+};
+
+const kgkMetniniNormallestir = (deger: string) => deger
+  .toLocaleUpperCase("tr-TR")
+  .replace(/[ÇĞİÖŞÜ]/g, (karakter) => ({ Ç: "C", Ğ: "G", İ: "I", Ö: "O", Ş: "S", Ü: "U" }[karakter] || karakter))
+  .replace(/[^A-Z0-9]/g, "");
+
+const kgkDosyaUyumsuzlugu = (dosya: KgkDosyasi, tanimSeti: FinansalTanimSeti) => {
+  const kaynak = kgkMetniniNormallestir(`${dosya.grup} ${dosya.baslik} ${dosya.dosyaAdi}`);
+  const kaynakStandardi = kaynak.includes("BOBIFRS") || kaynak.includes("BOBI")
+    ? 1
+    : kaynak.includes("TFRS")
+      ? 2
+      : kaynak.includes("KUMIFRS") || kaynak.includes("KUMI")
+        ? 3
+        : 0;
+  if (kaynakStandardi && kaynakStandardi !== tanimSeti.raporlamaStandardi) {
+    return "Seçilen KGK dosyasının raporlama standardı hedef tanım setiyle uyuşmuyor.";
+  }
+
+  const kaynakKapsami = kaynak.includes("MUNFERIT") || kaynak.includes("KONSOLIDEOLMAYAN")
+    ? 1
+    : kaynak.includes("KONSOLIDE")
+      ? 2
+      : 0;
+  if (kaynakKapsami && kaynakKapsami !== tanimSeti.kapsam) {
+    return "Seçilen KGK dosyasının münferit/konsolide kapsamı hedef tanım setiyle uyuşmuyor.";
+  }
+
+  return "";
+};
 
 type KuralTerimiFormu = {
   id: number;
@@ -162,17 +202,24 @@ const finansalTabloAdimlari = [
     aciklama: "İzole test mizanı oluşturun, yeni motor sonucunu ve legacy karşılaştırmasını inceleyin.",
     ipucu: "Test mizanı gerçek mizanı veya üretim arşivini değiştirmez. Önce test mizanını oluşturup ardından önizleme çalıştırın.",
   },
-  {
-    baslik: "KGK kontrolü",
-    aciklama: "KGK dosya güncellemelerini kontrol edin, farkları inceleyin ve onaylı çıktıyı üretin.",
-    ipucu: "Önce KGK’yı kontrol edin. Değişiklik varsa workbook karşılaştırmasını tamamladıktan sonra çıktı oluşturun.",
-  },
 ] as const;
 
 const Page = () => {
   const user = useSelector((state: AppState) => state.userReducer);
-  const [aktifAdim, setAktifAdim] = useState(0);
+  const pathname = usePathname();
+  const router = useRouter();
+  const kgkSayfasi = pathname.endsWith("/KgkGuncellemeleri");
+  const sayfaBasligi = kgkSayfasi ? "KGK Güncellemeleri" : "Sürümlü Tanım ve Formüller";
+  const breadcrumbItems = [
+    { to: "/Anasayfa", title: "Admin Menüsü" },
+    { to: "/FinansalTabloYonetimi", title: "Sürümlü Tanım ve Formüller" },
+    ...(kgkSayfasi
+      ? [{ to: "/FinansalTabloYonetimi/KgkGuncellemeleri", title: "KGK Güncellemeleri" }]
+      : []),
+  ];
+  const [aktifAdim, setAktifAdim] = useState(kgkSayfasi ? 2 : 0);
   const [gelismisPaketAraclariAcik, setGelismisPaketAraclariAcik] = useState(false);
+  const [kgkGelismisAraclarAcik, setKgkGelismisAraclarAcik] = useState(false);
   const [teknikDuzenlemeAraclariAcik, setTeknikDuzenlemeAraclariAcik] = useState(false);
   const [testAyrintilariAcik, setTestAyrintilariAcik] = useState(false);
   const [surumId, setSurumId] = useState("");
@@ -230,6 +277,9 @@ const Page = () => {
   const [kgkTaramaGecmisi, setKgkTaramaGecmisi] = useState<KgkTaramaGecmisi[]>([]);
   const [kgkGecmisYukleniyor, setKgkGecmisYukleniyor] = useState(false);
   const [kgkWorkbookSonucu, setKgkWorkbookSonucu] = useState<KgkWorkbookFarkSonucu | null>(null);
+  const [kgkFarkBaglami, setKgkFarkBaglami] = useState<KgkFarkBaglami | null>(null);
+  const [kgkKalemFarkiUygulandiMi, setKgkKalemFarkiUygulandiMi] = useState(false);
+  const [kgkFormulFarkiUygulandiMi, setKgkFormulFarkiUygulandiMi] = useState(false);
   const [kgkArsivWorkbookYukleniyor, setKgkArsivWorkbookYukleniyor] = useState("");
   const [uretimGirdiSha256, setUretimGirdiSha256] = useState("");
   const [uretimSnapshotSha256, setUretimSnapshotSha256] = useState("");
@@ -314,6 +364,14 @@ const Page = () => {
   const [kuralForm, setKuralForm] = useState({ hesaplamaTuru: 1, isaretPolitikasi: 1, bosDegerPolitikasi: 1, sabitDeger: "", aciklama: "", hamFormul: "", kgkExcelHedefi: "", aktifMi: true, terimler: [] as KuralTerimiFormu[] });
 
   useEffect(() => {
+    setAktifAdim((onceki) => kgkSayfasi ? 2 : onceki === 2 ? 0 : onceki);
+  }, [kgkSayfasi]);
+
+  useEffect(() => {
+    if (tanimHatasi) setSurumYonetimiMesaji("");
+  }, [tanimHatasi]);
+
+  useEffect(() => {
     if (!user.token) return;
     let etkin = true;
     setTanimYukleniyor(true);
@@ -378,6 +436,35 @@ const Page = () => {
   const secilenSurum = secilenSet?.surumler.find((surum) => surum.id === secilenSurumId);
   const seciliKgkKaynakDonemi = kgkKaynakDonemleri.find((kaynak) => kaynak.kod === kgkKaynakDonemKodu);
   const secilenKalemTablosu = surumDetayi?.tablolar.find((tablo) => tablo.id === kalemTabloId) || surumDetayi?.tablolar[0];
+
+  const kgkFarkiniTemizle = () => {
+    setKgkWorkbookSonucu(null);
+    setKgkFarkBaglami(null);
+    setKgkKalemFarkiUygulandiMi(false);
+    setKgkFormulFarkiUygulandiMi(false);
+  };
+
+  const tanimSetiSec = (id: number) => {
+    const set = tanimSetleri.find((aday) => aday.id === id);
+    const surum = set?.surumler?.find((aday) => surumDurumKodu(aday.durum) === 3) || set?.surumler?.[0];
+    setSecilenSetId(id);
+    setSecilenSurumId(surum?.id || 0);
+    setSurumId(surum ? String(surum.id) : "");
+    setEszamanlilikSurumu(surum ? String(surum.eszamanlilikSurumu) : "");
+    setTanimHatasi("");
+    setSurumYonetimiMesaji("");
+    kgkFarkiniTemizle();
+  };
+
+  const surumSec = (id: number) => {
+    const surum = secilenSet?.surumler.find((aday) => aday.id === id);
+    setSecilenSurumId(id);
+    setSurumId(surum ? String(surum.id) : "");
+    setEszamanlilikSurumu(surum ? String(surum.eszamanlilikSurumu) : "");
+    setTanimHatasi("");
+    setSurumYonetimiMesaji("");
+    kgkFarkiniTemizle();
+  };
 
   useEffect(() => {
     if (!secilenSurum) {
@@ -457,6 +544,10 @@ const Page = () => {
         const onerilen = kaynaklar.find((kaynak) => kaynak.onerilenMi) || kaynaklar[0];
         if (onerilen) setKgkKaynakDonemKodu(onerilen.kod);
         setKgkKontrolSonucu(null);
+        setKgkWorkbookSonucu(null);
+        setKgkFarkBaglami(null);
+        setKgkKalemFarkiUygulandiMi(false);
+        setKgkFormulFarkiUygulandiMi(false);
       } catch (error) {
         if (etkin) setTanimHatasi(error instanceof Error ? error.message : "KGK kaynak dönemleri okunamadı.");
       }
@@ -486,7 +577,7 @@ const Page = () => {
       setSurumDetayi((onceki) => onceki ? { ...onceki, surum: { ...onceki.surum, etiket: metaEtiket.trim(), gecerlilikBaslangici: metaBaslangic, gecerlilikBitisi: metaBitis || null, aciklama: metaAciklama.trim() || null, eszamanlilikSurumu: sonuc.eszamanlilikSurumu, guncellemeTarihi: sonuc.guncellemeTarihi } } : onceki);
       setMetaDuzenleme(false);
     } catch (error) {
-      setTanimHatasi(error instanceof Error ? error.message : "Sürüm metadata güncellenemedi.");
+      setTanimHatasi(error instanceof Error ? error.message : "Sürüm bilgileri güncellenemedi.");
     } finally {
       setMetaKaydediliyor(false);
     }
@@ -742,6 +833,7 @@ const Page = () => {
     geriDonusMu = false
   ) => {
     if (!user.token || !kaynakSurum) return;
+    kgkFarkiniTemizle();
     setSurumIslemiYukleniyor(true);
     setTanimHatasi("");
     setSurumYonetimiMesaji("");
@@ -813,6 +905,7 @@ const Page = () => {
     if (!user.token) return;
     setKgkKontrolYukleniyor(true);
     setTanimHatasi("");
+    kgkFarkiniTemizle();
     try {
       const oncekiDosyalar = kgkKontrolSonucu?.kaynakDonemKodu === kgkKaynakDonemKodu ? kgkKontrolSonucu.dosyalar.map((dosya) => ({
         url: dosya.url,
@@ -850,6 +943,8 @@ const Page = () => {
     if (!user.token) return;
     setKgkTaramaYukleniyor(true);
     setTanimHatasi("");
+    setSurumYonetimiMesaji("");
+    kgkFarkiniTemizle();
     try {
       const oncekiDosyalar = kgkKontrolSonucu?.kaynakDonemKodu === kgkKaynakDonemKodu ? kgkKontrolSonucu.dosyalar.map((dosya) => ({
         url: dosya.url,
@@ -866,9 +961,11 @@ const Page = () => {
         raporlamaDonemiBitisTarihi: kgkRaporlamaTarihi,
       });
       setKgkKontrolSonucu(data.kontrol);
-      setTanimHatasi(data.hatalar.length > 0
-        ? `${data.kontrol.bulunanDosyaSayisi} dosya kontrol edildi; ${data.hatalar.length} arşivleme hatası oluştu.`
-        : `${data.arsivler.length} KGK dosyası arşivlendi; ${data.toplamDenemeSayisi} deneme yapıldı.`);
+      if (data.hatalar.length > 0) {
+        setTanimHatasi(`${data.kontrol.bulunanDosyaSayisi} dosya kontrol edildi; ${data.hatalar.length} arşivleme hatası oluştu.`);
+      } else {
+        setSurumYonetimiMesaji(`${data.arsivler.length} KGK dosyası arşivlendi; ${data.toplamDenemeSayisi} deneme yapıldı.`);
+      }
       await kgkTaramaGecmisiniYukle();
     } catch (error) {
       setTanimHatasi(error instanceof Error ? error.message : "KGK tarama ve arşivleme tamamlanamadı.");
@@ -894,9 +991,10 @@ const Page = () => {
     if (!user.token) return;
     setKgkArsivlenenUrl(fileUrl);
     setTanimHatasi("");
+    setSurumYonetimiMesaji("");
     try {
       const sonuc = await archiveKgkFormat(user.token, fileUrl);
-      setTanimHatasi(sonuc.yeniMi ? `${sonuc.dosyaAdi} arşive kaydedildi (${sonuc.sha256}).` : `${sonuc.dosyaAdi} aynı SHA-256 ile daha önce arşivlenmiş.`);
+      setSurumYonetimiMesaji(sonuc.yeniMi ? `${sonuc.dosyaAdi} arşive kaydedildi (${sonuc.sha256}).` : `${sonuc.dosyaAdi} aynı SHA-256 ile daha önce arşivlenmiş.`);
     } catch (error) {
       setTanimHatasi(error instanceof Error ? error.message : "KGK formatı arşivlenemedi.");
     } finally {
@@ -904,16 +1002,26 @@ const Page = () => {
     }
   };
 
-  const kgkArsivWorkbookKarsilastir = async (dosya: KgkFormatKontrolSonucu["dosyalar"][number]) => {
-    if (!user.token || !dosya.oncekiSha256 || !dosya.sha256) return;
+  const kgkArsivWorkbookKarsilastir = async (dosya: KgkDosyasi) => {
+    if (!user.token || !dosya.oncekiSha256 || !dosya.sha256 || !secilenSet || !secilenSurum) return;
+    const uyumsuzluk = kgkDosyaUyumsuzlugu(dosya, secilenSet);
+    if (uyumsuzluk) {
+      kgkFarkiniTemizle();
+      setTanimHatasi(uyumsuzluk);
+      return;
+    }
+    kgkFarkiniTemizle();
     setKgkArsivWorkbookYukleniyor(dosya.url);
     setTanimHatasi("");
+    setSurumYonetimiMesaji("");
     try {
-      setKgkWorkbookSonucu(await compareArchivedKgkWorkbooks(user.token, {
+      const sonuc = await compareArchivedKgkWorkbooks(user.token, {
         url: dosya.url,
         oncekiSha256: dosya.oncekiSha256,
         yeniSha256: dosya.sha256,
-      }));
+      });
+      setKgkWorkbookSonucu(sonuc);
+      setKgkFarkBaglami({ dosya, tanimSetiId: secilenSet.id, surumId: secilenSurum.id });
     } catch (error) {
       setTanimHatasi(error instanceof Error ? error.message : "Arşivlenmiş KGK workbook karşılaştırılamadı.");
     } finally {
@@ -922,18 +1030,33 @@ const Page = () => {
   };
 
   const kgkFarktanTaslakOlustur = async () => {
-    if (!user.token || !secilenSurum || !kgkWorkbookSonucu) return;
+    if (!user.token || !secilenSurum || !secilenSet || !kgkWorkbookSonucu) return;
+    if (!kgkFarkBaglami || kgkFarkBaglami.tanimSetiId !== secilenSet.id || kgkFarkBaglami.surumId !== secilenSurum.id) {
+      setTanimHatasi("KGK farkı başka bir tanım veya sürüm için incelendi. Hedefi seçip arşivli farkı yeniden inceleyin.");
+      return;
+    }
     setSurumIslemiYukleniyor(true);
     setTanimHatasi("");
+    setSurumYonetimiMesaji("");
+    let olusturulanTaslakId = 0;
     try {
+      const kaynakSurum = secilenSurum;
       const aciklama = `KGK workbook fark incelemesi: ${kgkWorkbookSonucu.oncekiDosyaAdi} → ${kgkWorkbookSonucu.yeniDosyaAdi}; önceki SHA-256 ${kgkWorkbookSonucu.oncekiSha256}; yeni SHA-256 ${kgkWorkbookSonucu.yeniSha256}; ${kgkWorkbookSonucu.farkSayisi} yapısal fark, ${kgkWorkbookSonucu.kalemFarklari.length} semantik kalem farkı, ${kgkWorkbookSonucu.formulFarklari.length} formül farkı. Otomatik yayınlanmaz.`;
-      const sonuc = await cloneFinansalSurum(user.token, secilenSurum.id, {
-        etiket: `${secilenSurum.etiket} - KGK taslak`,
-        gecerlilikBaslangici: secilenSurum.gecerlilikBaslangici,
-        gecerlilikBitisi: secilenSurum.gecerlilikBitisi || null,
+      const sonuc = await cloneFinansalSurum(user.token, kaynakSurum.id, {
+        etiket: `${kaynakSurum.etiket} - KGK taslak`,
+        gecerlilikBaslangici: kaynakSurum.gecerlilikBaslangici,
+        gecerlilikBitisi: kaynakSurum.gecerlilikBitisi || null,
         aciklama,
-        beklenenKaynakEszamanlilikSurumu: secilenSurum.eszamanlilikSurumu,
+        beklenenKaynakEszamanlilikSurumu: kaynakSurum.eszamanlilikSurumu,
       });
+      olusturulanTaslakId = sonuc.surumId;
+      const taslak = { ...kaynakSurum, id: sonuc.surumId, surumNo: sonuc.surumNo, etiket: `${kaynakSurum.etiket} - KGK taslak`, durum: sonuc.durum, kaynakSurumId: kaynakSurum.id, aciklama, olusturmaTarihi: new Date().toISOString(), guncellemeTarihi: new Date().toISOString(), onayTarihi: null, eszamanlilikSurumu: sonuc.eszamanlilikSurumu };
+      setTanimSetleri((onceki) => onceki.map((set) => set.id === secilenSet.id ? { ...set, surumler: [taslak, ...set.surumler] } : set));
+      setSecilenSurumId(sonuc.surumId);
+      setSurumId(String(sonuc.surumId));
+      setEszamanlilikSurumu(String(sonuc.eszamanlilikSurumu));
+      setKgkFarkBaglami((onceki) => onceki ? { ...onceki, surumId: sonuc.surumId } : onceki);
+
       const uygulama = kgkWorkbookSonucu.kalemFarklari.length > 0
         ? await applyKgkKalemFarklari(user.token, sonuc.surumId, {
           beklenenEszamanlilikSurumu: sonuc.eszamanlilikSurumu,
@@ -941,21 +1064,67 @@ const Page = () => {
           aciklama,
         })
         : { eszamanlilikSurumu: sonuc.eszamanlilikSurumu, eklenenKalemSayisi: 0, pasifeAlinanKalemSayisi: 0, guncellenenKalemSayisi: 0 };
-      const yeniSurum = { ...secilenSurum, id: sonuc.surumId, surumNo: sonuc.surumNo, etiket: `${secilenSurum.etiket} - KGK taslak`, durum: sonuc.durum, kaynakSurumId: secilenSurum.id, aciklama, olusturmaTarihi: new Date().toISOString(), guncellemeTarihi: new Date().toISOString(), onayTarihi: null, eszamanlilikSurumu: uygulama.eszamanlilikSurumu, kalemSayisi: Math.max(0, secilenSurum.kalemSayisi + uygulama.eklenenKalemSayisi - uygulama.pasifeAlinanKalemSayisi) };
-      setTanimSetleri((onceki) => onceki.map((set) => set.id === secilenSetId ? { ...set, surumler: [yeniSurum, ...set.surumler] } : set));
-      setSecilenSurumId(sonuc.surumId);
-      setSurumId(String(sonuc.surumId));
+      setTanimSetleri((onceki) => onceki.map((set) => set.id !== secilenSet.id ? set : {
+        ...set,
+        surumler: set.surumler.map((surum) => surum.id === sonuc.surumId ? {
+          ...surum,
+          eszamanlilikSurumu: uygulama.eszamanlilikSurumu,
+          kalemSayisi: Math.max(0, kaynakSurum.kalemSayisi + uygulama.eklenenKalemSayisi - uygulama.pasifeAlinanKalemSayisi),
+        } : surum),
+      }));
       setEszamanlilikSurumu(String(uygulama.eszamanlilikSurumu));
-      setTanimHatasi(`KGK taslağı oluşturuldu: ${uygulama.eklenenKalemSayisi} yeni, ${uygulama.pasifeAlinanKalemSayisi} pasif, ${uygulama.guncellenenKalemSayisi} güncellenen kalem. Formül farkları ayrı Admin onayıyla aktarılır; taslak otomatik yayınlanmaz.`);
+      setKgkKalemFarkiUygulandiMi(true);
+      setSurumYonetimiMesaji(`KGK taslağı oluşturuldu: ${uygulama.eklenenKalemSayisi} yeni, ${uygulama.pasifeAlinanKalemSayisi} pasif, ${uygulama.guncellenenKalemSayisi} güncellenen kalem. Formül farkları ayrı Admin onayıyla aktarılır; taslak otomatik yayınlanmaz.`);
     } catch (error) {
-      setTanimHatasi(error instanceof Error ? error.message : "KGK farkı için taslak oluşturulamadı.");
+      const hata = error instanceof Error ? error.message : "KGK farkı için taslak oluşturulamadı.";
+      setTanimHatasi(olusturulanTaslakId
+        ? `Taslak #${olusturulanTaslakId} oluşturuldu ancak KGK kalem farkları tamamlanamadı: ${hata}`
+        : hata);
+    } finally {
+      setSurumIslemiYukleniyor(false);
+    }
+  };
+
+  const kgkKalemFarklariniTaslagAktar = async () => {
+    if (!user.token || !secilenSet || !secilenSurum || surumDurumKodu(secilenSurum.durum) !== 1 || !kgkWorkbookSonucu?.semantikDegisiklikVarMi) return;
+    if (!kgkFarkBaglami || kgkFarkBaglami.tanimSetiId !== secilenSet.id || kgkFarkBaglami.surumId !== secilenSurum.id) {
+      setTanimHatasi("KGK kalem farkı seçili taslağa ait değil. Hedef sürüm için arşivli farkı yeniden inceleyin.");
+      return;
+    }
+
+    setSurumIslemiYukleniyor(true);
+    setTanimHatasi("");
+    setSurumYonetimiMesaji("");
+    try {
+      const sonuc = await applyKgkKalemFarklari(user.token, secilenSurum.id, {
+        beklenenEszamanlilikSurumu: secilenSurum.eszamanlilikSurumu,
+        kalemFarklari: kgkWorkbookSonucu.kalemFarklari,
+        aciklama: `KGK workbook kalem farkları: ${kgkWorkbookSonucu.oncekiDosyaAdi} → ${kgkWorkbookSonucu.yeniDosyaAdi}`,
+      });
+      setTanimSetleri((onceki) => onceki.map((set) => set.id !== secilenSet.id ? set : {
+        ...set,
+        surumler: set.surumler.map((surum) => surum.id === secilenSurum.id ? {
+          ...surum,
+          eszamanlilikSurumu: sonuc.eszamanlilikSurumu,
+          kalemSayisi: Math.max(0, surum.kalemSayisi + sonuc.eklenenKalemSayisi - sonuc.pasifeAlinanKalemSayisi),
+        } : surum),
+      }));
+      setEszamanlilikSurumu(String(sonuc.eszamanlilikSurumu));
+      setKgkKalemFarkiUygulandiMi(true);
+      setSurumYonetimiMesaji(`KGK kalem farkları taslağa aktarıldı: ${sonuc.eklenenKalemSayisi} yeni, ${sonuc.pasifeAlinanKalemSayisi} pasif, ${sonuc.guncellenenKalemSayisi} güncellenen kalem. Taslak otomatik yayınlanmadı.`);
+    } catch (error) {
+      setTanimHatasi(error instanceof Error ? error.message : "KGK kalem farkları taslağa uygulanamadı.");
     } finally {
       setSurumIslemiYukleniyor(false);
     }
   };
 
   const kgkFormulFarklariniTaslagAktar = async () => {
-    if (!user.token || !secilenSurum || surumDurumKodu(secilenSurum.durum) !== 1 || !kgkWorkbookSonucu?.formulDegisikligiVarMi) return;
+    if (!user.token || !secilenSet || !secilenSurum || surumDurumKodu(secilenSurum.durum) !== 1 || !kgkWorkbookSonucu?.formulDegisikligiVarMi) return;
+    if (!kgkFarkBaglami || kgkFarkBaglami.tanimSetiId !== secilenSet.id || kgkFarkBaglami.surumId !== secilenSurum.id) {
+      setTanimHatasi("KGK formül farkı seçili taslağa ait değil. Hedef sürüm için arşivli farkı yeniden inceleyin.");
+      return;
+    }
     const hataliFormuller = kgkWorkbookSonucu.formulFarklari
       .map((fark) => fark.yeniFormul)
       .filter((formul) => formul && formul.dogrulamaHatalari.length > 0);
@@ -966,6 +1135,7 @@ const Page = () => {
 
     setSurumIslemiYukleniyor(true);
     setTanimHatasi("");
+    setSurumYonetimiMesaji("");
     try {
       const sonuc = await applyKgkFormulFarklari(user.token, secilenSurum.id, {
         beklenenEszamanlilikSurumu: secilenSurum.eszamanlilikSurumu,
@@ -975,12 +1145,13 @@ const Page = () => {
       setTanimSetleri((onceki) => onceki.map((set) => ({
         ...set,
         surumler: set.surumler.map((surum) => surum.id === secilenSurum.id
-          ? { ...surum, eszamanlilikSurumu: sonuc.eszamanlilikSurumu, formulSayisi: surum.formulSayisi + sonuc.eklenenFormulSayisi }
+          ? { ...surum, eszamanlilikSurumu: sonuc.eszamanlilikSurumu, formulSayisi: Math.max(0, surum.formulSayisi + sonuc.eklenenFormulSayisi - sonuc.pasifeAlinanFormulSayisi) }
           : surum),
       })));
       setEszamanlilikSurumu(String(sonuc.eszamanlilikSurumu));
       setSurumDetayi(await getFinansalSurumDetay(user.token, secilenSurum.id));
-      setTanimHatasi(`KGK formül farkları taslağa aktarıldı: ${sonuc.eklenenFormulSayisi} yeni, ${sonuc.guncellenenFormulSayisi} güncellenen, ${sonuc.pasifeAlinanFormulSayisi} pasif formül; ${sonuc.yazilanTerimSayisi} terim yazıldı. Taslak otomatik yayınlanmadı.`);
+      setKgkFormulFarkiUygulandiMi(true);
+      setSurumYonetimiMesaji(`KGK formül farkları taslağa aktarıldı: ${sonuc.eklenenFormulSayisi} yeni, ${sonuc.guncellenenFormulSayisi} güncellenen, ${sonuc.pasifeAlinanFormulSayisi} pasif formül; ${sonuc.yazilanTerimSayisi} terim yazıldı. Taslak otomatik yayınlanmadı.`);
     } catch (error) {
       setTanimHatasi(error instanceof Error ? error.message : "KGK formül farkları taslağa uygulanamadı.");
     } finally {
@@ -1136,7 +1307,7 @@ const Page = () => {
       setUretimBaslangic((onceki) => onceki || `${kayit.yil}-01-01`);
       setUretimBitis((onceki) => onceki || `${kayit.yil}-12-31`);
       setUretimOnizlemeSonucu(null);
-      setTanimHatasi(`Test mizanı oluşturuldu: ${kayit.ad} · ${kayit.satirlar.length} satır · SHA-256 ${kayit.sha256.slice(0, 16)}…`);
+      setSurumYonetimiMesaji(`Test mizanı oluşturuldu: ${kayit.ad} · ${kayit.satirlar.length} satır. Salt-okunur önizlemeye hazır.`);
       return kayit;
     } catch (error) {
       setTanimHatasi(error instanceof Error ? error.message : "Test mizanı oluşturulamadı.");
@@ -1228,7 +1399,8 @@ const Page = () => {
     try {
       const data = await createFinansalTabloUretimi(user.token, istek);
       setUretimSonucu(data);
-      setTanimHatasi(data.kayit.durum === 1 ? "Finansal tablo üretimi arşivlendi." : data.kayit.aciklama || "Finansal tablo üretimi tamamlanamadı.");
+      if (data.kayit.durum === 1) setSurumYonetimiMesaji("Finansal tablo üretimi arşivlendi.");
+      else setTanimHatasi(data.kayit.aciklama || "Finansal tablo üretimi tamamlanamadı.");
     } catch (error) {
       setTanimHatasi(error instanceof Error ? error.message : "Finansal tablo üretimi tamamlanamadı.");
     } finally {
@@ -1245,7 +1417,8 @@ const Page = () => {
     try {
       const data = await previewFinansalTabloUretimi(user.token, istek);
       setUretimOnizlemeSonucu(data);
-      setTanimHatasi(data.basariliMi ? "Salt-okunur örnek mizan önizlemesi tamamlandı; üretim arşivi değiştirilmedi." : data.aciklama || "Örnek mizan önizlemesi tamamlanamadı.");
+      if (data.basariliMi) setSurumYonetimiMesaji("Salt-okunur örnek mizan önizlemesi tamamlandı; üretim arşivi değiştirilmedi.");
+      else setTanimHatasi(data.aciklama || "Örnek mizan önizlemesi tamamlanamadı.");
       return data;
     } catch (error) {
       setTanimHatasi(error instanceof Error ? error.message : "Örnek mizan önizlemesi tamamlanamadı.");
@@ -1262,7 +1435,8 @@ const Page = () => {
     try {
       const data = await replayFinansalTabloUretimi(user.token, uretimSonucu.kayit.uretimId);
       setUretimSonucu(data);
-      setTanimHatasi(data.kayit.durum === 1 ? `Geçmiş üretim yeniden çalıştırıldı · kaynak ${data.kayit.yenidenUretimKaynakId || "-"}.` : data.kayit.aciklama || "Geçmiş finansal tablo yeniden üretilemedi.");
+      if (data.kayit.durum === 1) setSurumYonetimiMesaji(`Geçmiş üretim yeniden çalıştırıldı · kaynak ${data.kayit.yenidenUretimKaynakId || "-"}.`);
+      else setTanimHatasi(data.kayit.aciklama || "Geçmiş finansal tablo yeniden üretilemedi.");
     } catch (error) {
       setTanimHatasi(error instanceof Error ? error.message : "Geçmiş finansal tablo yeniden üretilemedi.");
     } finally {
@@ -1355,7 +1529,7 @@ const Page = () => {
     try {
       const istek = JSON.parse(golgeKarsilastirmaJson);
       setGolgeKarsilastirmaSonucu(await compareFinansalTabloGolge(user.token, istek));
-      setTanimHatasi("Legacy/yeni motor gölge karşılaştırması tamamlandı; sonuç arşivlenmedi.");
+      setSurumYonetimiMesaji("Eski ve yeni motor karşılaştırması tamamlandı; sonuç arşivlenmedi.");
     } catch (error) {
       setTanimHatasi(error instanceof Error ? error.message : "Gölge karşılaştırması çalıştırılamadı.");
     } finally {
@@ -1374,7 +1548,7 @@ const Page = () => {
       const sonuc = await createAutomaticFinansalTabloKgkExcel(user.token, uretimSonucu.kayit.uretimId);
       setKgkRenderSonucu(sonuc);
       setKgkArsivCiktilari(await getFinansalTabloKgkCiktilari(user.token, uretimSonucu.kayit.uretimId));
-      setTanimHatasi(`Resmi KGK şablonu otomatik seçildi, dolduruldu ve indirildi: ${sonuc.dosyaAdi}`);
+      setSurumYonetimiMesaji(`Resmi KGK şablonu otomatik seçildi, dolduruldu ve indirildi: ${sonuc.dosyaAdi}`);
     } catch (error) {
       setTanimHatasi(error instanceof Error ? error.message : "KGK finansal tablo çıktısı oluşturulamadı.");
     } finally {
@@ -1401,7 +1575,7 @@ const Page = () => {
     setTanimHatasi("");
     try {
       await downloadFinansalTabloKgkCiktisi(user.token, uretimSonucu.kayit.uretimId, kayit.ciktiSha256);
-      setTanimHatasi(`Arşivlenmiş KGK çıktısı indirildi: ${kayit.ciktiDosyaAdi}`);
+      setSurumYonetimiMesaji(`Arşivlenmiş KGK çıktısı indirildi: ${kayit.ciktiDosyaAdi}`);
     } catch (error) {
       setTanimHatasi(error instanceof Error ? error.message : "Arşivlenmiş KGK çıktısı indirilemedi.");
     } finally {
@@ -1550,21 +1724,27 @@ const Page = () => {
       await finansalTabloOnizle(testMizani);
       return;
     }
-    if (akilliYonlendirme.eylem === "kgk") setAktifAdim(2);
+    if (akilliYonlendirme.eylem === "kgk") {
+      router.push("/FinansalTabloYonetimi/KgkGuncellemeleri");
+    }
   };
 
   const tamamlananAdimlar = [
     Boolean(secilenSurum && (seciliSurumYayindaMi || teknikDogrulamaBasariliMi)),
     onizlemeBasariliMi,
-    Boolean(kgkKontrolSonucu),
   ];
 
   return (
     <PageContainer
-      title="Finansal Tablo Yönetimi"
-      description="Finansal tablo tanımlarını yönetme ve yeni üretim motorunu kontrollü test etme"
+      title={sayfaBasligi}
+      description={kgkSayfasi
+        ? "Resmi KGK kaynaklarını izleme, sürüm farklarını inceleme ve onaylı taslağa aktarma"
+        : "Finansal tablo tanımlarını ve formüllerini sürümleyerek yönetme ve kontrollü test etme"}
     >
-      <Breadcrumb title="Finansal Tablo Yönetimi" items={breadcrumbItems} />
+      <Breadcrumb title={sayfaBasligi} items={breadcrumbItems} />
+      {!kgkSayfasi && tanimHatasi && <Alert severity="error" onClose={() => setTanimHatasi("")} sx={{ mb: 2 }}>{tanimHatasi}</Alert>}
+      {!kgkSayfasi && surumYonetimiMesaji && <Alert severity="success" onClose={() => setSurumYonetimiMesaji("")} sx={{ mb: 2 }}>{surumYonetimiMesaji}</Alert>}
+      {!kgkSayfasi && <>
       <Paper variant="outlined" sx={{ p: { xs: 1.5, md: 2 }, mb: 2 }}>
         <Stack spacing={1.5}>
           <Box>
@@ -1572,7 +1752,7 @@ const Page = () => {
               Finansal tablo hazırlama adımları
             </Typography>
             <Typography variant="body2" color="text.secondary">
-              Tanımı seçin, örnek mizanla üretimi test edin ve gerektiğinde KGK güncellemelerini kontrol edin.
+              Tanımı seçin, formülleri sürümleyin ve örnek mizanla üretimi test edin. KGK güncellemeleri ayrı ekrandan yönetilir.
             </Typography>
           </Box>
           <Stepper activeStep={aktifAdim} nonLinear alternativeLabel sx={{ overflowX: "auto", pb: 0.5 }}>
@@ -1634,7 +1814,57 @@ const Page = () => {
           </Button>
         </Stack>
       </Paper>
-      <Box sx={{ display: aktifAdim === 2 ? "block" : "none" }}>
+      </>}
+      <Box sx={{ display: kgkSayfasi ? "block" : "none" }}>
+      <Paper variant="outlined" sx={{ p: 1.5, mb: 2 }}>
+        <Stack spacing={1.5}>
+          <Stack direction={{ xs: "column", md: "row" }} spacing={1.5} alignItems={{ md: "center" }}>
+            <Box sx={{ flexGrow: 1 }}>
+              <Typography variant="subtitle1" fontWeight={700}>KGK kaynağı ve hedef sürüm</Typography>
+              <Typography variant="body2" color="text.secondary">
+                Önce farkın uygulanacağı tanım ve sürümü seçin. KGK dosyasının standardı ve kapsamı hedefle uyuşmuyorsa aktarım engellenir.
+              </Typography>
+            </Box>
+            <Button variant="outlined" size="small" onClick={() => router.push("/FinansalTabloYonetimi")}>
+              Sürümlü tanım ve formüllere dön
+            </Button>
+          </Stack>
+          <Alert severity="info" icon={false} sx={{ py: 0.75 }}>
+            <strong>İzlenecek yol:</strong> 1. Hedef tanım ve sürümü seçin · 2. Rapor tarihini doğrulayın · 3. Otomatik taramayı başlatın · 4. Yalnız bulunan farkları inceleyip taslağa aktarın.
+          </Alert>
+          <Grid container spacing={1.25} alignItems="center">
+            <Grid item xs={12} md={5}>
+              <FormControl fullWidth size="small">
+                <InputLabel>Hedef tanım seti</InputLabel>
+                <Select label="Hedef tanım seti" value={secilenSet ? secilenSetId : ""} onChange={(event) => tanimSetiSec(Number(event.target.value))}>
+                  {tanimSetleri.map((set) => <MenuItem key={set.id} value={set.id}>{set.kod} — {set.ad}</MenuItem>)}
+                </Select>
+              </FormControl>
+            </Grid>
+            <Grid item xs={12} md={5}>
+              <FormControl fullWidth size="small">
+                <InputLabel>Hedef sürüm</InputLabel>
+                <Select label="Hedef sürüm" value={secilenSurum ? secilenSurumId : ""} onChange={(event) => surumSec(Number(event.target.value))}>
+                  {(secilenSet?.surumler || []).map((surum) => (
+                    <MenuItem key={surum.id} value={surum.id}>
+                      {surum.etiket} · #{surum.surumNo} · {surumDurumKodu(surum.durum) === 3 ? "Yayında" : surumDurumKodu(surum.durum) === 1 ? "Taslak" : "Geçmiş"}
+                    </MenuItem>
+                  ))}
+                </Select>
+              </FormControl>
+            </Grid>
+            <Grid item xs={12} md={2}>
+              <Stack direction="row" spacing={0.5} flexWrap="wrap" useFlexGap>
+                <Chip size="small" variant="outlined" label={raporlamaStandardiAdi(secilenSet?.raporlamaStandardi)} />
+                <Chip size="small" variant="outlined" label={kapsamAdi(secilenSet?.kapsam)} />
+                {secilenSurum && <Chip size="small" color={surumDurumKodu(secilenSurum.durum) === 1 ? "warning" : surumDurumKodu(secilenSurum.durum) === 3 ? "success" : "default"} label={surumDurumKodu(secilenSurum.durum) === 1 ? "Taslak hedef" : surumDurumKodu(secilenSurum.durum) === 3 ? "Yayındaki sürüm" : "Geçmiş sürüm"} />}
+              </Stack>
+            </Grid>
+          </Grid>
+          {tanimHatasi && <Alert severity="error" onClose={() => setTanimHatasi("")}>{tanimHatasi}</Alert>}
+          {surumYonetimiMesaji && <Alert severity="success" onClose={() => setSurumYonetimiMesaji("")}>{surumYonetimiMesaji}</Alert>}
+        </Stack>
+      </Paper>
       <Paper variant="outlined" sx={{ p: 1.5, mb: 2 }}>
         <Stack direction={{ xs: "column", md: "row" }} spacing={1.5} alignItems={{ md: "center" }}>
           <Box sx={{ flexGrow: 1 }}>
@@ -1655,34 +1885,30 @@ const Page = () => {
           </Typography>
           <Paper variant="outlined" sx={{ p: 1.25 }}>
             <Grid container spacing={1.25} alignItems="center">
-              <Grid item xs={12} md={3}>
+              <Grid item xs={12} md={4}>
                 <TextField
                   fullWidth
                   size="small"
                   type="date"
                   label="Raporlama dönemi bitişi"
                   value={kgkRaporlamaTarihi}
-                  onChange={(event) => setKgkRaporlamaTarihi(event.target.value)}
+                  onChange={(event) => {
+                    setKgkRaporlamaTarihi(event.target.value);
+                    setKgkKontrolSonucu(null);
+                    setTanimHatasi("");
+                    setSurumYonetimiMesaji("");
+                    kgkFarkiniTemizle();
+                  }}
                   InputLabelProps={{ shrink: true }}
                 />
               </Grid>
               <Grid item xs={12} md={5}>
-                <FormControl fullWidth size="small">
-                  <InputLabel>KGK kaynak dönemi</InputLabel>
-                  <Select
-                    label="KGK kaynak dönemi"
-                    value={kgkKaynakDonemKodu}
-                    onChange={(event) => { setKgkKaynakDonemKodu(String(event.target.value)); setKgkKontrolSonucu(null); }}
-                  >
-                    {kgkKaynakDonemleri.map((kaynak) => (
-                      <MenuItem key={kaynak.kod} value={kaynak.kod}>
-                        {kaynak.ad}{kaynak.onerilenMi ? " — bu tarih için önerilen" : ""}
-                      </MenuItem>
-                    ))}
-                  </Select>
-                </FormControl>
+                <Typography variant="caption" color="text.secondary">Otomatik seçilen resmi kaynak</Typography>
+                <Typography variant="body2" fontWeight={600}>
+                  {seciliKgkKaynakDonemi?.ad || "Rapor tarihine uygun kaynak belirleniyor…"}
+                </Typography>
               </Grid>
-              <Grid item xs={12} md={4}>
+              <Grid item xs={12} md={3}>
                 <Stack direction="row" spacing={0.75} alignItems="center" flexWrap="wrap" useFlexGap>
                   <Chip size="small" color={seciliKgkKaynakDonemi?.onerilenMi ? "success" : "warning"} label={seciliKgkKaynakDonemi?.onerilenMi ? "Tarih ile uyumlu" : "Tarih ile uyumsuz"} />
                   {seciliKgkKaynakDonemi && <Button size="small" component="a" href={seciliKgkKaynakDonemi.kaynakUrl} target="_blank" rel="noreferrer">Resmi sayfayı aç</Button>}
@@ -1690,41 +1916,82 @@ const Page = () => {
               </Grid>
             </Grid>
           </Paper>
-          <Stack direction="row" spacing={1.5} alignItems="center" flexWrap="wrap" useFlexGap>
-            <Button variant="contained" size="small" onClick={kgkKontrolEt} disabled={kgkKontrolYukleniyor || !kgkKaynakDonemKodu || !seciliKgkKaynakDonemi?.onerilenMi}>
-              {kgkKontrolYukleniyor ? <CircularProgress size={18} color="inherit" /> : "KGK'yı kontrol et"}
+          <Stack direction={{ xs: "column", sm: "row" }} spacing={1} alignItems={{ sm: "center" }} flexWrap="wrap" useFlexGap>
+            <Button variant="contained" size="small" onClick={kgkTaraVeArsivle} disabled={kgkTaramaYukleniyor || !kgkKaynakDonemKodu || !seciliKgkKaynakDonemi?.onerilenMi || !secilenSet || !secilenSurum}>
+              {kgkTaramaYukleniyor ? <CircularProgress size={18} color="inherit" /> : "KGK güncellemesini otomatik kontrol et"}
             </Button>
-            <Button variant="outlined" size="small" color="secondary" onClick={kgkTaraVeArsivle} disabled={kgkTaramaYukleniyor || !kgkKaynakDonemKodu || !seciliKgkKaynakDonemi?.onerilenMi}>
-              {kgkTaramaYukleniyor ? <CircularProgress size={18} color="inherit" /> : "Kontrol et + arşivle"}
-            </Button>
-            <TextField
-              size="small"
-              type="number"
-              label="Tekrar"
-              value={kgkTaramaDenemesi}
-              onChange={(event) => setKgkTaramaDenemesi(Math.min(5, Math.max(1, Number(event.target.value) || 1)))}
-              inputProps={{ min: 1, max: 5 }}
-              sx={{ width: 92 }}
-            />
-            <Button variant="text" size="small" onClick={kgkTaramaGecmisiniYukle} disabled={kgkGecmisYukleniyor}>
-              {kgkGecmisYukleniyor ? <CircularProgress size={16} /> : "Tarama geçmişi"}
-            </Button>
-            <Stack direction="row" spacing={0.5} alignItems="center">
-              <Switch size="small" checked={kgkHashleriIste} onChange={(event) => setKgkHashleriIste(event.target.checked)} />
-              <Typography variant="caption">Dosya SHA-256 hesapla</Typography>
-            </Stack>
             {kgkKontrolSonucu && <Chip label={`${kgkKontrolSonucu.bulunanDosyaSayisi} dosya · ${kgkKontrolSonucu.degisenDosyaSayisi} değişiklik`} color={kgkKontrolSonucu.degisenDosyaSayisi > 0 ? "warning" : "success"} />}
+            <Box sx={{ flexGrow: 1 }} />
+            <Button variant="text" size="small" onClick={() => setKgkGelismisAraclarAcik((onceki) => !onceki)}>
+              {kgkGelismisAraclarAcik ? "Teknik araçları gizle" : "Teknik araçları göster"}
+            </Button>
           </Stack>
+          <Box sx={{ display: kgkGelismisAraclarAcik ? "block" : "none" }}>
+            <Paper variant="outlined" sx={{ p: 1.25, bgcolor: "action.hover" }}>
+              <Stack direction="row" spacing={1} alignItems="center" flexWrap="wrap" useFlexGap>
+                <FormControl size="small" sx={{ minWidth: 320 }}>
+                  <InputLabel>KGK kaynak dönemi</InputLabel>
+                  <Select
+                    label="KGK kaynak dönemi"
+                    value={kgkKaynakDonemKodu}
+                    onChange={(event) => {
+                      setKgkKaynakDonemKodu(String(event.target.value));
+                      setKgkKontrolSonucu(null);
+                      kgkFarkiniTemizle();
+                    }}
+                  >
+                    {kgkKaynakDonemleri.map((kaynak) => <MenuItem key={kaynak.kod} value={kaynak.kod}>{kaynak.ad}{kaynak.onerilenMi ? " — önerilen" : ""}</MenuItem>)}
+                  </Select>
+                </FormControl>
+                <TextField size="small" type="number" label="En fazla deneme" value={kgkTaramaDenemesi} onChange={(event) => setKgkTaramaDenemesi(Math.min(5, Math.max(1, Number(event.target.value) || 1)))} inputProps={{ min: 1, max: 5 }} sx={{ width: 140 }} />
+                <Stack direction="row" spacing={0.5} alignItems="center">
+                  <Switch size="small" checked={kgkHashleriIste} onChange={(event) => setKgkHashleriIste(event.target.checked)} />
+                  <Typography variant="caption">SHA-256 hesapla</Typography>
+                </Stack>
+                <Button variant="outlined" size="small" onClick={kgkKontrolEt} disabled={kgkKontrolYukleniyor || !kgkKaynakDonemKodu || !seciliKgkKaynakDonemi?.onerilenMi}>
+                  {kgkKontrolYukleniyor ? <CircularProgress size={16} /> : "Arşivlemeden kontrol et"}
+                </Button>
+                <Button variant="text" size="small" onClick={kgkTaramaGecmisiniYukle} disabled={kgkGecmisYukleniyor}>
+                  {kgkGecmisYukleniyor ? <CircularProgress size={16} /> : "Geçmişi yenile"}
+                </Button>
+              </Stack>
+            </Paper>
+          </Box>
           {kgkKontrolSonucu && (
             <Paper variant="outlined" sx={{ p: 1.5, maxHeight: 360, overflow: "auto" }}>
               <Typography variant="caption" color="text.secondary" component="div" sx={{ mb: 1 }}>
                 Kaynak: <a href={kgkKontrolSonucu.kaynakUrl} target="_blank" rel="noreferrer">{kgkKontrolSonucu.kaynakDonemAdi || "KGK elektronik finansal raporlama"}</a> · Kontrol: {new Date(kgkKontrolSonucu.kontrolTarihi).toLocaleString("tr-TR")}
               </Typography>
               <Table size="small">
-                <TableHead><TableRow><TableCell>Grup</TableCell><TableCell>Dosya</TableCell><TableCell>Durum</TableCell><TableCell align="right">Boyut</TableCell><TableCell>Bağlantı</TableCell></TableRow></TableHead>
-                <TableBody>{kgkKontrolSonucu.dosyalar.map((dosya) => <TableRow key={dosya.url} hover><TableCell>{dosya.grup}</TableCell><TableCell>{dosya.dosyaAdi}</TableCell><TableCell>{!dosya.erisilebilirMi ? <Chip size="small" color="error" label="Erişilemiyor" /> : dosya.degistiMi ? <Chip size="small" color="warning" label="Değişmiş" /> : dosya.karsilastirmaVarMi ? <Chip size="small" color="success" label="Aynı" /> : <Chip size="small" variant="outlined" label="İlk kayıt" />}</TableCell><TableCell align="right">{dosya.icerikUzunlugu ? `${Math.round(dosya.icerikUzunlugu / 1024)} KB` : "—"}</TableCell><TableCell><Button size="small" component="a" href={dosya.url} target="_blank" rel="noreferrer">Aç</Button></TableCell></TableRow>)}</TableBody>
+                <TableHead><TableRow><TableCell>Standart</TableCell><TableCell>KGK dosyası</TableCell><TableCell>Durum</TableCell><TableCell align="right">Boyut</TableCell><TableCell align="right">İşlem</TableCell></TableRow></TableHead>
+                <TableBody>
+                  {kgkKontrolSonucu.dosyalar.map((dosya) => {
+                    const hedefUyumsuzlugu = secilenSet ? kgkDosyaUyumsuzlugu(dosya, secilenSet) : "Hedef tanım seçilmedi.";
+                    const incelenebilirMi = Boolean(dosya.degistiMi && dosya.oncekiSha256 && dosya.sha256 && /^(xlsx|xlsm)$/i.test(dosya.dosyaTuru));
+                    return (
+                      <TableRow key={dosya.url} hover>
+                        <TableCell>{dosya.grup}</TableCell>
+                        <TableCell>{dosya.baslik || dosya.dosyaAdi}</TableCell>
+                        <TableCell>{!dosya.erisilebilirMi ? <Chip size="small" color="error" label="Erişilemiyor" /> : dosya.degistiMi ? <Chip size="small" color="warning" label="Yeni değişiklik" /> : dosya.karsilastirmaVarMi ? <Chip size="small" color="success" label="Değişiklik yok" /> : <Chip size="small" variant="outlined" label="İlk kez arşivlendi" />}</TableCell>
+                        <TableCell align="right">{dosya.icerikUzunlugu ? `${Math.round(dosya.icerikUzunlugu / 1024)} KB` : "—"}</TableCell>
+                        <TableCell align="right">
+                          <Stack direction="row" spacing={0.5} justifyContent="flex-end" alignItems="center">
+                            <Button size="small" component="a" href={dosya.url} target="_blank" rel="noreferrer">Kaynağı aç</Button>
+                            {incelenebilirMi && hedefUyumsuzlugu && <Chip size="small" variant="outlined" label="Seçili tanımla uyumsuz" title={hedefUyumsuzlugu} />}
+                            {incelenebilirMi && !hedefUyumsuzlugu && (
+                              <Button size="small" variant="contained" color="info" onClick={() => kgkArsivWorkbookKarsilastir(dosya)} disabled={!secilenSurum || kgkArsivWorkbookYukleniyor === dosya.url}>
+                                {kgkArsivWorkbookYukleniyor === dosya.url ? <CircularProgress size={16} color="inherit" /> : "Değişikliği incele"}
+                              </Button>
+                            )}
+                          </Stack>
+                        </TableCell>
+                      </TableRow>
+                    );
+                  })}
+                </TableBody>
               </Table>
-              <Stack direction="row" spacing={1} flexWrap="wrap" useFlexGap sx={{ mt: 1 }}>
+              {kgkKontrolSonucu.degisenDosyaSayisi === 0 && <Alert severity="success" sx={{ mt: 1 }}>Seçili dönem için yeni KGK format değişikliği bulunmadı.</Alert>}
+              {kgkGelismisAraclarAcik && <Stack direction="row" spacing={1} flexWrap="wrap" useFlexGap sx={{ mt: 1 }}>
                 {kgkKontrolSonucu.dosyalar.map((dosya) => (
                   <Stack key={`kgk-islem-${dosya.url}`} direction="row" spacing={0.5}>
                     <Button size="small" variant="outlined" onClick={() => kgkDosyaIndir(dosya.url)} disabled={!dosya.erisilebilirMi || kgkIndirilenUrl === dosya.url}>
@@ -1733,15 +2000,12 @@ const Page = () => {
                     <Button size="small" variant="outlined" color="secondary" onClick={() => kgkDosyaArsivle(dosya.url)} disabled={!dosya.erisilebilirMi || kgkArsivlenenUrl === dosya.url}>
                       {kgkArsivlenenUrl === dosya.url ? <CircularProgress size={16} /> : "Arşivle"}
                     </Button>
-                    {dosya.degistiMi && dosya.oncekiSha256 && dosya.sha256 && /^(xlsx|xlsm)$/i.test(dosya.dosyaTuru) && <Button size="small" variant="contained" color="info" onClick={() => kgkArsivWorkbookKarsilastir(dosya)} disabled={kgkArsivWorkbookYukleniyor === dosya.url}>
-                      {kgkArsivWorkbookYukleniyor === dosya.url ? <CircularProgress size={16} color="inherit" /> : "Arşivli farkı incele"}
-                    </Button>}
                   </Stack>
                 ))}
-              </Stack>
+              </Stack>}
             </Paper>
           )}
-          {kgkTaramaGecmisi.length > 0 && (
+          {kgkGelismisAraclarAcik && kgkTaramaGecmisi.length > 0 && (
             <Paper variant="outlined" sx={{ p: 1.5, maxHeight: 220, overflow: "auto" }}>
               <Typography variant="subtitle2" sx={{ mb: 1 }}>Son KGK taramaları</Typography>
               <Table size="small">
@@ -1751,22 +2015,27 @@ const Page = () => {
             </Paper>
           )}
           <Divider />
-          <Typography variant="subtitle2">Otomatik workbook farkı</Typography>
+          <Typography variant="subtitle2">Değişiklik özeti</Typography>
           <Typography variant="caption" color="text.secondary">
-            KGK kontrolünde değişen Excel için yukarıdaki “Arşivli farkı incele” işlemini kullanın. Sistem önceki ve yeni arşivi otomatik karşılaştırır, sayfaları tablo türleriyle eşleştirir; dosya veya JSON yüklemeniz gerekmez. Kalem ve formül farkları yalnız Admin onayıyla taslağa aktarılır, otomatik yayın yapılmaz.
+            “Değişikliği incele” seçildiğinde önceki ve yeni KGK dosyası otomatik karşılaştırılır. Dosya veya JSON yüklemeniz gerekmez. Kalem ve formül farkları yalnız Admin onayıyla taslağa aktarılır; hiçbir değişiklik otomatik yayınlanmaz.
           </Typography>
           {kgkWorkbookSonucu && (
             <Paper variant="outlined" sx={{ p: 1.5, maxHeight: 320, overflow: "auto" }}>
-              <Stack direction="row" spacing={1} alignItems="center" sx={{ mb: 1 }}>
+              <Stack direction="row" spacing={1} alignItems="center" flexWrap="wrap" useFlexGap sx={{ mb: 1 }}>
+                <Chip size="small" variant="outlined" label={`Hedef: ${secilenSet?.kod || "—"} · sürüm #${secilenSurum?.surumNo || "—"}`} />
+                {kgkFarkBaglami?.dosya && <Chip size="small" variant="outlined" label={`Kaynak: ${kgkFarkBaglami.dosya.grup}`} />}
                 <Chip size="small" color={kgkWorkbookSonucu.yapisalDegisiklikVarMi ? "warning" : "success"} label={kgkWorkbookSonucu.yapisalDegisiklikVarMi ? `${kgkWorkbookSonucu.farkSayisi} yapısal fark` : "Yapısal fark yok"} />
                 {kgkWorkbookSonucu.makroVarMi && <Chip size="small" color="info" label="Makro bulundu; çalıştırılmadı" />}
                 {(kgkWorkbookSonucu.semantikDegisiklikVarMi || kgkWorkbookSonucu.formulDegisikligiVarMi) && secilenSurum && surumDurumKodu(secilenSurum.durum) !== 1 && <Button size="small" variant="outlined" onClick={kgkFarktanTaslakOlustur} disabled={surumIslemiYukleniyor}>KGK farkından taslak oluştur</Button>}
-                {kgkWorkbookSonucu.formulDegisikligiVarMi && secilenSurum && surumDurumKodu(secilenSurum.durum) === 1 && <Button size="small" variant="contained" color="secondary" onClick={kgkFormulFarklariniTaslagAktar} disabled={surumIslemiYukleniyor}>KGK formül farklarını taslağa aktar</Button>}
+                {kgkWorkbookSonucu.semantikDegisiklikVarMi && secilenSurum && surumDurumKodu(secilenSurum.durum) === 1 && !kgkKalemFarkiUygulandiMi && <Button size="small" variant="outlined" onClick={kgkKalemFarklariniTaslagAktar} disabled={surumIslemiYukleniyor}>KGK kalem farklarını taslağa aktar</Button>}
+                {kgkKalemFarkiUygulandiMi && <Chip size="small" color="success" variant="outlined" label="Kalem farkları aktarıldı" />}
+                {kgkWorkbookSonucu.formulDegisikligiVarMi && secilenSurum && surumDurumKodu(secilenSurum.durum) === 1 && !kgkFormulFarkiUygulandiMi && <Button size="small" variant="contained" color="secondary" onClick={kgkFormulFarklariniTaslagAktar} disabled={surumIslemiYukleniyor || (kgkWorkbookSonucu.semantikDegisiklikVarMi && !kgkKalemFarkiUygulandiMi)}>KGK formül farklarını taslağa aktar</Button>}
+                {kgkFormulFarkiUygulandiMi && <Chip size="small" color="success" variant="outlined" label="Formül farkları aktarıldı" />}
               </Stack>
               {kgkWorkbookSonucu.farklar.length > 0 && <Table size="small"><TableHead><TableRow><TableCell>Tür</TableCell><TableCell>Anahtar</TableCell><TableCell>Değişiklik</TableCell></TableRow></TableHead><TableBody>{kgkWorkbookSonucu.farklar.map((fark) => <TableRow key={`${fark.degisiklikTuru}-${fark.anahtar}`}><TableCell>{fark.nesneTuru}</TableCell><TableCell>{fark.anahtar}</TableCell><TableCell>{fark.degisiklikTuru}</TableCell></TableRow>)}</TableBody></Table>}
               <Divider sx={{ my: 1 }} />
               <Stack direction="row" spacing={1} alignItems="center" sx={{ mb: 1 }}>
-                <Typography variant="caption" color="text.secondary">Semantik kalemler: {kgkWorkbookSonucu.oncekiKalemSayisi} → {kgkWorkbookSonucu.yeniKalemSayisi}</Typography>
+                <Typography variant="caption" color="text.secondary">Finansal tablo kalemleri: {kgkWorkbookSonucu.oncekiKalemSayisi} → {kgkWorkbookSonucu.yeniKalemSayisi}</Typography>
                 <Chip size="small" color={kgkWorkbookSonucu.semantikDegisiklikVarMi ? "warning" : "success"} label={kgkWorkbookSonucu.semantikDegisiklikVarMi ? `${kgkWorkbookSonucu.kalemFarklari.length} kalem farkı` : "Kalem farkı yok"} />
               </Stack>
               {kgkWorkbookSonucu.kalemFarklari.length > 0 && <Table size="small"><TableHead><TableRow><TableCell>Değişiklik</TableCell><TableCell>Sayfa</TableCell><TableCell>Kalem</TableCell><TableCell>Üst kalem</TableCell><TableCell>Anahtar</TableCell></TableRow></TableHead><TableBody>{kgkWorkbookSonucu.kalemFarklari.map((fark) => { const kalem = fark.yeniKalem || fark.oncekiKalem; return <TableRow key={`${fark.degisiklikTuru}-${fark.sabitAnahtar}`}><TableCell>{fark.degisiklikTuru}</TableCell><TableCell>{kalem?.sayfaAdi || "—"}</TableCell><TableCell>{kalem?.ad || "—"}</TableCell><TableCell>{kalem?.ustSabitAnahtar || "—"}</TableCell><TableCell>{fark.sabitAnahtar}</TableCell></TableRow>; })}</TableBody></Table>}
@@ -2157,7 +2426,6 @@ const Page = () => {
               </FormControl>
             </Grid>
           </Grid>
-          {tanimHatasi && <Alert severity="error">{tanimHatasi}</Alert>}
           {tanimYukleniyor && <CircularProgress size={22} />}
           {!tanimYukleniyor && tanimSetleri.length === 0 && <Alert severity="info">Filtreye uyan tanım seti bulunamadı.</Alert>}
           {tanimSetleri.length > 0 && (
@@ -2165,7 +2433,7 @@ const Page = () => {
               <Grid item xs={12} md={4}>
                 <FormControl fullWidth size="small">
                   <InputLabel>Tanım seti</InputLabel>
-                  <Select label="Tanım seti" value={secilenSetId} onChange={(event) => { const id = Number(event.target.value); const set = tanimSetleri.find((aday) => aday.id === id); const surum = set?.surumler?.find((aday) => surumDurumKodu(aday.durum) === 3) || set?.surumler?.[0]; setSecilenSetId(id); setSecilenSurumId(surum?.id || 0); setSurumId(surum ? String(surum.id) : ""); setEszamanlilikSurumu(surum ? String(surum.eszamanlilikSurumu) : ""); }}>
+                  <Select label="Tanım seti" value={secilenSet ? secilenSetId : ""} onChange={(event) => tanimSetiSec(Number(event.target.value))}>
                     {tanimSetleri.map((set) => <MenuItem key={set.id} value={set.id}>{set.kod} — {set.ad}</MenuItem>)}
                   </Select>
                 </FormControl>
@@ -2173,7 +2441,7 @@ const Page = () => {
               <Grid item xs={12} md={8}>
                 <FormControl fullWidth size="small">
                   <InputLabel>Sürüm</InputLabel>
-                  <Select label="Sürüm" value={secilenSurumId} onChange={(event) => { const id = Number(event.target.value); const surum = secilenSet?.surumler.find((aday) => aday.id === id); setSecilenSurumId(id); setSurumId(surum ? String(surum.id) : ""); setEszamanlilikSurumu(surum ? String(surum.eszamanlilikSurumu) : ""); }}>
+                  <Select label="Sürüm" value={secilenSurum ? secilenSurumId : ""} onChange={(event) => surumSec(Number(event.target.value))}>
                     {(secilenSet?.surumler || []).map((surum) => <MenuItem key={surum.id} value={surum.id}>{surum.etiket} · #{surum.surumNo} · {surumDurumKodu(surum.durum) === 3 ? "Yayında" : surumDurumKodu(surum.durum) === 1 ? "Taslak" : surumDurumKodu(surum.durum) === 2 ? "Doğrulandı" : "Kaldırıldı"}</MenuItem>)}
                   </Select>
                 </FormControl>
@@ -2189,7 +2457,6 @@ const Page = () => {
             <br />
             {surumYonetimiDurumu?.aciklama || "Sürüm yönetimi durumu kontrol ediliyor."}
           </Alert>
-          {surumYonetimiMesaji && <Alert severity="success" onClose={() => setSurumYonetimiMesaji("")}>{surumYonetimiMesaji}</Alert>}
           {secilenSet && (
             <Paper variant="outlined" sx={{ overflowX: "auto" }}>
               <Box sx={{ px: 1.5, py: 1 }}>
@@ -2213,7 +2480,7 @@ const Page = () => {
                         <TableCell>{new Date(surum.guncellemeTarihi || surum.olusturmaTarihi).toLocaleDateString("tr-TR")}</TableCell>
                         <TableCell align="right">
                           <Stack direction="row" spacing={0.5} justifyContent="flex-end">
-                            <Button size="small" onClick={() => { setSecilenSurumId(surum.id); setSurumId(String(surum.id)); setEszamanlilikSurumu(String(surum.eszamanlilikSurumu)); }}>İncele</Button>
+                            <Button size="small" onClick={() => surumSec(surum.id)}>İncele</Button>
                             {durum !== 1 && <Button size="small" variant="outlined" onClick={() => void taslakKlonla(surum, durum === 4)} disabled={surumIslemiYukleniyor}>{durum === 4 ? "Geri dön" : "Taslak oluştur"}</Button>}
                           </Stack>
                         </TableCell>
@@ -2233,12 +2500,12 @@ const Page = () => {
                   <Chip label={`${secilenSurum.tabloSayisi} tablo · ${secilenSurum.kalemSayisi} kalem · ${secilenSurum.formulSayisi} formül`} variant="outlined" />
                   <Button size="small" variant="outlined" onClick={() => void taslakKlonla()} disabled={surumIslemiYukleniyor}>Yeni taslak oluştur</Button>
                   {surumDurumKodu(secilenSurum.durum) === 1 && <>
-                    <Button size="small" variant="outlined" onClick={() => setMetaDuzenleme((onceki) => !onceki)}>{metaDuzenleme ? "Düzenlemeyi kapat" : "Sürüm metadata düzenle"}</Button>
+                    <Button size="small" variant="outlined" onClick={() => setMetaDuzenleme((onceki) => !onceki)}>{metaDuzenleme ? "Bilgi düzenlemeyi kapat" : "Sürüm bilgilerini düzenle"}</Button>
                     <Button size="small" variant="contained" color="secondary" onClick={teknikDogrula} disabled={dogrulamaYukleniyor}>
                       {dogrulamaYukleniyor ? <CircularProgress size={16} color="inherit" /> : "Teknik doğrula"}
                     </Button>
                     <Button size="small" variant="text" onClick={() => setTeknikDuzenlemeAraclariAcik((onceki) => !onceki)}>
-                      {teknikDuzenlemeAraclariAcik ? "Teknik araçları gizle" : "Teknik düzenleme araçlarını göster"}
+                      {teknikDuzenlemeAraclariAcik ? "Tanım ve formül düzenleyicisini gizle" : "Tanım ve formülleri düzenle"}
                     </Button>
                   </>}
                 </Stack>
@@ -2272,7 +2539,7 @@ const Page = () => {
                       <Grid item xs={12} md={4}><TextField fullWidth size="small" type="date" label="Geçerlilik başlangıcı" value={metaBaslangic} onChange={(event) => setMetaBaslangic(event.target.value)} InputLabelProps={{ shrink: true }} /></Grid>
                       <Grid item xs={12} md={4}><TextField fullWidth size="small" type="date" label="Geçerlilik bitişi" value={metaBitis} onChange={(event) => setMetaBitis(event.target.value)} InputLabelProps={{ shrink: true }} /></Grid>
                       <Grid item xs={12}><TextField fullWidth size="small" multiline minRows={2} label="Açıklama" value={metaAciklama} onChange={(event) => setMetaAciklama(event.target.value)} inputProps={{ maxLength: 1000 }} /></Grid>
-                      <Grid item xs={12}><Stack direction="row" spacing={1}><Button variant="contained" size="small" onClick={metaKaydet} disabled={metaKaydediliyor || !metaEtiket.trim() || !metaBaslangic}>{metaKaydediliyor ? <CircularProgress size={18} color="inherit" /> : "Taslak metadata kaydet"}</Button><Button size="small" onClick={() => setMetaDuzenleme(false)} disabled={metaKaydediliyor}>İptal</Button></Stack></Grid>
+                      <Grid item xs={12}><Stack direction="row" spacing={1}><Button variant="contained" size="small" onClick={metaKaydet} disabled={metaKaydediliyor || !metaEtiket.trim() || !metaBaslangic}>{metaKaydediliyor ? <CircularProgress size={18} color="inherit" /> : "Taslak bilgilerini kaydet"}</Button><Button size="small" onClick={() => setMetaDuzenleme(false)} disabled={metaKaydediliyor}>İptal</Button></Stack></Grid>
                     </Grid>
                   </Paper>
                 )}
@@ -2618,7 +2885,7 @@ const Page = () => {
         </Stack>
       </ParentCard>
       </Box>
-      <Paper
+      {!kgkSayfasi && <Paper
         variant="outlined"
         sx={{
           mt: 2,
@@ -2639,19 +2906,19 @@ const Page = () => {
             Geri
           </Button>
           <Typography variant="caption" color="text.secondary" textAlign="center">
-            {aktifAdim + 1} / {finansalTabloAdimlari.length}
+            {aktifAdim + 1} / 2
           </Typography>
           <Button
             variant="contained"
-            disabled={aktifAdim === finansalTabloAdimlari.length - 1}
-            onClick={() => setAktifAdim((onceki) => Math.min(finansalTabloAdimlari.length - 1, onceki + 1))}
+            disabled={aktifAdim === 1}
+            onClick={() => setAktifAdim((onceki) => Math.min(1, onceki + 1))}
           >
-            {aktifAdim < finansalTabloAdimlari.length - 1
+            {aktifAdim < 1
               ? `Sonraki: ${finansalTabloAdimlari[aktifAdim + 1].baslik}`
               : "Akış tamamlandı"}
           </Button>
         </Stack>
-      </Paper>
+      </Paper>}
     </PageContainer>
   );
 };
