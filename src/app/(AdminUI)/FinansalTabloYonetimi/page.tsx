@@ -31,6 +31,8 @@ import { usePathname, useRouter } from "next/navigation";
 import PageContainer from "@/app/components/Container/PageContainer";
 import Breadcrumb from "@/app/components/Layout/Shared/Breadcrumb/Breadcrumb";
 import ParentCard from "@/app/components/Shared/ParentCard";
+import LegacyFormulAktarimCard from "./LegacyFormulAktarimCard";
+import type { LegacyFormulAktarimSonucu } from "@/api/FinansalTabloYonetimi/LegacyFormulAktarim";
 import { useSelector } from "@/store/hooks";
 import { AppState } from "@/store/store";
 import {
@@ -437,6 +439,19 @@ const Page = () => {
   const secilenSurum = secilenSet?.surumler.find((surum) => surum.id === secilenSurumId);
   const seciliKgkKaynakDonemi = kgkKaynakDonemleri.find((kaynak) => kaynak.kod === kgkKaynakDonemKodu);
   const secilenKalemTablosu = surumDetayi?.tablolar.find((tablo) => tablo.id === kalemTabloId) || surumDetayi?.tablolar[0];
+
+  const legacyFormulAktarimiTamamlandi = (sonuc: LegacyFormulAktarimSonucu) => {
+    setTanimSetleri((onceki) => onceki.map((set) => ({
+      ...set,
+      surumler: set.surumler.map((surum) => surum.id === sonuc.surumId
+        ? { ...surum, eszamanlilikSurumu: sonuc.eszamanlilikSurumu, guncellemeTarihi: new Date().toISOString() }
+        : surum),
+    })));
+    setEszamanlilikSurumu(String(sonuc.eszamanlilikSurumu));
+    setSurumYonetimiMesaji(
+      `Bir defalık eski formül aktarımı tamamlandı: ${sonuc.aktarilanKuralSayisi} kural aktarıldı. Bu tanım seti artık yalnız yeni sürümlü yapıdan yönetilecek.`
+    );
+  };
 
   const kgkFarkiniTemizle = () => {
     setKgkWorkbookSonucu(null);
@@ -2505,6 +2520,7 @@ const Page = () => {
                 <Alert severity="info" variant="outlined">
                   Bir kalem veya formül kaydedildiğinde taslak revizyon numarası artar. Yayındaki sürüm hiçbir zaman yerinde değiştirilmez; onaylanan taslak yeni sürüm olarak devreye alınır.
                 </Alert>
+                <LegacyFormulAktarimCard token={user.token || ""} surum={secilenSurum} onApplied={legacyFormulAktarimiTamamlandi} />
                 {surumDurumKodu(secilenSurum.durum) === 1 && (
                   <Paper variant="outlined" sx={{ p: 1.5, borderColor: surumYonetimiDurumu?.etkin ? "warning.main" : "divider" }}>
                     <Stack spacing={1.25}>
