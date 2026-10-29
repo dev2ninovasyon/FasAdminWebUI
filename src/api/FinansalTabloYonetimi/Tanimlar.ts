@@ -781,6 +781,10 @@ export const cloneFinansalSurum = async (
 
 export type KgkFormatKontrolSonucu = {
   kaynakUrl: string;
+  kaynakDonemKodu?: string | null;
+  kaynakDonemAdi?: string | null;
+  gecerlilikBaslangici?: string | null;
+  gecerlilikBitisi?: string | null;
   kontrolTarihi: string;
   sayfaSha256: string;
   bulunanDosyaSayisi: number;
@@ -804,9 +808,31 @@ export type KgkFormatKontrolSonucu = {
   }>;
 };
 
+export type KgkKaynakDonemi = {
+  kod: string;
+  ad: string;
+  gecerlilikBaslangici?: string | null;
+  gecerlilikBitisi?: string | null;
+  kaynakUrl: string;
+  onerilenMi: boolean;
+};
+
+export const getKgkKaynakDonemleri = (
+  token: string,
+  raporlamaDonemiBitisTarihi?: string
+) => jsonGet<KgkKaynakDonemi[]>(
+  token,
+  `/Kgk/KaynakDonemleri${raporlamaDonemiBitisTarihi ? `?raporlamaDonemiBitisTarihi=${encodeURIComponent(raporlamaDonemiBitisTarihi)}` : ""}`
+);
+
 export const kontrolEtKgkFormatlari = async (
   token: string,
-  istek: { icerikHashleriniHesapla: boolean; oncekiDosyalar?: Array<{ url: string; sha256?: string | null; etag?: string | null; icerikUzunlugu?: number | null }> } = { icerikHashleriniHesapla: false }
+  istek: {
+    icerikHashleriniHesapla: boolean;
+    oncekiDosyalar?: Array<{ url: string; sha256?: string | null; etag?: string | null; icerikUzunlugu?: number | null }>;
+    kaynakDonemKodu?: string | null;
+    raporlamaDonemiBitisTarihi?: string | null;
+  } = { icerikHashleriniHesapla: false }
 ) => {
   const response = await fetch(`${url}/FinansalTabloYonetimi/Kgk/Kontrol`, {
     method: "POST",
@@ -907,6 +933,8 @@ export type KgkTaramaGecmisi = {
   arsivlenenDosyaSayisi: number;
   hataSayisi: number;
   toplamDenemeSayisi: number;
+  kaynakDonemKodu?: string | null;
+  kaynakDonemAdi?: string | null;
 };
 
 export const scanAndArchiveKgkFormats = async (
@@ -916,6 +944,8 @@ export const scanAndArchiveKgkFormats = async (
     oncekiDosyalar?: Array<{ url: string; sha256?: string | null; etag?: string | null; icerikUzunlugu?: number | null }>;
     arsivle: boolean;
     maksimumDeneme: number;
+    kaynakDonemKodu?: string | null;
+    raporlamaDonemiBitisTarihi?: string | null;
   }
 ) => {
   const response = await fetch(`${url}/FinansalTabloYonetimi/Kgk/TaraVeArsivle`, {

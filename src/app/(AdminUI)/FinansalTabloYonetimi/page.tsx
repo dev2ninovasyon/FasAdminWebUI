@@ -57,6 +57,8 @@ import {
   validateFinansalSurum,
   updateFinansalSurumMeta,
   KgkFormatKontrolSonucu,
+  KgkKaynakDonemi,
+  getKgkKaynakDonemleri,
   kontrolEtKgkFormatlari,
   downloadKgkFormat,
   archiveKgkFormat,
@@ -108,6 +110,21 @@ const breadcrumbItems = [
 
 const sayi = (value?: number) =>
   new Intl.NumberFormat("tr-TR").format(value ?? 0);
+
+type KuralTerimiFormu = {
+  id: number;
+  sira: number;
+  hamTerim: string;
+  kaynakTuru: number;
+  kaynakAnahtari: string;
+  operator: number;
+  degerAlani: number;
+  donemDavranisi: number;
+  donemOfseti: number;
+  katsayi: number;
+  isaretPolitikasi: number;
+  zorunluMu: boolean;
+};
 
 const surumDurumKodu = (durum: number | string) => {
   if (typeof durum === "number") return durum;
@@ -201,6 +218,9 @@ const Page = () => {
   const [devreyeAlmaTarihi, setDevreyeAlmaTarihi] = useState(new Date().toISOString().slice(0, 10));
   const [surumYonetimiMesaji, setSurumYonetimiMesaji] = useState("");
   const [kgkKontrolSonucu, setKgkKontrolSonucu] = useState<KgkFormatKontrolSonucu | null>(null);
+  const [kgkKaynakDonemleri, setKgkKaynakDonemleri] = useState<KgkKaynakDonemi[]>([]);
+  const [kgkKaynakDonemKodu, setKgkKaynakDonemKodu] = useState("");
+  const [kgkRaporlamaTarihi, setKgkRaporlamaTarihi] = useState(`${new Date().getFullYear()}-12-31`);
   const [kgkKontrolYukleniyor, setKgkKontrolYukleniyor] = useState(false);
   const [kgkHashleriIste, setKgkHashleriIste] = useState(false);
   const [kgkIndirilenUrl, setKgkIndirilenUrl] = useState("");
@@ -297,7 +317,7 @@ const Page = () => {
   const [kuralKaydediliyor, setKuralKaydediliyor] = useState(false);
   const [yeniKuralAcik, setYeniKuralAcik] = useState(false);
   const [yeniKuralKalemId, setYeniKuralKalemId] = useState(0);
-  const [kuralForm, setKuralForm] = useState({ hesaplamaTuru: 1, isaretPolitikasi: 1, bosDegerPolitikasi: 1, sabitDeger: "", aciklama: "", hamFormul: "", kgkExcelHedefi: "", aktifMi: true, terimler: [] as Array<{ id: number; sira: number; hamTerim: string; kaynakTuru: number; kaynakAnahtari: string; operator: number; degerAlani: number; donemDavranisi: number; donemOfseti: number; katsayi: number; isaretPolitikasi: number; zorunluMu: boolean }> });
+  const [kuralForm, setKuralForm] = useState({ hesaplamaTuru: 1, isaretPolitikasi: 1, bosDegerPolitikasi: 1, sabitDeger: "", aciklama: "", hamFormul: "", kgkExcelHedefi: "", aktifMi: true, terimler: [] as KuralTerimiFormu[] });
 
   useEffect(() => {
     if (!user.token) return;
@@ -362,6 +382,7 @@ const Page = () => {
 
   const secilenSet = tanimSetleri.find((set) => set.id === secilenSetId);
   const secilenSurum = secilenSet?.surumler.find((surum) => surum.id === secilenSurumId);
+  const seciliKgkKaynakDonemi = kgkKaynakDonemleri.find((kaynak) => kaynak.kod === kgkKaynakDonemKodu);
   const secilenKalemTablosu = surumDetayi?.tablolar.find((tablo) => tablo.id === kalemTabloId) || surumDetayi?.tablolar[0];
 
   useEffect(() => {
@@ -430,6 +451,25 @@ const Page = () => {
       window.clearInterval(zamanlayici);
     };
   }, [aktifAdim, user.token]);
+
+  useEffect(() => {
+    if (!user.token || aktifAdim !== 2 || !kgkRaporlamaTarihi) return;
+    let etkin = true;
+    const kaynaklariYukle = async () => {
+      try {
+        const kaynaklar = await getKgkKaynakDonemleri(user.token || "", kgkRaporlamaTarihi);
+        if (!etkin) return;
+        setKgkKaynakDonemleri(kaynaklar);
+        const onerilen = kaynaklar.find((kaynak) => kaynak.onerilenMi) || kaynaklar[0];
+        if (onerilen) setKgkKaynakDonemKodu(onerilen.kod);
+        setKgkKontrolSonucu(null);
+      } catch (error) {
+        if (etkin) setTanimHatasi(error instanceof Error ? error.message : "KGK kaynak dönemleri okunamadı.");
+      }
+    };
+    void kaynaklariYukle();
+    return () => { etkin = false; };
+  }, [aktifAdim, kgkRaporlamaTarihi, user.token]);
 
   const metaKaydet = async () => {
     if (!user.token || !secilenSurum || surumDurumKodu(secilenSurum.durum) !== 1) return;
@@ -549,6 +589,46 @@ const Page = () => {
         zorunluMu: terim.zorunluMu,
       })),
     });
+  };
+
+  const kuralTerimiGuncelle = (index: number, degisiklik: Partial<KuralTerimiFormu>) => {
+    setKuralForm((onceki) => ({
+      ...onceki,
+      terimler: onceki.terimler.map((terim, terimIndex) =>
+        terimIndex === index ? { ...terim, ...degisiklik } : terim),
+    }));
+  };
+
+  const kuralTerimiEkle = () => {
+    setKuralForm((onceki) => ({
+      ...onceki,
+      terimler: [
+        ...onceki.terimler,
+        {
+          id: 0,
+          sira: onceki.terimler.length,
+          hamTerim: "",
+          kaynakTuru: 1,
+          kaynakAnahtari: "",
+          operator: 1,
+          degerAlani: 1,
+          donemDavranisi: 1,
+          donemOfseti: 0,
+          katsayi: 1,
+          isaretPolitikasi: 1,
+          zorunluMu: true,
+        },
+      ],
+    }));
+  };
+
+  const kuralTerimiSil = (index: number) => {
+    setKuralForm((onceki) => ({
+      ...onceki,
+      terimler: onceki.terimler
+        .filter((_, terimIndex) => terimIndex !== index)
+        .map((terim, sira) => ({ ...terim, sira })),
+    }));
   };
 
   const kuralKaydet = async () => {
@@ -740,15 +820,17 @@ const Page = () => {
     setKgkKontrolYukleniyor(true);
     setTanimHatasi("");
     try {
-      const oncekiDosyalar = kgkKontrolSonucu?.dosyalar.map((dosya) => ({
+      const oncekiDosyalar = kgkKontrolSonucu?.kaynakDonemKodu === kgkKaynakDonemKodu ? kgkKontrolSonucu.dosyalar.map((dosya) => ({
         url: dosya.url,
         sha256: dosya.sha256 || null,
         etag: dosya.etag || null,
         icerikUzunlugu: dosya.icerikUzunlugu || null,
-      })) || [];
+      })) : [];
       const data = await kontrolEtKgkFormatlari(user.token, {
         icerikHashleriniHesapla: kgkHashleriIste,
         oncekiDosyalar,
+        kaynakDonemKodu: kgkKaynakDonemKodu,
+        raporlamaDonemiBitisTarihi: kgkRaporlamaTarihi,
       });
       setKgkKontrolSonucu(data);
     } catch (error) {
@@ -775,17 +857,19 @@ const Page = () => {
     setKgkTaramaYukleniyor(true);
     setTanimHatasi("");
     try {
-      const oncekiDosyalar = kgkKontrolSonucu?.dosyalar.map((dosya) => ({
+      const oncekiDosyalar = kgkKontrolSonucu?.kaynakDonemKodu === kgkKaynakDonemKodu ? kgkKontrolSonucu.dosyalar.map((dosya) => ({
         url: dosya.url,
         sha256: dosya.sha256 || null,
         etag: dosya.etag || null,
         icerikUzunlugu: dosya.icerikUzunlugu || null,
-      })) || [];
+      })) : [];
       const data = await scanAndArchiveKgkFormats(user.token, {
         icerikHashleriniHesapla: true,
         oncekiDosyalar,
         arsivle: true,
         maksimumDeneme: kgkTaramaDenemesi,
+        kaynakDonemKodu: kgkKaynakDonemKodu,
+        raporlamaDonemiBitisTarihi: kgkRaporlamaTarihi,
       });
       setKgkKontrolSonucu(data.kontrol);
       setTanimHatasi(data.hatalar.length > 0
@@ -1629,13 +1713,50 @@ const Page = () => {
       <ParentCard title="KGK format güncelleme kontrolü">
         <Stack spacing={1.5}>
           <Typography variant="body2" color="text.secondary">
-            KGK'nın 31/12/2023 ve sonrası elektronik finansal raporlama sayfasındaki Excel/arşiv bağlantıları okunur. Bu işlem taslak oluşturmaz ve yayın yapmaz; yalnız değişiklik uyarısı üretir.
+            Raporlama dönemi bitiş tarihine göre resmi KGK kaynağı otomatik seçilir. 31.12.2023 öncesi ve 31.12.2023 ve sonrası formatlar ayrı izlenir; kontrol taslak oluşturmaz ve yayın yapmaz.
           </Typography>
+          <Paper variant="outlined" sx={{ p: 1.25 }}>
+            <Grid container spacing={1.25} alignItems="center">
+              <Grid item xs={12} md={3}>
+                <TextField
+                  fullWidth
+                  size="small"
+                  type="date"
+                  label="Raporlama dönemi bitişi"
+                  value={kgkRaporlamaTarihi}
+                  onChange={(event) => setKgkRaporlamaTarihi(event.target.value)}
+                  InputLabelProps={{ shrink: true }}
+                />
+              </Grid>
+              <Grid item xs={12} md={5}>
+                <FormControl fullWidth size="small">
+                  <InputLabel>KGK kaynak dönemi</InputLabel>
+                  <Select
+                    label="KGK kaynak dönemi"
+                    value={kgkKaynakDonemKodu}
+                    onChange={(event) => { setKgkKaynakDonemKodu(String(event.target.value)); setKgkKontrolSonucu(null); }}
+                  >
+                    {kgkKaynakDonemleri.map((kaynak) => (
+                      <MenuItem key={kaynak.kod} value={kaynak.kod}>
+                        {kaynak.ad}{kaynak.onerilenMi ? " — bu tarih için önerilen" : ""}
+                      </MenuItem>
+                    ))}
+                  </Select>
+                </FormControl>
+              </Grid>
+              <Grid item xs={12} md={4}>
+                <Stack direction="row" spacing={0.75} alignItems="center" flexWrap="wrap" useFlexGap>
+                  <Chip size="small" color={seciliKgkKaynakDonemi?.onerilenMi ? "success" : "warning"} label={seciliKgkKaynakDonemi?.onerilenMi ? "Tarih ile uyumlu" : "Tarih ile uyumsuz"} />
+                  {seciliKgkKaynakDonemi && <Button size="small" component="a" href={seciliKgkKaynakDonemi.kaynakUrl} target="_blank" rel="noreferrer">Resmi sayfayı aç</Button>}
+                </Stack>
+              </Grid>
+            </Grid>
+          </Paper>
           <Stack direction="row" spacing={1.5} alignItems="center" flexWrap="wrap" useFlexGap>
-            <Button variant="contained" size="small" onClick={kgkKontrolEt} disabled={kgkKontrolYukleniyor}>
+            <Button variant="contained" size="small" onClick={kgkKontrolEt} disabled={kgkKontrolYukleniyor || !kgkKaynakDonemKodu || !seciliKgkKaynakDonemi?.onerilenMi}>
               {kgkKontrolYukleniyor ? <CircularProgress size={18} color="inherit" /> : "KGK'yı kontrol et"}
             </Button>
-            <Button variant="outlined" size="small" color="secondary" onClick={kgkTaraVeArsivle} disabled={kgkTaramaYukleniyor}>
+            <Button variant="outlined" size="small" color="secondary" onClick={kgkTaraVeArsivle} disabled={kgkTaramaYukleniyor || !kgkKaynakDonemKodu || !seciliKgkKaynakDonemi?.onerilenMi}>
               {kgkTaramaYukleniyor ? <CircularProgress size={18} color="inherit" /> : "Kontrol et + arşivle"}
             </Button>
             <TextField
@@ -1659,7 +1780,7 @@ const Page = () => {
           {kgkKontrolSonucu && (
             <Paper variant="outlined" sx={{ p: 1.5, maxHeight: 360, overflow: "auto" }}>
               <Typography variant="caption" color="text.secondary" component="div" sx={{ mb: 1 }}>
-                Kaynak: <a href={kgkKontrolSonucu.kaynakUrl} target="_blank" rel="noreferrer">KGK elektronik finansal raporlama</a> · Kontrol: {new Date(kgkKontrolSonucu.kontrolTarihi).toLocaleString("tr-TR")}
+                Kaynak: <a href={kgkKontrolSonucu.kaynakUrl} target="_blank" rel="noreferrer">{kgkKontrolSonucu.kaynakDonemAdi || "KGK elektronik finansal raporlama"}</a> · Kontrol: {new Date(kgkKontrolSonucu.kontrolTarihi).toLocaleString("tr-TR")}
               </Typography>
               <Table size="small">
                 <TableHead><TableRow><TableCell>Grup</TableCell><TableCell>Dosya</TableCell><TableCell>Durum</TableCell><TableCell align="right">Boyut</TableCell><TableCell>Bağlantı</TableCell></TableRow></TableHead>
@@ -1686,8 +1807,8 @@ const Page = () => {
             <Paper variant="outlined" sx={{ p: 1.5, maxHeight: 220, overflow: "auto" }}>
               <Typography variant="subtitle2" sx={{ mb: 1 }}>Son KGK taramaları</Typography>
               <Table size="small">
-                <TableHead><TableRow><TableCell>Tarih</TableCell><TableCell>Dosya</TableCell><TableCell>Değişiklik</TableCell><TableCell>Arşiv</TableCell><TableCell>Hata</TableCell><TableCell>Deneme</TableCell></TableRow></TableHead>
-                <TableBody>{kgkTaramaGecmisi.map((kayit) => <TableRow key={kayit.taramaId}><TableCell>{new Date(kayit.bitis).toLocaleString("tr-TR")}</TableCell><TableCell>{kayit.bulunanDosyaSayisi}</TableCell><TableCell>{kayit.degisenDosyaSayisi}</TableCell><TableCell>{kayit.arsivlenenDosyaSayisi}</TableCell><TableCell>{kayit.hataSayisi}</TableCell><TableCell>{kayit.toplamDenemeSayisi}</TableCell></TableRow>)}</TableBody>
+                <TableHead><TableRow><TableCell>Tarih</TableCell><TableCell>KGK dönemi</TableCell><TableCell>Dosya</TableCell><TableCell>Değişiklik</TableCell><TableCell>Arşiv</TableCell><TableCell>Hata</TableCell><TableCell>Deneme</TableCell></TableRow></TableHead>
+                <TableBody>{kgkTaramaGecmisi.map((kayit) => <TableRow key={kayit.taramaId}><TableCell>{new Date(kayit.bitis).toLocaleString("tr-TR")}</TableCell><TableCell>{kayit.kaynakDonemAdi || "Eski kayıt"}</TableCell><TableCell>{kayit.bulunanDosyaSayisi}</TableCell><TableCell>{kayit.degisenDosyaSayisi}</TableCell><TableCell>{kayit.arsivlenenDosyaSayisi}</TableCell><TableCell>{kayit.hataSayisi}</TableCell><TableCell>{kayit.toplamDenemeSayisi}</TableCell></TableRow>)}</TableBody>
               </Table>
             </Paper>
           )}
@@ -2387,16 +2508,45 @@ const Page = () => {
                           <Grid item xs={12} md={6}><TextField fullWidth size="small" label="Ham formül" value={kuralForm.hamFormul} onChange={(event) => setKuralForm((onceki) => ({ ...onceki, hamFormul: event.target.value }))} /></Grid>
                           <Grid item xs={12} md={6}><TextField fullWidth size="small" label="KGK Excel hedefi" value={kuralForm.kgkExcelHedefi} onChange={(event) => setKuralForm((onceki) => ({ ...onceki, kgkExcelHedefi: event.target.value }))} /></Grid>
                           <Grid item xs={12}><TextField fullWidth size="small" multiline minRows={2} label="Açıklama" value={kuralForm.aciklama} onChange={(event) => setKuralForm((onceki) => ({ ...onceki, aciklama: event.target.value }))} /></Grid>
-                          <Grid item xs={12}><Typography variant="caption" color="text.secondary">Terimler (kaynak anahtarı ve katsayı)</Typography></Grid>
+                          <Grid item xs={12}>
+                            <Stack direction="row" spacing={1} alignItems="center">
+                              <Box sx={{ flexGrow: 1 }}>
+                                <Typography variant="subtitle2">Formül terimleri</Typography>
+                                <Typography variant="caption" color="text.secondary">Kaynak, dönem, değer alanı, işaret ve katsayı tamamen tanımdan yönetilir; kod değişikliği gerekmez.</Typography>
+                              </Box>
+                              <Button size="small" variant="outlined" onClick={kuralTerimiEkle}>Terim ekle</Button>
+                            </Stack>
+                          </Grid>
                           {kuralForm.terimler.map((terim, index) => (
-                            <Grid item xs={12} md={6} key={terim.sira}>
-                              <Stack direction="row" spacing={1}>
-                                <TextField size="small" label={`Terim ${index + 1}`} fullWidth value={terim.kaynakAnahtari} onChange={(event) => setKuralForm((onceki) => ({ ...onceki, terimler: onceki.terimler.map((aday, adayIndex) => adayIndex === index ? { ...aday, kaynakAnahtari: event.target.value } : aday) }))} />
-                                <TextField size="small" label="Katsayı" type="number" sx={{ width: 130 }} value={terim.katsayi} onChange={(event) => setKuralForm((onceki) => ({ ...onceki, terimler: onceki.terimler.map((aday, adayIndex) => adayIndex === index ? { ...aday, katsayi: Number(event.target.value) } : aday) }))} />
-                              </Stack>
+                            <Grid item xs={12} key={`${terim.id}-${terim.sira}-${index}`}>
+                              <Paper variant="outlined" sx={{ p: 1.25 }}>
+                                <Grid container spacing={1} alignItems="center">
+                                  <Grid item xs={12} md={2}>
+                                    <FormControl size="small" fullWidth><InputLabel>Kaynak türü</InputLabel><Select label="Kaynak türü" value={terim.kaynakTuru} onChange={(event) => kuralTerimiGuncelle(index, { kaynakTuru: Number(event.target.value) })}><MenuItem value={1}>Hesap kodu</MenuItem><MenuItem value={2}>Hesap kodu öneki</MenuItem><MenuItem value={3}>Finansal kalem</MenuItem><MenuItem value={4}>Önceki üretim</MenuItem><MenuItem value={5}>Sistem parametresi</MenuItem><MenuItem value={6}>Sabit</MenuItem></Select></FormControl>
+                                  </Grid>
+                                  <Grid item xs={12} md={3}><TextField size="small" label={`Kaynak anahtarı ${index + 1}`} fullWidth required value={terim.kaynakAnahtari} onChange={(event) => kuralTerimiGuncelle(index, { kaynakAnahtari: event.target.value })} /></Grid>
+                                  <Grid item xs={6} md={1.5}>
+                                    <FormControl size="small" fullWidth><InputLabel>İşlem</InputLabel><Select label="İşlem" value={terim.operator} onChange={(event) => kuralTerimiGuncelle(index, { operator: Number(event.target.value) })}><MenuItem value={1}>Topla</MenuItem><MenuItem value={2}>Çıkar</MenuItem></Select></FormControl>
+                                  </Grid>
+                                  <Grid item xs={6} md={1.5}><TextField size="small" label="Katsayı" type="number" fullWidth error={terim.katsayi === 0} helperText={terim.katsayi === 0 ? "Sıfır olamaz" : ""} value={terim.katsayi} onChange={(event) => kuralTerimiGuncelle(index, { katsayi: Number(event.target.value) })} /></Grid>
+                                  <Grid item xs={12} md={2}>
+                                    <FormControl size="small" fullWidth><InputLabel>Değer alanı</InputLabel><Select label="Değer alanı" value={terim.degerAlani} onChange={(event) => kuralTerimiGuncelle(index, { degerAlani: Number(event.target.value) })}><MenuItem value={1}>Bakiye</MenuItem><MenuItem value={2}>Borç</MenuItem><MenuItem value={3}>Alacak</MenuItem><MenuItem value={4}>Rapor borç</MenuItem><MenuItem value={5}>Rapor alacak</MenuItem><MenuItem value={6}>Kontrol bakiye</MenuItem><MenuItem value={7}>Transfer fişi hariç bakiye</MenuItem></Select></FormControl>
+                                  </Grid>
+                                  <Grid item xs={12} md={2}><Button color="error" size="small" onClick={() => kuralTerimiSil(index)}>Terimi kaldır</Button></Grid>
+                                  <Grid item xs={12} md={2}>
+                                    <FormControl size="small" fullWidth><InputLabel>Dönem</InputLabel><Select label="Dönem" value={terim.donemDavranisi} onChange={(event) => kuralTerimiGuncelle(index, { donemDavranisi: Number(event.target.value) })}><MenuItem value={1}>Cari dönem</MenuItem><MenuItem value={2}>Önceki dönem</MenuItem><MenuItem value={3}>Açılış</MenuItem><MenuItem value={4}>Değişim</MenuItem><MenuItem value={5}>Özel</MenuItem></Select></FormControl>
+                                  </Grid>
+                                  <Grid item xs={6} md={1.5}><TextField size="small" label="Dönem ofseti" type="number" fullWidth inputProps={{ min: -100, max: 100 }} value={terim.donemOfseti} onChange={(event) => kuralTerimiGuncelle(index, { donemOfseti: Number(event.target.value) })} /></Grid>
+                                  <Grid item xs={12} md={2}>
+                                    <FormControl size="small" fullWidth><InputLabel>Terim işareti</InputLabel><Select label="Terim işareti" value={terim.isaretPolitikasi} onChange={(event) => kuralTerimiGuncelle(index, { isaretPolitikasi: Number(event.target.value) })}><MenuItem value={1}>Olduğu gibi</MenuItem><MenuItem value={2}>Mutlak değer</MenuItem><MenuItem value={3}>Yalnız pozitif</MenuItem><MenuItem value={4}>Yalnız negatif</MenuItem><MenuItem value={5}>Ters işaret</MenuItem></Select></FormControl>
+                                  </Grid>
+                                  <Grid item xs={12} md={4}><TextField size="small" label="Kaynak formül notu" fullWidth value={terim.hamTerim} onChange={(event) => kuralTerimiGuncelle(index, { hamTerim: event.target.value })} /></Grid>
+                                  <Grid item xs={12} md={2.5}><Stack direction="row" spacing={0.5} alignItems="center"><Switch size="small" checked={terim.zorunluMu} onChange={(event) => kuralTerimiGuncelle(index, { zorunluMu: event.target.checked })} /><Typography variant="caption">Kaynak zorunlu</Typography></Stack></Grid>
+                                </Grid>
+                              </Paper>
                             </Grid>
                           ))}
-                          <Grid item xs={12}><Stack direction="row" spacing={1}><Button variant="contained" size="small" onClick={yeniKuralAcik ? kuralOlustur : kuralKaydet} disabled={kuralKaydediliyor || (yeniKuralAcik && !yeniKuralKalemId)}>{kuralKaydediliyor ? <CircularProgress size={18} color="inherit" /> : yeniKuralAcik ? "Yeni kuralı kaydet" : "Kuralı kaydet"}</Button><Button size="small" onClick={() => { setDuzenlenenKuralId(0); setYeniKuralAcik(false); }} disabled={kuralKaydediliyor}>İptal</Button></Stack></Grid>
+                          <Grid item xs={12}><Stack direction="row" spacing={1}><Button variant="contained" size="small" onClick={yeniKuralAcik ? kuralOlustur : kuralKaydet} disabled={kuralKaydediliyor || (yeniKuralAcik && !yeniKuralKalemId) || kuralForm.terimler.some((terim) => !terim.kaynakAnahtari.trim() || terim.katsayi === 0)}>{kuralKaydediliyor ? <CircularProgress size={18} color="inherit" /> : yeniKuralAcik ? "Yeni kuralı kaydet" : "Kuralı kaydet"}</Button><Button size="small" onClick={() => { setDuzenlenenKuralId(0); setYeniKuralAcik(false); }} disabled={kuralKaydediliyor}>İptal</Button></Stack></Grid>
                         </Grid>
                       )}
                     </Stack>
