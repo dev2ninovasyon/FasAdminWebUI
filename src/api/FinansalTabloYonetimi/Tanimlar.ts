@@ -1114,6 +1114,45 @@ export const applyKgkKalemFarklari = async (
   };
 };
 
+export const createKgkTaslakFromDifferences = async (
+  token: string,
+  kaynakSurumId: number,
+  istek: {
+    etiket: string;
+    gecerlilikBaslangici: string;
+    gecerlilikBitisi?: string | null;
+    aciklama?: string | null;
+    beklenenKaynakEszamanlilikSurumu: number;
+    kalemFarklari: KgkWorkbookFarkSonucu["kalemFarklari"];
+  }
+) => {
+  const response = await fetch(`${url}/FinansalTabloYonetimi/Surumler/${kaynakSurumId}/KgkTaslakOlustur`, {
+    method: "POST",
+    headers: {
+      accept: "application/json",
+      "Content-Type": "application/json",
+      Authorization: `Bearer ${token}`,
+    },
+    body: JSON.stringify(istek),
+  });
+  const payload = await response.json().catch(() => ({}));
+  if (!response.ok) {
+    throw new Error(payload?.detail || payload?.message || payload?.Message || "KGK farklarından taslak oluşturulamadı.");
+  }
+  return payload as {
+    success: boolean;
+    kaynakSurumId: number;
+    surumId: number;
+    surumNo: number;
+    durum: number;
+    eszamanlilikSurumu: number;
+    eklenenKalemSayisi: number;
+    pasifeAlinanKalemSayisi: number;
+    guncellenenKalemSayisi: number;
+    islenenAnahtarlar: string[];
+  };
+};
+
 export const applyKgkFormulFarklari = async (
   token: string,
   surumId: number,
