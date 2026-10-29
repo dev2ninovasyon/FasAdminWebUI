@@ -49,7 +49,9 @@ import {
   cloneFinansalSurum,
   compareFinansalSurumler,
   FinansalSurumKarsilastirma,
-  publishFinansalSurum,
+  FinansalSurumYonetimiDurumu,
+  activateFinansalSurum,
+  getFinansalSurumYonetimiDurumu,
   updateFinansalKalem,
   updateFinansalKural,
   validateFinansalSurum,
@@ -192,6 +194,12 @@ const Page = () => {
   const [karsilastirmaSurumId, setKarsilastirmaSurumId] = useState(0);
   const [karsilastirmaSonucu, setKarsilastirmaSonucu] = useState<FinansalSurumKarsilastirma | null>(null);
   const [karsilastirmaYukleniyor, setKarsilastirmaYukleniyor] = useState(false);
+  const [surumYonetimiDurumu, setSurumYonetimiDurumu] = useState<FinansalSurumYonetimiDurumu | null>(null);
+  const [surumYonetimiYukleniyor, setSurumYonetimiYukleniyor] = useState(false);
+  const [devreyeAlmaYukleniyor, setDevreyeAlmaYukleniyor] = useState(false);
+  const [devreyeAlmaAciklamasi, setDevreyeAlmaAciklamasi] = useState("");
+  const [devreyeAlmaTarihi, setDevreyeAlmaTarihi] = useState(new Date().toISOString().slice(0, 10));
+  const [surumYonetimiMesaji, setSurumYonetimiMesaji] = useState("");
   const [kgkKontrolSonucu, setKgkKontrolSonucu] = useState<KgkFormatKontrolSonucu | null>(null);
   const [kgkKontrolYukleniyor, setKgkKontrolYukleniyor] = useState(false);
   const [kgkHashleriIste, setKgkHashleriIste] = useState(false);
@@ -324,6 +332,19 @@ const Page = () => {
   }, [user.token, tanimFiltresi]);
 
   useEffect(() => {
+    if (!user.token) return;
+    let etkin = true;
+    setSurumYonetimiYukleniyor(true);
+    getFinansalSurumYonetimiDurumu(user.token)
+      .then((data) => etkin && setSurumYonetimiDurumu(data))
+      .catch((error) => etkin && setTanimHatasi(error instanceof Error ? error.message : "Sürüm yönetimi durumu okunamadı."))
+      .finally(() => etkin && setSurumYonetimiYukleniyor(false));
+    return () => {
+      etkin = false;
+    };
+  }, [user.token]);
+
+  useEffect(() => {
     if (!user.token || !secilenSurumId) {
       setSurumDetayi(null);
       return;
@@ -387,6 +408,28 @@ const Page = () => {
     uretimBaslangic,
     uretimBitis,
   ]);
+
+  useEffect(() => {
+    if (!user.token || aktifAdim !== 2) return;
+    let etkin = true;
+    const gecmisiYenile = async () => {
+      setKgkGecmisYukleniyor(true);
+      try {
+        const data = await getKgkScanHistory(user.token || "", 20);
+        if (etkin) setKgkTaramaGecmisi(data);
+      } catch (error) {
+        if (etkin) setTanimHatasi(error instanceof Error ? error.message : "KGK tarama geçmişi okunamadı.");
+      } finally {
+        if (etkin) setKgkGecmisYukleniyor(false);
+      }
+    };
+    void gecmisiYenile();
+    const zamanlayici = window.setInterval(() => void gecmisiYenile(), 60_000);
+    return () => {
+      etkin = false;
+      window.clearInterval(zamanlayici);
+    };
+  }, [aktifAdim, user.token]);
 
   const metaKaydet = async () => {
     if (!user.token || !secilenSurum || surumDurumKodu(secilenSurum.durum) !== 1) return;
@@ -620,43 +663,75 @@ const Page = () => {
     }
   };
 
-  const taslagiYayinla = async () => {
-    if (!user.token || !secilenSurum || surumDurumKodu(secilenSurum.durum) !== 1) return;
+  const taslakKlonla = async (
+    kaynakSurum: NonNullable<typeof secilenSurum> = secilenSurum!,
+    geriDonusMu = false
+  ) => {
+    if (!user.token || !kaynakSurum) return;
     setSurumIslemiYukleniyor(true);
     setTanimHatasi("");
+    setSurumYonetimiMesaji("");
     try {
-      const sonuc = await publishFinansalSurum(user.token, secilenSurum.id, secilenSurum.eszamanlilikSurumu);
-      setTanimSetleri((onceki) => onceki.map((set) => ({ ...set, surumler: set.surumler.map((surum) => surum.id === secilenSurum.id ? { ...surum, durum: sonuc.durum, eszamanlilikSurumu: sonuc.eszamanlilikSurumu, onayTarihi: sonuc.onayTarihi, guncellemeTarihi: sonuc.onayTarihi } : surum) })));
-      setSurumDetayi((onceki) => onceki ? { ...onceki, surum: { ...onceki.surum, durum: sonuc.durum, eszamanlilikSurumu: sonuc.eszamanlilikSurumu, onayTarihi: sonuc.onayTarihi, guncellemeTarihi: sonuc.onayTarihi } } : onceki);
-      setDogrulamaSonucu(null);
+      const etiket = geriDonusMu
+        ? `${kaynakSurum.etiket} - geri dönüş taslağı`
+        : `${kaynakSurum.etiket} - taslak`;
+      const aciklama = geriDonusMu
+        ? `Geri dönüş adayı: kaynak sürüm #${kaynakSurum.surumNo}. Önceki üretimler değişmez.`
+        : `Kaynak sürüm #${kaynakSurum.surumNo} üzerinden oluşturuldu.`;
+      const sonuc = await cloneFinansalSurum(user.token, kaynakSurum.id, {
+        etiket,
+        gecerlilikBaslangici: new Date().toISOString().slice(0, 10),
+        gecerlilikBitisi: null,
+        aciklama,
+        beklenenKaynakEszamanlilikSurumu: kaynakSurum.eszamanlilikSurumu,
+      });
+      const yeniSurum = { ...kaynakSurum, id: sonuc.surumId, surumNo: sonuc.surumNo, etiket, durum: sonuc.durum, kaynakSurumId: kaynakSurum.id, aciklama, gecerlilikBaslangici: new Date().toISOString(), gecerlilikBitisi: null, olusturmaTarihi: new Date().toISOString(), guncellemeTarihi: null, onayTarihi: null, eszamanlilikSurumu: sonuc.eszamanlilikSurumu };
+      setTanimSetleri((onceki) => onceki.map((set) => set.id === secilenSetId ? { ...set, surumler: [yeniSurum, ...set.surumler] } : set));
+      setSecilenSurumId(sonuc.surumId);
+      setSurumId(String(sonuc.surumId));
+      setEszamanlilikSurumu(String(sonuc.eszamanlilikSurumu));
+      setSurumYonetimiMesaji(geriDonusMu
+        ? `#${kaynakSurum.surumNo} sürümünden geri dönüş taslağı oluşturuldu. Kontrol ve test sonrası devreye alınabilir.`
+        : `#${kaynakSurum.surumNo} sürümünden yeni taslak oluşturuldu.`);
     } catch (error) {
-      setTanimHatasi(error instanceof Error ? error.message : "Sürüm yayınlanamadı.");
+      setTanimHatasi(error instanceof Error ? error.message : "Taslak sürüm oluşturulamadı.");
     } finally {
       setSurumIslemiYukleniyor(false);
     }
   };
 
-  const taslakKlonla = async () => {
-    if (!user.token || !secilenSurum) return;
-    setSurumIslemiYukleniyor(true);
+  const taslagiDevreyeAl = async () => {
+    if (!user.token || !secilenSurum || surumDurumKodu(secilenSurum.durum) !== 1) return;
+    if (!surumYonetimiDurumu?.etkin) {
+      setTanimHatasi("Sürüm devreye alma pilotu kapalıdır. Eski finansal tablo akışı değişmeden devam ediyor.");
+      return;
+    }
+    if (!teknikDogrulamaBasariliMi || !onizlemeBasariliMi || devreyeAlmaAciklamasi.trim().length < 10 || !devreyeAlmaTarihi) return;
+    setDevreyeAlmaYukleniyor(true);
     setTanimHatasi("");
+    setSurumYonetimiMesaji("");
     try {
-      const sonuc = await cloneFinansalSurum(user.token, secilenSurum.id, {
-        etiket: `${secilenSurum.etiket} - taslak`,
-        gecerlilikBaslangici: secilenSurum.gecerlilikBaslangici,
-        gecerlilikBitisi: secilenSurum.gecerlilikBitisi || null,
-        aciklama: `Kaynak sürüm #${secilenSurum.surumNo} üzerinden oluşturuldu.`,
-        beklenenKaynakEszamanlilikSurumu: secilenSurum.eszamanlilikSurumu,
+      const sonuc = await activateFinansalSurum(user.token, secilenSurum.id, {
+        beklenenEszamanlilikSurumu: secilenSurum.eszamanlilikSurumu,
+        etkinlikTarihi: devreyeAlmaTarihi,
+        onayAciklamasi: devreyeAlmaAciklamasi.trim(),
       });
-      const yeniSurum = { ...secilenSurum, id: sonuc.surumId, surumNo: sonuc.surumNo, etiket: `${secilenSurum.etiket} - taslak`, durum: sonuc.durum, kaynakSurumId: secilenSurum.id, aciklama: `Kaynak sürüm #${secilenSurum.surumNo} üzerinden oluşturuldu.`, olusturmaTarihi: new Date().toISOString(), guncellemeTarihi: null, onayTarihi: null, eszamanlilikSurumu: sonuc.eszamanlilikSurumu };
-      setTanimSetleri((onceki) => onceki.map((set) => set.id === secilenSetId ? { ...set, surumler: [yeniSurum, ...set.surumler] } : set));
-      setSecilenSurumId(sonuc.surumId);
-      setSurumId(String(sonuc.surumId));
-      setEszamanlilikSurumu(String(sonuc.eszamanlilikSurumu));
+      setTanimSetleri((onceki) => onceki.map((set) => set.id !== sonuc.tanimSetiId ? set : {
+        ...set,
+        surumler: set.surumler.map((surum) => {
+          if (surum.id === sonuc.surumId) return { ...surum, durum: sonuc.durum, eszamanlilikSurumu: sonuc.eszamanlilikSurumu, gecerlilikBaslangici: sonuc.etkinlikTarihi, gecerlilikBitisi: null, onayTarihi: sonuc.onayTarihi, guncellemeTarihi: sonuc.onayTarihi };
+          if (sonuc.kullanimdanKaldirilanSurumIdleri.includes(surum.id)) return { ...surum, durum: 4, guncellemeTarihi: sonuc.onayTarihi };
+          return surum;
+        }),
+      }));
+      setSurumDetayi((onceki) => onceki ? { ...onceki, surum: { ...onceki.surum, durum: sonuc.durum, eszamanlilikSurumu: sonuc.eszamanlilikSurumu, gecerlilikBaslangici: sonuc.etkinlikTarihi, gecerlilikBitisi: null, onayTarihi: sonuc.onayTarihi, guncellemeTarihi: sonuc.onayTarihi } } : onceki);
+      setDogrulamaSonucu(null);
+      setDevreyeAlmaAciklamasi("");
+      setSurumYonetimiMesaji(`Sürüm #${secilenSurum.surumNo} devreye alındı. ${sonuc.kullanimdanKaldirilanSurumIdleri.length} önceki sürüm kullanım dışına alındı; eski üretimler değişmedi.`);
     } catch (error) {
-      setTanimHatasi(error instanceof Error ? error.message : "Taslak sürüm oluşturulamadı.");
+      setTanimHatasi(error instanceof Error ? error.message : "Sürüm devreye alınamadı.");
     } finally {
-      setSurumIslemiYukleniyor(false);
+      setDevreyeAlmaYukleniyor(false);
     }
   };
 
@@ -1538,6 +1613,19 @@ const Page = () => {
         </Stack>
       </Paper>
       <Box sx={{ display: aktifAdim === 2 ? "block" : "none" }}>
+      <Paper variant="outlined" sx={{ p: 1.5, mb: 2 }}>
+        <Stack direction={{ xs: "column", md: "row" }} spacing={1.5} alignItems={{ md: "center" }}>
+          <Box sx={{ flexGrow: 1 }}>
+            <Typography variant="subtitle2">KGK kaynak sürümü ayrı izlenir</Typography>
+            <Typography variant="body2" color="text.secondary">
+              KGK dosya değişikliği doğrudan kullanıcı tanımını değiştirmez. Önce arşivlenir, kalem ve formül farkları incelenir, sonra seçili taslağa Admin onayıyla aktarılır.
+            </Typography>
+          </Box>
+          {kgkTaramaGecmisi[0]
+            ? <Chip color={kgkTaramaGecmisi[0].degisenDosyaSayisi > 0 ? "warning" : "success"} label={`Son tarama: ${kgkTaramaGecmisi[0].degisenDosyaSayisi} değişiklik · ${new Date(kgkTaramaGecmisi[0].bitis).toLocaleString("tr-TR")}`} />
+            : <Chip variant="outlined" label={kgkGecmisYukleniyor ? "Tarama durumu okunuyor" : "Henüz tarama kaydı yok"} />}
+        </Stack>
+      </Paper>
       <ParentCard title="KGK format güncelleme kontrolü">
         <Stack spacing={1.5}>
           <Typography variant="body2" color="text.secondary">
@@ -2060,25 +2148,91 @@ const Page = () => {
               </Grid>
             </Grid>
           )}
+          <Alert
+            severity={surumYonetimiDurumu?.etkin ? "warning" : "info"}
+            variant="outlined"
+            action={surumYonetimiYukleniyor ? <CircularProgress size={18} /> : undefined}
+          >
+            <strong>{surumYonetimiDurumu?.etkin ? "İzole sürüm pilotu açık" : "Canlı sürüm geçişi kapalı"}</strong>
+            <br />
+            {surumYonetimiDurumu?.aciklama || "Sürüm yönetimi durumu kontrol ediliyor."}
+          </Alert>
+          {surumYonetimiMesaji && <Alert severity="success" onClose={() => setSurumYonetimiMesaji("")}>{surumYonetimiMesaji}</Alert>}
+          {secilenSet && (
+            <Paper variant="outlined" sx={{ overflowX: "auto" }}>
+              <Box sx={{ px: 1.5, py: 1 }}>
+                <Typography variant="subtitle2">Tanım ve formül sürüm geçmişi</Typography>
+                <Typography variant="caption" color="text.secondary">
+                  Her değişiklik taslakta yapılır. Yayındaki sürüm değiştirilemez; geri dönüş eski sürümden yeni taslak oluşturarak yapılır.
+                </Typography>
+              </Box>
+              <Table size="small">
+                <TableHead><TableRow><TableCell>Sürüm</TableCell><TableCell>Kaynak</TableCell><TableCell>Durum</TableCell><TableCell align="right">Kalem</TableCell><TableCell align="right">Formül</TableCell><TableCell>Tarih</TableCell><TableCell align="right">İşlem</TableCell></TableRow></TableHead>
+                <TableBody>
+                  {secilenSet.surumler.map((surum) => {
+                    const durum = surumDurumKodu(surum.durum);
+                    return (
+                      <TableRow key={surum.id} hover selected={surum.id === secilenSurumId}>
+                        <TableCell><strong>#{surum.surumNo}</strong> · {surum.etiket}</TableCell>
+                        <TableCell>{surum.kaynakSurumId ? `#${secilenSet.surumler.find((aday) => aday.id === surum.kaynakSurumId)?.surumNo || surum.kaynakSurumId}` : "Başlangıç"}</TableCell>
+                        <TableCell><Chip size="small" variant={durum === 3 ? "filled" : "outlined"} color={durum === 3 ? "success" : durum === 1 ? "warning" : "default"} label={durum === 3 ? "Aktif" : durum === 1 ? "Taslak" : durum === 2 ? "Doğrulandı" : "Geçmiş"} /></TableCell>
+                        <TableCell align="right">{surum.kalemSayisi}</TableCell>
+                        <TableCell align="right">{surum.formulSayisi}</TableCell>
+                        <TableCell>{new Date(surum.guncellemeTarihi || surum.olusturmaTarihi).toLocaleDateString("tr-TR")}</TableCell>
+                        <TableCell align="right">
+                          <Stack direction="row" spacing={0.5} justifyContent="flex-end">
+                            <Button size="small" onClick={() => { setSecilenSurumId(surum.id); setSurumId(String(surum.id)); setEszamanlilikSurumu(String(surum.eszamanlilikSurumu)); }}>İncele</Button>
+                            {durum !== 1 && <Button size="small" variant="outlined" onClick={() => void taslakKlonla(surum, durum === 4)} disabled={surumIslemiYukleniyor}>{durum === 4 ? "Geri dön" : "Taslak oluştur"}</Button>}
+                          </Stack>
+                        </TableCell>
+                      </TableRow>
+                    );
+                  })}
+                </TableBody>
+              </Table>
+            </Paper>
+          )}
           {secilenSurum && (
             <Paper variant="outlined" sx={{ p: 1.5 }}>
               <Stack spacing={1.5}>
                 <Stack direction="row" spacing={1} flexWrap="wrap" useFlexGap>
                   <Chip label={`Sürüm ${secilenSurum.surumNo} · ${secilenSurum.etiket}`} color={surumDurumKodu(secilenSurum.durum) === 3 ? "success" : "default"} />
-                  <Chip label={`Eşzamanlılık ${secilenSurum.eszamanlilikSurumu}`} variant="outlined" />
+                  <Chip label={`Taslak revizyonu ${secilenSurum.eszamanlilikSurumu}`} variant="outlined" />
                   <Chip label={`${secilenSurum.tabloSayisi} tablo · ${secilenSurum.kalemSayisi} kalem · ${secilenSurum.formulSayisi} formül`} variant="outlined" />
-                  <Button size="small" variant="outlined" onClick={taslakKlonla} disabled={surumIslemiYukleniyor}>Taslağa klonla</Button>
+                  <Button size="small" variant="outlined" onClick={() => void taslakKlonla()} disabled={surumIslemiYukleniyor}>Yeni taslak oluştur</Button>
                   {surumDurumKodu(secilenSurum.durum) === 1 && <>
                     <Button size="small" variant="outlined" onClick={() => setMetaDuzenleme((onceki) => !onceki)}>{metaDuzenleme ? "Düzenlemeyi kapat" : "Sürüm metadata düzenle"}</Button>
                     <Button size="small" variant="contained" color="secondary" onClick={teknikDogrula} disabled={dogrulamaYukleniyor}>
                       {dogrulamaYukleniyor ? <CircularProgress size={16} color="inherit" /> : "Teknik doğrula"}
                     </Button>
-                    <Button size="small" variant="contained" color="success" onClick={taslagiYayinla} disabled={surumIslemiYukleniyor || !teknikDogrulamaBasariliMi}>Yayınla</Button>
                     <Button size="small" variant="text" onClick={() => setTeknikDuzenlemeAraclariAcik((onceki) => !onceki)}>
                       {teknikDuzenlemeAraclariAcik ? "Teknik araçları gizle" : "Teknik düzenleme araçlarını göster"}
                     </Button>
                   </>}
                 </Stack>
+                <Alert severity="info" variant="outlined">
+                  Bir kalem veya formül kaydedildiğinde taslak revizyon numarası artar. Yayındaki sürüm hiçbir zaman yerinde değiştirilmez; onaylanan taslak yeni sürüm olarak devreye alınır.
+                </Alert>
+                {surumDurumKodu(secilenSurum.durum) === 1 && (
+                  <Paper variant="outlined" sx={{ p: 1.5, borderColor: surumYonetimiDurumu?.etkin ? "warning.main" : "divider" }}>
+                    <Stack spacing={1.25}>
+                      <Box>
+                        <Typography variant="subtitle2">Kontrollü devreye alma</Typography>
+                        <Typography variant="caption" color="text.secondary">
+                          Önce teknik doğrulama ve izole önizleme tamamlanır. Devreye alma eski üretimleri değiştirmez; yalnız yeni üretimlerin kullanacağı aktif sürümü değiştirir.
+                        </Typography>
+                      </Box>
+                      <Stack direction={{ xs: "column", md: "row" }} spacing={1} alignItems={{ md: "flex-start" }}>
+                        <TextField size="small" type="date" label="Etkinlik tarihi" value={devreyeAlmaTarihi} onChange={(event) => setDevreyeAlmaTarihi(event.target.value)} InputLabelProps={{ shrink: true }} sx={{ minWidth: 180 }} />
+                        <TextField size="small" fullWidth label="Admin onay açıklaması" value={devreyeAlmaAciklamasi} onChange={(event) => setDevreyeAlmaAciklamasi(event.target.value)} inputProps={{ maxLength: 500 }} helperText="En az 10 karakter; değişiklik ve onay nedeni." />
+                        <Button variant="contained" color="success" onClick={taslagiDevreyeAl} disabled={devreyeAlmaYukleniyor || !surumYonetimiDurumu?.etkin || !teknikDogrulamaBasariliMi || !onizlemeBasariliMi || devreyeAlmaAciklamasi.trim().length < 10} sx={{ minWidth: 150 }}>
+                          {devreyeAlmaYukleniyor ? <CircularProgress size={18} color="inherit" /> : "Devreye al"}
+                        </Button>
+                      </Stack>
+                      {!surumYonetimiDurumu?.etkin && <Alert severity="info" variant="outlined">Canlı kullanıcılar eski tablolarla devam ediyor. Özellik bayrağı açılmadan bu işlem çalışmaz.</Alert>}
+                    </Stack>
+                  </Paper>
+                )}
                 {metaDuzenleme && surumDurumKodu(secilenSurum.durum) === 1 && (
                   <Paper variant="outlined" sx={{ p: 1.5, bgcolor: "action.hover" }}>
                     <Grid container spacing={1.5}>

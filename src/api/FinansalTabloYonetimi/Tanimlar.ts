@@ -528,6 +528,48 @@ export type FinansalSurumKarsilastirma = {
   }>;
 };
 
+export type FinansalSurumYonetimiDurumu = {
+  etkin: boolean;
+  eskiAkisKorunuyor: boolean;
+  acikSurumSecimiZorunlu: boolean;
+  aciklama: string;
+};
+
+export type FinansalSurumDevreyeAlmaSonucu = {
+  surumId: number;
+  tanimSetiId: number;
+  durum: number | string;
+  etkinlikTarihi: string;
+  onayTarihi: string;
+  eszamanlilikSurumu: number;
+  kullanimdanKaldirilanSurumIdleri: number[];
+  onayAciklamasi: string;
+};
+
+export const getFinansalSurumYonetimiDurumu = (token: string) =>
+  jsonGet<FinansalSurumYonetimiDurumu>(token, "/SurumYonetimi/Durum");
+
+export const activateFinansalSurum = async (
+  token: string,
+  surumId: number,
+  istek: { beklenenEszamanlilikSurumu: number; etkinlikTarihi: string; onayAciklamasi: string }
+) => {
+  const response = await fetch(`${url}/FinansalTabloYonetimi/Surumler/${surumId}/DevreyeAl`, {
+    method: "POST",
+    headers: {
+      accept: "application/json",
+      "Content-Type": "application/json",
+      Authorization: `Bearer ${token}`,
+    },
+    body: JSON.stringify(istek),
+  });
+  const payload = await response.json().catch(() => ({}));
+  if (!response.ok) {
+    throw new Error(payload?.message || payload?.Message || "Sürüm devreye alınamadı.");
+  }
+  return payload as FinansalSurumDevreyeAlmaSonucu;
+};
+
 export const compareFinansalSurumler = (
   token: string,
   solSurumId: number,
