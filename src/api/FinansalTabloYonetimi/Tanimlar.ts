@@ -421,24 +421,23 @@ export const replayFinansalTabloUretimi = async (
   return payload as FinansalTabloUretimSonucu;
 };
 
-export type FinansalTabloKgkRenderSonucu = {
+export type FinansalTabloOtomatikKgkExcelSonucu = {
   dosyaAdi: string;
   sha256: string | null;
+  sablonSha256: string | null;
+  kaynakDonemKodu: string | null;
+  tanimSurumu: string | null;
+  doldurulanHucreSayisi: number;
+  eslesmeyenDegerSayisi: number;
 };
 
-export const renderFinansalTabloKgk = async (
+export const createAutomaticFinansalTabloKgkExcel = async (
   token: string,
-  uretimId: string,
-  sablon: File,
-  eslesmelerJson: string
+  uretimId: string
 ) => {
-  const formData = new FormData();
-  formData.append("sablon", sablon);
-  formData.append("eslesmelerJson", eslesmelerJson);
-  const response = await fetch(`${url}/FinansalTabloYonetimi/Uretimler/${uretimId}/KgkRender`, {
+  const response = await fetch(`${url}/FinansalTabloYonetimi/Uretimler/${uretimId}/KgkExcel/Otomatik`, {
     method: "POST",
     headers: { accept: "application/octet-stream", Authorization: `Bearer ${token}` },
-    body: formData,
   });
   if (!response.ok) {
     const payload = await response.json().catch(() => ({}));
@@ -458,7 +457,20 @@ export const renderFinansalTabloKgk = async (
   anchor.click();
   anchor.remove();
   window.setTimeout(() => window.URL.revokeObjectURL(objectUrl), 0);
-  return { dosyaAdi, sha256: response.headers.get("x-finansaltablo-kgk-sha256") } as FinansalTabloKgkRenderSonucu;
+  const sayiyaDonustur = (deger: string | null) => {
+    const sayi = Number(deger);
+    return Number.isFinite(sayi) ? sayi : 0;
+  };
+  const kodlanmisSurum = response.headers.get("x-finansaltablo-tanim-surum");
+  return {
+    dosyaAdi,
+    sha256: response.headers.get("x-finansaltablo-kgk-sha256"),
+    sablonSha256: response.headers.get("x-finansaltablo-kgk-sablon-sha256"),
+    kaynakDonemKodu: response.headers.get("x-finansaltablo-kgk-kaynak-donem"),
+    tanimSurumu: kodlanmisSurum ? decodeURIComponent(kodlanmisSurum) : null,
+    doldurulanHucreSayisi: sayiyaDonustur(response.headers.get("x-finansaltablo-kgk-doldurulan-hucre")),
+    eslesmeyenDegerSayisi: sayiyaDonustur(response.headers.get("x-finansaltablo-kgk-eslesmeyen-deger")),
+  } as FinansalTabloOtomatikKgkExcelSonucu;
 };
 
 export type FinansalTabloKgkUretimArsivKaydi = {

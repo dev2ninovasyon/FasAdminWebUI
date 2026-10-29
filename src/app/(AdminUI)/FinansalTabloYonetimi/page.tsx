@@ -82,7 +82,8 @@ import {
   getFinansalTabloKgkCiktilari,
   downloadFinansalTabloKgkCiktisi,
   replayFinansalTabloUretimi,
-  renderFinansalTabloKgk,
+  createAutomaticFinansalTabloKgkExcel,
+  FinansalTabloOtomatikKgkExcelSonucu,
   FinansalTabloKgkUretimArsivKaydi,
   FinansalTabloUretimArsivSonucu,
   FinansalTabloUretimSonucu,
@@ -302,10 +303,8 @@ const Page = () => {
 }`);
   const [golgeKarsilastirmaSonucu, setGolgeKarsilastirmaSonucu] = useState<FinansalTabloGolgeKarsilastirmaSonucu | null>(null);
   const [golgeKarsilastirmaYukleniyor, setGolgeKarsilastirmaYukleniyor] = useState(false);
-  const [kgkRenderSablon, setKgkRenderSablon] = useState<File | null>(null);
-  const [kgkRenderEslesmeler, setKgkRenderEslesmeler] = useState('[{"hedefTuru":1,"hedefSabitAnahtari":"VARLIKLAR","sayfaAdi":"Finansal Durum","hucreAdresi":"B2"}]');
   const [kgkRenderYukleniyor, setKgkRenderYukleniyor] = useState(false);
-  const [kgkRenderSonucu, setKgkRenderSonucu] = useState<{ dosyaAdi: string; sha256: string | null } | null>(null);
+  const [kgkRenderSonucu, setKgkRenderSonucu] = useState<FinansalTabloOtomatikKgkExcelSonucu | null>(null);
   const [kgkArsivCiktilari, setKgkArsivCiktilari] = useState<FinansalTabloKgkUretimArsivKaydi[]>([]);
   const [kgkArsivCiktilariYukleniyor, setKgkArsivCiktilariYukleniyor] = useState(false);
   const [kgkArsivIndirilenSha, setKgkArsivIndirilenSha] = useState("");
@@ -1425,18 +1424,18 @@ const Page = () => {
     }
   };
 
-  const kgkFinansalTabloRenderEt = async () => {
-    if (!user.token || !uretimSonucu?.kayit.uretimId || !kgkRenderSablon || !kgkRenderEslesmeler.trim()) {
-      setTanimHatasi("KGK çıktısı için üretim kaydı, şablon ve eşleştirme JSON'u zorunludur.");
+  const kgkFinansalTabloOtomatikOlustur = async () => {
+    if (!user.token || !uretimSonucu?.kayit.uretimId) {
+      setTanimHatasi("Otomatik KGK Excel çıktısı için önce finansal tablo üretimi oluşturun.");
       return;
     }
     setKgkRenderYukleniyor(true);
     setTanimHatasi("");
     try {
-      const sonuc = await renderFinansalTabloKgk(user.token, uretimSonucu.kayit.uretimId, kgkRenderSablon, kgkRenderEslesmeler);
+      const sonuc = await createAutomaticFinansalTabloKgkExcel(user.token, uretimSonucu.kayit.uretimId);
       setKgkRenderSonucu(sonuc);
       setKgkArsivCiktilari(await getFinansalTabloKgkCiktilari(user.token, uretimSonucu.kayit.uretimId));
-      setTanimHatasi(`KGK çıktısı indirildi: ${sonuc.dosyaAdi}`);
+      setTanimHatasi(`Resmi KGK şablonu otomatik seçildi, dolduruldu ve indirildi: ${sonuc.dosyaAdi}`);
     } catch (error) {
       setTanimHatasi(error instanceof Error ? error.message : "KGK finansal tablo çıktısı oluşturulamadı.");
     } finally {
@@ -2166,20 +2165,26 @@ const Page = () => {
             </Paper>
           ) : null}
           <Divider />
-          <Typography variant="subtitle2">KGK workbook çıktısı</Typography>
-          <Typography variant="caption" color="text.secondary">
-            Bu üretimdeki değerleri, admin tarafından belirlenen sayfa/hücre eşleşmelerine göre KGK şablonuna yazar. Makrolar çalıştırılmaz; çıktı SHA-256 ile arşivlenir.
-          </Typography>
-          <Stack direction="row" spacing={1} alignItems="center" flexWrap="wrap" useFlexGap>
-            <Button component="label" size="small" variant="outlined">
-              {kgkRenderSablon?.name || "KGK şablonu (.xlsx/.xlsm)"}
-              <input hidden type="file" accept=".xlsx,.xlsm" onChange={(event) => setKgkRenderSablon(event.target.files?.[0] || null)} />
-            </Button>
-            <Button variant="contained" size="small" onClick={kgkFinansalTabloRenderEt} disabled={!uretimSonucu || !kgkRenderSablon || kgkRenderYukleniyor}>
-              {kgkRenderYukleniyor ? <CircularProgress size={18} color="inherit" /> : "KGK çıktısı oluştur ve indir"}
-            </Button>
-            {kgkRenderSonucu && <Chip size="small" color="success" label={`İndirildi · SHA ${kgkRenderSonucu.sha256?.slice(0, 12) || "-"}`} />}
-          </Stack>
+          <Paper variant="outlined" sx={{ p: 1.5, bgcolor: "background.default" }}>
+            <Stack spacing={1.25}>
+              <Box>
+                <Typography variant="subtitle2">Otomatik KGK Excel çıktısı</Typography>
+                <Typography variant="caption" color="text.secondary">
+                  Rapor tarihi, finansal tablo standardı, kapsamı ve yöntemi kullanılarak doğru resmi KGK şablonu otomatik seçilir. Hücreler seçili tanım sürümündeki KGK Excel hedeflerinden doldurulur; dosya veya JSON yüklemeniz gerekmez.
+                </Typography>
+              </Box>
+              <Stack direction="row" spacing={1} alignItems="center" flexWrap="wrap" useFlexGap>
+                <Button variant="contained" size="small" onClick={kgkFinansalTabloOtomatikOlustur} disabled={!uretimSonucu || kgkRenderYukleniyor}>
+                  {kgkRenderYukleniyor ? <CircularProgress size={18} color="inherit" /> : "KGK Excel'i otomatik oluştur ve indir"}
+                </Button>
+                {!uretimSonucu && <Chip size="small" variant="outlined" label="Önce tablo üretimi oluşturun" />}
+              </Stack>
+              {kgkRenderSonucu && <Alert severity={kgkRenderSonucu.eslesmeyenDegerSayisi > 0 ? "warning" : "success"}>
+                {kgkRenderSonucu.doldurulanHucreSayisi} hücre dolduruldu · sürüm {kgkRenderSonucu.tanimSurumu || "-"} · kaynak {kgkRenderSonucu.kaynakDonemKodu || "-"} · çıktı SHA {kgkRenderSonucu.sha256?.slice(0, 12) || "-"}
+                {kgkRenderSonucu.eslesmeyenDegerSayisi > 0 && ` · ${kgkRenderSonucu.eslesmeyenDegerSayisi} değer için bu sürümde KGK hücre hedefi yok. Formül ekranında hedefleri tamamlayıp yeni üretim oluşturun.`}
+              </Alert>}
+            </Stack>
+          </Paper>
           <Stack direction="row" spacing={1} alignItems="center">
             <Button variant="outlined" size="small" onClick={kgkArsivCiktilariniYukle} disabled={!uretimSonucu || kgkArsivCiktilariYukleniyor}>
               {kgkArsivCiktilariYukleniyor ? <CircularProgress size={18} /> : "Arşivlenmiş KGK çıktıları"}
@@ -2192,16 +2197,6 @@ const Page = () => {
               <TableBody>{kgkArsivCiktilari.map((kayit) => <TableRow key={kayit.ciktiSha256}><TableCell>{kayit.ciktiDosyaAdi}</TableCell><TableCell>{new Date(kayit.arsivlemeTarihi).toLocaleString("tr-TR")}</TableCell><TableCell>{kayit.ciktiSha256.slice(0, 12)}…</TableCell><TableCell align="right"><Button size="small" variant="text" onClick={() => kgkArsivCiktisiIndir(kayit)} disabled={kgkArsivIndirilenSha === kayit.ciktiSha256}>{kgkArsivIndirilenSha === kayit.ciktiSha256 ? <CircularProgress size={16} /> : "İndir"}</Button></TableCell></TableRow>)}</TableBody>
             </Table>
           </Paper>}
-          <TextField
-            fullWidth
-            size="small"
-            multiline
-            minRows={3}
-            label="KGK sayfa/hücre eşleştirmeleri (JSON)"
-            value={kgkRenderEslesmeler}
-            onChange={(event) => setKgkRenderEslesmeler(event.target.value)}
-            helperText="hedefTuru, hedefSabitAnahtari, sayfaAdi ve hucreAdresi alanlarını kullanın."
-          />
         </Stack>
       </ParentCard>
       </Box>
