@@ -505,6 +505,9 @@ const Page = () => {
   const secilenSurum = secilenSet?.surumler.find((surum) => surum.id === secilenSurumId);
   const seciliKgkKaynakDonemi = kgkKaynakDonemleri.find((kaynak) => kaynak.kod === kgkKaynakDonemKodu);
   const secilenKalemTablosu = surumDetayi?.tablolar.find((tablo) => tablo.id === kalemTabloId) || surumDetayi?.tablolar[0];
+  const duzenlenenKural = secilenKalemTablosu?.kurallar.find((kural) => kural.id === duzenlenenKuralId);
+  const kuralHedefKalemId = yeniKuralAcik ? yeniKuralKalemId : duzenlenenKural?.kalemId;
+  const kuralKaynakKalemleri = secilenKalemTablosu?.kalemler.filter((kalem) => kalem.id !== kuralHedefKalemId) || [];
 
   const legacyFormulAktarimiTamamlandi = (sonuc: LegacyFormulAktarimSonucu) => {
     setTanimSetleri((onceki) => onceki.map((set) => ({
@@ -2857,9 +2860,32 @@ const Page = () => {
                                     </FormControl>
                                   </Grid>
                                   <Grid item xs={12} md={2}>
-                                    <FormControl size="small" fullWidth><InputLabel>Kaynak türü</InputLabel><Select label="Kaynak türü" value={terim.kaynakTuru} onChange={(event) => kuralTerimiGuncelle(index, { kaynakTuru: Number(event.target.value) })}><MenuItem value={1}>Hesap kodu</MenuItem><MenuItem value={2}>Hesap kodu öneki</MenuItem><MenuItem value={3}>Finansal kalem</MenuItem><MenuItem value={4}>Önceki üretim</MenuItem><MenuItem value={5}>Sistem parametresi</MenuItem><MenuItem value={6}>Sabit</MenuItem></Select></FormControl>
+                                    <FormControl size="small" fullWidth><InputLabel>Kaynak türü</InputLabel><Select label="Kaynak türü" value={terim.kaynakTuru} onChange={(event) => { const kaynakTuru = Number(event.target.value); kuralTerimiGuncelle(index, { kaynakTuru, ...(kaynakTuru !== terim.kaynakTuru ? { kaynakAnahtari: "" } : {}) }); }}><MenuItem value={1}>Hesap kodu</MenuItem><MenuItem value={2}>Hesap kodu öneki</MenuItem><MenuItem value={3}>Finansal kalem</MenuItem><MenuItem value={4}>Önceki üretim</MenuItem><MenuItem value={5}>Sistem parametresi</MenuItem><MenuItem value={6}>Sabit</MenuItem></Select></FormControl>
                                   </Grid>
-                                  <Grid item xs={12} md={3}><TextField size="small" label={`Kaynak anahtarı ${index + 1}`} fullWidth required value={terim.kaynakAnahtari} onChange={(event) => kuralTerimiGuncelle(index, { kaynakAnahtari: event.target.value })} /></Grid>
+                                  <Grid item xs={12} md={3}>
+                                    {terim.kaynakTuru === 3 ? (
+                                      <FormControl size="small" fullWidth required>
+                                        <InputLabel>Kaynak finansal kalem</InputLabel>
+                                        <Select
+                                          label="Kaynak finansal kalem"
+                                          value={terim.kaynakAnahtari}
+                                          onChange={(event) => kuralTerimiGuncelle(index, { kaynakAnahtari: String(event.target.value) })}
+                                        >
+                                          <MenuItem value=""><em>Kalem seçin</em></MenuItem>
+                                          {terim.kaynakAnahtari && !kuralKaynakKalemleri.some((kalem) => kalem.sabitAnahtar === terim.kaynakAnahtari) && (
+                                            <MenuItem value={terim.kaynakAnahtari} disabled>Bulunamayan kalem · {terim.kaynakAnahtari}</MenuItem>
+                                          )}
+                                          {kuralKaynakKalemleri.map((kalem) => (
+                                            <MenuItem key={kalem.id} value={kalem.sabitAnahtar}>
+                                              {kalem.ad} · {kalem.kod || kalem.sabitAnahtar}
+                                            </MenuItem>
+                                          ))}
+                                        </Select>
+                                      </FormControl>
+                                    ) : (
+                                      <TextField size="small" label={`Kaynak anahtarı ${index + 1}`} fullWidth required value={terim.kaynakAnahtari} onChange={(event) => kuralTerimiGuncelle(index, { kaynakAnahtari: event.target.value })} />
+                                    )}
+                                  </Grid>
                                   <Grid item xs={6} md={1.5}>
                                     <FormControl size="small" fullWidth><InputLabel>İşlem</InputLabel><Select label="İşlem" value={terim.operator} onChange={(event) => kuralTerimiGuncelle(index, { operator: Number(event.target.value) })}><MenuItem value={1}>Topla</MenuItem><MenuItem value={2}>Çıkar</MenuItem></Select></FormControl>
                                   </Grid>
