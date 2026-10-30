@@ -108,15 +108,21 @@ const fulfillJson = (route: Route, body: unknown, status = 200) => route.fulfill
 test("admin girişinden kural düzenleme ve salt-okunur finansal tablo önizlemesine kadar çalışır", async ({ page }) => {
   let loginPayload: Record<string, unknown> | null = null;
   let ruleUpdatePayload: Record<string, any> | null = null;
+  let validationPayload: Record<string, any> | null = null;
   let testTrialBalancePayload: Record<string, any> | null = null;
   let previewPayload: Record<string, any> | null = null;
   let productionWriteCount = 0;
   let definitionAuthorization = "";
   const runtimeErrors: string[] = [];
+  const isCancelledDashboardRequest = (value: string) =>
+    value.includes("Failed to fetch")
+    && (value.includes("/api/Denetci/Hepsi") || value.includes("/api/Denetlenen/Hepsi"));
 
   page.on("pageerror", (error) => runtimeErrors.push(error.message));
   page.on("console", (message) => {
-    if (message.type() === "error") runtimeErrors.push(message.text());
+    if (message.type() === "error" && !isCancelledDashboardRequest(message.text())) {
+      runtimeErrors.push(message.text());
+    }
   });
   page.on("response", (response) => {
     if (response.status() >= 400) runtimeErrors.push(`${response.status()} ${response.url()}`);
@@ -124,6 +130,10 @@ test("admin girişinden kural düzenleme ve salt-okunur finansal tablo önizleme
   page.on("requestfailed", (request) => {
     const errorText = request.failure()?.errorText || "";
     if (errorText === "net::ERR_ABORTED" && !request.url().includes("/api/")) return;
+    if (errorText === "net::ERR_ABORTED" && (
+      request.url().includes("/api/Denetci/Hepsi")
+      || request.url().includes("/api/Denetlenen/Hepsi")
+    )) return;
     runtimeErrors.push(`İstek başarısız: ${request.url()} ${errorText}`);
   });
 
@@ -184,6 +194,23 @@ test("admin girişinden kural düzenleme ve salt-okunur finansal tablo önizleme
         aktarilabilirFarkSayisi: 0,
         incelemeGerektirenFarkSayisi: 0,
         farklar: [],
+      });
+    }
+
+    if (path.endsWith("/FinansalTabloYonetimi/Surumler/11/Dogrula") && request.method() === "POST") {
+      validationPayload = request.postDataJSON() as Record<string, any>;
+      return fulfillJson(route, {
+        surumId: 11,
+        surumEtiketi: "E2E Taslak",
+        eszamanlilikSurumu: 8,
+        gecerliMi: true,
+        tablolar: [{
+          tabloId: 21,
+          tabloKod: "FDT",
+          gecerliMi: true,
+          snapshotSha256: "c".repeat(64),
+          sorunlar: [],
+        }],
       });
     }
 
@@ -294,19 +321,16 @@ test("admin girişinden kural düzenleme ve salt-okunur finansal tablo önizleme
   const savedRule = ruleUpdatePayload as unknown as Record<string, any>;
   expect(savedRule.terimler?.[0]?.kaynakAnahtari).toBe("TICARI_ALACAKLAR");
   expect(savedRule.beklenenEszamanlilikSurumu).toBe(7);
+  await expect(page.getByRole("button", { name: "Kuralı kaydet" })).toHaveCount(0);
 
-  await page.getByRole("button", { name: "Üretimi test et", exact: true }).click();
-  await page.getByRole("button", { name: "Ayrıntıları göster" }).click();
-  await expect(page.getByText("İzole test mizanı", { exact: true })).toBeVisible();
+  await page.getByRole("button", { name: "Otomatik testi çalıştır" }).click();
 
-  await page.getByLabel("Test mizanı adı").fill("E2E dengeli mizan");
-  await page.getByLabel("Denetlenen ID").first().fill("999999");
-  await page.getByRole("button", { name: "Test mizanı oluştur" }).click();
-
+  await expect.poll(() => validationPayload).not.toBeNull();
+  expect(validationPayload).toMatchObject({ beklenenEszamanlilikSurumu: 8 });
   await expect.poll(() => testTrialBalancePayload).not.toBeNull();
   const createdTrialBalance = testTrialBalancePayload as unknown as Record<string, any>;
   expect(createdTrialBalance).toMatchObject({
-    ad: "E2E dengeli mizan",
+    ad: "Yeni motor test mizanı",
     denetlenenId: 999999,
     konsolidasyonMu: false,
   });
@@ -320,8 +344,8 @@ test("admin girişinden kural düzenleme ve salt-okunur finansal tablo önizleme
     paraBirimi: "TRY",
   });
   await expect(page.getByText("Test mizanı hazır", { exact: true })).toBeVisible();
-
-  await page.getByRole("button", { name: "Örnek mizanla önizle" }).click();
+  await expect(page.getByText("Admin testi başarıyla tamamlandı", { exact: true })).toBeVisible();
+  await page.getByRole("button", { name: "Ayrıntıları göster" }).click();
   await expect(page.getByText("Salt-okunur önizleme tamamlandı", { exact: true })).toBeVisible();
   await expect(page.getByText("Arşivlenmedi", { exact: true })).toBeVisible();
   await expect(page.getByText("FDT · TOPLAM_VARLIKLAR", { exact: true })).toBeVisible();
@@ -333,6 +357,7 @@ test("admin girişinden kural düzenleme ve salt-okunur finansal tablo önizleme
     tanimSurumu: "E2E Taslak",
     girdiSabitAnahtari: "TEST-MIZAN-11111111",
     girdiSha256: "b".repeat(64),
+    tanimSnapshotSha256: "c".repeat(64),
     tabloSabitAnahtari: "FDT",
     donemSabitAnahtari: "CARI",
     calistirmaBaglami: {
