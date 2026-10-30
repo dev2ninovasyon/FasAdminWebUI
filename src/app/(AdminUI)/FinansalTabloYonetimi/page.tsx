@@ -98,6 +98,11 @@ import {
   FinansalTabloKaliciArsivHazirlikApiSonucu,
   FinansalTabloArsivKarsilastirmaApiSonucu,
   FinansalTabloGolgeKarsilastirmaSonucu,
+  FinansalTabloAnaTabloGecisi,
+  getFinansalTabloAnaTabloGecisleri,
+  prepareFinansalTabloAnaTabloGecisi,
+  activateFinansalTabloAnaTabloGecisi,
+  rollbackFinansalTabloAnaTabloGecisi,
 } from "@/api/FinansalTabloYonetimi/Tanimlar";
 import {
   createFinansalTabloTestMizani,
@@ -367,6 +372,10 @@ const Page = () => {
   const [uretimOnizlemeSonucu, setUretimOnizlemeSonucu] = useState<FinansalTabloUretimOnizlemeSonucu | null>(null);
   const [testMizanlari, setTestMizanlari] = useState<FinansalTabloTestMizan[]>([]);
   const [seciliTestMizani, setSeciliTestMizani] = useState<FinansalTabloTestMizan | null>(null);
+  const [anaTabloGecisleri, setAnaTabloGecisleri] = useState<FinansalTabloAnaTabloGecisi[]>([]);
+  const [anaTabloGecisYukleniyor, setAnaTabloGecisYukleniyor] = useState(false);
+  const [anaTabloOnayMetni, setAnaTabloOnayMetni] = useState("");
+  const [anaTabloAciklama, setAnaTabloAciklama] = useState("");
   const [testMizanAdi, setTestMizanAdi] = useState("Yeni motor test mizanı");
   const [testMizanSatirlariJson, setTestMizanSatirlariJson] = useState(`[
   { "yil": ${new Date().getFullYear()}, "detayKodu": "100.01", "hesapAdi": "Kasa", "borc": 1000, "alacak": 0 },
@@ -503,6 +512,12 @@ const Page = () => {
 
   const secilenSet = tanimSetleri.find((set) => set.id === secilenSetId);
   const secilenSurum = secilenSet?.surumler.find((surum) => surum.id === secilenSurumId);
+  const seciliAnaTabloGecisi = seciliTestMizani
+    ? anaTabloGecisleri.find((gecis) =>
+      gecis.denetlenenId === seciliTestMizani.denetlenenId &&
+      gecis.yil === seciliTestMizani.yil &&
+      gecis.konsolidasyonMu === seciliTestMizani.konsolidasyonMu)
+    : undefined;
   const seciliKgkKaynakDonemi = kgkKaynakDonemleri.find((kaynak) => kaynak.kod === kgkKaynakDonemKodu);
   const secilenKalemTablosu = surumDetayi?.tablolar.find((tablo) => tablo.id === kalemTabloId) || surumDetayi?.tablolar[0];
   const duzenlenenKural = secilenKalemTablosu?.kurallar.find((kural) => kural.id === duzenlenenKuralId);
@@ -1450,6 +1465,83 @@ const Page = () => {
     setUretimOnizlemeSonucu(null);
   };
 
+  const anaTabloGecisleriniYukle = async () => {
+    if (!user.token) return;
+    setAnaTabloGecisYukleniyor(true);
+    setTanimHatasi("");
+    try {
+      const denetlenenId = seciliTestMizani?.denetlenenId || Number(uretimDenetlenenId) || undefined;
+      const yil = seciliTestMizani?.yil || Number(uretimYil) || undefined;
+      setAnaTabloGecisleri(await getFinansalTabloAnaTabloGecisleri(user.token, { denetlenenId, yil }));
+    } catch (error) {
+      setTanimHatasi(error instanceof Error ? error.message : "Ana tablo geçişleri okunamadı.");
+    } finally {
+      setAnaTabloGecisYukleniyor(false);
+    }
+  };
+
+  const anaTabloGecisiniHazirla = async () => {
+    if (!user.token || !secilenSurum || !seciliTestMizani) {
+      setTanimHatasi("Önce sürüm ve örnek mizan seçilmelidir.");
+      return;
+    }
+    setAnaTabloGecisYukleniyor(true);
+    setTanimHatasi("");
+    try {
+      const gecis = await prepareFinansalTabloAnaTabloGecisi(user.token, {
+        surumId: secilenSurum.id,
+        testMizanId: seciliTestMizani.id,
+        aciklama: anaTabloAciklama.trim() || null,
+      });
+      setAnaTabloGecisleri((onceki) => [gecis, ...onceki.filter((aday) => aday.id !== gecis.id)]);
+      setAnaTabloOnayMetni("");
+      setSurumYonetimiMesaji(`${gecis.dogrulananTabloSayisi} tablo ve ${gecis.dogrulananDonemSayisi} dönem örnek mizanla doğrulandı. Eski akış hâlâ etkin.`);
+    } catch (error) {
+      setTanimHatasi(error instanceof Error ? error.message : "Ana tablo geçişi hazırlanamadı.");
+    } finally {
+      setAnaTabloGecisYukleniyor(false);
+    }
+  };
+
+  const anaTabloGecisiniEtkinlestir = async () => {
+    if (!user.token || !seciliAnaTabloGecisi) return;
+    setAnaTabloGecisYukleniyor(true);
+    setTanimHatasi("");
+    try {
+      const gecis = await activateFinansalTabloAnaTabloGecisi(user.token, seciliAnaTabloGecisi.id, {
+        beklenenEszamanlilikSurumu: seciliAnaTabloGecisi.eszamanlilikSurumu,
+        onayMetni: anaTabloOnayMetni,
+        aciklama: anaTabloAciklama.trim() || null,
+      });
+      setAnaTabloGecisleri((onceki) => [gecis, ...onceki.filter((aday) => aday.id !== gecis.id)]);
+      setAnaTabloOnayMetni("");
+      setSurumYonetimiMesaji("Geçiş etkinleştirildi. Bu firma/yıl/kapsamdaki sonraki finansal tablo oluşturma işlemi Admin sürümünü kullanacak.");
+    } catch (error) {
+      setTanimHatasi(error instanceof Error ? error.message : "Ana tablo geçişi etkinleştirilemedi.");
+    } finally {
+      setAnaTabloGecisYukleniyor(false);
+    }
+  };
+
+  const anaTabloGecisiniGeriAl = async () => {
+    if (!user.token || !seciliAnaTabloGecisi) return;
+    setAnaTabloGecisYukleniyor(true);
+    setTanimHatasi("");
+    try {
+      const gecis = await rollbackFinansalTabloAnaTabloGecisi(user.token, seciliAnaTabloGecisi.id, {
+        beklenenEszamanlilikSurumu: seciliAnaTabloGecisi.eszamanlilikSurumu,
+        aciklama: anaTabloAciklama.trim() || null,
+      });
+      setAnaTabloGecisleri((onceki) => [gecis, ...onceki.filter((aday) => aday.id !== gecis.id)]);
+      setAnaTabloOnayMetni("");
+      setSurumYonetimiMesaji("Geçiş geri alındı. Sonraki finansal tablolar yeniden eski akışla oluşturulacak.");
+    } catch (error) {
+      setTanimHatasi(error instanceof Error ? error.message : "Ana tablo geçişi geri alınamadı.");
+    } finally {
+      setAnaTabloGecisYukleniyor(false);
+    }
+  };
+
   const finansalTabloIstekOlustur = (
     testMizani: FinansalTabloTestMizan | null = seciliTestMizani,
     tanimSnapshotSha256Override = ""
@@ -2268,6 +2360,79 @@ const Page = () => {
                   <TableBody>{seciliTestMizani.satirlar.slice(0, 100).map((satir) => <TableRow key={`${seciliTestMizani.id}-${satir.yil}-${satir.detayKodu}`}><TableCell>{satir.yil || seciliTestMizani.yil}</TableCell><TableCell>{satir.detayKodu}</TableCell><TableCell>{satir.hesapAdi}</TableCell><TableCell align="right">{satir.borc.toLocaleString("tr-TR")}</TableCell><TableCell align="right">{satir.alacak.toLocaleString("tr-TR")}</TableCell><TableCell align="right">{satir.bakiye.toLocaleString("tr-TR")}</TableCell></TableRow>)}</TableBody>
                 </Table>
               </Paper>}
+            </Stack>
+          </Paper>
+          <Paper variant="outlined" sx={{ p: 1.5, borderColor: seciliAnaTabloGecisi?.durum === 2 ? "success.main" : "divider" }}>
+            <Stack spacing={1.25}>
+              <Stack direction={{ xs: "column", sm: "row" }} spacing={1} alignItems={{ sm: "center" }}>
+                <Box sx={{ flexGrow: 1 }}>
+                  <Typography variant="subtitle2">Ana tabloya kontrollü geçiş</Typography>
+                  <Typography variant="caption" color="text.secondary">
+                    Hazırlama örnek mizanla tüm aktif tablo ve dönemleri sınar. Etkinleştirilene kadar uygulama eski formüllerle çalışır.
+                  </Typography>
+                </Box>
+                <Chip
+                  size="small"
+                  color={seciliAnaTabloGecisi?.durum === 2 ? "success" : seciliAnaTabloGecisi?.durum === 1 ? "warning" : "default"}
+                  label={seciliAnaTabloGecisi?.durum === 2 ? "Yeni sürüm etkin" : seciliAnaTabloGecisi?.durum === 1 ? "Hazır · eski akış etkin" : "Eski akış etkin"}
+                />
+              </Stack>
+              {seciliAnaTabloGecisi && <Stack direction="row" spacing={1} flexWrap="wrap" useFlexGap>
+                <Chip size="small" variant="outlined" label={`Sürüm ${seciliAnaTabloGecisi.surumEtiketi}`} />
+                <Chip size="small" variant="outlined" label={`${seciliAnaTabloGecisi.dogrulananTabloSayisi} tablo · ${seciliAnaTabloGecisi.dogrulananDonemSayisi} dönem`} />
+                <Chip size="small" variant="outlined" label={`Kanıt ${seciliAnaTabloGecisi.hazirlikKanitiSha256.slice(0, 12)}…`} />
+              </Stack>}
+              <TextField
+                fullWidth
+                size="small"
+                label="Admin açıklaması"
+                value={anaTabloAciklama}
+                onChange={(event) => setAnaTabloAciklama(event.target.value)}
+                inputProps={{ maxLength: 500 }}
+              />
+              {seciliAnaTabloGecisi?.durum === 1 && <TextField
+                fullWidth
+                size="small"
+                label="Etkinleştirme onayı"
+                value={anaTabloOnayMetni}
+                onChange={(event) => setAnaTabloOnayMetni(event.target.value)}
+                helperText="Tek komut için ANA TABLOLARA UYGULA yazın. Bu yalnız seçili firma/yıl/kapsamı etkiler."
+              />}
+              <Stack direction="row" spacing={1} flexWrap="wrap" useFlexGap>
+                <Button size="small" variant="outlined" onClick={anaTabloGecisleriniYukle} disabled={anaTabloGecisYukleniyor}>
+                  {anaTabloGecisYukleniyor ? <CircularProgress size={18} /> : "Durumu yenile"}
+                </Button>
+                <Button
+                  size="small"
+                  variant="contained"
+                  color="info"
+                  onClick={anaTabloGecisiniHazirla}
+                  disabled={anaTabloGecisYukleniyor || !secilenSurum || !seciliTestMizani || seciliAnaTabloGecisi?.durum === 2}
+                >
+                  Örnek mizanla hazırla
+                </Button>
+                <Button
+                  size="small"
+                  variant="contained"
+                  color="success"
+                  onClick={anaTabloGecisiniEtkinlestir}
+                  disabled={anaTabloGecisYukleniyor || seciliAnaTabloGecisi?.durum !== 1 || seciliAnaTabloGecisi?.surumId !== secilenSurum?.id || surumDurumKodu(secilenSurum?.durum) !== 3 || anaTabloOnayMetni.trim() !== "ANA TABLOLARA UYGULA"}
+                >
+                  Ana tablolara uygula
+                </Button>
+                <Button
+                  size="small"
+                  variant="outlined"
+                  color="warning"
+                  onClick={anaTabloGecisiniGeriAl}
+                  disabled={anaTabloGecisYukleniyor || seciliAnaTabloGecisi?.durum !== 2}
+                >
+                  Eski akışa dön
+                </Button>
+              </Stack>
+              {seciliAnaTabloGecisi?.durum === 2 && <Alert severity="success" variant="outlined">
+                Bu kapsamda sonraki “Finansal tabloları oluştur” işlemi seçili Admin sürümünü kullanır. Hata olursa mevcut ana tablo kayıtları silinmez.
+              </Alert>}
             </Stack>
           </Paper>
           <Stack spacing={1}>
