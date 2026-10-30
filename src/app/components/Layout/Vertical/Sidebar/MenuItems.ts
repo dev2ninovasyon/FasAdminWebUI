@@ -9,6 +9,10 @@ import {
   IconBarcode,
   IconNumbers,
   IconChartLine,
+  IconSettings,
+  IconActivity,
+  IconServer,
+  IconMessage2,
 } from "@tabler/icons-react";
 
 interface MenuitemsType {
@@ -176,6 +180,44 @@ const Menuitems: MenuitemsType[] = [
         title: "Bağımsız Denetim Metodolojisi",
         icon: IconPoint,
         href: "/StandartCalismaKagitlari/BagimsizDenetimMetodolojisi",
+      },
+    ],
+  },
+  {
+    id: uniqueId(),
+    title: "Sistem ve Log Yönetimi",
+    icon: IconSettings,
+    href: "/",
+    children: [
+      {
+        id: uniqueId(),
+        title: "Hangfire Yönetimi",
+        icon: IconPoint,
+        href: "/Hangfire",
+      },
+      {
+        id: uniqueId(),
+        title: "Sistem Logları",
+        icon: IconPoint,
+        href: "/SistemLoglari",
+      },
+      {
+        id: uniqueId(),
+        title: "Sistem İşlem Logları (Audit)",
+        icon: IconPoint,
+        href: "/AuditLoglari",
+      },
+      {
+        id: uniqueId(),
+        title: "Enflasyon Logları",
+        icon: IconPoint,
+        href: "/EnflasyonLoglari",
+      },
+      {
+        id: uniqueId(),
+        title: "Geri Bildirimler",
+        icon: IconPoint,
+        href: "/GeriBildirimler",
       },
     ],
   },
