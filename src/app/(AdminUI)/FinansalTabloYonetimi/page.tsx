@@ -1450,7 +1450,10 @@ const Page = () => {
     setUretimOnizlemeSonucu(null);
   };
 
-  const finansalTabloIstekOlustur = (testMizani: FinansalTabloTestMizan | null = seciliTestMizani): FinansalTabloUretimIstegi | null => {
+  const finansalTabloIstekOlustur = (
+    testMizani: FinansalTabloTestMizan | null = seciliTestMizani,
+    tanimSnapshotSha256Override = ""
+  ): FinansalTabloUretimIstegi | null => {
     const tablo = secilenKalemTablosu;
     const set = secilenSet;
     const surum = secilenSurum;
@@ -1473,7 +1476,10 @@ const Page = () => {
       setTanimHatasi("Girdi SHA-256, denetlenen, yıl ve dönem tarihleri zorunludur.");
       return null;
     }
-    const snapshotSha256 = uretimSnapshotSha256.trim() || dogrulamaSonucu?.tablolar.find((aday) => aday.tabloId === tablo.id)?.snapshotSha256 || "";
+    const snapshotSha256 = tanimSnapshotSha256Override.trim()
+      || uretimSnapshotSha256.trim()
+      || dogrulamaSonucu?.tablolar.find((aday) => aday.tabloId === tablo.id)?.snapshotSha256
+      || "";
     return {
       yeniMotorSurumu: "finansal-tablo-yeni-motor-v1",
       tanimSetiSabitAnahtari: set.kod,
@@ -1529,8 +1535,11 @@ const Page = () => {
     }
   };
 
-  const finansalTabloOnizle = async (testMizani: FinansalTabloTestMizan | null = seciliTestMizani): Promise<FinansalTabloUretimOnizlemeSonucu | null> => {
-    const istek = finansalTabloIstekOlustur(testMizani);
+  const finansalTabloOnizle = async (
+    testMizani: FinansalTabloTestMizan | null = seciliTestMizani,
+    tanimSnapshotSha256Override = ""
+  ): Promise<FinansalTabloUretimOnizlemeSonucu | null> => {
+    const istek = finansalTabloIstekOlustur(testMizani, tanimSnapshotSha256Override);
     if (!istek || !user.token) return null;
     setUretimOnizlemeYukleniyor(true);
     setUretimOnizlemeSonucu(null);
@@ -1835,14 +1844,18 @@ const Page = () => {
     if (akilliYonlendirme.eylem === "tanim") return setAktifAdim(0);
     if (akilliYonlendirme.eylem === "otomatik-test") {
       setAktifAdim(0);
+      let dogrulananSnapshotSha256 = "";
       if (seciliSurumTaslakMi && !teknikDogrulamaGuncelMi) {
         const dogrulama = await teknikDogrula();
         if (!dogrulama?.gecerliMi) return;
+        dogrulananSnapshotSha256 = dogrulama.tablolar.find(
+          (tablo) => tablo.tabloId === secilenKalemTablosu?.id
+        )?.snapshotSha256 || "";
       }
       setAktifAdim(1);
       const testMizani = seciliTestMizani || await testMizaniOlustur();
       if (!testMizani) return;
-      await finansalTabloOnizle(testMizani);
+      await finansalTabloOnizle(testMizani, dogrulananSnapshotSha256);
       return;
     }
     if (akilliYonlendirme.eylem === "kgk") {
