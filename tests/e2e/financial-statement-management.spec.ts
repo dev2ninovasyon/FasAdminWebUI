@@ -112,11 +112,16 @@ test("admin girişinden güvenli doğrulama ve kontrollü sürüm aktivasyonuna 
   let testTrialBalancePayload: Record<string, any> | null = null;
   let previewPayload: Record<string, any> | null = null;
   let activationPayload: Record<string, any> | null = null;
+  let mainTablePreparePayload: Record<string, any> | null = null;
+  let mainTableActivationPayload: Record<string, any> | null = null;
+  let mainTableRollbackPayload: Record<string, any> | null = null;
+  let mainTableTransition: Record<string, any> | null = null;
   let ruleUpdateCount = 0;
   let validationCallCount = 0;
   let testTrialBalanceCreateCount = 0;
   let previewCount = 0;
   let productionWriteCount = 0;
+  let mainTableTransitionListCount = 0;
   let validationShouldFail = false;
   let pilotEnabled = false;
   let definitionAuthorization = "";
@@ -124,10 +129,14 @@ test("admin girişinden güvenli doğrulama ve kontrollü sürüm aktivasyonuna 
   const isCancelledDashboardRequest = (value: string) =>
     value.includes("Failed to fetch")
     && (value.includes("/api/Denetci/Hepsi") || value.includes("/api/Denetlenen/Hepsi"));
+  const isExpectedTestConsoleError = (value: string) =>
+    value.includes("Missing required parameters: sitekey");
 
   page.on("pageerror", (error) => runtimeErrors.push(error.message));
   page.on("console", (message) => {
-    if (message.type() === "error" && !isCancelledDashboardRequest(message.text())) {
+    if (message.type() === "error"
+      && !isCancelledDashboardRequest(message.text())
+      && !isExpectedTestConsoleError(message.text())) {
       runtimeErrors.push(message.text());
     }
   });
@@ -272,6 +281,62 @@ test("admin girişinden güvenli doğrulama ve kontrollü sürüm aktivasyonuna 
 
     if (path.endsWith("/FinansalTabloYonetimi/TestMizanlari") && request.method() === "GET") {
       return fulfillJson(route, []);
+    }
+
+    if (path.endsWith("/FinansalTabloYonetimi/AnaTabloGecisleri") && request.method() === "GET") {
+      mainTableTransitionListCount += 1;
+      return fulfillJson(route, mainTableTransition ? [mainTableTransition] : []);
+    }
+
+    if (path.endsWith("/FinansalTabloYonetimi/AnaTabloGecisleri/Hazirla") && request.method() === "POST") {
+      mainTablePreparePayload = request.postDataJSON() as Record<string, any>;
+      mainTableTransition = {
+        id: 501,
+        denetlenenId: 999999,
+        yil: Number(testTrialBalancePayload?.yil || new Date().getFullYear()),
+        konsolidasyonMu: false,
+        surumId: 11,
+        surumEtiketi: "E2E Taslak",
+        surumEszamanlilikSurumu: 10,
+        testMizanId: "11111111-2222-3333-4444-555555555555",
+        testMizanSha256: "b".repeat(64),
+        hazirlikKanitiSha256: "d".repeat(64),
+        dogrulananTabloSayisi: 4,
+        dogrulananDonemSayisi: 12,
+        durum: 1,
+        eskiAkisEtkin: true,
+        hazirlikTarihi: "2026-10-30T13:00:00Z",
+        etkinlestirmeTarihi: null,
+        geriAlmaTarihi: null,
+        aciklama: mainTablePreparePayload.aciklama,
+        eszamanlilikSurumu: 1,
+      };
+      return fulfillJson(route, mainTableTransition);
+    }
+
+    if (path.endsWith("/FinansalTabloYonetimi/AnaTabloGecisleri/501/Etkinlestir") && request.method() === "POST") {
+      mainTableActivationPayload = request.postDataJSON() as Record<string, any>;
+      mainTableTransition = {
+        ...mainTableTransition,
+        durum: 2,
+        eskiAkisEtkin: false,
+        etkinlestirmeTarihi: "2026-10-30T13:05:00Z",
+        aciklama: mainTableActivationPayload.aciklama,
+        eszamanlilikSurumu: 2,
+      };
+      return fulfillJson(route, mainTableTransition);
+    }
+
+    if (path.endsWith("/FinansalTabloYonetimi/AnaTabloGecisleri/501/GeriAl") && request.method() === "POST") {
+      mainTableRollbackPayload = request.postDataJSON() as Record<string, any>;
+      mainTableTransition = {
+        ...mainTableTransition,
+        durum: 3,
+        eskiAkisEtkin: true,
+        geriAlmaTarihi: "2026-10-30T13:10:00Z",
+        eszamanlilikSurumu: 3,
+      };
+      return fulfillJson(route, mainTableTransition);
     }
 
     if (path.endsWith("/FinansalTabloYonetimi/Uretimler/Onizle") && request.method() === "POST") {
@@ -455,6 +520,45 @@ test("admin girişinden güvenli doğrulama ve kontrollü sürüm aktivasyonuna 
   await expect(page.getByText("Sürüm #4 devreye alındı.", { exact: false }).first()).toBeVisible();
   await expect(page.getByText("Aktif", { exact: true }).first()).toBeVisible();
   await expect(page.getByRole("button", { name: "Devreye al" })).toHaveCount(0);
+
+  await page.getByRole("button", { name: "Sonraki: Üretimi test et" }).click();
+  await page.getByRole("button", { name: "Ayrıntıları göster" }).click();
+  await expect(page.getByText("Ana tabloya kontrollü geçiş", { exact: true })).toBeVisible();
+  await expect(page.getByText("Eski akış etkin", { exact: true }).last()).toBeVisible();
+  await page.getByRole("button", { name: "Durumu yenile" }).click();
+  await expect.poll(() => mainTableTransitionListCount).toBe(1);
+
+  await page.getByLabel("Admin açıklaması").fill("E2E ana tablo geçişi");
+  await page.getByRole("button", { name: "Örnek mizanla hazırla" }).click();
+  await expect.poll(() => mainTablePreparePayload).not.toBeNull();
+  expect(mainTablePreparePayload).toMatchObject({
+    surumId: 11,
+    testMizanId: "11111111-2222-3333-4444-555555555555",
+    aciklama: "E2E ana tablo geçişi",
+  });
+  await expect(page.getByText("Hazır · eski akış etkin", { exact: true })).toBeVisible();
+  await expect(page.getByText("4 tablo · 12 dönem", { exact: true })).toBeVisible();
+  await expect(page.getByRole("button", { name: "Ana tablolara uygula" })).toBeDisabled();
+
+  await page.getByLabel("Etkinleştirme onayı").fill("ANA TABLOLARA UYGULA");
+  await expect(page.getByRole("button", { name: "Ana tablolara uygula" })).toBeEnabled();
+  await page.getByRole("button", { name: "Ana tablolara uygula" }).click();
+  await expect.poll(() => mainTableActivationPayload).not.toBeNull();
+  expect(mainTableActivationPayload).toMatchObject({
+    beklenenEszamanlilikSurumu: 1,
+    onayMetni: "ANA TABLOLARA UYGULA",
+    aciklama: "E2E ana tablo geçişi",
+  });
+  await expect(page.getByText("Yeni sürüm etkin", { exact: true })).toBeVisible();
+  await expect(page.getByText("Hata olursa mevcut ana tablo kayıtları silinmez.", { exact: false })).toBeVisible();
+
+  await page.getByRole("button", { name: "Eski akışa dön" }).click();
+  await expect.poll(() => mainTableRollbackPayload).not.toBeNull();
+  expect(mainTableRollbackPayload).toMatchObject({
+    beklenenEszamanlilikSurumu: 2,
+    aciklama: "E2E ana tablo geçişi",
+  });
+  await expect(page.getByText("Eski akış etkin", { exact: true }).last()).toBeVisible();
   expect(productionWriteCount).toBe(0);
   expect(runtimeErrors).toEqual([]);
 });
