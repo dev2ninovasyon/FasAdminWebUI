@@ -1,4 +1,4 @@
-import {
+﻿import {
   IconAward,
   IconBoxMultiple,
   IconPoint,
@@ -212,5 +212,44 @@ const Menuitems = [
           },
     ],
   },
+  {
+    id: uniqueId(),
+    title: "Sistem ve Log Yönetimi",
+    icon: IconSettings,
+    href: "//",
+    children: [
+      {
+        id: uniqueId(),
+        title: "Hangfire Yönetimi",
+        icon: IconPoint,
+        href: "/Hangfire",
+      },
+      {
+        id: uniqueId(),
+        title: "Sistem Logları",
+        icon: IconPoint,
+        href: "/SistemLoglari",
+      },
+      {
+        id: uniqueId(),
+        title: "Sistem İşlem Logları (Audit)",
+        icon: IconPoint,
+        href: "/AuditLoglari",
+      },
+      {
+        id: uniqueId(),
+        title: "Enflasyon Logları",
+        icon: IconPoint,
+        href: "/EnflasyonLoglari",
+      },
+      {
+        id: uniqueId(),
+        title: "Geri Bildirimler",
+        icon: IconPoint,
+        href: "/GeriBildirimler",
+      },
+    ],
+  },
+
 ];
 export default Menuitems;
