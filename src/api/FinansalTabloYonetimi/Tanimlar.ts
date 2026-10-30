@@ -102,6 +102,73 @@ export const getFinansalTanimSetleri = (
 export const getFinansalSurumDetay = (token: string, surumId: number) =>
   jsonGet<FinansalSurumDetay>(token, `/Surumler/${surumId}/Tanim`);
 
+export type FinansalTabloAnaTabloGecisi = {
+  id: number;
+  denetlenenId: number;
+  yil: number;
+  konsolidasyonMu: boolean;
+  surumId: number;
+  surumEtiketi: string;
+  surumEszamanlilikSurumu: number;
+  testMizanId: string;
+  testMizanSha256: string;
+  hazirlikKanitiSha256: string;
+  dogrulananTabloSayisi: number;
+  dogrulananDonemSayisi: number;
+  durum: 1 | 2 | 3;
+  eskiAkisEtkin: boolean;
+  hazirlikTarihi: string;
+  etkinlestirmeTarihi?: string | null;
+  geriAlmaTarihi?: string | null;
+  aciklama?: string | null;
+  eszamanlilikSurumu: number;
+};
+
+const anaTabloGecisIstegi = async <T>(token: string, path: string, body: unknown): Promise<T> => {
+  const response = await fetch(`${url}/FinansalTabloYonetimi${path}`, {
+    method: "POST",
+    headers: {
+      accept: "application/json",
+      "Content-Type": "application/json",
+      Authorization: `Bearer ${token}`,
+    },
+    body: JSON.stringify(body),
+  });
+  const payload = await response.json().catch(() => ({}));
+  if (!response.ok) {
+    throw new Error(payload?.detail || payload?.message || payload?.Message || "Ana tablo geçişi tamamlanamadı.");
+  }
+  return payload as T;
+};
+
+export const getFinansalTabloAnaTabloGecisleri = (
+  token: string,
+  filtre: { denetlenenId?: number; yil?: number } = {}
+) => {
+  const query = new URLSearchParams();
+  if (filtre.denetlenenId) query.set("denetlenenId", String(filtre.denetlenenId));
+  if (filtre.yil) query.set("yil", String(filtre.yil));
+  const suffix = query.toString() ? `?${query.toString()}` : "";
+  return jsonGet<FinansalTabloAnaTabloGecisi[]>(token, `/AnaTabloGecisleri${suffix}`);
+};
+
+export const prepareFinansalTabloAnaTabloGecisi = (
+  token: string,
+  istek: { surumId: number; testMizanId: string; aciklama?: string | null }
+) => anaTabloGecisIstegi<FinansalTabloAnaTabloGecisi>(token, "/AnaTabloGecisleri/Hazirla", istek);
+
+export const activateFinansalTabloAnaTabloGecisi = (
+  token: string,
+  id: number,
+  istek: { beklenenEszamanlilikSurumu: number; onayMetni: string; aciklama?: string | null }
+) => anaTabloGecisIstegi<FinansalTabloAnaTabloGecisi>(token, `/AnaTabloGecisleri/${id}/Etkinlestir`, istek);
+
+export const rollbackFinansalTabloAnaTabloGecisi = (
+  token: string,
+  id: number,
+  istek: { beklenenEszamanlilikSurumu: number; aciklama?: string | null }
+) => anaTabloGecisIstegi<FinansalTabloAnaTabloGecisi>(token, `/AnaTabloGecisleri/${id}/GeriAl`, istek);
+
 export type FinansalTabloUretimSonucu = {
   arsivYolu: string;
   arsivKaydiYeniMi: boolean;
