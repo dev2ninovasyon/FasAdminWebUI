@@ -1,6 +1,7 @@
 import { url } from "@/api/apiBase";
 
 export type FinansalTabloTestMizanSatiri = {
+  yil: number;
   detayKodu: string;
   hesapAdi: string;
   borc: number;
@@ -33,6 +34,7 @@ export type FinansalTabloTestMizanOlusturmaIstegi = {
   yil: number;
   konsolidasyonMu: boolean;
   satirlar: Array<{
+    yil?: number;
     detayKodu: string;
     hesapAdi?: string;
     borc: number;
@@ -50,6 +52,7 @@ export type FinansalTabloTestMizanOlusturmaIstegi = {
 };
 
 export type FinansalTabloMevcutMizanSatiri = {
+  yil?: number | null;
   detayKodu?: string | null;
   hesapAdi?: string | null;
   borcBakiye?: number | null;

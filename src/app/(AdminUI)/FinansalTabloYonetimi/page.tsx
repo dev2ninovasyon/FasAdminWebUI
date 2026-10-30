@@ -101,6 +101,7 @@ import {
 } from "@/api/FinansalTabloYonetimi/Tanimlar";
 import {
   createFinansalTabloTestMizani,
+  FinansalTabloMevcutMizanSatiri,
   FinansalTabloTestMizan,
   FinansalTabloTestMizanOlusturmaIstegi,
   getFinansalTabloMevcutMizani,
@@ -368,8 +369,8 @@ const Page = () => {
   const [seciliTestMizani, setSeciliTestMizani] = useState<FinansalTabloTestMizan | null>(null);
   const [testMizanAdi, setTestMizanAdi] = useState("Yeni motor test mizanı");
   const [testMizanSatirlariJson, setTestMizanSatirlariJson] = useState(`[
-  { "detayKodu": "100.01", "hesapAdi": "Kasa", "borc": 1000, "alacak": 0 },
-  { "detayKodu": "320.01", "hesapAdi": "Satıcılar", "borc": 0, "alacak": 1000 }
+  { "yil": ${new Date().getFullYear()}, "detayKodu": "100.01", "hesapAdi": "Kasa", "borc": 1000, "alacak": 0 },
+  { "yil": ${new Date().getFullYear()}, "detayKodu": "320.01", "hesapAdi": "Satıcılar", "borc": 0, "alacak": 1000 }
 ]`);
   const [testMizanYukleniyor, setTestMizanYukleniyor] = useState(false);
   const [testMizanListesiYukleniyor, setTestMizanListesiYukleniyor] = useState(false);
@@ -1287,7 +1288,12 @@ const Page = () => {
         }
         return sayiDegeri;
       };
+      const satirYili = sayiOku("yil", Number(uretimYil));
+      if (!Number.isInteger(satirYili) || satirYili < 1900 || satirYili > 2200) {
+        throw new Error(`Test mizanı ${index + 1}. satırında yil 1900 ile 2200 arasında olmalıdır.`);
+      }
       return {
+        yil: satirYili,
         detayKodu,
         hesapAdi: String(satir.hesapAdi || detayKodu),
         borc: sayiOku("borc"),
@@ -1329,21 +1335,30 @@ const Page = () => {
     setMevcutMizanBilgi("");
     setTanimHatasi("");
     try {
-      const satirlar = await getFinansalTabloMevcutMizani(user.token, denetlenenId, yil, uretimKonsolide);
-      if (satirlar.length === 0) {
+      const donemSonuclari: Array<{ yil: number; satirlar: FinansalTabloMevcutMizanSatiri[] }> = [];
+      for (const donemYili of [yil, yil - 1, yil - 2]) {
+        try {
+          const satirlar = await getFinansalTabloMevcutMizani(user.token, denetlenenId, donemYili, uretimKonsolide);
+          if (satirlar.length > 0) donemSonuclari.push({ yil: donemYili, satirlar });
+        } catch (error) {
+          if (donemYili === yil) throw error;
+        }
+      }
+      if (!donemSonuclari.some((donem) => donem.yil === yil)) {
         throw new Error("Seçilen denetlenen ve yıl için mevcut dönüşüm mizanı bulunamadı.");
       }
-      if (satirlar.length > 5000) {
-        throw new Error("Mevcut mizan 5.000 satırdan fazla; test fixture sınırını aşmamak için aktarılmadı.");
+      const toplamSatir = donemSonuclari.reduce((toplam, donem) => toplam + donem.satirlar.length, 0);
+      if (toplamSatir > 5000) {
+        throw new Error("Cari ve karşılaştırmalı dönem mizanları toplam 5.000 satırdan fazla; test fixture sınırını aşmamak için aktarılmadı.");
       }
       const sayiOku = (deger: number | null | undefined, varsayilan = 0) => {
         const sayiDegeri = Number(deger ?? varsayilan);
         return Number.isFinite(sayiDegeri) ? sayiDegeri : varsayilan;
       };
-      const fixtureSatirlari = satirlar.map((satir, index) => {
+      const fixtureSatirlari = donemSonuclari.flatMap((donem) => donem.satirlar.map((satir, index) => {
         const detayKodu = String(satir.detayKodu || "").trim();
         if (!detayKodu) {
-          throw new Error(`Mevcut mizanın ${index + 1}. satırında detay kodu bulunamadı.`);
+          throw new Error(`${donem.yil} yılı mevcut mizanın ${index + 1}. satırında detay kodu bulunamadı.`);
         }
         const borc = sayiOku(satir.borcBakiye);
         const alacak = sayiOku(satir.alacakBakiye);
@@ -1351,6 +1366,7 @@ const Page = () => {
         const raporAlacak = sayiOku(satir.raporAlacak, alacak);
         const bakiye = sayiOku(satir.bakiye, raporBorc - raporAlacak);
         return {
+          yil: donem.yil,
           detayKodu,
           hesapAdi: String(satir.hesapAdi || detayKodu),
           borc,
@@ -1368,12 +1384,13 @@ const Page = () => {
           ),
           paraBirimi: String(satir.paraBirimi || "TRY"),
         };
-      });
+      }));
       setTestMizanSatirlariJson(JSON.stringify(fixtureSatirlari, null, 2));
       setTestMizanAdi(`Mevcut mizan snapshotı ${denetlenenId}-${yil}`);
       setSeciliTestMizani(null);
       setUretimOnizlemeSonucu(null);
-      setMevcutMizanBilgi(`${fixtureSatirlari.length} mizan satırı editöre yüklendi. Kontrol edip “Test mizanı oluştur” düğmesine basın.`);
+      const yuklenenDonemler = donemSonuclari.map((donem) => donem.yil).join(", ");
+      setMevcutMizanBilgi(`${fixtureSatirlari.length} mizan satırı (${yuklenenDonemler}) editöre yüklendi. Kontrol edip “Test mizanı oluştur” düğmesine basın.`);
     } catch (error) {
       setTanimHatasi(error instanceof Error ? error.message : "Mevcut dönüşüm mizanı okunamadı.");
     } finally {
@@ -2231,8 +2248,8 @@ const Page = () => {
               {seciliTestMizani && <Paper variant="outlined" sx={{ p: 1, maxHeight: 220, overflow: "auto" }}>
                 <Typography variant="caption" color="text.secondary" display="block" sx={{ mb: 0.5 }}>Ana uygulamadaki mizan satırlarına karşılık gelen test verisi</Typography>
                 <Table size="small">
-                  <TableHead><TableRow><TableCell>Hesap</TableCell><TableCell>Ad</TableCell><TableCell align="right">Borç</TableCell><TableCell align="right">Alacak</TableCell><TableCell align="right">Bakiye</TableCell></TableRow></TableHead>
-                  <TableBody>{seciliTestMizani.satirlar.slice(0, 100).map((satir) => <TableRow key={`${seciliTestMizani.id}-${satir.detayKodu}`}><TableCell>{satir.detayKodu}</TableCell><TableCell>{satir.hesapAdi}</TableCell><TableCell align="right">{satir.borc.toLocaleString("tr-TR")}</TableCell><TableCell align="right">{satir.alacak.toLocaleString("tr-TR")}</TableCell><TableCell align="right">{satir.bakiye.toLocaleString("tr-TR")}</TableCell></TableRow>)}</TableBody>
+                  <TableHead><TableRow><TableCell>Yıl</TableCell><TableCell>Hesap</TableCell><TableCell>Ad</TableCell><TableCell align="right">Borç</TableCell><TableCell align="right">Alacak</TableCell><TableCell align="right">Bakiye</TableCell></TableRow></TableHead>
+                  <TableBody>{seciliTestMizani.satirlar.slice(0, 100).map((satir) => <TableRow key={`${seciliTestMizani.id}-${satir.yil}-${satir.detayKodu}`}><TableCell>{satir.yil || seciliTestMizani.yil}</TableCell><TableCell>{satir.detayKodu}</TableCell><TableCell>{satir.hesapAdi}</TableCell><TableCell align="right">{satir.borc.toLocaleString("tr-TR")}</TableCell><TableCell align="right">{satir.alacak.toLocaleString("tr-TR")}</TableCell><TableCell align="right">{satir.bakiye.toLocaleString("tr-TR")}</TableCell></TableRow>)}</TableBody>
                 </Table>
               </Paper>}
             </Stack>
