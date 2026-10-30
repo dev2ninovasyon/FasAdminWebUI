@@ -49,7 +49,7 @@ export type FinansalSurumDetay = {
     donemKolonlari: Array<{ id: number; sabitAnahtar: string; ad: string; donemDavranisi: number; donemOfseti: number; sira: number; zorunluMu: boolean }>;
     kalemler: Array<{ id: number; ustKalemId?: number | null; sabitAnahtar: string; kod?: string | null; ad: string; sira: number; kalemTuru: number; eksen: number; varsayilanGorunurMu: boolean; aktifMi: boolean }>;
     hucreler: Array<{ id: number; sabitAnahtar: string; dikeyKalemId: number; yatayKalemId: number; aktifMi: boolean }>;
-    kurallar: Array<{ id: number; kalemId?: number | null; hucreId?: number | null; hesaplamaTuru: number; isaretPolitikasi: number; bosDegerPolitikasi: number; sabitDeger?: number | null; aciklama?: string | null; hamFormul?: string | null; kgkExcelHedefi?: string | null; aktifMi: boolean; terimler: Array<{ id: number; sira: number; hamTerim?: string | null; kaynakTuru: number; kaynakAnahtari: string; operator: number; degerAlani: number; donemDavranisi: number; donemOfseti: number; katsayi: number; isaretPolitikasi: number; zorunluMu: boolean; hesaplamaSekli: number; karsilastirmaDegerAlani: number; karsilastirmaDonemDavranisi: number; karsilastirmaDonemOfseti: number; karsilastirmaIsaretPolitikasi: number; farkYonu: number; sonucIsaretPolitikasi: number }> }>;
+    kurallar: Array<{ id: number; kalemId?: number | null; hucreId?: number | null; hesaplamaTuru: number; isaretPolitikasi: number; bosDegerPolitikasi: number; sabitDeger?: number | null; aciklama?: string | null; hamFormul?: string | null; kgkExcelHedefi?: string | null; aktifMi: boolean; terimler: Array<{ id: number; sira: number; hamTerim?: string | null; kaynakTuru: number; kaynakAnahtari: string; operator: number; degerAlani: number; donemDavranisi: number; donemOfseti: number; katsayi: number; isaretPolitikasi: number; zorunluMu: boolean; hesaplamaSekli: number; karsilastirmaDegerAlani: number; karsilastirmaDonemDavranisi: number; karsilastirmaDonemOfseti: number; karsilastirmaIsaretPolitikasi: number; farkYonu: number; sonucIsaretPolitikasi: number; katsayiKaynakTuru?: number | null; katsayiKaynakAnahtari?: string | null; katsayiDonemDavranisi?: number; katsayiDonemOfseti?: number }> }>;
     kontrolKurallari: Array<{ id: number; kod: string; ad: string; tolerans: number; seviye: number; aktifMi: boolean; terimler: Array<{ id: number; taraf: number; sira: number; kalemSabitAnahtari: string; operator: number; katsayi: number; donemDavranisi: number; donemOfseti: number }> }>;
   }>;
 };
@@ -758,6 +758,10 @@ export type FinansalKuralTerimiGuncelleme = {
   karsilastirmaIsaretPolitikasi: number;
   farkYonu: number;
   sonucIsaretPolitikasi: number;
+  katsayiKaynakTuru?: number | null;
+  katsayiKaynakAnahtari?: string | null;
+  katsayiDonemDavranisi: number;
+  katsayiDonemOfseti: number;
 };
 
 export type FinansalKuralGuncelleme = {

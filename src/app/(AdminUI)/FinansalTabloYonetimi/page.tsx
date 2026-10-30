@@ -180,6 +180,10 @@ type KuralTerimiFormu = {
   karsilastirmaIsaretPolitikasi: number;
   farkYonu: number;
   sonucIsaretPolitikasi: number;
+  katsayiKaynakTuru: number | null;
+  katsayiKaynakAnahtari: string;
+  katsayiDonemDavranisi: number;
+  katsayiDonemOfseti: number;
 };
 
 const degerAlaniEtiketi = (deger: number) => ({
@@ -228,6 +232,10 @@ const yeniKuralTerimi = (sira: number): KuralTerimiFormu => ({
   karsilastirmaIsaretPolitikasi: 1,
   farkYonu: 1,
   sonucIsaretPolitikasi: 1,
+  katsayiKaynakTuru: null,
+  katsayiKaynakAnahtari: "",
+  katsayiDonemDavranisi: 1,
+  katsayiDonemOfseti: 0,
 });
 
 const terimOzeti = (terim: KuralTerimiFormu) => {
@@ -237,7 +245,10 @@ const terimOzeti = (terim: KuralTerimiFormu) => {
   const hesap = terim.hesaplamaSekli === 2
     ? `(${fark}) → ${isaretEtiketi(terim.sonucIsaretPolitikasi)}`
     : kaynak;
-  return `${terim.operator === 2 ? "Çıkar" : "Topla"}: ${hesap}${terim.katsayi !== 1 ? ` × ${terim.katsayi}` : ""}`;
+  const dinamikKatsayi = terim.katsayiKaynakTuru
+    ? ` × ${terim.katsayiKaynakAnahtari || "dinamik katsayı"} [${donemEtiketi(terim.katsayiDonemDavranisi, terim.katsayiDonemOfseti)}]`
+    : "";
+  return `${terim.operator === 2 ? "Çıkar" : "Topla"}: ${hesap}${terim.katsayi !== 1 ? ` × ${terim.katsayi}` : ""}${dinamikKatsayi}`;
 };
 
 const surumDurumKodu = (durum: number | string) => {
@@ -779,6 +790,10 @@ const Page = () => {
         karsilastirmaIsaretPolitikasi: terim.karsilastirmaIsaretPolitikasi ?? 1,
         farkYonu: terim.farkYonu ?? 1,
         sonucIsaretPolitikasi: terim.sonucIsaretPolitikasi ?? 1,
+        katsayiKaynakTuru: terim.katsayiKaynakTuru ?? null,
+        katsayiKaynakAnahtari: terim.katsayiKaynakAnahtari || "",
+        katsayiDonemDavranisi: terim.katsayiDonemDavranisi ?? 1,
+        katsayiDonemOfseti: terim.katsayiDonemOfseti ?? 0,
       })),
     });
   };
@@ -822,6 +837,17 @@ const Page = () => {
       transferHaricAzalis: { ...ortak, hesaplamaSekli: 2, degerAlani: 7, karsilastirmaDegerAlani: 7, farkYonu: 2, sonucIsaretPolitikasi: 3 },
       kontrolBakiye: { ...ortak, degerAlani: 6 },
       transferHaricKontrol: { ...ortak, degerAlani: 10 },
+      sunumEndeksliOncekiUretim: {
+        ...ortak,
+        kaynakTuru: 4,
+        kaynakAnahtari: "",
+        donemDavranisi: 2,
+        donemOfseti: -1,
+        katsayiKaynakTuru: 5,
+        katsayiKaynakAnahtari: "SUNUM_ENDEKSI",
+        katsayiDonemDavranisi: 2,
+        katsayiDonemOfseti: -1,
+      },
     };
     if (sablonlar[sablon]) kuralTerimiGuncelle(index, sablonlar[sablon]);
   };
@@ -3014,6 +3040,7 @@ const Page = () => {
                                       <MenuItem value="transferHaricAzalis">Transfer fişi hariç yalnız azalış</MenuItem>
                                       <MenuItem value="kontrolBakiye">Cari kontrol bakiye</MenuItem>
                                       <MenuItem value="transferHaricKontrol">Transfer fişi hariç kontrol bakiye</MenuItem>
+                                      <MenuItem value="sunumEndeksliOncekiUretim">Sunum endeksli önceki üretim</MenuItem>
                                     </Select>
                                   </FormControl>
                                 </Stack>
@@ -3061,7 +3088,15 @@ const Page = () => {
                                         </Select>
                                       </FormControl>
                                     ) : (
-                                      <TextField size="small" label={`Kaynak anahtarı ${index + 1}`} fullWidth required value={terim.kaynakAnahtari} onChange={(event) => kuralTerimiGuncelle(index, { kaynakAnahtari: event.target.value })} />
+                                      <TextField
+                                        size="small"
+                                        label={`Kaynak anahtarı ${index + 1}`}
+                                        fullWidth
+                                        required
+                                        value={terim.kaynakAnahtari}
+                                        helperText={terim.kaynakTuru === 4 ? "tabloAdi|kalemKodu biçiminde girin" : undefined}
+                                        onChange={(event) => kuralTerimiGuncelle(index, { kaynakAnahtari: event.target.value })}
+                                      />
                                     )}
                                   </Grid>
                                   <Grid item xs={6} md={1.5}>
@@ -3078,6 +3113,48 @@ const Page = () => {
                                   <Grid item xs={6} md={1.5}><TextField size="small" label="Dönem ofseti" type="number" fullWidth inputProps={{ min: -100, max: 100 }} value={terim.donemOfseti} onChange={(event) => kuralTerimiGuncelle(index, { donemOfseti: Number(event.target.value) })} /></Grid>
                                   <Grid item xs={12} md={2}>
                                     <FormControl size="small" fullWidth><InputLabel>Kaynak değer işareti</InputLabel><Select label="Kaynak değer işareti" value={terim.isaretPolitikasi} onChange={(event) => kuralTerimiGuncelle(index, { isaretPolitikasi: Number(event.target.value) })}><MenuItem value={1}>Olduğu gibi</MenuItem><MenuItem value={2}>Mutlak değer</MenuItem><MenuItem value={3}>Yalnız pozitif</MenuItem><MenuItem value={4}>Yalnız negatif</MenuItem><MenuItem value={5}>Ters işaret</MenuItem></Select></FormControl>
+                                  </Grid>
+                                  <Grid item xs={12}>
+                                    <Paper variant="outlined" sx={{ p: 1, bgcolor: terim.katsayiKaynakTuru ? "action.selected" : "transparent" }}>
+                                      <Typography variant="caption" fontWeight={600}>Dinamik katsayı</Typography>
+                                      <Grid container spacing={1} sx={{ mt: 0.25 }} alignItems="center">
+                                        <Grid item xs={12} md={3}>
+                                          <FormControl size="small" fullWidth>
+                                            <InputLabel>Katsayı kaynağı</InputLabel>
+                                            <Select
+                                              label="Katsayı kaynağı"
+                                              value={terim.katsayiKaynakTuru ?? 0}
+                                              onChange={(event) => {
+                                                const kaynakTuru = Number(event.target.value);
+                                                kuralTerimiGuncelle(index, kaynakTuru === 0
+                                                  ? { katsayiKaynakTuru: null, katsayiKaynakAnahtari: "", katsayiDonemDavranisi: 1, katsayiDonemOfseti: 0 }
+                                                  : { katsayiKaynakTuru: 5, katsayiKaynakAnahtari: "SUNUM_ENDEKSI" });
+                                              }}
+                                            >
+                                              <MenuItem value={0}>Kullanma</MenuItem>
+                                              <MenuItem value={5}>Sunum endeksi</MenuItem>
+                                            </Select>
+                                          </FormControl>
+                                        </Grid>
+                                        <Grid item xs={12} md={3}>
+                                          <TextField size="small" fullWidth label="Sistem parametresi" value={terim.katsayiKaynakAnahtari} disabled={!terim.katsayiKaynakTuru} InputProps={{ readOnly: true }} />
+                                        </Grid>
+                                        <Grid item xs={12} md={2.5}>
+                                          <FormControl size="small" fullWidth disabled={!terim.katsayiKaynakTuru}>
+                                            <InputLabel>Katsayı dönemi</InputLabel>
+                                            <Select label="Katsayı dönemi" value={terim.katsayiDonemDavranisi} onChange={(event) => kuralTerimiGuncelle(index, { katsayiDonemDavranisi: Number(event.target.value) })}>
+                                              <MenuItem value={1}>Cari dönem</MenuItem><MenuItem value={2}>Önceki dönem</MenuItem><MenuItem value={3}>Açılış</MenuItem><MenuItem value={4}>Değişim</MenuItem><MenuItem value={5}>Özel</MenuItem>
+                                            </Select>
+                                          </FormControl>
+                                        </Grid>
+                                        <Grid item xs={6} md={1.5}>
+                                          <TextField size="small" label="Katsayı ofseti" type="number" fullWidth disabled={!terim.katsayiKaynakTuru} inputProps={{ min: -100, max: 100 }} value={terim.katsayiDonemOfseti} onChange={(event) => kuralTerimiGuncelle(index, { katsayiDonemOfseti: Number(event.target.value) })} />
+                                        </Grid>
+                                        <Grid item xs={12} md={2}>
+                                          <Typography variant="caption" color="text.secondary">Önceki üretim tutarını seçilen dönem endeksiyle çarpar.</Typography>
+                                        </Grid>
+                                      </Grid>
+                                    </Paper>
                                   </Grid>
                                   {terim.hesaplamaSekli === 2 && (
                                     <Grid item xs={12}>
@@ -3110,7 +3187,7 @@ const Page = () => {
                               </Paper>
                             </Grid>
                           ))}
-                          <Grid item xs={12}><Stack direction="row" spacing={1}><Button variant="contained" size="small" onClick={yeniKuralAcik ? kuralOlustur : kuralKaydet} disabled={kuralKaydediliyor || (yeniKuralAcik && !yeniKuralKalemId) || kuralForm.terimler.some((terim) => !terim.kaynakAnahtari.trim() || terim.katsayi === 0)}>{kuralKaydediliyor ? <CircularProgress size={18} color="inherit" /> : yeniKuralAcik ? "Yeni kuralı kaydet" : "Kuralı kaydet"}</Button><Button size="small" onClick={() => { setDuzenlenenKuralId(0); setYeniKuralAcik(false); }} disabled={kuralKaydediliyor}>İptal</Button></Stack></Grid>
+                          <Grid item xs={12}><Stack direction="row" spacing={1}><Button variant="contained" size="small" onClick={yeniKuralAcik ? kuralOlustur : kuralKaydet} disabled={kuralKaydediliyor || (yeniKuralAcik && !yeniKuralKalemId) || kuralForm.terimler.some((terim) => !terim.kaynakAnahtari.trim() || terim.katsayi === 0 || (terim.katsayiKaynakTuru !== null && !terim.katsayiKaynakAnahtari.trim()))}>{kuralKaydediliyor ? <CircularProgress size={18} color="inherit" /> : yeniKuralAcik ? "Yeni kuralı kaydet" : "Kuralı kaydet"}</Button><Button size="small" onClick={() => { setDuzenlenenKuralId(0); setYeniKuralAcik(false); }} disabled={kuralKaydediliyor}>İptal</Button></Stack></Grid>
                         </Grid>
                       )}
                     </Stack>
