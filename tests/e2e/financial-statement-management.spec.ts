@@ -105,13 +105,18 @@ const fulfillJson = (route: Route, body: unknown, status = 200) => route.fulfill
   body: JSON.stringify(body),
 });
 
-test("admin girişinden kural düzenleme ve salt-okunur finansal tablo önizlemesine kadar çalışır", async ({ page }) => {
+test("admin girişinden otomatik önizleme ve hatalı revizyonda güvenli durdurmaya kadar çalışır", async ({ page }) => {
   let loginPayload: Record<string, unknown> | null = null;
   let ruleUpdatePayload: Record<string, any> | null = null;
   let validationPayload: Record<string, any> | null = null;
   let testTrialBalancePayload: Record<string, any> | null = null;
   let previewPayload: Record<string, any> | null = null;
+  let ruleUpdateCount = 0;
+  let validationCallCount = 0;
+  let testTrialBalanceCreateCount = 0;
+  let previewCount = 0;
   let productionWriteCount = 0;
+  let validationShouldFail = false;
   let definitionAuthorization = "";
   const runtimeErrors: string[] = [];
   const isCancelledDashboardRequest = (value: string) =>
@@ -198,34 +203,42 @@ test("admin girişinden kural düzenleme ve salt-okunur finansal tablo önizleme
     }
 
     if (path.endsWith("/FinansalTabloYonetimi/Surumler/11/Dogrula") && request.method() === "POST") {
+      validationCallCount += 1;
       validationPayload = request.postDataJSON() as Record<string, any>;
       return fulfillJson(route, {
         surumId: 11,
         surumEtiketi: "E2E Taslak",
-        eszamanlilikSurumu: 8,
-        gecerliMi: true,
+        eszamanlilikSurumu: validationShouldFail ? 9 : 8,
+        gecerliMi: !validationShouldFail,
         tablolar: [{
           tabloId: 21,
           tabloKod: "FDT",
-          gecerliMi: true,
-          snapshotSha256: "c".repeat(64),
-          sorunlar: [],
+          gecerliMi: !validationShouldFail,
+          snapshotSha256: validationShouldFail ? null : "c".repeat(64),
+          sorunlar: validationShouldFail ? [{
+            kod: 1001,
+            konum: "FDT/TOPLAM_VARLIKLAR",
+            aciklama: "E2E zorunlu kaynak bulunamadı.",
+            hedef: { hedefTuru: 1, sabitAnahtar: "TOPLAM_VARLIKLAR" },
+          }] : [],
         }],
       });
     }
 
     if (path.endsWith("/FinansalTabloYonetimi/Surumler/11/Tablolar/21/Kurallar/201") && request.method() === "PUT") {
+      ruleUpdateCount += 1;
       ruleUpdatePayload = request.postDataJSON() as Record<string, any>;
       return fulfillJson(route, {
         success: true,
         kuralId: 201,
         surumId: 11,
-        eszamanlilikSurumu: 8,
+        eszamanlilikSurumu: 7 + ruleUpdateCount,
         guncellemeTarihi: "2026-10-30T10:00:00Z",
       });
     }
 
     if (path.endsWith("/FinansalTabloYonetimi/TestMizanlari") && request.method() === "POST") {
+      testTrialBalanceCreateCount += 1;
       testTrialBalancePayload = request.postDataJSON() as Record<string, any>;
       return fulfillJson(route, {
         id: "11111111-2222-3333-4444-555555555555",
@@ -244,6 +257,7 @@ test("admin girişinden kural düzenleme ve salt-okunur finansal tablo önizleme
     }
 
     if (path.endsWith("/FinansalTabloYonetimi/Uretimler/Onizle") && request.method() === "POST") {
+      previewCount += 1;
       previewPayload = request.postDataJSON() as Record<string, any>;
       return fulfillJson(route, {
         saltOkunur: true,
@@ -368,6 +382,31 @@ test("admin girişinden kural düzenleme ve salt-okunur finansal tablo önizleme
       },
     },
   });
+  expect(ruleUpdateCount).toBe(1);
+  expect(validationCallCount).toBe(1);
+  expect(testTrialBalanceCreateCount).toBe(1);
+  expect(previewCount).toBe(1);
+
+  await page.getByRole("button", { name: "Tanımı seç", exact: true }).click();
+  await expect(page.getByRole("button", { name: "Devreye al" })).toBeDisabled();
+  await expect(page.getByText("Canlı kullanıcılar eski tablolarla devam ediyor.", { exact: false })).toBeVisible();
+
+  validationShouldFail = true;
+  await expect(page.getByText("Yapılandırılmış kural editörü", { exact: true })).toBeVisible();
+  await page.getByText("Kural seçin", { exact: true }).click();
+  await page.getByRole("option", { name: "#201 · Kalem 101" }).click();
+  await page.getByText("Ticari alacaklar · 120", { exact: true }).click();
+  await page.getByRole("option", { name: "Nakit ve nakit benzerleri · 100" }).click();
+  await page.getByRole("button", { name: "Kuralı kaydet" }).click();
+  await expect.poll(() => ruleUpdateCount).toBe(2);
+  await expect(page.getByRole("button", { name: "Kuralı kaydet" })).toHaveCount(0);
+
+  await page.getByRole("button", { name: "Otomatik testi çalıştır" }).click();
+  await expect.poll(() => validationCallCount).toBe(2);
+  await expect(page.getByText("Düzeltilmesi gereken tanımlar var", { exact: true })).toBeVisible();
+  await expect(page.getByText("E2E zorunlu kaynak bulunamadı.", { exact: false })).toBeVisible();
+  expect(testTrialBalanceCreateCount).toBe(1);
+  expect(previewCount).toBe(1);
   expect(productionWriteCount).toBe(0);
   expect(runtimeErrors).toEqual([]);
 });
