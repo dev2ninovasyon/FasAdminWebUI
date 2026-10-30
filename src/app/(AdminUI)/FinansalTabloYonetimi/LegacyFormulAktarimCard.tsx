@@ -80,9 +80,9 @@ const LegacyFormulAktarimCard = ({ token, surum, onApplied }: Props) => {
       <Stack spacing={1.25}>
         <Stack direction={{ xs: "column", md: "row" }} spacing={1} alignItems={{ md: "center" }}>
           <Box sx={{ flexGrow: 1 }}>
-            <Typography variant="subtitle2">Bir defalık eski sistem formül aktarımı</Typography>
+            <Typography variant="subtitle2">Enflasyon formüllerinden başlangıç aktarımı</Typography>
             <Typography variant="caption" color="text.secondary">
-              Formuller ve FormullerOzkaynak yalnız okunur; aktarım tamamlanınca bu tanım seti bir daha eski kaynaktan kontrol edilmez.
+              FormullerEnflasyon ve eski özkaynak FormullerOzkaynak kayıtları yalnız okunur; aktarım tamamlanınca bu tanım seti bir daha eski kaynaktan kontrol edilmez.
             </Typography>
           </Box>
           {yukleniyor && <CircularProgress size={20} />}
@@ -120,7 +120,7 @@ const LegacyFormulAktarimCard = ({ token, surum, onApplied }: Props) => {
             {sonuc.farklar.length > 0 && (
               <Box sx={{ maxHeight: 280, overflow: "auto" }}>
                 <Table size="small" stickyHeader>
-                  <TableHead><TableRow><TableCell>Tablo / hedef</TableCell><TableCell>Eski formül</TableCell><TableCell>Yeni sürümdeki formül</TableCell><TableCell>Durum</TableCell></TableRow></TableHead>
+                  <TableHead><TableRow><TableCell>Tablo / hedef</TableCell><TableCell>Enflasyon formülü</TableCell><TableCell>Yeni sürümdeki formül</TableCell><TableCell>Durum</TableCell></TableRow></TableHead>
                   <TableBody>
                     {sonuc.farklar.map((fark) => (
                       <TableRow key={fark.kuralId} hover>

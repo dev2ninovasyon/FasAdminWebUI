@@ -1,6 +1,7 @@
 import { url } from "@/api/apiBase";
 
 export type FinansalTabloTestMizanSatiri = {
+  yil: number;
   detayKodu: string;
   hesapAdi: string;
   borc: number;
@@ -10,6 +11,9 @@ export type FinansalTabloTestMizanSatiri = {
   bakiye: number;
   kontrolBakiye: number;
   bakiyeTransferFisiHaric: number;
+  raporBorcTransferFisiHaric: number;
+  raporAlacakTransferFisiHaric: number;
+  kontrolBakiyeTransferFisiHaric: number;
   paraBirimi: string;
 };
 
@@ -30,6 +34,7 @@ export type FinansalTabloTestMizanOlusturmaIstegi = {
   yil: number;
   konsolidasyonMu: boolean;
   satirlar: Array<{
+    yil?: number;
     detayKodu: string;
     hesapAdi?: string;
     borc: number;
@@ -39,11 +44,15 @@ export type FinansalTabloTestMizanOlusturmaIstegi = {
     bakiye?: number;
     kontrolBakiye?: number;
     bakiyeTransferFisiHaric?: number;
+    raporBorcTransferFisiHaric?: number;
+    raporAlacakTransferFisiHaric?: number;
+    kontrolBakiyeTransferFisiHaric?: number;
     paraBirimi?: string;
   }>;
 };
 
 export type FinansalTabloMevcutMizanSatiri = {
+  yil?: number | null;
   detayKodu?: string | null;
   hesapAdi?: string | null;
   borcBakiye?: number | null;
@@ -53,6 +62,9 @@ export type FinansalTabloMevcutMizanSatiri = {
   raporAlacak?: number | null;
   kontrolBakiye?: number | null;
   bakiyeTransferFisiHaric?: number | null;
+  raporBorcTransferFisiHaric?: number | null;
+  raporAlacakTransferFisiHaric?: number | null;
+  kontrolBakiyeTransferFisiHaric?: number | null;
   paraBirimi?: string | null;
 };
 
