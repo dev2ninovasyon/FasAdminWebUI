@@ -55,8 +55,16 @@ const jsonRequest = async <T>(token: string, path: string, init?: RequestInit): 
   return payload as T;
 };
 
-export const compareLegacyFormuller = (token: string, surumId: number) =>
-  jsonRequest<LegacyFormulKarsilastirma>(token, `/Surumler/${surumId}/LegacyFormuller/Karsilastir`);
+export const compareLegacyFormuller = async (token: string, surumId: number) => {
+  const payload = await jsonRequest<LegacyFormulKarsilastirma>(
+    token,
+    `/Surumler/${surumId}/LegacyFormuller/Karsilastir`
+  );
+  if (!payload || typeof payload.kaynakSha256 !== "string" || !Array.isArray(payload.farklar)) {
+    throw new Error("Eski formül karşılaştırma yanıtı beklenen biçimde değil.");
+  }
+  return payload;
+};
 
 export const applyLegacyFormuller = (
   token: string,

@@ -702,7 +702,7 @@ const Page = () => {
   };
 
   const kalemKaydet = async () => {
-    const tablo = surumDetayi?.tablolar.find((aday) => aday.id === kalemTabloId);
+    const tablo = secilenKalemTablosu;
     if (!user.token || !secilenSurum || surumDurumKodu(secilenSurum.durum) !== 1 || !tablo || !duzenlenenKalemId) return;
     setKalemKaydediliyor(true);
     setTanimHatasi("");
@@ -821,7 +821,7 @@ const Page = () => {
   };
 
   const kuralKaydet = async () => {
-    const tablo = surumDetayi?.tablolar.find((aday) => aday.id === kalemTabloId);
+    const tablo = secilenKalemTablosu;
     if (!user.token || !secilenSurum || surumDurumKodu(secilenSurum.durum) !== 1 || !tablo || !duzenlenenKuralId) return;
     setKuralKaydediliyor(true);
     setTanimHatasi("");
@@ -866,7 +866,7 @@ const Page = () => {
   };
 
   const yeniKuralBaslat = () => {
-    const tablo = surumDetayi?.tablolar.find((aday) => aday.id === kalemTabloId);
+    const tablo = secilenKalemTablosu;
     const hedef = tablo?.kalemler.find((kalem) => !tablo.kurallar.some((kural) => kural.kalemId === kalem.id));
     setDuzenlenenKuralId(0);
     setYeniKuralKalemId(hedef?.id || 0);
@@ -885,7 +885,7 @@ const Page = () => {
   };
 
   const kuralOlustur = async () => {
-    const tablo = surumDetayi?.tablolar.find((aday) => aday.id === kalemTabloId);
+    const tablo = secilenKalemTablosu;
     if (!user.token || !secilenSurum || surumDurumKodu(secilenSurum.durum) !== 1 || !tablo || !yeniKuralKalemId) return;
     setKuralKaydediliyor(true);
     setTanimHatasi("");
