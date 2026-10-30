@@ -93,6 +93,10 @@ const versionDetail = {
         karsilastirmaIsaretPolitikasi: 1,
         farkYonu: 1,
         sonucIsaretPolitikasi: 1,
+        katsayiKaynakTuru: null,
+        katsayiKaynakAnahtari: null,
+        katsayiDonemDavranisi: 1,
+        katsayiDonemOfseti: 0,
       }],
     }],
     kontrolKurallari: [],
@@ -413,10 +417,22 @@ test("admin girişinden güvenli doğrulama ve kontrollü sürüm aktivasyonuna 
   await expect(page.getByRole("option", { name: /Toplam varlıklar/ })).toHaveCount(0);
   await page.getByRole("option", { name: "Ticari alacaklar · 120" }).click();
 
+  await page.getByText("Katsayı kaynağı", { exact: true }).locator("..").getByRole("combobox").click();
+  await page.getByRole("option", { name: "Sunum endeksi" }).click();
+  await page.getByText("Katsayı dönemi", { exact: true }).locator("..").getByRole("combobox").click();
+  await page.getByRole("option", { name: "Önceki dönem" }).last().click();
+  await page.getByRole("spinbutton", { name: "Katsayı ofseti" }).fill("-1");
+
   await page.getByRole("button", { name: "Kuralı kaydet" }).click();
   await expect.poll(() => ruleUpdatePayload).not.toBeNull();
   const savedRule = ruleUpdatePayload as unknown as Record<string, any>;
   expect(savedRule.terimler?.[0]?.kaynakAnahtari).toBe("TICARI_ALACAKLAR");
+  expect(savedRule.terimler?.[0]).toMatchObject({
+    katsayiKaynakTuru: 5,
+    katsayiKaynakAnahtari: "SUNUM_ENDEKSI",
+    katsayiDonemDavranisi: 2,
+    katsayiDonemOfseti: -1,
+  });
   expect(savedRule.beklenenEszamanlilikSurumu).toBe(7);
   await expect(page.getByRole("button", { name: "Kuralı kaydet" })).toHaveCount(0);
 
