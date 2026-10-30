@@ -105,18 +105,20 @@ const fulfillJson = (route: Route, body: unknown, status = 200) => route.fulfill
   body: JSON.stringify(body),
 });
 
-test("admin girişinden otomatik önizleme ve hatalı revizyonda güvenli durdurmaya kadar çalışır", async ({ page }) => {
+test("admin girişinden güvenli doğrulama ve kontrollü sürüm aktivasyonuna kadar çalışır", async ({ page }) => {
   let loginPayload: Record<string, unknown> | null = null;
   let ruleUpdatePayload: Record<string, any> | null = null;
   let validationPayload: Record<string, any> | null = null;
   let testTrialBalancePayload: Record<string, any> | null = null;
   let previewPayload: Record<string, any> | null = null;
+  let activationPayload: Record<string, any> | null = null;
   let ruleUpdateCount = 0;
   let validationCallCount = 0;
   let testTrialBalanceCreateCount = 0;
   let previewCount = 0;
   let productionWriteCount = 0;
   let validationShouldFail = false;
+  let pilotEnabled = false;
   let definitionAuthorization = "";
   const runtimeErrors: string[] = [];
   const isCancelledDashboardRequest = (value: string) =>
@@ -174,10 +176,12 @@ test("admin girişinden otomatik önizleme ve hatalı revizyonda güvenli durdur
 
     if (path.endsWith("/FinansalTabloYonetimi/SurumYonetimi/Durum")) {
       return fulfillJson(route, {
-        etkin: false,
+        etkin: pilotEnabled,
         eskiAkisKorunuyor: true,
         acikSurumSecimiZorunlu: true,
-        aciklama: "E2E testinde canlı sürüm geçişi kapalıdır.",
+        aciklama: pilotEnabled
+          ? "E2E testinde kontrollü sürüm geçişi açıktır."
+          : "E2E testinde canlı sürüm geçişi kapalıdır.",
       });
     }
 
@@ -208,7 +212,7 @@ test("admin girişinden otomatik önizleme ve hatalı revizyonda güvenli durdur
       return fulfillJson(route, {
         surumId: 11,
         surumEtiketi: "E2E Taslak",
-        eszamanlilikSurumu: validationShouldFail ? 9 : 8,
+        eszamanlilikSurumu: Number(validationPayload.beklenenEszamanlilikSurumu),
         gecerliMi: !validationShouldFail,
         tablolar: [{
           tabloId: 21,
@@ -234,6 +238,20 @@ test("admin girişinden otomatik önizleme ve hatalı revizyonda güvenli durdur
         surumId: 11,
         eszamanlilikSurumu: 7 + ruleUpdateCount,
         guncellemeTarihi: "2026-10-30T10:00:00Z",
+      });
+    }
+
+    if (path.endsWith("/FinansalTabloYonetimi/Surumler/11/DevreyeAl") && request.method() === "POST") {
+      activationPayload = request.postDataJSON() as Record<string, any>;
+      return fulfillJson(route, {
+        surumId: 11,
+        tanimSetiId: 1,
+        durum: 3,
+        etkinlikTarihi: activationPayload.etkinlikTarihi,
+        onayTarihi: "2026-10-30T12:45:00Z",
+        eszamanlilikSurumu: 10,
+        kullanimdanKaldirilanSurumIdleri: [10],
+        onayAciklamasi: activationPayload.onayAciklamasi,
       });
     }
 
@@ -407,6 +425,36 @@ test("admin girişinden otomatik önizleme ve hatalı revizyonda güvenli durdur
   await expect(page.getByText("E2E zorunlu kaynak bulunamadı.", { exact: false })).toBeVisible();
   expect(testTrialBalanceCreateCount).toBe(1);
   expect(previewCount).toBe(1);
+  expect(productionWriteCount).toBe(0);
+  expect(runtimeErrors).toEqual([]);
+
+  pilotEnabled = true;
+  validationShouldFail = false;
+  draftVersion.eszamanlilikSurumu = 9;
+  versionDetail.surum.eszamanlilikSurumu = 9;
+  await page.reload();
+  await expect(page.getByText("İzole sürüm pilotu açık", { exact: true })).toBeVisible();
+
+  await page.getByRole("button", { name: "Otomatik testi çalıştır" }).click();
+  await expect.poll(() => validationCallCount).toBe(3);
+  await expect.poll(() => previewCount).toBe(2);
+  await expect(page.getByText("Admin testi başarıyla tamamlandı", { exact: true })).toBeVisible();
+
+  await page.getByRole("button", { name: "Tanımı seç", exact: true }).click();
+  await page.getByLabel("Etkinlik tarihi").fill("2026-11-01");
+  await page.getByLabel("Admin onay açıklaması").fill("E2E kontrollü pilot onayı");
+  await expect(page.getByRole("button", { name: "Devreye al" })).toBeEnabled();
+  await page.getByRole("button", { name: "Devreye al" }).click();
+
+  await expect.poll(() => activationPayload).not.toBeNull();
+  expect(activationPayload).toMatchObject({
+    beklenenEszamanlilikSurumu: 9,
+    etkinlikTarihi: "2026-11-01",
+    onayAciklamasi: "E2E kontrollü pilot onayı",
+  });
+  await expect(page.getByText("Sürüm #4 devreye alındı.", { exact: false }).first()).toBeVisible();
+  await expect(page.getByText("Aktif", { exact: true }).first()).toBeVisible();
+  await expect(page.getByRole("button", { name: "Devreye al" })).toHaveCount(0);
   expect(productionWriteCount).toBe(0);
   expect(runtimeErrors).toEqual([]);
 });
