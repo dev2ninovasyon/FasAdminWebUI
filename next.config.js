@@ -1,3 +1,7 @@
+// Netlify, Next.js ciktisini .next klasorunde bekler. IIS/standalone dagitimi icin
+// mevcut build + standalone davranisi korunur.
+const isNetlifyBuild = process.env.NETLIFY_BUILD === "true";
+
 /** @type {import('next').NextConfig} */
 
 const nextConfig = {
@@ -15,8 +19,7 @@ const nextConfig = {
     ],
   },
   reactStrictMode: true,
-  distDir: "build",
-  output: "standalone",
+  ...(isNetlifyBuild ? {} : { distDir: "build", output: "standalone" }),
   compress: true,
   images: {
     unoptimized: false,
