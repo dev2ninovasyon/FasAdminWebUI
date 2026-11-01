@@ -74,6 +74,7 @@ const LegacyFormulAktarimCard = ({ token, surum, onApplied }: Props) => {
 
   const taslakMi = durumKodu(surum.durum) === 1;
   const blokluMu = (sonuc?.incelemeGerektirenFarkSayisi ?? 0) > 0;
+  const uyariliFarkSayisi = sonuc?.farklar.filter((fark) => fark.uyariMi).length ?? 0;
 
   return (
     <Paper variant="outlined" sx={{ p: 1.5, borderColor: sonuc?.kilitliMi ? "success.main" : "divider" }}>
@@ -110,12 +111,18 @@ const LegacyFormulAktarimCard = ({ token, surum, onApplied }: Props) => {
               <Chip size="small" variant="outlined" label={`${sonuc.karsilastirilanKuralSayisi} eski kural okundu`} />
               <Chip size="small" variant="outlined" color={sonuc.farkSayisi ? "warning" : "success"} label={`${sonuc.farkSayisi} fark`} />
               <Chip size="small" variant="outlined" color="success" label={`${sonuc.aktarilabilirFarkSayisi} otomatik aktarılabilir`} />
+              {uyariliFarkSayisi > 0 && <Chip size="small" variant="outlined" color="warning" label={`${uyariliFarkSayisi} uyarıyla aktarılabilir`} />}
               <Chip size="small" variant="outlined" color={blokluMu ? "error" : "default"} label={`${sonuc.incelemeGerektirenFarkSayisi} inceleme`} />
               <Chip size="small" variant="outlined" label={`Kaynak SHA-256: ${sonuc.kaynakSha256.slice(0, 12)}…`} />
             </Stack>
 
             {!taslakMi && <Alert severity="info" variant="outlined">Başlangıç aktarımı yayımlanmış sürüme yazılmaz. Bu sürümden bir taslak oluşturup taslağı seçin.</Alert>}
             {blokluMu && <Alert severity="error" variant="outlined">Anlaşılamayan formüller çözülmeden kısmi aktarım yapılmaz ve köprü kapatılmaz. Aşağıdaki kayıtları inceleyin.</Alert>}
+            {!blokluMu && uyariliFarkSayisi > 0 && (
+              <Alert severity="warning" variant="outlined">
+                {uyariliFarkSayisi} kural eski sonuç korunarak aktarılabilir; aktarım sonrasında taslaktaki hesap eşleştirmelerini yönetici olarak gözden geçirin.
+              </Alert>
+            )}
 
             {sonuc.farklar.length > 0 && (
               <Box sx={{ maxHeight: 280, overflow: "auto" }}>
@@ -127,7 +134,17 @@ const LegacyFormulAktarimCard = ({ token, surum, onApplied }: Props) => {
                         <TableCell><strong>{fark.tabloKodu}</strong> · {fark.hedefAdi}<br /><Typography variant="caption" color="text.secondary">{fark.hedefTuru} · eski kayıt #{fark.legacyFormulId}</Typography></TableCell>
                         <TableCell sx={{ maxWidth: 280, overflowWrap: "anywhere" }}>{fark.eskiFormul || "—"}</TableCell>
                         <TableCell sx={{ maxWidth: 280, overflowWrap: "anywhere" }}>{fark.yeniFormul || "—"}</TableCell>
-                        <TableCell><Chip size="small" color={fark.aktarilabilirMi ? "success" : "error"} variant="outlined" label={fark.aktarilabilirMi ? "Hazır" : "İncele"} /><Typography display="block" variant="caption" color="text.secondary" sx={{ mt: 0.5 }}>{fark.aciklama}</Typography></TableCell>
+                        <TableCell>
+                          <Chip
+                            size="small"
+                            color={!fark.aktarilabilirMi ? "error" : fark.uyariMi ? "warning" : "success"}
+                            variant="outlined"
+                            label={!fark.aktarilabilirMi ? "İncele" : fark.uyariMi ? "Uyarıyla hazır" : "Hazır"}
+                          />
+                          <Typography display="block" variant="caption" color={fark.uyariMi ? "warning.main" : "text.secondary"} sx={{ mt: 0.5 }}>
+                            {fark.aciklama}
+                          </Typography>
+                        </TableCell>
                       </TableRow>
                     ))}
                   </TableBody>
