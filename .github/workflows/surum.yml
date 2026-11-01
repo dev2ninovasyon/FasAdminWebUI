@@ -1,0 +1,40 @@
+name: Surum
+
+on:
+  push:
+    branches: [main]
+  workflow_dispatch:
+
+permissions:
+  contents: write
+
+concurrency:
+  group: surum-main
+  cancel-in-progress: false
+
+jobs:
+  surum:
+    name: SemVer etiketi ve GitHub surumu
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    steps:
+      - name: Depoyu tam gecmis ve etiketlerle al
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+          persist-credentials: false
+
+      - name: Node.js kur
+        uses: actions/setup-node@v4
+        with:
+          node-version: 22
+
+      - name: Surumu hesapla, etiketle ve GitHub surumunu olustur
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: |
+          npx --yes \
+            --package semantic-release@24.2.7 \
+            --package conventional-changelog-conventionalcommits@8.0.0 \
+            semantic-release
