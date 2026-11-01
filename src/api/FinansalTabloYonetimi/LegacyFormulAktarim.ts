@@ -11,6 +11,7 @@ export type LegacyFormulFarki = {
   durum: "Aktarilabilir" | "IncelemeGerekli";
   aciklama: string;
   aktarilabilirMi: boolean;
+  uyariMi?: boolean;
 };
 
 export type LegacyFormulKarsilastirma = {
