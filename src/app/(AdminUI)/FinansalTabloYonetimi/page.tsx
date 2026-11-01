@@ -184,6 +184,7 @@ type KuralTerimiFormu = {
   katsayiKaynakAnahtari: string;
   katsayiDonemDavranisi: number;
   katsayiDonemOfseti: number;
+  asgariMutlakFark: number;
 };
 
 const degerAlaniEtiketi = (deger: number) => ({
@@ -236,6 +237,7 @@ const yeniKuralTerimi = (sira: number): KuralTerimiFormu => ({
   katsayiKaynakAnahtari: "",
   katsayiDonemDavranisi: 1,
   katsayiDonemOfseti: 0,
+  asgariMutlakFark: 0,
 });
 
 const terimOzeti = (terim: KuralTerimiFormu) => {
@@ -243,7 +245,7 @@ const terimOzeti = (terim: KuralTerimiFormu) => {
   const karsilastirma = `${terim.kaynakAnahtari || "hesap"}.${degerAlaniEtiketi(terim.karsilastirmaDegerAlani)} [${donemEtiketi(terim.karsilastirmaDonemDavranisi, terim.karsilastirmaDonemOfseti)}; ${isaretEtiketi(terim.karsilastirmaIsaretPolitikasi)}]`;
   const fark = terim.farkYonu === 2 ? `${karsilastirma} − ${kaynak}` : `${kaynak} − ${karsilastirma}`;
   const hesap = terim.hesaplamaSekli === 2
-    ? `(${fark}) → ${isaretEtiketi(terim.sonucIsaretPolitikasi)}`
+    ? `(${fark}) → ${isaretEtiketi(terim.sonucIsaretPolitikasi)}${terim.asgariMutlakFark > 0 ? `; |fark| < ${terim.asgariMutlakFark} ise 0` : ""}`
     : kaynak;
   const dinamikKatsayi = terim.katsayiKaynakTuru
     ? ` × ${terim.katsayiKaynakAnahtari || "dinamik katsayı"} [${donemEtiketi(terim.katsayiDonemDavranisi, terim.katsayiDonemOfseti)}]`
@@ -794,6 +796,7 @@ const Page = () => {
         katsayiKaynakAnahtari: terim.katsayiKaynakAnahtari || "",
         katsayiDonemDavranisi: terim.katsayiDonemDavranisi ?? 1,
         katsayiDonemOfseti: terim.katsayiDonemOfseti ?? 0,
+        asgariMutlakFark: terim.asgariMutlakFark ?? 0,
       })),
     });
   };
@@ -827,14 +830,15 @@ const Page = () => {
       karsilastirmaIsaretPolitikasi: 1,
       farkYonu: 1,
       sonucIsaretPolitikasi: 1,
+      asgariMutlakFark: 0,
     };
     const sablonlar: Record<string, Partial<KuralTerimiFormu>> = {
       cariBakiye: { ...ortak, degerAlani: 1 },
       cariTransferHaric: { ...ortak, degerAlani: 7 },
       cariEksiOncekiTransferHaric: { ...ortak, hesaplamaSekli: 2, degerAlani: 7, karsilastirmaDegerAlani: 7 },
       oncekiEksiCariTransferHaric: { ...ortak, hesaplamaSekli: 2, degerAlani: 7, karsilastirmaDegerAlani: 7, farkYonu: 2 },
-      transferHaricArtis: { ...ortak, hesaplamaSekli: 2, degerAlani: 7, karsilastirmaDegerAlani: 7, sonucIsaretPolitikasi: 3 },
-      transferHaricAzalis: { ...ortak, hesaplamaSekli: 2, degerAlani: 7, karsilastirmaDegerAlani: 7, farkYonu: 2, sonucIsaretPolitikasi: 3 },
+      transferHaricArtis: { ...ortak, hesaplamaSekli: 2, degerAlani: 7, karsilastirmaDegerAlani: 7, sonucIsaretPolitikasi: 3, asgariMutlakFark: 1 },
+      transferHaricAzalis: { ...ortak, hesaplamaSekli: 2, degerAlani: 7, karsilastirmaDegerAlani: 7, farkYonu: 2, sonucIsaretPolitikasi: 3, asgariMutlakFark: 1 },
       kontrolBakiye: { ...ortak, degerAlani: 6 },
       transferHaricKontrol: { ...ortak, degerAlani: 10 },
       sunumEndeksliOncekiUretim: {
@@ -3177,6 +3181,9 @@ const Page = () => {
                                           <Grid item xs={12} md={2.25}>
                                             <FormControl size="small" fullWidth><InputLabel>Fark sonucu</InputLabel><Select label="Fark sonucu" value={terim.sonucIsaretPolitikasi} onChange={(event) => kuralTerimiGuncelle(index, { sonucIsaretPolitikasi: Number(event.target.value) })}><MenuItem value={1}>Olduğu gibi</MenuItem><MenuItem value={2}>Mutlak değer</MenuItem><MenuItem value={3}>Yalnız pozitif</MenuItem><MenuItem value={4}>Yalnız negatif</MenuItem><MenuItem value={5}>Ters işaret</MenuItem></Select></FormControl>
                                           </Grid>
+                                          <Grid item xs={12} md={2}>
+                                            <TextField size="small" label="Asgari mutlak fark" type="number" fullWidth inputProps={{ min: 0, step: "any" }} value={terim.asgariMutlakFark} onChange={(event) => kuralTerimiGuncelle(index, { asgariMutlakFark: Math.max(0, Number(event.target.value)) })} helperText="Bu değerin altındaki hareketler sıfır kabul edilir." />
+                                          </Grid>
                                         </Grid>
                                       </Paper>
                                     </Grid>
@@ -3187,7 +3194,7 @@ const Page = () => {
                               </Paper>
                             </Grid>
                           ))}
-                          <Grid item xs={12}><Stack direction="row" spacing={1}><Button variant="contained" size="small" onClick={yeniKuralAcik ? kuralOlustur : kuralKaydet} disabled={kuralKaydediliyor || (yeniKuralAcik && !yeniKuralKalemId) || kuralForm.terimler.some((terim) => !terim.kaynakAnahtari.trim() || terim.katsayi === 0 || (terim.katsayiKaynakTuru !== null && !terim.katsayiKaynakAnahtari.trim()))}>{kuralKaydediliyor ? <CircularProgress size={18} color="inherit" /> : yeniKuralAcik ? "Yeni kuralı kaydet" : "Kuralı kaydet"}</Button><Button size="small" onClick={() => { setDuzenlenenKuralId(0); setYeniKuralAcik(false); }} disabled={kuralKaydediliyor}>İptal</Button></Stack></Grid>
+                          <Grid item xs={12}><Stack direction="row" spacing={1}><Button variant="contained" size="small" onClick={yeniKuralAcik ? kuralOlustur : kuralKaydet} disabled={kuralKaydediliyor || (yeniKuralAcik && !yeniKuralKalemId) || kuralForm.terimler.some((terim) => !terim.kaynakAnahtari.trim() || terim.katsayi === 0 || terim.asgariMutlakFark < 0 || (terim.katsayiKaynakTuru !== null && !terim.katsayiKaynakAnahtari.trim()))}>{kuralKaydediliyor ? <CircularProgress size={18} color="inherit" /> : yeniKuralAcik ? "Yeni kuralı kaydet" : "Kuralı kaydet"}</Button><Button size="small" onClick={() => { setDuzenlenenKuralId(0); setYeniKuralAcik(false); }} disabled={kuralKaydediliyor}>İptal</Button></Stack></Grid>
                         </Grid>
                       )}
                     </Stack>
