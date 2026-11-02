@@ -116,7 +116,7 @@ export type FinansalTabloAnaTabloGecisi = {
   dogrulananTabloSayisi: number;
   dogrulananDonemSayisi: number;
   durum: 1 | 2 | 3;
-  eskiAkisEtkin: boolean;
+  yeniMotorEtkin: boolean;
   hazirlikTarihi: string;
   etkinlestirmeTarihi?: string | null;
   geriAlmaTarihi?: string | null;
@@ -300,9 +300,7 @@ export const getFinansalTabloUretimi = (token: string, uretimId: string) =>
 export const getFinansalTabloUretimGecmisi = (token: string, limit = 100) =>
   jsonGet<FinansalTabloUretimArsivSonucu[]>(token, `/Uretimler?limit=${Math.min(500, Math.max(1, limit))}`);
 
-export type FinansalTabloPilotDurumApiSonucu = {
-  yeniMotorEtkin: boolean;
-  kontrolluPilotOnayi: boolean;
+export type FinansalTabloSistemDurumApiSonucu = {
   kgkTaramaZamanlayiciEtkin: boolean;
   hangfireDevreDisi: boolean;
   hangfireGelistirmedeDevreDisi: boolean;
@@ -319,8 +317,8 @@ export type FinansalTabloPilotDurumApiSonucu = {
   kontrolTarihi: string;
 };
 
-export const getFinansalTabloPilotDurumu = (token: string) =>
-  jsonGet<FinansalTabloPilotDurumApiSonucu>(token, "/PilotDurumu");
+export const getFinansalTabloSistemDurumu = (token: string) =>
+  jsonGet<FinansalTabloSistemDurumApiSonucu>(token, "/SistemDurumu");
 
 export type FinansalTabloKaliciArsivDurumApiSonucu = {
   dbKaliciArsivEtkin: boolean;
@@ -413,62 +411,6 @@ export const getFinansalTabloArsivKarsilastirmasi = (token: string, limit = 100)
     token,
     `/KaliciArsivKarsilastirma?limit=${Math.min(500, Math.max(1, limit))}`
   );
-
-export type FinansalTabloGolgeKarsilastirmaIstegi = {
-  kaynakPaketAnahtari: string;
-  kaynakPaketSha256: string;
-  legacyMotorSurumu: string;
-  yeniMotorSurumu: string;
-  yeniTanimSetiSabitAnahtari: string;
-  yeniTanimSurumu: string;
-  girdiSabitAnahtari: string;
-  girdiSha256: string;
-  calistirmaBaglami: FinansalTabloUretimIstegi["calistirmaBaglami"];
-  politikaKodu: string;
-  mutlakTolerans: number;
-  yeniTabloSabitAnahtari: string;
-  yeniDonemSabitAnahtari: string;
-  yeniRaporlamaStandardi?: number | null;
-  yeniKapsam?: number | null;
-  yeniDonusumTipi?: number | null;
-  yeniTabloTuru?: number | null;
-  yeniNakitAkisYontemi?: number | null;
-  yeniGecerlilikTarihi?: string | null;
-  yeniTanimSnapshotSha256?: string;
-};
-
-export type FinansalTabloGolgeKarsilastirmaSonucu = {
-  durum: number;
-  basariliMi: boolean;
-  karsilastirma?: {
-    durum: number;
-    sonucSha256?: string | null;
-    ozet?: { legacyKayitSayisi: number; yeniKayitSayisi: number; eslesenAnahtarSayisi: number; birlesikAnahtarSayisi: number; siniflar: Array<{ sinif: number; adet: number }> } | null;
-    farklar: Array<{ anahtar: { tabloSabitAnahtari: string; hedefTuru: number; hedefSabitAnahtari: string; donemSabitAnahtari: string }; sinif: number; mutlakFark?: number | null; legacy?: { deger?: number | null } | null; yeni?: { deger?: number | null } | null }>;
-    sorunlar: Array<{ kod: number; konum: string; aciklama: string }>;
-  } | null;
-  sorunlar: Array<{ kod: number; asama: number; konum: string; aciklama: string }>;
-};
-
-export const compareFinansalTabloGolge = async (
-  token: string,
-  istek: FinansalTabloGolgeKarsilastirmaIstegi
-) => {
-  const response = await fetch(`${url}/FinansalTabloYonetimi/Golge/Karsilastir`, {
-    method: "POST",
-    headers: {
-      accept: "application/json",
-      "Content-Type": "application/json",
-      Authorization: `Bearer ${token}`,
-    },
-    body: JSON.stringify(istek),
-  });
-  const payload = await response.json().catch(() => ({}));
-  if (!response.ok) {
-    throw new Error(payload?.detail || payload?.message || payload?.Message || "Legacy/yeni motor gölge karşılaştırması çalıştırılamadı.");
-  }
-  return payload as FinansalTabloGolgeKarsilastirmaSonucu;
-};
 
 export const replayFinansalTabloUretimi = async (
   token: string,
@@ -609,7 +551,7 @@ export type FinansalSurumKarsilastirma = {
 
 export type FinansalSurumYonetimiDurumu = {
   etkin: boolean;
-  eskiAkisKorunuyor: boolean;
+  mevcutRaporlarKorunuyor: boolean;
   acikSurumSecimiZorunlu: boolean;
   aciklama: string;
 };
