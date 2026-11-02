@@ -242,8 +242,8 @@ const AuthLogin: React.FC<LoginType> = ({ title, subtitle, subtext }) => {
       return;
     }
 
-    if (requiresOtp && !/^\d{8}$/.test(otpCode)) {
-      enqueueSnackbar("8 haneli güvenlik kodunu girin.", {
+    if (requiresOtp && !/^[A-Za-z0-9]{8}$/.test(otpCode)) {
+      enqueueSnackbar("Harf ve rakamlardan oluşan 8 karakterli güvenlik kodunu girin.", {
         variant: "warning",
         autoHideDuration: 3000,
       });
@@ -314,11 +314,11 @@ const AuthLogin: React.FC<LoginType> = ({ title, subtitle, subtext }) => {
                 fullWidth
                 autoFocus
                 value={otpCode}
-                placeholder="8 haneli kod"
+                placeholder="8 karakterli kod"
                 onChange={(event: React.ChangeEvent<HTMLInputElement>) =>
-                  setOtpCode(event.target.value.replace(/\D/g, "").slice(0, 8))
+                  setOtpCode(event.target.value.replace(/[^A-Za-z0-9]/g, "").slice(0, 8))
                 }
-                inputProps={{ maxLength: 8, inputMode: "numeric", pattern: "[0-9]*" }}
+                inputProps={{ maxLength: 8, inputMode: "text", pattern: "[A-Za-z0-9]{8}", autoComplete: "one-time-code" }}
                 InputProps={{
                   startAdornment: (
                     <InputAdornment position="start">
@@ -328,7 +328,7 @@ const AuthLogin: React.FC<LoginType> = ({ title, subtitle, subtext }) => {
                 }}
               />
               <Typography variant="caption" color="text.secondary" mt={0.75} display="block">
-                E-posta adresinize gönderilen 8 haneli kodu girin.
+                E-posta adresinize gönderilen 8 karakterli kodu girin. Kod harf ve rakam içerebilir.
               </Typography>
             </Box>
           ) : null}
