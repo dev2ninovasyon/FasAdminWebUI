@@ -1,6 +1,9 @@
 "use client";
 
 import {
+  Accordion,
+  AccordionDetails,
+  AccordionSummary,
   Alert,
   Box,
   Button,
@@ -14,7 +17,7 @@ import {
   Select,
   Stack,
   Step,
-  StepButton,
+  StepLabel,
   Stepper,
   Switch,
   Table,
@@ -25,6 +28,7 @@ import {
   TextField,
   Typography,
 } from "@mui/material";
+import ExpandMoreIcon from "@mui/icons-material/ExpandMore";
 import Grid from "@mui/material/GridLegacy";
 import { useEffect, useMemo, useState } from "react";
 import { usePathname, useRouter } from "next/navigation";
@@ -269,14 +273,14 @@ const tabloTuruEtiketi = (tabloTuru: number | string) => {
 
 const finansalTabloAdimlari = [
   {
-    baslik: "Tanımı seç",
-    aciklama: "Raporlama standardını seçin, taslak veya yayımlanmış sürümün içeriğini kontrol edin.",
-    ipucu: "İlk kullanımda mevcut tanım setini ve sürümü seçmeniz yeterlidir. Kalem ve formül düzenleme yalnız taslak sürümlerde yapılır.",
+    baslik: "Tanımı düzenle",
+    aciklama: "Tanım seti ve yayındaki sürüm otomatik seçilir. Formül değişikliği için taslak oluşturun.",
+    ipucu: "Filtre ve eski sürüm seçimi isteğe bağlıdır; normal kullanımda tek tanım seti seçimi yeterlidir.",
   },
   {
-    baslik: "Üretimi test et",
-    aciklama: "İzole test mizanı oluşturun ve yeni motor sonucunu inceleyin.",
-    ipucu: "Test mizanı gerçek mizanı veya üretim arşivini değiştirmez. Önce test mizanını oluşturup ardından önizleme çalıştırın.",
+    baslik: "Test et ve sonucu incele",
+    aciklama: "Örnek mizanla otomatik kontrol yapın; sonuçlar gerçek raporları değiştirmez.",
+    ipucu: "Elle mizan girişi ve üretim/arşiv işlemleri yalnız gelişmiş araçlarda bulunur.",
   },
 ] as const;
 
@@ -294,6 +298,8 @@ const Page = () => {
       : []),
   ];
   const [aktifAdim, setAktifAdim] = useState(kgkSayfasi ? 2 : 0);
+  const [tanimFiltreleriAcik, setTanimFiltreleriAcik] = useState(false);
+  const [surumGecmisiAcik, setSurumGecmisiAcik] = useState(false);
   const [kgkGelismisAraclarAcik, setKgkGelismisAraclarAcik] = useState(false);
   const [teknikDuzenlemeAraclariAcik, setTeknikDuzenlemeAraclariAcik] = useState(false);
   const [testAyrintilariAcik, setTestAyrintilariAcik] = useState(false);
@@ -1747,11 +1753,19 @@ const Page = () => {
   );
   const teknikDogrulamaBasariliMi = teknikDogrulamaGuncelMi && dogrulamaSonucu?.gecerliMi === true;
   const onizlemeBasariliMi = uretimOnizlemeSonucu?.basariliMi === true;
+  const testSonucuSorunluMu = Boolean(
+    uretimOnizlemeSonucu && (
+      !uretimOnizlemeSonucu.basariliMi ||
+      uretimOnizlemeSonucu.sonuclar.length === 0 ||
+      uretimOnizlemeSonucu.sonuclar.some((sonuc) => sonuc.durum !== 1)
+    )
+  );
+  const ilkTestSorunu = uretimOnizlemeSonucu?.sonuclar.find((sonuc) => sonuc.durum !== 1);
   const yonlendirmeYukleniyor = tanimYukleniyor || dogrulamaYukleniyor || testMizanYukleniyor || uretimOnizlemeYukleniyor;
 
   const akilliYonlendirme = useMemo(() => {
     if (tanimYukleniyor) return { seviye: "info" as const, baslik: "Tanımlar kontrol ediliyor", aciklama: "Uygun tanım seti ve sürüm otomatik seçiliyor.", eylem: "bekle", dugme: "Kontrol ediliyor" };
-    if (!secilenSet || !secilenSurum) return { seviye: "error" as const, baslik: "Kullanılabilir tanım bulunamadı", aciklama: "Filtreleri temizleyin veya aktif tanım setlerini kontrol edin.", eylem: "tanim", dugme: "Tanım seçimine dön" };
+    if (!secilenSet || !secilenSurum) return { seviye: "error" as const, baslik: "Kullanılabilir tanım bulunamadı", aciklama: "Tanım arama filtrelerini açın veya aktif bir tanım seti seçin.", eylem: "tanim", dugme: "Tanım seçimine dön" };
     if (seciliSurumTaslakMi && !teknikDogrulamaGuncelMi) return { seviye: "warning" as const, baslik: "Otomatik test hazır", aciklama: "Sistem tanımları doğrulayacak, izole test mizanını hazırlayacak ve önizlemeyi tek işlemde çalıştıracak.", eylem: "otomatik-test", dugme: "Otomatik testi çalıştır" };
     if (seciliSurumTaslakMi && !teknikDogrulamaBasariliMi) return { seviye: "error" as const, baslik: "Düzeltilmesi gereken tanımlar var", aciklama: "Sorunlu tablo ve formüller aşağıda gösterildi. Düzeltmeden yayınlama yapılamaz.", eylem: "tanim", dugme: "Sorunları incele" };
     if (!seciliTestMizani) return { seviye: "info" as const, baslik: "İzole test başlatılabilir", aciklama: "Sistem dengeli örnek mizanı hazırlayıp salt-okunur önizlemeyi kendisi çalıştıracak. Gerçek veriler ve mevcut raporlar etkilenmeyecek.", eylem: "otomatik-test", dugme: "Otomatik testi çalıştır" };
@@ -1759,24 +1773,32 @@ const Page = () => {
     return { seviye: "success" as const, baslik: "Admin testi başarıyla tamamlandı", aciklama: `${uretimOnizlemeSonucu?.sonuclar.length ?? 0} finansal tablo sonucu üretildi; mevcut raporlar ve üretim arşivi değiştirilmedi.`, eylem: "kgk", dugme: "KGK kontrolüne geç" };
   }, [tanimYukleniyor, secilenSet, secilenSurum, seciliSurumTaslakMi, teknikDogrulamaGuncelMi, teknikDogrulamaBasariliMi, seciliTestMizani, onizlemeBasariliMi, uretimOnizlemeSonucu]);
 
-  const onerilenIslemiCalistir = async () => {
-    if (akilliYonlendirme.eylem === "tanim") return setAktifAdim(0);
-    if (akilliYonlendirme.eylem === "otomatik-test") {
+  const otomatikTestiCalistir = async () => {
+    if (!secilenSet || !secilenSurum) {
       setAktifAdim(0);
-      let dogrulananSnapshotSha256 = "";
-      if (seciliSurumTaslakMi && !teknikDogrulamaGuncelMi) {
-        const dogrulama = await teknikDogrula();
-        if (!dogrulama?.gecerliMi) return;
-        dogrulananSnapshotSha256 = dogrulama.tablolar.find(
-          (tablo) => tablo.tabloId === secilenKalemTablosu?.id
-        )?.snapshotSha256 || "";
-      }
-      setAktifAdim(1);
-      const testMizani = seciliTestMizani || await testMizaniOlustur();
-      if (!testMizani) return;
-      await finansalTabloOnizle(testMizani, dogrulananSnapshotSha256);
       return;
     }
+
+    setTanimHatasi("");
+    setAktifAdim(0);
+    let dogrulananSnapshotSha256 = "";
+    if (seciliSurumTaslakMi && !teknikDogrulamaGuncelMi) {
+      const dogrulama = await teknikDogrula();
+      if (!dogrulama?.gecerliMi) return;
+      dogrulananSnapshotSha256 = dogrulama.tablolar.find(
+        (tablo) => tablo.tabloId === secilenKalemTablosu?.id
+      )?.snapshotSha256 || "";
+    }
+
+    setAktifAdim(1);
+    const testMizani = seciliTestMizani || await testMizaniOlustur();
+    if (!testMizani) return;
+    await finansalTabloOnizle(testMizani, dogrulananSnapshotSha256);
+  };
+
+  const onerilenIslemiCalistir = async () => {
+    if (akilliYonlendirme.eylem === "tanim") return setAktifAdim(0);
+    if (akilliYonlendirme.eylem === "otomatik-test") return otomatikTestiCalistir();
     if (akilliYonlendirme.eylem === "kgk") {
       router.push("/FinansalTabloYonetimi/KgkGuncellemeleri");
     }
@@ -1805,15 +1827,13 @@ const Page = () => {
               Finansal tablo hazırlama adımları
             </Typography>
             <Typography variant="body2" color="text.secondary">
-              Tanımı seçin, formülleri sürümleyin ve örnek mizanla üretimi test edin. KGK güncellemeleri ayrı ekrandan yönetilir.
+              Tanım otomatik seçilir. Gerekirse taslakta formülleri düzenleyin; ardından örnek mizanla test edin. KGK güncellemeleri ayrı ekrandadır.
             </Typography>
           </Box>
-          <Stepper activeStep={aktifAdim} nonLinear alternativeLabel sx={{ overflowX: "auto", pb: 0.5 }}>
+          <Stepper activeStep={aktifAdim} alternativeLabel sx={{ overflowX: "auto", pb: 0.5 }}>
             {finansalTabloAdimlari.map((adim, index) => (
               <Step key={adim.baslik} completed={tamamlananAdimlar[index]}>
-                <StepButton color="inherit" onClick={() => setAktifAdim(index)}>
-                  {adim.baslik}
-                </StepButton>
+                <StepLabel>{adim.baslik}</StepLabel>
               </Step>
             ))}
           </Stepper>
@@ -2104,16 +2124,74 @@ const Page = () => {
       </ParentCard>
       </Box>
       <Box sx={{ display: aktifAdim === 1 ? "block" : "none" }}>
+      <Paper variant="outlined" sx={{ p: 2, mb: 2 }}>
+        {uretimOnizlemeSonucu ? (
+          <Stack spacing={1.25}>
+            <Alert severity={testSonucuSorunluMu ? "warning" : "success"}>
+              <strong>{testSonucuSorunluMu ? "Testte incelenmesi gereken sonuçlar var" : "Test başarıyla tamamlandı"}</strong>
+              <br />
+              {uretimOnizlemeSonucu.aciklama || "Örnek mizan, seçili tanım ve formüllerle kontrol edildi. Gerçek finansal tablolar değiştirilmedi."}
+              {ilkTestSorunu && (
+                <>
+                  <br />
+                  İlk bulgu: {ilkTestSorunu.hataKodu || ilkTestSorunu.aciklama || "Bazı formül sonuçları üretilemedi."}
+                </>
+              )}
+            </Alert>
+            <Stack direction="row" spacing={1} alignItems="center" flexWrap="wrap" useFlexGap>
+              <Chip size="small" label={`${uretimOnizlemeSonucu.sonuclar.length} sonuç`} />
+              <Chip
+                size="small"
+                color={testSonucuSorunluMu ? "warning" : "success"}
+                label={`${uretimOnizlemeSonucu.sonuclar.filter((sonuc) => sonuc.durum === 1).length} başarılı`}
+              />
+              <Typography variant="caption" color="text.secondary">
+                Sürüm: {uretimOnizlemeSonucu.motorSurumu} · Test mizanı: {seciliTestMizani?.ad || "örnek mizan"}
+              </Typography>
+            </Stack>
+            <Stack direction="row" spacing={1} flexWrap="wrap" useFlexGap>
+              <Button size="small" variant="outlined" onClick={() => setTestAyrintilariAcik(true)}>
+                Sonuç ayrıntılarını aç
+              </Button>
+              <Button size="small" onClick={() => setAktifAdim(0)}>
+                Tanım ve formüllere dön
+              </Button>
+              <Button
+                size="small"
+                variant="contained"
+                onClick={() => void otomatikTestiCalistir()}
+                disabled={yonlendirmeYukleniyor}
+              >
+                {yonlendirmeYukleniyor ? <CircularProgress size={16} color="inherit" /> : "Testi yeniden çalıştır"}
+              </Button>
+            </Stack>
+          </Stack>
+        ) : (
+          <Stack spacing={1.25}>
+            <Alert severity="info">
+              Bu adım gerçek finansal tabloları değiştirmeyen örnek mizan testidir. Testi başlatın; tanımlar doğrulanır, örnek mizan hazırlanır ve sonuçlar burada gösterilir.
+            </Alert>
+            <Button
+              variant="contained"
+              onClick={() => void otomatikTestiCalistir()}
+              disabled={yonlendirmeYukleniyor || !secilenSurum}
+              sx={{ alignSelf: { xs: "stretch", sm: "flex-start" } }}
+            >
+              {yonlendirmeYukleniyor ? <CircularProgress size={18} color="inherit" /> : "Örnek mizanla otomatik test et"}
+            </Button>
+          </Stack>
+        )}
+      </Paper>
       <Paper variant="outlined" sx={{ p: 1.5, mb: 2 }}>
         <Stack direction={{ xs: "column", sm: "row" }} spacing={1.5} alignItems={{ sm: "center" }}>
           <Box sx={{ flexGrow: 1 }}>
-            <Typography variant="subtitle2">Test ayrıntıları</Typography>
+            <Typography variant="subtitle2">Gelişmiş test ve üretim araçları</Typography>
             <Typography variant="body2" color="text.secondary">
-              Normal kullanımda yukarıdaki otomatik test yeterlidir. Mizan satırları, teknik üretim girdileri ve motor sonuçları yalnız inceleme gerektiğinde açılır.
+              Mizan satırlarını elle değiştirme, gerçek üretim ve arşiv işlemleri yalnız gerektiğinde açılır. Normal test akışı yukarıdaki tek düğmeyle tamamlanır.
             </Typography>
           </Box>
           <Button size="small" variant="outlined" onClick={() => setTestAyrintilariAcik((onceki) => !onceki)}>
-            {testAyrintilariAcik ? "Ayrıntıları gizle" : "Ayrıntıları göster"}
+            {testAyrintilariAcik ? "Gelişmiş araçları gizle" : "Gelişmiş araçları göster"}
           </Button>
         </Stack>
       </Paper>
@@ -2478,11 +2556,20 @@ const Page = () => {
       </Box>
       </Box>
       <Box sx={{ display: aktifAdim === 0 ? "block" : "none" }}>
-      <ParentCard title="Sürüm ve tanım görünümü">
+      <ParentCard title="1. Tanımı seç ve düzenle">
         <Stack spacing={2}>
           <Typography variant="body2" color="text.secondary">
-            Yayındaki ve taslak tanımları standart, kapsam ve dönüşüm tipine göre filtreleyin. Bu okuma modeli bir sonraki adımda taslak tanım editörünün kaynağıdır.
+            Kullanılacak tanım seti otomatik seçilir. Formül değişikliği gerekiyorsa taslak oluşturup yalnız ilgili tablo ve kalemi düzenleyin.
           </Typography>
+          <Accordion
+            disableGutters
+            expanded={tanimFiltreleriAcik}
+            onChange={(_, acik) => setTanimFiltreleriAcik(acik)}
+          >
+            <AccordionSummary expandIcon={<ExpandMoreIcon />}>
+              <Typography variant="body2" fontWeight={600}>Tanım arama filtreleri</Typography>
+            </AccordionSummary>
+            <AccordionDetails>
           <Grid container spacing={1.5}>
             <Grid item xs={12} sm={6} md={3}>
               <FormControl fullWidth size="small">
@@ -2517,11 +2604,13 @@ const Page = () => {
               </FormControl>
             </Grid>
           </Grid>
+            </AccordionDetails>
+          </Accordion>
           {tanimYukleniyor && <CircularProgress size={22} />}
           {!tanimYukleniyor && tanimSetleri.length === 0 && <Alert severity="info">Filtreye uyan tanım seti bulunamadı.</Alert>}
           {tanimSetleri.length > 0 && (
-            <Grid container spacing={2}>
-              <Grid item xs={12} md={4}>
+            <Grid container spacing={2} alignItems="center">
+              <Grid item xs={12} md={6}>
                 <FormControl fullWidth size="small">
                   <InputLabel>Tanım seti</InputLabel>
                   <Select label="Tanım seti" value={secilenSet ? secilenSetId : ""} onChange={(event) => tanimSetiSec(Number(event.target.value))}>
@@ -2529,13 +2618,15 @@ const Page = () => {
                   </Select>
                 </FormControl>
               </Grid>
-              <Grid item xs={12} md={8}>
-                <FormControl fullWidth size="small">
-                  <InputLabel>Sürüm</InputLabel>
-                  <Select label="Sürüm" value={secilenSurum ? secilenSurumId : ""} onChange={(event) => surumSec(Number(event.target.value))}>
-                    {(secilenSet?.surumler || []).map((surum) => <MenuItem key={surum.id} value={surum.id}>{surum.etiket} · #{surum.surumNo} · {surumDurumKodu(surum.durum) === 3 ? "Yayında" : surumDurumKodu(surum.durum) === 1 ? "Taslak" : surumDurumKodu(surum.durum) === 2 ? "Doğrulandı" : "Kaldırıldı"}</MenuItem>)}
-                  </Select>
-                </FormControl>
+              <Grid item xs={12} md={6}>
+                {secilenSurum ? (
+                  <Alert severity={surumDurumKodu(secilenSurum.durum) === 1 ? "warning" : "success"} sx={{ py: 0.25 }}>
+                    Kullanılan sürüm: <strong>#{secilenSurum.surumNo} · {secilenSurum.etiket}</strong>
+                    {surumDurumKodu(secilenSurum.durum) === 1 ? " · Taslak" : " · Yayında"}
+                  </Alert>
+                ) : (
+                  <Alert severity="info" sx={{ py: 0.25 }}>Seçilen tanım setinde kullanılabilir sürüm yok.</Alert>
+                )}
               </Grid>
             </Grid>
           )}
@@ -2549,6 +2640,15 @@ const Page = () => {
             {surumYonetimiDurumu?.aciklama || "Sürüm yönetimi durumu kontrol ediliyor."}
           </Alert>
           {secilenSet && (
+            <Accordion
+              disableGutters
+              expanded={surumGecmisiAcik}
+              onChange={(_, acik) => setSurumGecmisiAcik(acik)}
+            >
+              <AccordionSummary expandIcon={<ExpandMoreIcon />}>
+                <Typography variant="body2" fontWeight={600}>Sürüm geçmişi ve eski sürümler</Typography>
+              </AccordionSummary>
+              <AccordionDetails>
             <Paper variant="outlined" sx={{ overflowX: "auto" }}>
               <Box sx={{ px: 1.5, py: 1 }}>
                 <Typography variant="subtitle2">Tanım ve formül sürüm geçmişi</Typography>
@@ -2581,6 +2681,8 @@ const Page = () => {
                 </TableBody>
               </Table>
             </Paper>
+              </AccordionDetails>
+            </Accordion>
           )}
           {secilenSurum && (
             <Paper variant="outlined" sx={{ p: 1.5 }}>
