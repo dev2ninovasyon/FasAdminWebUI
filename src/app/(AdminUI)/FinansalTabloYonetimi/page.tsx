@@ -1510,18 +1510,21 @@ const Page = ({ editorSurumId }: PageProps) => {
       .filter((kural) => kural.aktifMi)
       .flatMap((kural) => kural.terimler)
       .find((terim) => (terim.kaynakTuru === 1 || terim.kaynakTuru === 2)
-        && /^\d+(?:\.\d+)*$/.test(terim.kaynakAnahtari.trim()));
+        && /^\d+(?:\.\d+)*\.?$/.test(terim.kaynakAnahtari.trim()));
     const yil = Number(uretimYil);
     if (!kaynak || !Number.isInteger(yil) || yil < 1902 || yil > 2200) return null;
+    const kaynakKodu = kaynak.kaynakAnahtari.trim();
     const hesapKodu = kaynak.kaynakTuru === 2
-      ? `${kaynak.kaynakAnahtari.trim()}.01`
-      : kaynak.kaynakAnahtari.trim();
+      ? `${kaynakKodu}${kaynakKodu.endsWith(".") ? "" : "."}01`
+      : kaynakKodu;
     const karsiHesap = hesapKodu === "999999.99" ? "888888.88" : "999999.99";
+    const alacakYonu = [3, 5, 9].includes(kaynak.degerAlani)
+      || ([1, 6, 7, 10].includes(kaynak.degerAlani) && kaynak.isaretPolitikasi === 4);
     return [yil, yil - 1, yil - 2].flatMap((satirYili, index) => {
       const tutar = 1000 - index * 200;
       return [
-        { yil: satirYili, detayKodu: hesapKodu, hesapAdi: "Formül test hesabı", borc: tutar, alacak: 0 },
-        { yil: satirYili, detayKodu: karsiHesap, hesapAdi: "Dengeleme hesabı", borc: 0, alacak: tutar },
+        { yil: satirYili, detayKodu: hesapKodu, hesapAdi: "Formül test hesabı", borc: alacakYonu ? 0 : tutar, alacak: alacakYonu ? tutar : 0 },
+        { yil: satirYili, detayKodu: karsiHesap, hesapAdi: "Dengeleme hesabı", borc: alacakYonu ? tutar : 0, alacak: alacakYonu ? 0 : tutar },
       ];
     });
   };

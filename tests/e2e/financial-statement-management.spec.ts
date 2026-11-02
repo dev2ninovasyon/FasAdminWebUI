@@ -121,7 +121,7 @@ const versionDetail = {
         donemDavranisi: 1,
         donemOfseti: 0,
         katsayi: 1,
-        isaretPolitikasi: 1,
+        isaretPolitikasi: 4,
         zorunluMu: true,
         hesaplamaSekli: 1,
         karsilastirmaDegerAlani: 1,
@@ -475,10 +475,10 @@ test("admin girişinden güvenli doğrulama ve sürüm aktivasyonuna kadar çal�
   expect(createdTrialBalance.satirlar).toHaveLength(6);
   expect(createdTrialBalance.satirlar[0]).toMatchObject({
     detayKodu: "314.01",
-    borc: 1000,
-    alacak: 0,
-    bakiye: 1000,
-    bakiyeTransferFisiHaric: 1000,
+    borc: 0,
+    alacak: 1000,
+    bakiye: -1000,
+    bakiyeTransferFisiHaric: -1000,
     paraBirimi: "TRY",
   });
   expect(createdTrialBalance.satirlar.map((satir: Record<string, unknown>) => satir.yil)).toEqual([
@@ -486,7 +486,7 @@ test("admin girişinden güvenli doğrulama ve sürüm aktivasyonuna kadar çal�
     createdTrialBalance.yil - 1, createdTrialBalance.yil - 1,
     createdTrialBalance.yil - 2, createdTrialBalance.yil - 2,
   ]);
-  expect(createdTrialBalance.satirlar[1]).toMatchObject({ detayKodu: "999999.99", borc: 0, alacak: 1000 });
+  expect(createdTrialBalance.satirlar[1]).toMatchObject({ detayKodu: "999999.99", borc: 1000, alacak: 0 });
   await expect(page.getByText("Test başarıyla tamamlandı", { exact: true })).toBeVisible();
   await page.getByRole("button", { name: "Sonuç ayrıntılarını aç" }).click();
   await expect(page.getByText("FDT · TOPLAM_VARLIKLAR", { exact: true })).toBeVisible();
