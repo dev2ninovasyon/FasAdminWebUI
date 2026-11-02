@@ -30,7 +30,8 @@ import {
 } from "@mui/material";
 import ExpandMoreIcon from "@mui/icons-material/ExpandMore";
 import Grid from "@mui/material/GridLegacy";
-import { useEffect, useMemo, useState } from "react";
+import { format } from "date-fns";
+import { useEffect, useRef, useState } from "react";
 import { usePathname, useRouter } from "next/navigation";
 import PageContainer from "@/app/components/Container/PageContainer";
 import Breadcrumb from "@/app/components/Layout/Shared/Breadcrumb/Breadcrumb";
@@ -274,15 +275,21 @@ const tabloTuruEtiketi = (tabloTuru: number | string) => {
 const finansalTabloAdimlari = [
   {
     baslik: "Tanımı düzenle",
-    aciklama: "Tanım seti ve yayındaki sürüm otomatik seçilir. Formül değişikliği için taslak oluşturun.",
-    ipucu: "Filtre ve eski sürüm seçimi isteğe bağlıdır; normal kullanımda tek tanım seti seçimi yeterlidir.",
+    aciklama: "Varsa açık taslak, yoksa yayındaki sürüm seçilir. Formül değişikliği için taslak oluşturun.",
   },
   {
-    baslik: "Test et ve sonucu incele",
-    aciklama: "Örnek mizanla otomatik kontrol yapın; sonuçlar gerçek raporları değiştirmez.",
-    ipucu: "Elle mizan girişi ve üretim/arşiv işlemleri yalnız gelişmiş araçlarda bulunur.",
+    baslik: "Test et ve devreye al",
+    aciklama: "Örnek mizanla kontrol edin. Taslak başarılıysa bu adımda devreye alın.",
   },
 ] as const;
+
+const varsayilanSurumuSec = (set: FinansalTanimSeti | undefined, taslakOncelikliMi: boolean) => {
+  const birincilDurum = taslakOncelikliMi ? 1 : 3;
+  const ikincilDurum = taslakOncelikliMi ? 3 : 1;
+  return set?.surumler.find((surum) => surumDurumKodu(surum.durum) === birincilDurum)
+    || set?.surumler.find((surum) => surumDurumKodu(surum.durum) === ikincilDurum)
+    || set?.surumler[0];
+};
 
 const Page = () => {
   const user = useSelector((state: AppState) => state.userReducer);
@@ -328,10 +335,10 @@ const Page = () => {
   const [karsilastirmaSonucu, setKarsilastirmaSonucu] = useState<FinansalSurumKarsilastirma | null>(null);
   const [karsilastirmaYukleniyor, setKarsilastirmaYukleniyor] = useState(false);
   const [surumYonetimiDurumu, setSurumYonetimiDurumu] = useState<FinansalSurumYonetimiDurumu | null>(null);
-  const [surumYonetimiYukleniyor, setSurumYonetimiYukleniyor] = useState(false);
   const [devreyeAlmaYukleniyor, setDevreyeAlmaYukleniyor] = useState(false);
   const [devreyeAlmaAciklamasi, setDevreyeAlmaAciklamasi] = useState("");
-  const [devreyeAlmaTarihi, setDevreyeAlmaTarihi] = useState(new Date().toISOString().slice(0, 10));
+  const [devreyeAlmaTarihi, setDevreyeAlmaTarihi] = useState(() => format(new Date(), "yyyy-MM-dd"));
+  const [sonDevreyeAlinanSurumId, setSonDevreyeAlinanSurumId] = useState<number | null>(null);
   const [surumYonetimiMesaji, setSurumYonetimiMesaji] = useState("");
   const [kgkKontrolSonucu, setKgkKontrolSonucu] = useState<KgkFormatKontrolSonucu | null>(null);
   const [kgkKaynakDonemleri, setKgkKaynakDonemleri] = useState<KgkKaynakDonemi[]>([]);
@@ -406,20 +413,19 @@ const Page = () => {
   const [yeniKuralAcik, setYeniKuralAcik] = useState(false);
   const [yeniKuralKalemId, setYeniKuralKalemId] = useState(0);
   const [kuralForm, setKuralForm] = useState({ hesaplamaTuru: 1, isaretPolitikasi: 1, bosDegerPolitikasi: 1, sabitDeger: "", aciklama: "", hamFormul: "", kgkExcelHedefi: "", aktifMi: true, terimler: [] as KuralTerimiFormu[] });
+  const secilenSetIdRef = useRef(0);
 
+  /* eslint-disable react-hooks/set-state-in-effect -- Route mode changes the visible step of this shared page. */
   useEffect(() => {
     setAktifAdim((onceki) => kgkSayfasi ? 2 : onceki === 2 ? 0 : onceki);
   }, [kgkSayfasi]);
+  /* eslint-enable react-hooks/set-state-in-effect */
 
-  useEffect(() => {
-    if (tanimHatasi) setSurumYonetimiMesaji("");
-  }, [tanimHatasi]);
-
+  /* eslint-disable react-hooks/set-state-in-effect -- Loading state is reset when a new server read starts. */
   useEffect(() => {
     if (!user.token) return;
     let etkin = true;
     setTanimYukleniyor(true);
-    setTanimHatasi("");
     getFinansalTanimSetleri(user.token, {
       raporlamaStandardi: tanimFiltresi.raporlamaStandardi || undefined,
       kapsam: tanimFiltresi.kapsam || undefined,
@@ -428,10 +434,12 @@ const Page = () => {
     })
       .then((data) => {
         if (!etkin) return;
+        setTanimHatasi("");
         setTanimSetleri(data);
-        const ilkSet = data.find((set) => set.id === secilenSetId) || data[0];
-        setSecilenSetId(ilkSet?.id || 0);
-        const ilkSurum = ilkSet?.surumler?.find((surum) => surumDurumKodu(surum.durum) === 3) || ilkSet?.surumler?.[0];
+        const ilkSet = data.find((set) => set.id === secilenSetIdRef.current) || data[0];
+        secilenSetIdRef.current = ilkSet?.id || 0;
+        setSecilenSetId(secilenSetIdRef.current);
+        const ilkSurum = varsayilanSurumuSec(ilkSet, !kgkSayfasi);
         setSecilenSurumId(ilkSurum?.id || 0);
       })
       .catch((error) => {
@@ -443,21 +451,21 @@ const Page = () => {
     return () => {
       etkin = false;
     };
-  }, [user.token, tanimFiltresi]);
+  }, [user.token, tanimFiltresi, kgkSayfasi]);
+  /* eslint-enable react-hooks/set-state-in-effect */
 
   useEffect(() => {
     if (!user.token) return;
     let etkin = true;
-    setSurumYonetimiYukleniyor(true);
     getFinansalSurumYonetimiDurumu(user.token)
       .then((data) => etkin && setSurumYonetimiDurumu(data))
-      .catch((error) => etkin && setTanimHatasi(error instanceof Error ? error.message : "Sürüm yönetimi durumu okunamadı."))
-      .finally(() => etkin && setSurumYonetimiYukleniyor(false));
+      .catch((error) => etkin && setTanimHatasi(error instanceof Error ? error.message : "Sürüm yönetimi durumu okunamadı."));
     return () => {
       etkin = false;
     };
   }, [user.token]);
 
+  /* eslint-disable react-hooks/set-state-in-effect -- Clear details immediately when the selected scope has no version. */
   useEffect(() => {
     if (!user.token || !secilenSurumId) {
       setSurumDetayi(null);
@@ -473,6 +481,7 @@ const Page = () => {
       etkin = false;
     };
   }, [user.token, secilenSurumId]);
+  /* eslint-enable react-hooks/set-state-in-effect */
 
   const secilenSet = tanimSetleri.find((set) => set.id === secilenSetId);
   const secilenSurum = secilenSet?.surumler.find((surum) => surum.id === secilenSurumId);
@@ -497,7 +506,8 @@ const Page = () => {
 
   const tanimSetiSec = (id: number) => {
     const set = tanimSetleri.find((aday) => aday.id === id);
-    const surum = set?.surumler?.find((aday) => surumDurumKodu(aday.durum) === 3) || set?.surumler?.[0];
+    const surum = varsayilanSurumuSec(set, !kgkSayfasi);
+    secilenSetIdRef.current = id;
     setSecilenSetId(id);
     setSecilenSurumId(surum?.id || 0);
     setTanimHatasi("");
@@ -513,6 +523,7 @@ const Page = () => {
     kgkFarkiniTemizle();
   };
 
+  /* eslint-disable react-hooks/set-state-in-effect -- Reset editor forms and stale validation when the selected version changes. */
   useEffect(() => {
     if (!secilenSurum) {
       setMetaDuzenleme(false);
@@ -530,7 +541,9 @@ const Page = () => {
     setKalemTabloId(0);
     setDuzenlenenKalemId(0);
   }, [secilenSurum]);
+  /* eslint-enable react-hooks/set-state-in-effect */
 
+  /* eslint-disable react-hooks/set-state-in-effect -- Keep production preview defaults aligned with the selected table/version. */
   useEffect(() => {
     const donem = secilenKalemTablosu?.donemKolonlari?.[0];
     if (!donem) return;
@@ -540,7 +553,9 @@ const Page = () => {
       setUretimBitis(secilenSurum.gecerlilikBitisi?.slice(0, 10) || "");
     }
   }, [secilenKalemTablosu, secilenSurum]);
+  /* eslint-enable react-hooks/set-state-in-effect */
 
+  /* eslint-disable react-hooks/set-state-in-effect -- A preview is stale after any input used to produce it changes. */
   useEffect(() => {
     setUretimOnizlemeSonucu(null);
   }, [
@@ -557,6 +572,7 @@ const Page = () => {
     uretimBaslangic,
     uretimBitis,
   ]);
+  /* eslint-enable react-hooks/set-state-in-effect */
 
   useEffect(() => {
     if (!user.token || aktifAdim !== 2) return;
@@ -929,7 +945,7 @@ const Page = () => {
         : `Kaynak sürüm #${kaynakSurum.surumNo} üzerinden oluşturuldu.`;
       const sonuc = await cloneFinansalSurum(user.token, kaynakSurum.id, {
         etiket,
-        gecerlilikBaslangici: new Date().toISOString().slice(0, 10),
+        gecerlilikBaslangici: format(new Date(), "yyyy-MM-dd"),
         gecerlilikBitisi: null,
         aciklama,
         beklenenKaynakEszamanlilikSurumu: kaynakSurum.eszamanlilikSurumu,
@@ -948,7 +964,7 @@ const Page = () => {
   };
 
   const taslagiDevreyeAl = async () => {
-    if (!user.token || !secilenSurum || surumDurumKodu(secilenSurum.durum) !== 1) return;
+    if (!user.token || !secilenSurum || surumDurumKodu(secilenSurum.durum) !== 1 || surumYonetimiDurumu?.etkin !== true) return;
     if (!teknikDogrulamaBasariliMi || !onizlemeBasariliMi || devreyeAlmaAciklamasi.trim().length < 10 || !devreyeAlmaTarihi) return;
     setDevreyeAlmaYukleniyor(true);
     setTanimHatasi("");
@@ -970,6 +986,7 @@ const Page = () => {
       setSurumDetayi((onceki) => onceki ? { ...onceki, surum: { ...onceki.surum, durum: sonuc.durum, eszamanlilikSurumu: sonuc.eszamanlilikSurumu, gecerlilikBaslangici: sonuc.etkinlikTarihi, gecerlilikBitisi: null, onayTarihi: sonuc.onayTarihi, guncellemeTarihi: sonuc.onayTarihi } } : onceki);
       setDogrulamaSonucu(null);
       setDevreyeAlmaAciklamasi("");
+      setSonDevreyeAlinanSurumId(sonuc.surumId);
       setSurumYonetimiMesaji(`Sürüm #${secilenSurum.surumNo} devreye alındı. ${sonuc.kullanimdanKaldirilanSurumIdleri.length} önceki sürüm kullanım dışına alındı; eski üretimler değişmedi.`);
     } catch (error) {
       setTanimHatasi(error instanceof Error ? error.message : "Sürüm devreye alınamadı.");
@@ -1746,41 +1763,66 @@ const Page = () => {
 
   const seciliSurumTaslakMi = surumDurumKodu(secilenSurum?.durum ?? 0) === 1;
   const seciliSurumYayindaMi = surumDurumKodu(secilenSurum?.durum ?? 0) === 3;
+  const yeniSurumDevredeMi = Boolean(seciliSurumYayindaMi && sonDevreyeAlinanSurumId === secilenSurum?.id);
   const teknikDogrulamaGuncelMi = Boolean(
     dogrulamaSonucu && secilenSurum &&
     dogrulamaSonucu.surumId === secilenSurum.id &&
     dogrulamaSonucu.eszamanlilikSurumu === secilenSurum.eszamanlilikSurumu
   );
   const teknikDogrulamaBasariliMi = teknikDogrulamaGuncelMi && dogrulamaSonucu?.gecerliMi === true;
-  const onizlemeBasariliMi = uretimOnizlemeSonucu?.basariliMi === true;
-  const testSonucuSorunluMu = Boolean(
-    uretimOnizlemeSonucu && (
-      !uretimOnizlemeSonucu.basariliMi ||
-      uretimOnizlemeSonucu.sonuclar.length === 0 ||
-      uretimOnizlemeSonucu.sonuclar.some((sonuc) => sonuc.durum !== 1)
-    )
+  const basariliTestSonucuSayisi = uretimOnizlemeSonucu?.sonuclar.filter((sonuc) => sonuc.durum === 1).length ?? 0;
+  const basarisizTestSonucuSayisi = uretimOnizlemeSonucu
+    ? uretimOnizlemeSonucu.sonuclar.length - basariliTestSonucuSayisi
+    : 0;
+  const onizlemeBasariliMi = Boolean(
+    uretimOnizlemeSonucu &&
+    uretimOnizlemeSonucu.basariliMi === true &&
+    uretimOnizlemeSonucu.sonuclar.length > 0 &&
+    basarisizTestSonucuSayisi === 0
   );
+  const testSonucuSorunluMu = Boolean(uretimOnizlemeSonucu && !onizlemeBasariliMi);
+  const testTamamlanamadiMi = Boolean(
+    uretimOnizlemeSonucu &&
+    (!uretimOnizlemeSonucu.basariliMi || uretimOnizlemeSonucu.sonuclar.length === 0)
+  );
+  const testBasarisizlikEtiketi = basarisizTestSonucuSayisi > 0
+    ? `${basarisizTestSonucuSayisi} başarısız`
+    : testSonucuSorunluMu
+      ? "Test tamamlanamadı"
+      : "0 başarısız";
   const ilkTestSorunu = uretimOnizlemeSonucu?.sonuclar.find((sonuc) => sonuc.durum !== 1);
   const yonlendirmeYukleniyor = tanimYukleniyor || dogrulamaYukleniyor || testMizanYukleniyor || uretimOnizlemeYukleniyor;
 
-  const akilliYonlendirme = useMemo(() => {
+  const akilliYonlendirme = (() => {
     if (tanimYukleniyor) return { seviye: "info" as const, baslik: "Tanımlar kontrol ediliyor", aciklama: "Uygun tanım seti ve sürüm otomatik seçiliyor.", eylem: "bekle", dugme: "Kontrol ediliyor" };
     if (!secilenSet || !secilenSurum) return { seviye: "error" as const, baslik: "Kullanılabilir tanım bulunamadı", aciklama: "Tanım arama filtrelerini açın veya aktif bir tanım seti seçin.", eylem: "tanim", dugme: "Tanım seçimine dön" };
     if (seciliSurumTaslakMi && !teknikDogrulamaGuncelMi) return { seviye: "warning" as const, baslik: "Otomatik test hazır", aciklama: "Sistem tanımları doğrulayacak, izole test mizanını hazırlayacak ve önizlemeyi tek işlemde çalıştıracak.", eylem: "otomatik-test", dugme: "Otomatik testi çalıştır" };
     if (seciliSurumTaslakMi && !teknikDogrulamaBasariliMi) return { seviye: "error" as const, baslik: "Düzeltilmesi gereken tanımlar var", aciklama: "Sorunlu tablo ve formüller aşağıda gösterildi. Düzeltmeden yayınlama yapılamaz.", eylem: "tanim", dugme: "Sorunları incele" };
+    if (yeniSurumDevredeMi) return { seviye: "success" as const, baslik: "Sürüm devreye alındı", aciklama: "Yeni finansal tablo üretimleri bu sürümü kullanacak; önceki raporlar korunur.", eylem: "kgk", dugme: "KGK kontrolüne geç" };
     if (!seciliTestMizani) return { seviye: "info" as const, baslik: "İzole test başlatılabilir", aciklama: "Sistem dengeli örnek mizanı hazırlayıp salt-okunur önizlemeyi kendisi çalıştıracak. Gerçek veriler ve mevcut raporlar etkilenmeyecek.", eylem: "otomatik-test", dugme: "Otomatik testi çalıştır" };
     if (!onizlemeBasariliMi) return { seviye: uretimOnizlemeSonucu ? "warning" as const : "info" as const, baslik: uretimOnizlemeSonucu ? "Test yeniden çalıştırılmalı" : "Yeni motor önizlemeye hazır", aciklama: uretimOnizlemeSonucu?.aciklama || "Seçili tanım ve test mizanıyla salt-okunur finansal tablo üretilecek.", eylem: "otomatik-test", dugme: "Otomatik testi çalıştır" };
+    if (seciliSurumTaslakMi && surumYonetimiDurumu?.etkin !== true) return { seviye: "warning" as const, baslik: "Devreye alma bekliyor", aciklama: surumYonetimiDurumu?.aciklama || "Sürüm yönetimi durumu doğrulanamadı.", eylem: "bekle", dugme: "Devreye alma kullanılamıyor" };
+    if (seciliSurumTaslakMi) return { seviye: "success" as const, baslik: "Taslak devreye alınabilir", aciklama: `${uretimOnizlemeSonucu?.sonuclar.length ?? 0} tablo sonucu başarılı. Etkinlik tarihi ve onay nedenini girerek sürümü devreye alın.`, eylem: "devreye-al", dugme: "Devreye almaya geç" };
     return { seviye: "success" as const, baslik: "Admin testi başarıyla tamamlandı", aciklama: `${uretimOnizlemeSonucu?.sonuclar.length ?? 0} finansal tablo sonucu üretildi; mevcut raporlar ve üretim arşivi değiştirilmedi.`, eylem: "kgk", dugme: "KGK kontrolüne geç" };
-  }, [tanimYukleniyor, secilenSet, secilenSurum, seciliSurumTaslakMi, teknikDogrulamaGuncelMi, teknikDogrulamaBasariliMi, seciliTestMizani, onizlemeBasariliMi, uretimOnizlemeSonucu]);
+  })();
+
+  const adimaGit = (adim: 0 | 1, hedefId?: string) => {
+    setAktifAdim(adim);
+    window.requestAnimationFrame(() => {
+      const hedef = hedefId ? document.getElementById(hedefId) : null;
+      if (hedef) hedef.scrollIntoView({ behavior: "smooth", block: "start" });
+      else window.scrollTo({ top: 0, behavior: "smooth" });
+    });
+  };
 
   const otomatikTestiCalistir = async () => {
     if (!secilenSet || !secilenSurum) {
-      setAktifAdim(0);
+      adimaGit(0);
       return;
     }
 
     setTanimHatasi("");
-    setAktifAdim(0);
+    adimaGit(0);
     let dogrulananSnapshotSha256 = "";
     if (seciliSurumTaslakMi && !teknikDogrulamaGuncelMi) {
       const dogrulama = await teknikDogrula();
@@ -1790,15 +1832,16 @@ const Page = () => {
       )?.snapshotSha256 || "";
     }
 
-    setAktifAdim(1);
+    adimaGit(1);
     const testMizani = seciliTestMizani || await testMizaniOlustur();
     if (!testMizani) return;
     await finansalTabloOnizle(testMizani, dogrulananSnapshotSha256);
   };
 
   const onerilenIslemiCalistir = async () => {
-    if (akilliYonlendirme.eylem === "tanim") return setAktifAdim(0);
+    if (akilliYonlendirme.eylem === "tanim") return adimaGit(0);
     if (akilliYonlendirme.eylem === "otomatik-test") return otomatikTestiCalistir();
+    if (akilliYonlendirme.eylem === "devreye-al") return adimaGit(1, "taslak-devreye-al");
     if (akilliYonlendirme.eylem === "kgk") {
       router.push("/FinansalTabloYonetimi/KgkGuncellemeleri");
     }
@@ -1806,7 +1849,7 @@ const Page = () => {
 
   const tamamlananAdimlar = [
     Boolean(secilenSurum && (seciliSurumYayindaMi || teknikDogrulamaBasariliMi)),
-    onizlemeBasariliMi,
+    onizlemeBasariliMi || yeniSurumDevredeMi,
   ];
 
   return (
@@ -1817,19 +1860,12 @@ const Page = () => {
         : "Finansal tablo tanımlarını ve formüllerini sürümleyerek yönetme ve kontrollü test etme"}
     >
       <Breadcrumb title={sayfaBasligi} items={breadcrumbItems} />
-      {!kgkSayfasi && tanimHatasi && <Alert severity="error" onClose={() => setTanimHatasi("")} sx={{ mb: 2 }}>{tanimHatasi}</Alert>}
-      {!kgkSayfasi && surumYonetimiMesaji && <Alert severity="success" onClose={() => setSurumYonetimiMesaji("")} sx={{ mb: 2 }}>{surumYonetimiMesaji}</Alert>}
+      {!kgkSayfasi && tanimHatasi && <Alert severity="error" onClose={() => { setTanimHatasi(""); setSurumYonetimiMesaji(""); }} sx={{ mb: 2 }}>{tanimHatasi}</Alert>}
+      {!kgkSayfasi && !tanimHatasi && surumYonetimiMesaji && <Alert severity="success" onClose={() => setSurumYonetimiMesaji("")} sx={{ mb: 2 }}>{surumYonetimiMesaji}</Alert>}
       {!kgkSayfasi && <>
       <Paper variant="outlined" sx={{ p: { xs: 1.5, md: 2 }, mb: 2 }}>
-        <Stack spacing={1.5}>
-          <Box>
-            <Typography variant="subtitle1" fontWeight={700}>
-              Finansal tablo hazırlama adımları
-            </Typography>
-            <Typography variant="body2" color="text.secondary">
-              Tanım otomatik seçilir. Gerekirse taslakta formülleri düzenleyin; ardından örnek mizanla test edin. KGK güncellemeleri ayrı ekrandadır.
-            </Typography>
-          </Box>
+        <Stack spacing={1}>
+          <Typography variant="subtitle2" fontWeight={700}>Finansal tablo hazırlama</Typography>
           <Stepper activeStep={aktifAdim} alternativeLabel sx={{ overflowX: "auto", pb: 0.5 }}>
             {finansalTabloAdimlari.map((adim, index) => (
               <Step key={adim.baslik} completed={tamamlananAdimlar[index]}>
@@ -1837,15 +1873,7 @@ const Page = () => {
               </Step>
             ))}
           </Stepper>
-          <Alert severity="info" icon={false} sx={{ py: 0.75 }}>
-            <Typography variant="subtitle2">
-              {aktifAdim + 1}. {finansalTabloAdimlari[aktifAdim].baslik}
-            </Typography>
-            <Typography variant="body2">{finansalTabloAdimlari[aktifAdim].aciklama}</Typography>
-            <Typography variant="caption" color="text.secondary">
-              {finansalTabloAdimlari[aktifAdim].ipucu}
-            </Typography>
-          </Alert>
+          <Typography variant="body2" color="text.secondary">{finansalTabloAdimlari[aktifAdim].aciklama}</Typography>
         </Stack>
       </Paper>
       <Paper
@@ -1870,11 +1898,6 @@ const Page = () => {
             <Typography variant="body2" color="text.secondary" sx={{ mt: 0.5 }}>
               {akilliYonlendirme.aciklama}
             </Typography>
-            <Stack direction="row" spacing={0.75} flexWrap="wrap" useFlexGap sx={{ mt: 1 }}>
-              <Chip size="small" color={tamamlananAdimlar[0] ? "success" : "default"} label={tamamlananAdimlar[0] ? "Tanım hazır" : "Tanım kontrolü bekliyor"} />
-              <Chip size="small" color={seciliTestMizani ? "success" : "default"} label={seciliTestMizani ? "Test mizanı hazır" : "Test mizanı bekliyor"} />
-              <Chip size="small" color={onizlemeBasariliMi ? "success" : "default"} label={onizlemeBasariliMi ? "Önizleme başarılı" : "Önizleme bekliyor"} />
-            </Stack>
           </Box>
           <Button
             variant="contained"
@@ -1934,8 +1957,8 @@ const Page = () => {
               </Stack>
             </Grid>
           </Grid>
-          {tanimHatasi && <Alert severity="error" onClose={() => setTanimHatasi("")}>{tanimHatasi}</Alert>}
-          {surumYonetimiMesaji && <Alert severity="success" onClose={() => setSurumYonetimiMesaji("")}>{surumYonetimiMesaji}</Alert>}
+          {tanimHatasi && <Alert severity="error" onClose={() => { setTanimHatasi(""); setSurumYonetimiMesaji(""); }}>{tanimHatasi}</Alert>}
+          {!tanimHatasi && surumYonetimiMesaji && <Alert severity="success" onClose={() => setSurumYonetimiMesaji("")}>{surumYonetimiMesaji}</Alert>}
         </Stack>
       </Paper>
       <Paper variant="outlined" sx={{ p: 1.5, mb: 2 }}>
@@ -2127,14 +2150,20 @@ const Page = () => {
       <Paper variant="outlined" sx={{ p: 2, mb: 2 }}>
         {uretimOnizlemeSonucu ? (
           <Stack spacing={1.25}>
-            <Alert severity={testSonucuSorunluMu ? "warning" : "success"}>
-              <strong>{testSonucuSorunluMu ? "Testte incelenmesi gereken sonuçlar var" : "Test başarıyla tamamlandı"}</strong>
+            <Alert severity={testTamamlanamadiMi ? "error" : testSonucuSorunluMu ? "warning" : "success"}>
+              <strong>
+                {testTamamlanamadiMi
+                  ? "Test tamamlanamadı"
+                  : testSonucuSorunluMu
+                    ? "Bazı tablo sonuçları incelenmeli"
+                    : "Test başarıyla tamamlandı"}
+              </strong>
               <br />
               {uretimOnizlemeSonucu.aciklama || "Örnek mizan, seçili tanım ve formüllerle kontrol edildi. Gerçek finansal tablolar değiştirilmedi."}
               {ilkTestSorunu && (
                 <>
                   <br />
-                  İlk bulgu: {ilkTestSorunu.hataKodu || ilkTestSorunu.aciklama || "Bazı formül sonuçları üretilemedi."}
+                  İlk başarısız sonuç: {ilkTestSorunu.hataKodu || ilkTestSorunu.aciklama || "Sonuç durumu başarılı değil."}
                 </>
               )}
             </Alert>
@@ -2143,7 +2172,12 @@ const Page = () => {
               <Chip
                 size="small"
                 color={testSonucuSorunluMu ? "warning" : "success"}
-                label={`${uretimOnizlemeSonucu.sonuclar.filter((sonuc) => sonuc.durum === 1).length} başarılı`}
+                label={`${basariliTestSonucuSayisi} başarılı`}
+              />
+              <Chip
+                size="small"
+                color={testSonucuSorunluMu ? "error" : "default"}
+                label={testBasarisizlikEtiketi}
               />
               <Typography variant="caption" color="text.secondary">
                 Sürüm: {uretimOnizlemeSonucu.motorSurumu} · Test mizanı: {seciliTestMizani?.ad || "örnek mizan"}
@@ -2153,7 +2187,7 @@ const Page = () => {
               <Button size="small" variant="outlined" onClick={() => setTestAyrintilariAcik(true)}>
                 Sonuç ayrıntılarını aç
               </Button>
-              <Button size="small" onClick={() => setAktifAdim(0)}>
+              <Button size="small" onClick={() => adimaGit(0)}>
                 Tanım ve formüllere dön
               </Button>
               <Button
@@ -2182,6 +2216,28 @@ const Page = () => {
           </Stack>
         )}
       </Paper>
+      {seciliSurumTaslakMi && teknikDogrulamaBasariliMi && onizlemeBasariliMi && (
+        <Paper id="taslak-devreye-al" variant="outlined" sx={{ p: 1.5, mb: 2, borderColor: "success.main" }}>
+          <Stack spacing={1.25}>
+            <Box>
+              <Typography variant="subtitle2">Taslağı devreye al</Typography>
+              <Typography variant="body2" color="text.secondary">
+                Kontroller başarılı. Etkinlik tarihini doğrulayın ve değişikliğin nedenini yazın. Önceki raporlar etkilenmez.
+              </Typography>
+            </Box>
+            {surumYonetimiDurumu?.etkin !== true && (
+              <Alert severity="warning">{surumYonetimiDurumu?.aciklama || "Sürüm yönetimi durumu doğrulanamadı; devreye alma için bağlantıyı kontrol edin."}</Alert>
+            )}
+            <Stack direction={{ xs: "column", md: "row" }} spacing={1} alignItems={{ md: "flex-start" }}>
+              <TextField size="small" type="date" label="Etkinlik tarihi" value={devreyeAlmaTarihi} onChange={(event) => setDevreyeAlmaTarihi(event.target.value)} InputLabelProps={{ shrink: true }} sx={{ minWidth: 180 }} />
+              <TextField size="small" fullWidth label="Onay nedeni" value={devreyeAlmaAciklamasi} onChange={(event) => setDevreyeAlmaAciklamasi(event.target.value)} inputProps={{ maxLength: 500 }} helperText="Değişikliği en az 10 karakterle açıklayın." />
+              <Button variant="contained" color="success" onClick={taslagiDevreyeAl} disabled={devreyeAlmaYukleniyor || surumYonetimiDurumu?.etkin !== true || !devreyeAlmaTarihi || devreyeAlmaAciklamasi.trim().length < 10} sx={{ minWidth: 150 }}>
+                {devreyeAlmaYukleniyor ? <CircularProgress size={18} color="inherit" /> : "Devreye al"}
+              </Button>
+            </Stack>
+          </Stack>
+        </Paper>
+      )}
       <Paper variant="outlined" sx={{ p: 1.5, mb: 2 }}>
         <Stack direction={{ xs: "column", sm: "row" }} spacing={1.5} alignItems={{ sm: "center" }}>
           <Box sx={{ flexGrow: 1 }}>
@@ -2630,15 +2686,9 @@ const Page = () => {
               </Grid>
             </Grid>
           )}
-          <Alert
-            severity="success"
-            variant="outlined"
-            action={surumYonetimiYukleniyor ? <CircularProgress size={18} /> : undefined}
-          >
-            <strong>Sürüm yönetimi etkin</strong>
-            <br />
-            {surumYonetimiDurumu?.aciklama || "Sürüm yönetimi durumu kontrol ediliyor."}
-          </Alert>
+          {surumYonetimiDurumu && !surumYonetimiDurumu.etkin && (
+            <Alert severity="warning">{surumYonetimiDurumu.aciklama || "Sürüm yönetimi etkin değil."}</Alert>
+          )}
           {secilenSet && (
             <Accordion
               disableGutters
@@ -2705,25 +2755,6 @@ const Page = () => {
                 <Alert severity="info" variant="outlined">
                   Bir kalem veya formül kaydedildiğinde taslak revizyon numarası artar. Yayındaki sürüm hiçbir zaman yerinde değiştirilmez; onaylanan taslak yeni sürüm olarak devreye alınır.
                 </Alert>
-                {surumDurumKodu(secilenSurum.durum) === 1 && (
-                  <Paper variant="outlined" sx={{ p: 1.5, borderColor: "success.main" }}>
-                    <Stack spacing={1.25}>
-                      <Box>
-                        <Typography variant="subtitle2">Sürümü devreye al</Typography>
-                        <Typography variant="caption" color="text.secondary">
-                          Önce teknik doğrulama ve izole önizleme tamamlanır. Devreye alma mevcut raporları değiştirmez; yalnız yeni üretimlerin kullanacağı aktif sürümü değiştirir.
-                        </Typography>
-                      </Box>
-                      <Stack direction={{ xs: "column", md: "row" }} spacing={1} alignItems={{ md: "flex-start" }}>
-                        <TextField size="small" type="date" label="Etkinlik tarihi" value={devreyeAlmaTarihi} onChange={(event) => setDevreyeAlmaTarihi(event.target.value)} InputLabelProps={{ shrink: true }} sx={{ minWidth: 180 }} />
-                        <TextField size="small" fullWidth label="Admin onay açıklaması" value={devreyeAlmaAciklamasi} onChange={(event) => setDevreyeAlmaAciklamasi(event.target.value)} inputProps={{ maxLength: 500 }} helperText="En az 10 karakter; değişiklik ve onay nedeni." />
-                        <Button variant="contained" color="success" onClick={taslagiDevreyeAl} disabled={devreyeAlmaYukleniyor || !teknikDogrulamaBasariliMi || !onizlemeBasariliMi || devreyeAlmaAciklamasi.trim().length < 10} sx={{ minWidth: 150 }}>
-                          {devreyeAlmaYukleniyor ? <CircularProgress size={18} color="inherit" /> : "Devreye al"}
-                        </Button>
-                      </Stack>
-                    </Stack>
-                  </Paper>
-                )}
                 {metaDuzenleme && surumDurumKodu(secilenSurum.durum) === 1 && (
                   <Paper variant="outlined" sx={{ p: 1.5, bgcolor: "action.hover" }}>
                     <Grid container spacing={1.5}>
@@ -3084,22 +3115,22 @@ const Page = () => {
           <Button
             variant="text"
             disabled={aktifAdim === 0}
-            onClick={() => setAktifAdim((onceki) => Math.max(0, onceki - 1))}
+            onClick={() => adimaGit(0)}
           >
             Geri
           </Button>
           <Typography variant="caption" color="text.secondary" textAlign="center">
             {aktifAdim + 1} / 2
           </Typography>
-          <Button
-            variant="contained"
-            disabled={aktifAdim === 1}
-            onClick={() => setAktifAdim((onceki) => Math.min(1, onceki + 1))}
-          >
-            {aktifAdim < 1
-              ? `Sonraki: ${finansalTabloAdimlari[aktifAdim + 1].baslik}`
-              : "Akış tamamlandı"}
-          </Button>
+          {aktifAdim === 0 ? (
+            <Button variant="contained" onClick={() => adimaGit(1)}>Sonraki: Test et</Button>
+          ) : yeniSurumDevredeMi || (seciliSurumYayindaMi && onizlemeBasariliMi) ? (
+            <Button variant="contained" onClick={() => router.push("/FinansalTabloYonetimi/KgkGuncellemeleri")}>KGK kontrolüne geç</Button>
+          ) : seciliSurumTaslakMi && onizlemeBasariliMi ? (
+            <Button variant="contained" color="success" onClick={() => adimaGit(1, "taslak-devreye-al")}>Devreye alma alanına git</Button>
+          ) : (
+            <Button variant="contained" onClick={() => void otomatikTestiCalistir()} disabled={yonlendirmeYukleniyor || !secilenSurum}>Otomatik testi çalıştır</Button>
+          )}
         </Stack>
       </Paper>}
     </PageContainer>
