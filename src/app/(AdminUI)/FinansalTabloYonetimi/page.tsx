@@ -274,8 +274,8 @@ const tabloTuruEtiketi = (tabloTuru: number | string) => {
 
 const finansalTabloAdimlari = [
   {
-    baslik: "Tanımı düzenle",
-    aciklama: "Varsa açık taslak, yoksa yayındaki sürüm seçilir. Formül değişikliği için taslak oluşturun.",
+    baslik: "Sürümü hazırla",
+    aciklama: "Varsa açık taslak, yoksa yayındaki sürüm seçilir. Formül değişikliği için düzenleme sayfasını açın.",
   },
   {
     baslik: "Test et ve devreye al",
@@ -291,24 +291,27 @@ const varsayilanSurumuSec = (set: FinansalTanimSeti | undefined, taslakOncelikli
     || set?.surumler[0];
 };
 
-const Page = () => {
+type PageProps = { editorSurumId?: number };
+
+const Page = ({ editorSurumId }: PageProps) => {
   const user = useSelector((state: AppState) => state.userReducer);
   const pathname = usePathname();
   const router = useRouter();
   const kgkSayfasi = pathname.endsWith("/KgkGuncellemeleri");
-  const sayfaBasligi = kgkSayfasi ? "KGK Güncellemeleri" : "Sürümlü Tanım ve Formüller";
+  const duzenleyiciSayfasi = editorSurumId !== undefined;
+  const sayfaBasligi = kgkSayfasi ? "KGK Güncellemeleri" : duzenleyiciSayfasi ? "Sürüm ve Formül Düzenleme" : "Sürümlü Tanım ve Formüller";
   const breadcrumbItems = [
     { to: "/Anasayfa", title: "Admin Menüsü" },
     { to: "/FinansalTabloYonetimi", title: "Sürümlü Tanım ve Formüller" },
     ...(kgkSayfasi
       ? [{ to: "/FinansalTabloYonetimi/KgkGuncellemeleri", title: "KGK Güncellemeleri" }]
-      : []),
+      : duzenleyiciSayfasi ? [{ to: pathname, title: "Sürüm ve Formül Düzenleme" }] : []),
   ];
   const [aktifAdim, setAktifAdim] = useState(kgkSayfasi ? 2 : 0);
   const [tanimFiltreleriAcik, setTanimFiltreleriAcik] = useState(false);
   const [surumGecmisiAcik, setSurumGecmisiAcik] = useState(false);
+  const [editorAyrintilariAcik, setEditorAyrintilariAcik] = useState(false);
   const [kgkGelismisAraclarAcik, setKgkGelismisAraclarAcik] = useState(false);
-  const [teknikDuzenlemeAraclariAcik, setTeknikDuzenlemeAraclariAcik] = useState(false);
   const [testAyrintilariAcik, setTestAyrintilariAcik] = useState(false);
   const [tanimSetleri, setTanimSetleri] = useState<FinansalTanimSeti[]>([]);
   const [tanimFiltresi, setTanimFiltresi] = useState({
@@ -426,7 +429,7 @@ const Page = () => {
     if (!user.token) return;
     let etkin = true;
     setTanimYukleniyor(true);
-    getFinansalTanimSetleri(user.token, {
+    getFinansalTanimSetleri(user.token, duzenleyiciSayfasi ? {} : {
       raporlamaStandardi: tanimFiltresi.raporlamaStandardi || undefined,
       kapsam: tanimFiltresi.kapsam || undefined,
       donusumTipi: tanimFiltresi.donusumTipi || undefined,
@@ -436,10 +439,14 @@ const Page = () => {
         if (!etkin) return;
         setTanimHatasi("");
         setTanimSetleri(data);
-        const ilkSet = data.find((set) => set.id === secilenSetIdRef.current) || data[0];
+        const ilkSet = duzenleyiciSayfasi
+          ? data.find((set) => set.surumler.some((surum) => surum.id === editorSurumId))
+          : data.find((set) => set.id === secilenSetIdRef.current) || data[0];
         secilenSetIdRef.current = ilkSet?.id || 0;
         setSecilenSetId(secilenSetIdRef.current);
-        const ilkSurum = varsayilanSurumuSec(ilkSet, !kgkSayfasi);
+        const ilkSurum = duzenleyiciSayfasi
+          ? ilkSet?.surumler.find((surum) => surum.id === editorSurumId)
+          : varsayilanSurumuSec(ilkSet, !kgkSayfasi);
         setSecilenSurumId(ilkSurum?.id || 0);
       })
       .catch((error) => {
@@ -451,7 +458,7 @@ const Page = () => {
     return () => {
       etkin = false;
     };
-  }, [user.token, tanimFiltresi, kgkSayfasi]);
+  }, [user.token, tanimFiltresi, kgkSayfasi, duzenleyiciSayfasi, editorSurumId]);
   /* eslint-enable react-hooks/set-state-in-effect */
 
   useEffect(() => {
@@ -956,6 +963,7 @@ const Page = () => {
       setSurumYonetimiMesaji(geriDonusMu
         ? `#${kaynakSurum.surumNo} sürümünden geri dönüş taslağı oluşturuldu. Kontrol ve test sonrası devreye alınabilir.`
         : `#${kaynakSurum.surumNo} sürümünden yeni taslak oluşturuldu.`);
+      router.push(`/FinansalTabloYonetimi/Surum/${sonuc.surumId}`);
     } catch (error) {
       setTanimHatasi(error instanceof Error ? error.message : "Taslak sürüm oluşturulamadı.");
     } finally {
@@ -1862,7 +1870,7 @@ const Page = () => {
       <Breadcrumb title={sayfaBasligi} items={breadcrumbItems} />
       {!kgkSayfasi && tanimHatasi && <Alert severity="error" onClose={() => { setTanimHatasi(""); setSurumYonetimiMesaji(""); }} sx={{ mb: 2 }}>{tanimHatasi}</Alert>}
       {!kgkSayfasi && !tanimHatasi && surumYonetimiMesaji && <Alert severity="success" onClose={() => setSurumYonetimiMesaji("")} sx={{ mb: 2 }}>{surumYonetimiMesaji}</Alert>}
-      {!kgkSayfasi && <>
+      {!kgkSayfasi && !duzenleyiciSayfasi && <>
       <Paper variant="outlined" sx={{ p: { xs: 1.5, md: 2 }, mb: 2 }}>
         <Stack spacing={1}>
           <Typography variant="subtitle2" fontWeight={700}>Finansal tablo hazırlama</Typography>
@@ -2146,7 +2154,7 @@ const Page = () => {
         </Stack>
       </ParentCard>
       </Box>
-      <Box sx={{ display: aktifAdim === 1 ? "block" : "none" }}>
+      <Box sx={{ display: !duzenleyiciSayfasi && aktifAdim === 1 ? "block" : "none" }}>
       <Paper variant="outlined" sx={{ p: 2, mb: 2 }}>
         {uretimOnizlemeSonucu ? (
           <Stack spacing={1.25}>
@@ -2611,11 +2619,18 @@ const Page = () => {
       </ParentCard>
       </Box>
       </Box>
-      <Box sx={{ display: aktifAdim === 0 ? "block" : "none" }}>
-      <ParentCard title="1. Tanımı seç ve düzenle">
+      <Box sx={{ display: duzenleyiciSayfasi || aktifAdim === 0 ? "block" : "none" }}>
+      <ParentCard title={duzenleyiciSayfasi ? "Sürüm ve formül düzenleme" : "1. Sürümü hazırla"}>
         <Stack spacing={2}>
+          {duzenleyiciSayfasi && (
+            <Stack direction={{ xs: "column", sm: "row" }} spacing={1} alignItems={{ sm: "center" }}>
+              <Button variant="outlined" onClick={() => router.push("/FinansalTabloYonetimi")}>Yönetime dön</Button>
+              <Typography variant="body2" color="text.secondary">Formülleri kaydedin; ardından yönetim ekranında örnek mizanla test edin.</Typography>
+            </Stack>
+          )}
+          {!duzenleyiciSayfasi && <>
           <Typography variant="body2" color="text.secondary">
-            Kullanılacak tanım seti otomatik seçilir. Formül değişikliği gerekiyorsa taslak oluşturup yalnız ilgili tablo ve kalemi düzenleyin.
+            Kullanılacak tanım seti otomatik seçilir. Formül değişikliği gerekiyorsa taslağın düzenleme sayfasını açın.
           </Typography>
           <Accordion
             disableGutters
@@ -2662,9 +2677,10 @@ const Page = () => {
           </Grid>
             </AccordionDetails>
           </Accordion>
+          </>}
           {tanimYukleniyor && <CircularProgress size={22} />}
-          {!tanimYukleniyor && tanimSetleri.length === 0 && <Alert severity="info">Filtreye uyan tanım seti bulunamadı.</Alert>}
-          {tanimSetleri.length > 0 && (
+          {!tanimYukleniyor && !secilenSurum && <Alert severity={duzenleyiciSayfasi ? "error" : "info"}>{duzenleyiciSayfasi ? "Bu sürüm bulunamadı veya erişim izniniz yok." : "Filtreye uyan tanım seti bulunamadı."}</Alert>}
+          {!duzenleyiciSayfasi && tanimSetleri.length > 0 && (
             <Grid container spacing={2} alignItems="center">
               <Grid item xs={12} md={6}>
                 <FormControl fullWidth size="small">
@@ -2689,7 +2705,7 @@ const Page = () => {
           {surumYonetimiDurumu && !surumYonetimiDurumu.etkin && (
             <Alert severity="warning">{surumYonetimiDurumu.aciklama || "Sürüm yönetimi etkin değil."}</Alert>
           )}
-          {secilenSet && (
+          {!duzenleyiciSayfasi && secilenSet && (
             <Accordion
               disableGutters
               expanded={surumGecmisiAcik}
@@ -2734,21 +2750,33 @@ const Page = () => {
               </AccordionDetails>
             </Accordion>
           )}
-          {secilenSurum && (
+          {secilenSurum && !duzenleyiciSayfasi && (
+            <Paper variant="outlined" sx={{ p: 1.5 }}>
+              <Stack direction={{ xs: "column", sm: "row" }} spacing={1} alignItems={{ sm: "center" }}>
+                <Box sx={{ flexGrow: 1 }}>
+                  <Typography variant="subtitle2">{secilenSurum.etiket}</Typography>
+                  <Typography variant="body2" color="text.secondary">Sürüm #{secilenSurum.surumNo} · {seciliSurumTaslakMi ? "Taslak" : seciliSurumYayindaMi ? "Yayında" : "Geçmiş sürüm"} · {secilenSurum.formulSayisi} formül</Typography>
+                </Box>
+                {seciliSurumTaslakMi ? (
+                  <Button variant="contained" onClick={() => router.push(`/FinansalTabloYonetimi/Surum/${secilenSurum.id}`)}>Formülleri düzenle</Button>
+                ) : (
+                  <Button variant="contained" onClick={() => void taslakKlonla()} disabled={surumIslemiYukleniyor}>{surumIslemiYukleniyor ? <CircularProgress size={18} color="inherit" /> : "Taslak oluştur ve düzenle"}</Button>
+                )}
+              </Stack>
+            </Paper>
+          )}
+          {secilenSurum && duzenleyiciSayfasi && (
             <Paper variant="outlined" sx={{ p: 1.5 }}>
               <Stack spacing={1.5}>
                 <Stack direction="row" spacing={1} flexWrap="wrap" useFlexGap>
                   <Chip label={`Sürüm ${secilenSurum.surumNo} · ${secilenSurum.etiket}`} color={surumDurumKodu(secilenSurum.durum) === 3 ? "success" : "default"} />
                   <Chip label={`Taslak revizyonu ${secilenSurum.eszamanlilikSurumu}`} variant="outlined" />
                   <Chip label={`${secilenSurum.tabloSayisi} tablo · ${secilenSurum.kalemSayisi} kalem · ${secilenSurum.formulSayisi} formül`} variant="outlined" />
-                  <Button size="small" variant="outlined" onClick={() => void taslakKlonla()} disabled={surumIslemiYukleniyor}>Yeni taslak oluştur</Button>
+                  {surumDurumKodu(secilenSurum.durum) !== 1 && <Button size="small" variant="outlined" onClick={() => void taslakKlonla()} disabled={surumIslemiYukleniyor}>Bu sürümden taslak oluştur</Button>}
                   {surumDurumKodu(secilenSurum.durum) === 1 && <>
                     <Button size="small" variant="outlined" onClick={() => setMetaDuzenleme((onceki) => !onceki)}>{metaDuzenleme ? "Bilgi düzenlemeyi kapat" : "Sürüm bilgilerini düzenle"}</Button>
                     <Button size="small" variant="contained" color="secondary" onClick={teknikDogrula} disabled={dogrulamaYukleniyor}>
                       {dogrulamaYukleniyor ? <CircularProgress size={16} color="inherit" /> : "Teknik doğrula"}
-                    </Button>
-                    <Button size="small" variant="text" onClick={() => setTeknikDuzenlemeAraclariAcik((onceki) => !onceki)}>
-                      {teknikDuzenlemeAraclariAcik ? "Tanım ve formül düzenleyicisini gizle" : "Tanım ve formülleri düzenle"}
                     </Button>
                   </>}
                 </Stack>
@@ -2793,7 +2821,23 @@ const Page = () => {
                     </Stack>
                   </Paper>
                 )}
-                {teknikDuzenlemeAraclariAcik && secilenSet && secilenSet.surumler.length > 1 && (
+                {surumDetayi && seciliSurumTaslakMi && secilenKalemTablosu && (
+                  <FormControl size="small" fullWidth>
+                    <InputLabel>Finansal tablo</InputLabel>
+                    <Select label="Finansal tablo" value={secilenKalemTablosu.id} onChange={(event) => {
+                      setKalemTabloId(Number(event.target.value));
+                      setDuzenlenenKalemId(0);
+                      setDuzenlenenKuralId(0);
+                      setYeniKuralAcik(false);
+                    }}>
+                      {surumDetayi.tablolar.map((tablo) => <MenuItem key={tablo.id} value={tablo.id}>{tablo.kod} — {tablo.ad}</MenuItem>)}
+                    </Select>
+                  </FormControl>
+                )}
+                <Button size="small" variant="text" onClick={() => setEditorAyrintilariAcik((onceki) => !onceki)} sx={{ alignSelf: "flex-start" }}>
+                  {editorAyrintilariAcik ? "Kalem ve sürüm ayrıntılarını gizle" : "Kalem ve sürüm ayrıntılarını göster"}
+                </Button>
+                {editorAyrintilariAcik && secilenSet && secilenSet.surumler.length > 1 && (
                   <Paper variant="outlined" sx={{ p: 1.5, bgcolor: "action.hover" }}>
                     <Stack spacing={1.5}>
                       <Typography variant="subtitle2">Sürüm karşılaştırma</Typography>
@@ -2818,14 +2862,14 @@ const Page = () => {
                     </Stack>
                   </Paper>
                 )}
-                {surumDetayi && (
+                {editorAyrintilariAcik && surumDetayi && (
                   <Box sx={{ overflowX: "auto" }}>
                     <Table size="small"><TableHead><TableRow><TableCell>Tablo</TableCell><TableCell>Tür</TableCell><TableCell align="right">Dönem</TableCell><TableCell align="right">Kalem</TableCell><TableCell align="right">Formül</TableCell><TableCell align="right">Kontrol</TableCell></TableRow></TableHead>
                       <TableBody>{surumDetayi.tablolar.map((tablo) => <TableRow key={tablo.id} hover><TableCell><strong>{tablo.kod}</strong><br /><Typography variant="caption" color="text.secondary">{tablo.ad}</Typography></TableCell><TableCell>{tabloTuruEtiketi(tablo.tabloTuru)}</TableCell><TableCell align="right">{tablo.donemKolonlari.length}</TableCell><TableCell align="right">{tablo.kalemler.length}</TableCell><TableCell align="right">{tablo.kurallar.length}</TableCell><TableCell align="right">{tablo.kontrolKurallari.length}</TableCell></TableRow>)}</TableBody>
                     </Table>
                   </Box>
                 )}
-                {teknikDuzenlemeAraclariAcik && surumDetayi && surumDurumKodu(secilenSurum.durum) === 1 && secilenKalemTablosu && (
+                {editorAyrintilariAcik && surumDetayi && surumDurumKodu(secilenSurum.durum) === 1 && secilenKalemTablosu && (
                   <Paper variant="outlined" sx={{ p: 1.5, bgcolor: "action.hover" }}>
                     <Stack spacing={1.5}>
                       <Stack direction="row" spacing={1} alignItems="center">
@@ -2834,12 +2878,6 @@ const Page = () => {
                       <Alert severity="info" variant="outlined">
                         Kalem ekleme veya kaldırma elle yapılmaz. KGK Excel sürümleri arasındaki farktan tespit edilen kalemler taslak sürüme aktarılır; bu ekran yalnızca gelen taslağın metadata ve formül incelemesi içindir.
                       </Alert>
-                      <FormControl size="small" fullWidth>
-                        <InputLabel>Tablo</InputLabel>
-                        <Select label="Tablo" value={secilenKalemTablosu.id} onChange={(event) => { setKalemTabloId(Number(event.target.value)); setDuzenlenenKalemId(0); }}>
-                          {surumDetayi.tablolar.map((tablo) => <MenuItem key={tablo.id} value={tablo.id}>{tablo.kod} — {tablo.ad}</MenuItem>)}
-                        </Select>
-                      </FormControl>
                       <Table size="small">
                         <TableHead><TableRow><TableCell>Sabit anahtar</TableCell><TableCell>Kalem</TableCell><TableCell align="right">Sıra</TableCell><TableCell>Durum</TableCell><TableCell align="right">İşlem</TableCell></TableRow></TableHead>
                         <TableBody>
@@ -2877,18 +2915,21 @@ const Page = () => {
                     </Stack>
                   </Paper>
                 )}
-                {teknikDuzenlemeAraclariAcik && surumDetayi && surumDurumKodu(secilenSurum.durum) === 1 && secilenKalemTablosu && (
+                {surumDetayi && surumDurumKodu(secilenSurum.durum) === 1 && secilenKalemTablosu && (
                   <Paper variant="outlined" sx={{ p: 1.5, bgcolor: "action.hover" }}>
                     <Stack spacing={1.5}>
                       <Stack direction="row" spacing={1} alignItems="center">
-                        <Typography variant="subtitle2" sx={{ flexGrow: 1 }}>Yapılandırılmış kural editörü</Typography>
+                        <Typography variant="subtitle2" sx={{ flexGrow: 1 }}>Formül kuralları</Typography>
                         <Button size="small" variant="outlined" onClick={yeniKuralBaslat}>{yeniKuralAcik ? "Yeni kuralı kapat" : "Yeni kural"}</Button>
                       </Stack>
                       <FormControl size="small" fullWidth>
-                        <InputLabel>Kural</InputLabel>
-                        <Select label="Kural" value={duzenlenenKuralId} onChange={(event) => { const id = Number(event.target.value); const kural = secilenKalemTablosu.kurallar.find((aday) => aday.id === id); if (kural) kuralDuzenle(kural); }}>
-                          <MenuItem value={0}>Kural seçin</MenuItem>
-                          {secilenKalemTablosu.kurallar.map((kural) => <MenuItem key={kural.id} value={kural.id}>#{kural.id} · {kural.kalemId ? `Kalem ${kural.kalemId}` : `Hücre ${kural.hucreId}`}</MenuItem>)}
+                        <InputLabel>Finansal tablo kalemi</InputLabel>
+                        <Select label="Finansal tablo kalemi" value={duzenlenenKuralId} onChange={(event) => { const id = Number(event.target.value); const kural = secilenKalemTablosu.kurallar.find((aday) => aday.id === id); if (kural) kuralDuzenle(kural); }}>
+                          <MenuItem value={0}>Kalem seçin</MenuItem>
+                          {secilenKalemTablosu.kurallar.map((kural) => {
+                            const kalem = secilenKalemTablosu.kalemler.find((aday) => aday.id === kural.kalemId);
+                            return <MenuItem key={kural.id} value={kural.id}>{kalem ? `${kalem.sabitAnahtar} — ${kalem.ad}` : `Hücre ${kural.hucreId}`} · Kural #{kural.id}</MenuItem>;
+                          })}
                         </Select>
                       </FormControl>
                       {yeniKuralAcik && (
@@ -3099,7 +3140,7 @@ const Page = () => {
         </Stack>
       </ParentCard>
       </Box>
-      {!kgkSayfasi && <Paper
+      {!kgkSayfasi && !duzenleyiciSayfasi && <Paper
         variant="outlined"
         sx={{
           mt: 2,
