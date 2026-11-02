@@ -54,6 +54,21 @@ export type FinansalSurumDetay = {
   }>;
 };
 
+export type FinansalTabloTabloRevizyonu = {
+  id: number;
+  surumId: number;
+  tabloId: number;
+  tabloKod: string;
+  revizyonNo: number;
+  surumEszamanlilikSurumu: number;
+  islem: string;
+  hedefAnahtar?: string | null;
+  aciklama: string;
+  degisiklikJson?: string | null;
+  kullaniciId?: number | null;
+  tarih: string;
+};
+
 export type FinansalSurumDogrulamaSonucu = {
   surumId: number;
   surumEtiketi: string;
@@ -101,6 +116,9 @@ export const getFinansalTanimSetleri = (
 
 export const getFinansalSurumDetay = (token: string, surumId: number) =>
   jsonGet<FinansalSurumDetay>(token, `/Surumler/${surumId}/Tanim`);
+
+export const getFinansalTabloTabloRevizyonlari = (token: string, surumId: number) =>
+  jsonGet<FinansalTabloTabloRevizyonu[]>(token, `/Surumler/${surumId}/TabloRevizyonlari`);
 
 export type FinansalTabloAnaTabloGecisi = {
   id: number;
@@ -992,7 +1010,8 @@ export const scanAndArchiveKgkFormats = async (
   });
   const payload = await response.json().catch(() => ({}));
   if (!response.ok) {
-    throw new Error(payload?.detail || payload?.message || payload?.Message || "KGK taraması tamamlanamadı.");
+    const neden = payload?.detail || payload?.message || payload?.Message || payload?.title;
+    throw new Error(neden || `KGK taraması tamamlanamadı (HTTP ${response.status}). API durumunu ve KGK bağlantısını kontrol edin.`);
   }
   return payload as KgkTaramaSonucu;
 };
