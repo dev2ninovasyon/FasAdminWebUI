@@ -64,3 +64,79 @@ test("KGK taraması sürüm seçimi olmadan başlar ve dosya hatasını gösteri
   await expect(page.getByText("Üretim için yayımlanmış sürüm", { exact: false })).toHaveCount(0);
   expect(uretimSayisi).toBe(0);
 });
+
+test("başarılı tarama KGK ana sürümünü ve bağlı taslakları gösterir", async ({ page }) => {
+  let tarandi = false;
+  await page.route("**/api/**", async (route) => {
+    const path = new URL(route.request().url()).pathname;
+    const json = (body: unknown) => route.fulfill({
+      status: 200,
+      contentType: "application/json; charset=utf-8",
+      body: JSON.stringify(body),
+    });
+    if (path.endsWith("/Auth/AdminLogin")) return json({
+      token: "e2e-access-token",
+      refreshToken: "e2e-refresh-token",
+      userId: 1,
+      denetciId: 1,
+      yetki: "FasAdmin",
+      rol: ["FasAdmin"],
+      claims: ["FasAdmin"],
+      kullaniciAdi: "E2E Admin",
+      unvan: "FasAdmin",
+      bddkmi: false,
+      kurulumTamamlandi: true,
+      kurulumAdimi: 0,
+      setupWizardProgress: "{}",
+      turTamamlandi: true,
+    });
+    if (path.endsWith("/FinansalTabloYonetimi/TanimSetleri")) return json([]);
+    if (path.endsWith("/FinansalTabloYonetimi/SurumYonetimi/Durum")) return json({ etkin: true, mevcutRaporlarKorunuyor: true });
+    if (path.endsWith("/FinansalTabloYonetimi/Kgk/KaynakDonemleri")) return json([{
+      kod: "KGK_2023_VE_SONRASI",
+      ad: "31.12.2023 ve sonrası",
+      onerilenMi: true,
+    }]);
+    if (path.endsWith("/FinansalTabloYonetimi/Kgk/AnaSurumler")) return json(tarandi ? [{
+      id: 7,
+      kaynakDonemKodu: "KGK_2023_VE_SONRASI",
+      surumNo: 2,
+      kaynakUrl: "https://kgk.gov.tr/kaynak",
+      dosyaManifestiSha256: "a".repeat(64),
+      dosyaSayisi: 3,
+      olusturmaTarihi: "2026-11-02T12:00:00Z",
+      surumler: [{ id: 11, tanimSetiId: 5, tanimSetiKodu: "BOBI-MUNFERIT", surumNo: 4, durum: 1 }],
+    }] : []);
+    if (path.endsWith("/FinansalTabloYonetimi/Kgk/TaramaGecmisi")) return json(tarandi ? [{
+      taramaId: "3f8c2b7c-6b78-42d5-9c3e-e3700a0b9bf4",
+      bitis: "2026-11-02T12:00:00Z",
+      degisenDosyaSayisi: 0,
+      anaSurumId: 7,
+      anaSurumNo: 2,
+    }] : []);
+    if (path.endsWith("/FinansalTabloYonetimi/Kgk/TaraVeArsivle")) {
+      tarandi = true;
+      return json({
+        anaSurumId: 7,
+        anaSurumNo: 2,
+        kontrol: { kaynakDonemKodu: "KGK_2023_VE_SONRASI", bulunanDosyaSayisi: 3, degisenDosyaSayisi: 0, dosyalar: [] },
+        arsivler: [{ dosyaAdi: "fdt.xlsx" }, { dosyaAdi: "kzt.xlsx" }, { dosyaAdi: "nat.xlsx" }],
+        hatalar: [],
+        toplamDenemeSayisi: 3,
+      });
+    }
+    return json(route.request().method() === "GET" ? [] : {});
+  });
+
+  await page.goto("/");
+  await page.getByLabel("Email").fill("e2e@local.test");
+  await page.getByLabel("Şifre").fill("E2E-only-password");
+  await page.getByRole("button", { name: "Giriş yap" }).click();
+  await page.waitForURL("**/Anasayfa");
+  await page.goto("/FinansalTabloYonetimi/KgkGuncellemeleri");
+  await page.getByRole("button", { name: "KGK güncellemesini otomatik kontrol et" }).click();
+
+  await expect(page.getByText("KGK ana sürüm #2 hazır.", { exact: false })).toBeVisible();
+  await page.getByText("KGK ana sürümleri (1)").click();
+  await expect(page.getByRole("button", { name: "BOBI-MUNFERIT · #4" })).toBeVisible();
+});

@@ -20,6 +20,7 @@ export type FinansalSurum = {
   gecerlilikBaslangici: string;
   gecerlilikBitisi?: string | null;
   kaynakSurumId?: number | null;
+  kgkAnaSurumId?: number | null;
   aciklama?: string | null;
   olusturmaTarihi: string;
   guncellemeTarihi?: string | null;
@@ -971,6 +972,8 @@ export type KgkTaramaSonucu = {
   arsivler: KgkArsivKaydi[];
   hatalar: Array<{ url: string; dosyaAdi: string; denemeSayisi: number; hata: string }>;
   toplamDenemeSayisi: number;
+  anaSurumId?: number | null;
+  anaSurumNo?: number | null;
 };
 
 export type KgkTaramaGecmisi = {
@@ -986,7 +989,29 @@ export type KgkTaramaGecmisi = {
   toplamDenemeSayisi: number;
   kaynakDonemKodu?: string | null;
   kaynakDonemAdi?: string | null;
+  anaSurumId?: number | null;
+  anaSurumNo?: number | null;
 };
+
+export type KgkAnaSurum = {
+  id: number;
+  kaynakDonemKodu: string;
+  surumNo: number;
+  kaynakUrl: string;
+  dosyaManifestiSha256: string;
+  dosyaSayisi: number;
+  olusturmaTarihi: string;
+  surumler: Array<{
+    id: number;
+    tanimSetiId: number;
+    tanimSetiKodu: string;
+    surumNo: number;
+    durum: number | string;
+  }>;
+};
+
+export const getKgkAnaSurumler = (token: string) =>
+  jsonGet<KgkAnaSurum[]>(token, "/Kgk/AnaSurumler");
 
 export const scanAndArchiveKgkFormats = async (
   token: string,
@@ -1164,6 +1189,9 @@ export const createKgkTaslakFromDifferences = async (
     aciklama?: string | null;
     beklenenKaynakEszamanlilikSurumu: number;
     kalemFarklari: KgkWorkbookFarkSonucu["kalemFarklari"];
+    kgkAnaSurumId?: number;
+    kgkDosyaUrl?: string;
+    kgkDosyaSha256?: string;
   }
 ) => {
   const response = await fetch(`${url}/FinansalTabloYonetimi/Surumler/${kaynakSurumId}/KgkTaslakOlustur`, {

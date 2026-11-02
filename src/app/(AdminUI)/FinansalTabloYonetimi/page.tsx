@@ -70,6 +70,8 @@ import {
   compareArchivedKgkWorkbooks,
   applyKgkKalemFarklari,
   createKgkTaslakFromDifferences,
+  getKgkAnaSurumler,
+  KgkAnaSurum,
   applyKgkFormulFarklari,
   createFinansalTabloUretimi,
   previewFinansalTabloUretimi,
@@ -358,8 +360,10 @@ const Page = ({ editorSurumId }: PageProps) => {
   const [kgkArsivlenenUrl, setKgkArsivlenenUrl] = useState("");
   const [kgkTaramaYukleniyor, setKgkTaramaYukleniyor] = useState(false);
   const [kgkTaramaHatasi, setKgkTaramaHatasi] = useState("");
+  const [kgkAnaSurumId, setKgkAnaSurumId] = useState<number | null>(null);
   const [kgkTaramaDenemesi, setKgkTaramaDenemesi] = useState(3);
   const [kgkTaramaGecmisi, setKgkTaramaGecmisi] = useState<KgkTaramaGecmisi[]>([]);
+  const [kgkAnaSurumler, setKgkAnaSurumler] = useState<KgkAnaSurum[]>([]);
   const [kgkGecmisYukleniyor, setKgkGecmisYukleniyor] = useState(false);
   const [kgkWorkbookSonucu, setKgkWorkbookSonucu] = useState<KgkWorkbookFarkSonucu | null>(null);
   const [kgkFarkBaglami, setKgkFarkBaglami] = useState<KgkFarkBaglami | null>(null);
@@ -624,8 +628,14 @@ const Page = ({ editorSurumId }: PageProps) => {
     const gecmisiYenile = async () => {
       setKgkGecmisYukleniyor(true);
       try {
-        const data = await getKgkScanHistory(user.token || "", 20);
-        if (etkin) setKgkTaramaGecmisi(data);
+        const [gecmis, anaSurumler] = await Promise.all([
+          getKgkScanHistory(user.token || "", 20),
+          getKgkAnaSurumler(user.token || ""),
+        ]);
+        if (etkin) {
+          setKgkTaramaGecmisi(gecmis);
+          setKgkAnaSurumler(anaSurumler);
+        }
       } catch (error) {
         if (etkin) setTanimHatasi(error instanceof Error ? error.message : "KGK tarama geçmişi okunamadı.");
       } finally {
@@ -1073,7 +1083,12 @@ const Page = ({ editorSurumId }: PageProps) => {
     if (!user.token) return;
     setKgkGecmisYukleniyor(true);
     try {
-      setKgkTaramaGecmisi(await getKgkScanHistory(user.token, 20));
+      const [gecmis, anaSurumler] = await Promise.all([
+        getKgkScanHistory(user.token, 20),
+        getKgkAnaSurumler(user.token),
+      ]);
+      setKgkTaramaGecmisi(gecmis);
+      setKgkAnaSurumler(anaSurumler);
     } catch (error) {
       setTanimHatasi(error instanceof Error ? error.message : "KGK tarama geçmişi okunamadı.");
     } finally {
@@ -1086,6 +1101,7 @@ const Page = ({ editorSurumId }: PageProps) => {
     setKgkTaramaYukleniyor(true);
     setKgkTaramaHatasi("");
     setKgkKontrolSonucu(null);
+    setKgkAnaSurumId(null);
     setTanimHatasi("");
     setSurumYonetimiMesaji("");
     kgkFarkiniTemizle();
@@ -1105,12 +1121,13 @@ const Page = ({ editorSurumId }: PageProps) => {
         raporlamaDonemiBitisTarihi: kgkRaporlamaTarihi,
       });
       setKgkKontrolSonucu(data.kontrol);
+      setKgkAnaSurumId(data.anaSurumId || null);
       const erisilemeyenDosyalar = data.kontrol.dosyalar.filter((dosya) => !dosya.erisilebilirMi);
       if (data.hatalar.length > 0 || erisilemeyenDosyalar.length > 0) {
         const ilkHata = erisilemeyenDosyalar[0]?.hata || data.hatalar[0]?.hata;
         setKgkTaramaHatasi(`${data.kontrol.bulunanDosyaSayisi} dosya bulundu; ${erisilemeyenDosyalar.length} dosyaya erişilemedi, ${data.hatalar.length} dosya arşivlenemedi.${ilkHata ? ` İlk hata: ${ilkHata}` : ""}`);
       } else {
-        setSurumYonetimiMesaji(`${data.arsivler.length} KGK dosyası arşivlendi; ${data.toplamDenemeSayisi} deneme yapıldı.`);
+        setSurumYonetimiMesaji(`${data.anaSurumNo ? `KGK ana sürüm #${data.anaSurumNo} hazır.` : "KGK taraması tamamlandı."} ${data.arsivler.length} dosya arşivlendi; ${data.toplamDenemeSayisi} deneme yapıldı.`);
       }
       await kgkTaramaGecmisiniYukle();
     } catch (error) {
@@ -1177,6 +1194,10 @@ const Page = ({ editorSurumId }: PageProps) => {
 
   const kgkFarktanTaslakOlustur = async () => {
     if (!user.token || !secilenSurum || !secilenSet || !kgkWorkbookSonucu) return;
+    if (!kgkAnaSurumId || !kgkFarkBaglami?.dosya.sha256) {
+      setTanimHatasi("Taslağı KGK ana sürümüne bağlamak için önce taramayı çalıştırın.");
+      return;
+    }
     if (!kgkFarkBaglami || kgkFarkBaglami.tanimSetiId !== secilenSet.id || kgkFarkBaglami.surumId !== secilenSurum.id) {
       setTanimHatasi("KGK farkı başka bir tanım veya sürüm için incelendi. Hedefi seçip arşivli farkı yeniden inceleyin.");
       return;
@@ -1194,6 +1215,9 @@ const Page = ({ editorSurumId }: PageProps) => {
         aciklama,
         beklenenKaynakEszamanlilikSurumu: kaynakSurum.eszamanlilikSurumu,
         kalemFarklari: kgkWorkbookSonucu.kalemFarklari,
+        kgkAnaSurumId,
+        kgkDosyaUrl: kgkFarkBaglami.dosya.url,
+        kgkDosyaSha256: kgkFarkBaglami.dosya.sha256,
       });
       const taslak = {
         ...kaynakSurum,
@@ -1202,6 +1226,7 @@ const Page = ({ editorSurumId }: PageProps) => {
         etiket: `${kaynakSurum.etiket} - KGK taslak`,
         durum: sonuc.durum,
         kaynakSurumId: kaynakSurum.id,
+        kgkAnaSurumId,
         aciklama,
         olusturmaTarihi: new Date().toISOString(),
         guncellemeTarihi: new Date().toISOString(),
@@ -2030,10 +2055,31 @@ const Page = ({ editorSurumId }: PageProps) => {
             </Typography>
           </Box>
           {kgkTaramaGecmisi[0]
-            ? <Chip color={kgkTaramaGecmisi[0].degisenDosyaSayisi > 0 ? "warning" : "success"} label={`Son tarama: ${kgkTaramaGecmisi[0].degisenDosyaSayisi} değişiklik · ${new Date(kgkTaramaGecmisi[0].bitis).toLocaleString("tr-TR")}`} />
+            ? <Chip color={kgkTaramaGecmisi[0].degisenDosyaSayisi > 0 ? "warning" : "success"} label={`Son tarama${kgkTaramaGecmisi[0].anaSurumNo ? ` · KGK ana sürüm #${kgkTaramaGecmisi[0].anaSurumNo}` : ""}: ${kgkTaramaGecmisi[0].degisenDosyaSayisi} değişiklik · ${new Date(kgkTaramaGecmisi[0].bitis).toLocaleString("tr-TR")}`} />
             : <Chip variant="outlined" label={kgkGecmisYukleniyor ? "Tarama durumu okunuyor" : "Henüz tarama kaydı yok"} />}
         </Stack>
       </Paper>
+      {kgkAnaSurumler.length > 0 && <Accordion disableGutters sx={{ mb: 2 }}>
+        <AccordionSummary expandIcon={<ExpandMoreIcon />}>
+          <Typography variant="subtitle2">KGK ana sürümleri ({kgkAnaSurumler.length})</Typography>
+        </AccordionSummary>
+        <AccordionDetails sx={{ pt: 0, overflowX: "auto" }}>
+          <Table size="small">
+            <TableHead><TableRow><TableCell>Kaynak dönemi</TableCell><TableCell>Ana sürüm</TableCell><TableCell align="right">Dosya</TableCell><TableCell>Bağlı rapor sürümleri</TableCell></TableRow></TableHead>
+            <TableBody>{kgkAnaSurumler.map((anaSurum) => <TableRow key={anaSurum.id}>
+              <TableCell>{kgkKaynakDonemleri.find((donem) => donem.kod === anaSurum.kaynakDonemKodu)?.ad || anaSurum.kaynakDonemKodu}</TableCell>
+              <TableCell>#{anaSurum.surumNo}<br /><Typography variant="caption" color="text.secondary">{new Date(anaSurum.olusturmaTarihi).toLocaleDateString("tr-TR")}</Typography></TableCell>
+              <TableCell align="right">{anaSurum.dosyaSayisi}</TableCell>
+              <TableCell>{anaSurum.surumler.length === 0
+                ? <Typography variant="body2" color="text.secondary">Henüz taslak bağlanmadı.</Typography>
+                : <Stack direction="row" spacing={0.5} flexWrap="wrap" useFlexGap>{anaSurum.surumler.map((surum) =>
+                  <Button key={surum.id} size="small" variant="text" onClick={() => router.push(`/FinansalTabloYonetimi/Surum/${surum.id}`)}>
+                    {surum.tanimSetiKodu} · #{surum.surumNo}
+                  </Button>)}</Stack>}</TableCell>
+            </TableRow>)}</TableBody>
+          </Table>
+        </AccordionDetails>
+      </Accordion>}
       <ParentCard title="KGK format güncelleme kontrolü">
         <Stack spacing={1.5}>
           {kgkTaramaHatasi && <Alert severity="error" onClose={() => setKgkTaramaHatasi("")}>{kgkTaramaHatasi}</Alert>}
