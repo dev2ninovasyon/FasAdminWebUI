@@ -106,7 +106,9 @@ const FormatTable = () => {
                 </Typography>
               </TableCell>
 
-              <TableCell></TableCell>
+              <TableCell>
+                <Typography variant="h6">İşlemler</Typography>
+              </TableCell>
             </TableRow>
           </TableHead>
           <TableBody>
@@ -130,42 +132,43 @@ const FormatTable = () => {
 
                 <TableCell>
                   <IconButton
-                    id="basic-button"
-                    aria-controls={open ? "basic-menu" : undefined}
+                    id={`format-actions-${row.id}`}
+                    aria-label={`${row.adi} işlemleri`}
+                    aria-controls={open && selectedId === row.id ? "format-actions-menu" : undefined}
                     aria-haspopup="true"
-                    aria-expanded={open ? "true" : undefined}
+                    aria-expanded={open && selectedId === row.id ? "true" : undefined}
                     onClick={(event) => handleClick(event, row.id)}
                   >
                     <IconDotsVertical width={18} />
                   </IconButton>
-                  <Menu
-                    id="basic-menu"
-                    anchorEl={anchorEl}
-                    open={open}
-                    onClose={handleClose}
-                    MenuListProps={{
-                      "aria-labelledby": "basic-button",
-                    }}
-                  >
-                    <MenuItem onClick={() => handleDuzenle()}>
-                      <ListItemIcon>
-                        <IconEdit width={18} />
-                      </ListItemIcon>
-                      Düzenle
-                    </MenuItem>
-                    <MenuItem onClick={() => handleDelete()}>
-                      <ListItemIcon>
-                        <IconTrash width={18} />
-                      </ListItemIcon>
-                      Sil
-                    </MenuItem>
-                  </Menu>
                 </TableCell>
               </TableRow>
             ))}
           </TableBody>
         </Table>
       </TableContainer>
+      <Menu
+        id="format-actions-menu"
+        anchorEl={anchorEl}
+        open={open}
+        onClose={handleClose}
+        MenuListProps={{
+          "aria-labelledby": selectedId === null ? undefined : `format-actions-${selectedId}`,
+        }}
+      >
+        <MenuItem onClick={handleDuzenle}>
+          <ListItemIcon>
+            <IconEdit width={18} />
+          </ListItemIcon>
+          Düzenle
+        </MenuItem>
+        <MenuItem onClick={handleDelete}>
+          <ListItemIcon>
+            <IconTrash width={18} />
+          </ListItemIcon>
+          Sil
+        </MenuItem>
+      </Menu>
     </BlankCard>
   );
 };

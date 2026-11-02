@@ -1808,7 +1808,26 @@ const Page = () => {
               Tanımı seçin, formülleri sürümleyin ve örnek mizanla üretimi test edin. KGK güncellemeleri ayrı ekrandan yönetilir.
             </Typography>
           </Box>
-          <Stepper activeStep={aktifAdim} nonLinear alternativeLabel sx={{ overflowX: "auto", pb: 0.5 }}>
+          <Stepper
+            activeStep={aktifAdim}
+            nonLinear
+            alternativeLabel
+            sx={{
+              width: "100%",
+              minWidth: 0,
+              py: 1,
+              "& .MuiStep-root": { flex: 1, minWidth: 0, px: 0.5 },
+              "& .MuiStepButton-root": {
+                width: "100%",
+                m: 0,
+                px: 1,
+                py: 1.5,
+                boxSizing: "border-box",
+              },
+              "& .MuiStepLabel-root": { minWidth: 0, maxWidth: "100%" },
+              "& .MuiStepLabel-label": { whiteSpace: "normal", overflowWrap: "anywhere" },
+            }}
+          >
             {finansalTabloAdimlari.map((adim, index) => (
               <Step key={adim.baslik} completed={tamamlananAdimlar[index]}>
                 <StepButton color="inherit" onClick={() => setAktifAdim(index)}>
@@ -2032,7 +2051,7 @@ const Page = () => {
                             <Button size="small" component="a" href={dosya.url} target="_blank" rel="noreferrer">Kaynağı aç</Button>
                             {incelenebilirMi && hedefUyumsuzlugu && <Chip size="small" variant="outlined" label="Seçili tanımla uyumsuz" title={hedefUyumsuzlugu} />}
                             {incelenebilirMi && !hedefUyumsuzlugu && (
-                              <Button size="small" variant="contained" color="info" onClick={() => kgkArsivWorkbookKarsilastir(dosya)} disabled={!secilenSurum || kgkArsivWorkbookYukleniyor === dosya.url}>
+                              <Button size="small" variant="contained" color="primary" onClick={() => kgkArsivWorkbookKarsilastir(dosya)} disabled={!secilenSurum || kgkArsivWorkbookYukleniyor === dosya.url}>
                                 {kgkArsivWorkbookYukleniyor === dosya.url ? <CircularProgress size={16} color="inherit" /> : "Değişikliği incele"}
                               </Button>
                             )}
@@ -2050,7 +2069,7 @@ const Page = () => {
                     <Button size="small" variant="outlined" onClick={() => kgkDosyaIndir(dosya.url)} disabled={!dosya.erisilebilirMi || kgkIndirilenUrl === dosya.url}>
                       {kgkIndirilenUrl === dosya.url ? <CircularProgress size={16} /> : `${dosya.dosyaAdi} güvenli indir`}
                     </Button>
-                    <Button size="small" variant="outlined" color="secondary" onClick={() => kgkDosyaArsivle(dosya.url)} disabled={!dosya.erisilebilirMi || kgkArsivlenenUrl === dosya.url}>
+                    <Button size="small" variant="outlined" color="primary" onClick={() => kgkDosyaArsivle(dosya.url)} disabled={!dosya.erisilebilirMi || kgkArsivlenenUrl === dosya.url}>
                       {kgkArsivlenenUrl === dosya.url ? <CircularProgress size={16} /> : "Arşivle"}
                     </Button>
                   </Stack>
@@ -2082,7 +2101,7 @@ const Page = () => {
                 {(kgkWorkbookSonucu.semantikDegisiklikVarMi || kgkWorkbookSonucu.formulDegisikligiVarMi) && secilenSurum && surumDurumKodu(secilenSurum.durum) !== 1 && <Button size="small" variant="outlined" onClick={kgkFarktanTaslakOlustur} disabled={surumIslemiYukleniyor}>KGK farkından taslak oluştur</Button>}
                 {kgkWorkbookSonucu.semantikDegisiklikVarMi && secilenSurum && surumDurumKodu(secilenSurum.durum) === 1 && !kgkKalemFarkiUygulandiMi && <Button size="small" variant="outlined" onClick={kgkKalemFarklariniTaslagAktar} disabled={surumIslemiYukleniyor}>KGK kalem farklarını taslağa aktar</Button>}
                 {kgkKalemFarkiUygulandiMi && <Chip size="small" color="success" variant="outlined" label="Kalem farkları aktarıldı" />}
-                {kgkWorkbookSonucu.formulDegisikligiVarMi && secilenSurum && surumDurumKodu(secilenSurum.durum) === 1 && !kgkFormulFarkiUygulandiMi && <Button size="small" variant="contained" color="secondary" onClick={kgkFormulFarklariniTaslagAktar} disabled={surumIslemiYukleniyor || (kgkWorkbookSonucu.semantikDegisiklikVarMi && !kgkKalemFarkiUygulandiMi)}>KGK formül farklarını taslağa aktar</Button>}
+                {kgkWorkbookSonucu.formulDegisikligiVarMi && secilenSurum && surumDurumKodu(secilenSurum.durum) === 1 && !kgkFormulFarkiUygulandiMi && <Button size="small" variant="contained" color="primary" onClick={kgkFormulFarklariniTaslagAktar} disabled={surumIslemiYukleniyor || (kgkWorkbookSonucu.semantikDegisiklikVarMi && !kgkKalemFarkiUygulandiMi)}>KGK formül farklarını taslağa aktar</Button>}
                 {kgkFormulFarkiUygulandiMi && <Chip size="small" color="success" variant="outlined" label="Formül farkları aktarıldı" />}
               </Stack>
               {kgkWorkbookSonucu.farklar.length > 0 && <Table size="small"><TableHead><TableRow><TableCell>Tür</TableCell><TableCell>Anahtar</TableCell><TableCell>Değişiklik</TableCell></TableRow></TableHead><TableBody>{kgkWorkbookSonucu.farklar.map((fark) => <TableRow key={`${fark.degisiklikTuru}-${fark.anahtar}`}><TableCell>{fark.nesneTuru}</TableCell><TableCell>{fark.anahtar}</TableCell><TableCell>{fark.degisiklikTuru}</TableCell></TableRow>)}</TableBody></Table>}

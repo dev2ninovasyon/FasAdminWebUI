@@ -1,4 +1,4 @@
-.handsontableInput {
+.handsontableInput:not(.fas-admin-table *) {
   color: #2a3547 !important;
 }
 
@@ -8,7 +8,7 @@
 }
 
 /* Hücre dikey hizalama ve ikonlar için göreceli konumlandırma */
-.handsontable td {
+.handsontable td:not(.fas-admin-table *) {
   position: relative !important;
   vertical-align: middle !important;
   padding-right: 25px !important;
@@ -16,7 +16,7 @@
 }
 
 /* Açılır menü ikonu */
-.htAutocompleteArrow {
+.htAutocompleteArrow:not(.fas-admin-table *) {
   position: absolute !important;
   right: 5px !important;
   top: 50% !important;
@@ -33,7 +33,7 @@
   justify-content: center !important;
 }
 
-.htAutocompleteArrow:after {
+.htAutocompleteArrow:not(.fas-admin-table *):after {
   content: '▽' !important;
   /* Outline üçgen */
   font-size: 18px !important;

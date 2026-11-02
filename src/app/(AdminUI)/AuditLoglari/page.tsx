@@ -25,7 +25,6 @@ import {
   Table,
   TableBody,
   TableCell,
-  TableContainer,
   TableHead,
   TableRow,
   TextField,
@@ -42,6 +41,7 @@ import {
 import Breadcrumb from "@/app/components/Layout/Shared/Breadcrumb/Breadcrumb";
 import PageContainer from "@/app/components/Container/PageContainer";
 import ParentCard from "@/app/components/Shared/ParentCard";
+import AdminTableContainer from "@/app/components/Shared/AdminTableContainer";
 import { usePageTitle } from "@/hooks/usePageTitle";
 import { useSelector } from "@/store/hooks";
 import { AppState } from "@/store/store";
@@ -217,7 +217,7 @@ export default function AuditLoglariPage() {
           </Paper>
 
           {/* Table */}
-          <TableContainer component={Paper} variant="outlined" sx={{ maxHeight: "65vh", borderRadius: 2 }}>
+          <AdminTableContainer density="compact" sx={{ maxHeight: "65vh" }}>
             <Table stickyHeader size="small">
               <TableHead>
                 <TableRow>
@@ -246,13 +246,13 @@ export default function AuditLoglariPage() {
                 ) : filteredLogs.length > 0 ? (
                   filteredLogs.map((item) => (
                     <TableRow key={item.id} hover>
-                      <TableCell sx={{ fontSize: "0.8rem", whiteSpace: "nowrap" }}>
+                      <TableCell sx={{ whiteSpace: "nowrap" }}>
                         {formatDate(item.createdAt)}
                       </TableCell>
-                      <TableCell sx={{ fontSize: "0.85rem", fontWeight: 600 }}>
+                      <TableCell>
                         {item.userName || `#${item.userId}`}
                       </TableCell>
-                      <TableCell sx={{ fontSize: "0.8rem" }}>
+                      <TableCell>
                         {item.denetlenenUnvani || (item.denetlenenId ? `Şirket #${item.denetlenenId}` : "-")}
                         {item.yil ? ` (${item.yil})` : ""}
                       </TableCell>
@@ -271,8 +271,8 @@ export default function AuditLoglariPage() {
                           color={getStatusColor(item.statusCode, item.isError)}
                         />
                       </TableCell>
-                      <TableCell sx={{ fontSize: "0.85rem" }}>
-                        <Typography variant="body2" fontWeight={600}>
+                      <TableCell>
+                        <Typography variant="body1" fontWeight={600}>
                           {item.friendlyTitle || item.actionName || item.controllerName || "-"}
                         </Typography>
                         {item.controllerName && (
@@ -281,7 +281,7 @@ export default function AuditLoglariPage() {
                           </Typography>
                         )}
                       </TableCell>
-                      <TableCell sx={{ fontSize: "0.8rem", maxWidth: 220, overflow: "hidden", textOverflow: "ellipsis" }}>
+                      <TableCell sx={{ maxWidth: 220, overflow: "hidden", textOverflow: "ellipsis" }}>
                         <Tooltip title={item.path || ""}>
                           <span>{item.path}</span>
                         </Tooltip>
@@ -308,7 +308,7 @@ export default function AuditLoglariPage() {
                 )}
               </TableBody>
             </Table>
-          </TableContainer>
+          </AdminTableContainer>
         </Stack>
       </ParentCard>
 

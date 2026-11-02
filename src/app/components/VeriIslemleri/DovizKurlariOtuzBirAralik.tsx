@@ -4,10 +4,9 @@ import "@/lib/handsontableSetup";
 import CustomHotTable from "@/components/HotTableWrapper";
 import { registerAllModules } from "handsontable/registry";
 
-import { plus } from "@/utils/theme/Typography";
 import { useDispatch, useSelector } from "@/store/hooks";
 import { AppState } from "@/store/store";
-import { Grid, useTheme } from "@mui/material";
+import { Grid } from "@mui/material";
 import { useEffect, useRef, useState } from "react";
 import ExcelJS from "exceljs";
 import { saveAs } from "file-saver";
@@ -38,24 +37,14 @@ const DovizKurlariOtuzBirAralik: React.FC<Props> = ({
   const user = useSelector((state: AppState) => state.userReducer);
   const customizer = useSelector((state: AppState) => state.customizer);
   const dispatch = useDispatch();
-  const theme = useTheme();
 
   const [rowCount, setRowCount] = useState(0);
 
   const [fetchedData, setFetchedData] = useState<Veri[]>([]);
 
   useEffect(() => {
-    const loadStyles = async () => {
-      dispatch(setCollapse(true));
-      if (customizer.activeMode === "dark") {
-        await import("@/app/components/HandsOnTable/HandsOnTableDark.css");
-      } else {
-        await import("@/app/components/HandsOnTable/HandsOnTableLight.css");
-      }
-    };
-
-    loadStyles();
-  }, [customizer.activeMode]);
+    dispatch(setCollapse(true));
+  }, [dispatch]);
 
   const colHeaders = ["Tarih", "Kodu", "Adı", "Döviz Alış", "Döviz Satış"];
 
@@ -101,113 +90,6 @@ const DovizKurlariOtuzBirAralik: React.FC<Props> = ({
       editor: false,
     }, // Döviz Satış
   ];
-
-  const afterGetColHeader = (col: any, TH: any) => {
-    TH.style.height = "50px";
-
-    let div = TH.querySelector("div");
-    if (!div) {
-      div = document.createElement("div");
-      TH.appendChild(div);
-    }
-
-    div.style.whiteSpace = "normal";
-    div.style.wordWrap = "break-word";
-    div.style.display = "flex";
-    div.style.alignItems = "center";
-    div.style.height = "100%";
-    div.style.position = "relative";
-
-    //typography body1
-    TH.style.fontFamily = plus.style.fontFamily;
-    TH.style.fontWeight = 500;
-    TH.style.fontSize = "0.875rem";
-    TH.style.lineHeight = "1.334rem";
-
-    //color
-    TH.style.color = customizer.activeMode === "dark" ? "#ffffff" : "#2A3547";
-    TH.style.backgroundColor = theme.palette.primary.light;
-    //customizer.activeMode === "dark" ? "#253662" : "#ECF2FF";
-
-    TH.style.borderColor = customizer.activeMode === "dark" ? "#10141c" : "#";
-
-    // Create span for the header text
-    let span = div.querySelector("span");
-    if (!span) {
-      span = document.createElement("span");
-      div.appendChild(span);
-    }
-    span.textContent = colHeaders[col];
-    span.style.position = "absolute";
-    span.style.marginRight = "16px";
-    span.style.left = "4px";
-
-    // Create button if it does not exist
-    let button = div.querySelector("button");
-    if (!button) {
-      button = document.createElement("button");
-      button.style.display = "none";
-      div.appendChild(button);
-    }
-    button.style.position = "absolute";
-    button.style.right = "4px";
-  };
-
-  const afterGetRowHeader = (row: any, TH: any) => {
-    let div = TH.querySelector("div");
-    div.style.whiteSpace = "normal";
-    div.style.wordWrap = "break-word";
-    div.style.display = "flex";
-    div.style.alignItems = "center";
-    div.style.justifyContent = "center";
-    div.style.height = "100%";
-
-    //typography body1
-    TH.style.fontFamily = plus.style.fontFamily;
-    TH.style.fontWeight = 500;
-    TH.style.fontSize = "0.875rem";
-    TH.style.lineHeight = "1.334rem";
-
-    //color
-    TH.style.color = customizer.activeMode === "dark" ? "#ffffff" : "#2A3547";
-    TH.style.backgroundColor = theme.palette.primary.light;
-    //customizer.activeMode === "dark" ? "#253662" : "#ECF2FF";
-
-    TH.style.borderColor = customizer.activeMode === "dark" ? "#10141c" : "#";
-  };
-
-  const afterRenderer = (
-    TD: any,
-    row: any,
-    col: any,
-    prop: any,
-    value: any,
-    cellProperties: any
-  ) => {
-    //typography body1
-    TD.style.fontFamily = plus.style.fontFamily;
-    TD.style.fontWeight = 500;
-    TD.style.fontSize = "0.875rem";
-    TD.style.lineHeight = "1.334rem";
-    //TD.style.textAlign = "left";
-
-    //color
-    TD.style.color = customizer.activeMode === "dark" ? "#ffffff" : "#2A3547";
-
-    if (row % 2 === 0) {
-      TD.style.backgroundColor =
-        customizer.activeMode === "dark" ? "#171c23" : "#ffffff";
-      TD.style.borderColor =
-        customizer.activeMode === "dark" ? "#10141c" : "#cccccc";
-    } else {
-      TD.style.backgroundColor =
-        customizer.activeMode === "dark" ? "#10141c" : "#cccccc";
-      TD.style.borderColor =
-        customizer.activeMode === "dark" ? "#10141c" : "#cccccc";
-      TD.style.borderRightColor =
-        customizer.activeMode === "dark" ? "#171c23" : "#ffffff";
-    }
-  };
 
   const fetchData = async () => {
     try {
@@ -316,7 +198,9 @@ const DovizKurlariOtuzBirAralik: React.FC<Props> = ({
 
   return (
     <>
-      <CustomHotTable 
+      <CustomHotTable
+        adminDesign
+        density="compact"
         style={{
           height: "100%",
           width: "100%",
@@ -333,7 +217,6 @@ const DovizKurlariOtuzBirAralik: React.FC<Props> = ({
         stretchH="all"
         manualColumnResize={true}
         rowHeaders={true}
-        rowHeights={35}
         autoWrapRow={true}
         minRows={rowCount}
         minCols={3}
@@ -345,9 +228,6 @@ const DovizKurlariOtuzBirAralik: React.FC<Props> = ({
           "filter_action_bar",
         ]}
         licenseKey="non-commercial-and-evaluation" // For non-commercial use only
-        afterGetColHeader={afterGetColHeader}
-        afterGetRowHeader={afterGetRowHeader}
-        afterRenderer={afterRenderer}
         contextMenu={["alignment", "copy"]}
       />
       <Grid container marginTop={2} marginBottom={1}>

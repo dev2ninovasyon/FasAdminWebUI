@@ -1,12 +1,13 @@
 import { Card } from '@mui/material';
 import { useTheme } from '@mui/material/styles';
+import type { SxProps, Theme } from '@mui/material/styles';
 import { AppState } from '@/store/store';
 import { useSelector } from '@/store/hooks';
 
 type Props = {
   className?: string;
   children: React.ReactNode;
-  sx?: any;
+  sx?: SxProps<Theme>;
 };
 
 const BlankCard = ({ children, className, sx }: Props) => {
@@ -17,7 +18,10 @@ const BlankCard = ({ children, className, sx }: Props) => {
 
   return (
     <Card
-      sx={{ p: 0, border: !customizer.isCardShadow ? `1px solid ${borderColor}` : 'none', position: 'relative', sx }}
+      sx={[
+        { p: 0, border: !customizer.isCardShadow ? `1px solid ${borderColor}` : 'none', position: 'relative' },
+        ...(Array.isArray(sx) ? sx : sx ? [sx] : []),
+      ]}
       className={className}
       elevation={customizer.isCardShadow ? 9 : 0}
       variant={!customizer.isCardShadow ? 'outlined' : undefined}

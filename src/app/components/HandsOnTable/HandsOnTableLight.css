@@ -1,3 +1,3 @@
-.handsontableInput {
+.handsontableInput:not(.fas-admin-table *) {
   color: #2a3547 !important;
 }

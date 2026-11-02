@@ -58,3 +58,12 @@ BREAKING CHANGE: <kırıcı değişikliğin açıklaması>
 - API: `GET /api/health` → `version`, `commit`, `builtAt` alanları.
 - UI: Netlify deploy kaydındaki commit SHA'sı ile GitHub Sürümü karşılaştırılır.
 <!-- END:surumleme-kurallari -->
+
+## Tasarım tutarlılığı
+
+FasAdminWebUI'da tablo, tipografi, renk, kart, form, buton ve diyalog görünümüyle ilgili işlerde
+projedeki [SKILL.md](SKILL.md) dosyasını ve onun yönlendirdiği
+[tasarım sözleşmesi ve uygulama planını](docs/TASARIM-STANDARDIZASYON-PLANI.md) oku.
+Aynı bileşen rolü sayfalar arasında ortak tema ve stilleri kullanmalıdır.
+Planın işaretlenmemiş aşamaları henüz uygulanmamıştır; yalnızca plan hazırlama talebinde
+sayfa tasarımlarını topluca değiştirme.

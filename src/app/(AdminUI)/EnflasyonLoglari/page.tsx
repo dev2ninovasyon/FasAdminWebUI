@@ -17,7 +17,6 @@ import {
   Table,
   TableBody,
   TableCell,
-  TableContainer,
   TableHead,
   TableRow,
   Tabs,
@@ -32,6 +31,7 @@ import {
 import Breadcrumb from "@/app/components/Layout/Shared/Breadcrumb/Breadcrumb";
 import PageContainer from "@/app/components/Container/PageContainer";
 import ParentCard from "@/app/components/Shared/ParentCard";
+import AdminTableContainer from "@/app/components/Shared/AdminTableContainer";
 import { usePageTitle } from "@/hooks/usePageTitle";
 import { useSelector } from "@/store/hooks";
 import { AppState } from "@/store/store";
@@ -169,14 +169,10 @@ export default function EnflasyonLoglariPage() {
           {error && <Alert severity="warning">{error}</Alert>}
 
           {/* Table Container */}
-          <TableContainer
-            component={Paper}
-            variant="outlined"
+          <AdminTableContainer
+            density="compact"
             sx={{
               maxHeight: "65vh",
-              borderRadius: 2,
-              bgcolor: "background.paper",
-              color: "text.primary",
             }}
           >
             {loading && logs.length === 0 ? (
@@ -208,7 +204,7 @@ export default function EnflasyonLoglariPage() {
                           }}
                           onClick={() => setSelectedLog(log)}
                         >
-                          <TableCell sx={{ color: "text.secondary", fontSize: "0.8rem" }}>
+                          <TableCell>
                             {index + 1}
                           </TableCell>
                           <TableCell>
@@ -229,7 +225,6 @@ export default function EnflasyonLoglariPage() {
                                   : color === "info"
                                   ? "info.main"
                                   : "text.primary",
-                              fontSize: "0.85rem",
                               whiteSpace: "pre-wrap",
                               wordBreak: "break-all",
                             }}
@@ -249,7 +244,7 @@ export default function EnflasyonLoglariPage() {
                 </TableBody>
               </Table>
             )}
-          </TableContainer>
+          </AdminTableContainer>
         </Stack>
       </ParentCard>
 
