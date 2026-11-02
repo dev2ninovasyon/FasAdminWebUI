@@ -109,7 +109,7 @@ const fulfillJson = (route: Route, body: unknown, status = 200) => route.fulfill
   body: JSON.stringify(body),
 });
 
-test("admin girişinden güvenli doğrulama ve kontrollü sürüm aktivasyonuna kadar çalışır", async ({ page }) => {
+test("admin girişinden güvenli doğrulama ve sürüm aktivasyonuna kadar çalışır", async ({ page }) => {
   let loginPayload: Record<string, unknown> | null = null;
   let ruleUpdatePayload: Record<string, any> | null = null;
   let validationPayload: Record<string, any> | null = null;
@@ -127,7 +127,6 @@ test("admin girişinden güvenli doğrulama ve kontrollü sürüm aktivasyonuna 
   let productionWriteCount = 0;
   let mainTableTransitionListCount = 0;
   let validationShouldFail = false;
-  let pilotEnabled = false;
   let definitionAuthorization = "";
   const runtimeErrors: string[] = [];
   const isCancelledDashboardRequest = (value: string) =>
@@ -189,34 +188,15 @@ test("admin girişinden güvenli doğrulama ve kontrollü sürüm aktivasyonuna 
 
     if (path.endsWith("/FinansalTabloYonetimi/SurumYonetimi/Durum")) {
       return fulfillJson(route, {
-        etkin: pilotEnabled,
-        eskiAkisKorunuyor: true,
+        etkin: true,
+        mevcutRaporlarKorunuyor: true,
         acikSurumSecimiZorunlu: true,
-        aciklama: pilotEnabled
-          ? "E2E testinde kontrollü sürüm geçişi açıktır."
-          : "E2E testinde canlı sürüm geçişi kapalıdır.",
+        aciklama: "Sürüm yönetimi etkin. Yalnız doğrulanmış taslaklar Admin onayıyla devreye alınabilir.",
       });
     }
 
     if (path.endsWith("/FinansalTabloYonetimi/Surumler/11/Tanim")) {
       return fulfillJson(route, versionDetail);
-    }
-
-    if (path.endsWith("/FinansalTabloYonetimi/Surumler/11/LegacyFormuller/Karsilastir")) {
-      return fulfillJson(route, {
-        surumId: 11,
-        tanimSetiId: 1,
-        taslakMi: true,
-        kilitliMi: true,
-        kilitSurumId: 10,
-        eszamanlilikSurumu: 7,
-        kaynakSha256: "a".repeat(64),
-        karsilastirilanKuralSayisi: 1,
-        farkSayisi: 0,
-        aktarilabilirFarkSayisi: 0,
-        incelemeGerektirenFarkSayisi: 0,
-        farklar: [],
-      });
     }
 
     if (path.endsWith("/FinansalTabloYonetimi/Surumler/11/Dogrula") && request.method() === "POST") {
@@ -308,7 +288,7 @@ test("admin girişinden güvenli doğrulama ve kontrollü sürüm aktivasyonuna 
         dogrulananTabloSayisi: 4,
         dogrulananDonemSayisi: 12,
         durum: 1,
-        eskiAkisEtkin: true,
+        yeniMotorEtkin: false,
         hazirlikTarihi: "2026-10-30T13:00:00Z",
         etkinlestirmeTarihi: null,
         geriAlmaTarihi: null,
@@ -323,7 +303,7 @@ test("admin girişinden güvenli doğrulama ve kontrollü sürüm aktivasyonuna 
       mainTableTransition = {
         ...mainTableTransition,
         durum: 2,
-        eskiAkisEtkin: false,
+        yeniMotorEtkin: true,
         etkinlestirmeTarihi: "2026-10-30T13:05:00Z",
         aciklama: mainTableActivationPayload.aciklama,
         eszamanlilikSurumu: 2,
@@ -336,7 +316,7 @@ test("admin girişinden güvenli doğrulama ve kontrollü sürüm aktivasyonuna 
       mainTableTransition = {
         ...mainTableTransition,
         durum: 3,
-        eskiAkisEtkin: true,
+        yeniMotorEtkin: false,
         geriAlmaTarihi: "2026-10-30T13:10:00Z",
         eszamanlilikSurumu: 3,
       };
@@ -488,7 +468,7 @@ test("admin girişinden güvenli doğrulama ve kontrollü sürüm aktivasyonuna 
 
   await page.getByRole("button", { name: "Tanımı seç", exact: true }).click();
   await expect(page.getByRole("button", { name: "Devreye al" })).toBeDisabled();
-  await expect(page.getByText("Canlı kullanıcılar eski tablolarla devam ediyor.", { exact: false })).toBeVisible();
+  await expect(page.getByText("Devreye alma mevcut raporları değiştirmez", { exact: false })).toBeVisible();
 
   validationShouldFail = true;
   await expect(page.getByText("Yapılandırılmış kural editörü", { exact: true })).toBeVisible();
@@ -509,12 +489,11 @@ test("admin girişinden güvenli doğrulama ve kontrollü sürüm aktivasyonuna 
   expect(productionWriteCount).toBe(0);
   expect(runtimeErrors).toEqual([]);
 
-  pilotEnabled = true;
   validationShouldFail = false;
   draftVersion.eszamanlilikSurumu = 9;
   versionDetail.surum.eszamanlilikSurumu = 9;
   await page.reload();
-  await expect(page.getByText("İzole sürüm pilotu açık", { exact: true })).toBeVisible();
+  await expect(page.getByText("Sürüm yönetimi etkin", { exact: true })).toBeVisible();
 
   await page.getByRole("button", { name: "Otomatik testi çalıştır" }).click();
   await expect.poll(() => validationCallCount).toBe(3);
@@ -523,7 +502,7 @@ test("admin girişinden güvenli doğrulama ve kontrollü sürüm aktivasyonuna 
 
   await page.getByRole("button", { name: "Tanımı seç", exact: true }).click();
   await page.getByLabel("Etkinlik tarihi").fill("2026-11-01");
-  await page.getByLabel("Admin onay açıklaması").fill("E2E kontrollü pilot onayı");
+  await page.getByLabel("Admin onay açıklaması").fill("E2E sürüm yayın onayı");
   await expect(page.getByRole("button", { name: "Devreye al" })).toBeEnabled();
   await page.getByRole("button", { name: "Devreye al" }).click();
 
@@ -531,7 +510,7 @@ test("admin girişinden güvenli doğrulama ve kontrollü sürüm aktivasyonuna 
   expect(activationPayload).toMatchObject({
     beklenenEszamanlilikSurumu: 9,
     etkinlikTarihi: "2026-11-01",
-    onayAciklamasi: "E2E kontrollü pilot onayı",
+    onayAciklamasi: "E2E sürüm yayın onayı",
   });
   await expect(page.getByText("Sürüm #4 devreye alındı.", { exact: false }).first()).toBeVisible();
   await expect(page.getByText("Aktif", { exact: true }).first()).toBeVisible();
@@ -540,7 +519,7 @@ test("admin girişinden güvenli doğrulama ve kontrollü sürüm aktivasyonuna 
   await page.getByRole("button", { name: "Sonraki: Üretimi test et" }).click();
   await page.getByRole("button", { name: "Ayrıntıları göster" }).click();
   await expect(page.getByText("Ana tabloya kontrollü geçiş", { exact: true })).toBeVisible();
-  await expect(page.getByText("Eski akış etkin", { exact: true }).last()).toBeVisible();
+  await expect(page.getByText("Yeni üretim durduruldu", { exact: true }).last()).toBeVisible();
   await page.getByRole("button", { name: "Durumu yenile" }).click();
   await expect.poll(() => mainTableTransitionListCount).toBe(1);
 
@@ -552,7 +531,7 @@ test("admin girişinden güvenli doğrulama ve kontrollü sürüm aktivasyonuna 
     testMizanId: "11111111-2222-3333-4444-555555555555",
     aciklama: "E2E ana tablo geçişi",
   });
-  await expect(page.getByText("Hazır · eski akış etkin", { exact: true })).toBeVisible();
+  await expect(page.getByText("Hazır · etkinleştirme bekliyor", { exact: true })).toBeVisible();
   await expect(page.getByText("4 tablo · 12 dönem", { exact: true })).toBeVisible();
   await expect(page.getByRole("button", { name: "Ana tablolara uygula" })).toBeDisabled();
 
@@ -568,13 +547,13 @@ test("admin girişinden güvenli doğrulama ve kontrollü sürüm aktivasyonuna 
   await expect(page.getByText("Yeni sürüm etkin", { exact: true })).toBeVisible();
   await expect(page.getByText("Hata olursa mevcut ana tablo kayıtları silinmez.", { exact: false })).toBeVisible();
 
-  await page.getByRole("button", { name: "Eski akışa dön" }).click();
+  await page.getByRole("button", { name: "Yeni üretimi durdur" }).click();
   await expect.poll(() => mainTableRollbackPayload).not.toBeNull();
   expect(mainTableRollbackPayload).toMatchObject({
     beklenenEszamanlilikSurumu: 2,
     aciklama: "E2E ana tablo geçişi",
   });
-  await expect(page.getByText("Eski akış etkin", { exact: true }).last()).toBeVisible();
+  await expect(page.getByText("Yeni üretim durduruldu", { exact: true }).last()).toBeVisible();
   expect(productionWriteCount).toBe(0);
   expect(runtimeErrors).toEqual([]);
 });
