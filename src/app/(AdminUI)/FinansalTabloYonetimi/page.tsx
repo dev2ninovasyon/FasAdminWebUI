@@ -1684,9 +1684,10 @@ const Page = ({ editorSurumId }: PageProps) => {
       .map((kimlik) => {
         const cozumYili = yil + donem.donemOfseti + kimlik.donemOfseti;
         const tarihYiliniDegistir = (tarih: string) => {
+          const hedefYil = Number(tarih.slice(0, 4)) + cozumYili - yil;
           const ay = Number(tarih.slice(5, 7));
-          const gun = Math.min(Number(tarih.slice(8, 10)), new Date(Date.UTC(cozumYili, ay, 0)).getUTCDate());
-          return `${cozumYili}-${String(ay).padStart(2, "0")}-${String(gun).padStart(2, "0")}`;
+          const gun = Math.min(Number(tarih.slice(8, 10)), new Date(Date.UTC(hedefYil, ay, 0)).getUTCDate());
+          return `${hedefYil}-${String(ay).padStart(2, "0")}-${String(gun).padStart(2, "0")}`;
         };
         return {
           donemDavranisi: kimlik.donemDavranisi,
@@ -1700,6 +1701,8 @@ const Page = ({ editorSurumId }: PageProps) => {
       });
     if (donemEslesmeleri.some((eslesme) => !/^\d{4}-\d{2}-\d{2}$/.test(eslesme.donem.baslangicTarihi)
       || !/^\d{4}-\d{2}-\d{2}$/.test(eslesme.donem.bitisTarihi)
+      || Number(eslesme.donem.baslangicTarihi.slice(0, 4)) < 1900
+      || Number(eslesme.donem.baslangicTarihi.slice(0, 4)) > 2200
       || Number(eslesme.donem.bitisTarihi.slice(0, 4)) < 1900
       || Number(eslesme.donem.bitisTarihi.slice(0, 4)) > 2200)) {
       setTanimHatasi("Formüllerdeki dönem ofseti geçerli bir raporlama yılına karşılık gelmiyor.");
