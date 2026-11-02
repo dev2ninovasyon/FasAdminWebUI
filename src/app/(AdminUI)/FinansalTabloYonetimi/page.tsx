@@ -1053,6 +1053,7 @@ const Page = ({ editorSurumId }: PageProps) => {
       setDevreyeAlmaAciklamasi("");
       setSonDevreyeAlinanSurumId(sonuc.surumId);
       setSurumYonetimiMesaji(`Sürüm #${secilenSurum.surumNo} devreye alındı. ${sonuc.kullanimdanKaldirilanSurumIdleri.length} önceki sürüm kullanım dışına alındı; eski üretimler değişmedi.`);
+      await anaTabloGecisleriniYukle();
     } catch (error) {
       setTanimHatasi(error instanceof Error ? error.message : "Sürüm devreye alınamadı.");
     } finally {
@@ -1921,7 +1922,7 @@ const Page = ({ editorSurumId }: PageProps) => {
     if (!secilenSet || !secilenSurum) return { seviye: "error" as const, baslik: "Kullanılabilir tanım bulunamadı", aciklama: "Tanım arama filtrelerini açın veya aktif bir tanım seti seçin.", eylem: "tanim", dugme: "Tanım seçimine dön" };
     if (seciliSurumTaslakMi && !teknikDogrulamaGuncelMi) return { seviye: "warning" as const, baslik: "Otomatik test hazır", aciklama: "Sistem tanımları doğrulayacak, izole test mizanını hazırlayacak ve önizlemeyi tek işlemde çalıştıracak.", eylem: "otomatik-test", dugme: "Otomatik testi çalıştır" };
     if (seciliSurumTaslakMi && !teknikDogrulamaBasariliMi) return { seviye: "error" as const, baslik: "Düzeltilmesi gereken tanımlar var", aciklama: "Sorunlu tablo ve formüller aşağıda gösterildi. Düzeltmeden yayınlama yapılamaz.", eylem: "tanim", dugme: "Sorunları incele" };
-    if (yeniSurumDevredeMi) return { seviye: "success" as const, baslik: "Sürüm devreye alındı", aciklama: "Yeni finansal tablo üretimleri bu sürümü kullanacak; önceki raporlar korunur.", eylem: "kgk", dugme: "KGK kontrolüne geç" };
+    if (yeniSurumDevredeMi) return { seviye: "success" as const, baslik: "Sürüm devreye alındı", aciklama: "Ana tablolarda kullanmak için örnek mizanla hazırlayıp geçişi etkinleştirin. Önceki raporlar korunur.", eylem: "ana-tablo", dugme: "Ana tablo geçişine git" };
     if (!seciliTestMizani) return { seviye: "info" as const, baslik: "İzole test başlatılabilir", aciklama: "Sistem dengeli örnek mizanı hazırlayıp salt-okunur önizlemeyi kendisi çalıştıracak. Gerçek veriler ve mevcut raporlar etkilenmeyecek.", eylem: "otomatik-test", dugme: "Otomatik testi çalıştır" };
     if (!onizlemeBasariliMi) return { seviye: uretimOnizlemeSonucu ? "warning" as const : "info" as const, baslik: uretimOnizlemeSonucu ? "Test yeniden çalıştırılmalı" : "Yeni motor önizlemeye hazır", aciklama: uretimOnizlemeSonucu?.aciklama || "Seçili tanım ve test mizanıyla salt-okunur finansal tablo üretilecek.", eylem: "otomatik-test", dugme: "Otomatik testi çalıştır" };
     if (seciliSurumTaslakMi && surumYonetimiDurumu?.etkin !== true) return { seviye: "warning" as const, baslik: "Devreye alma bekliyor", aciklama: surumYonetimiDurumu?.aciklama || "Sürüm yönetimi durumu doğrulanamadı.", eylem: "bekle", dugme: "Devreye alma kullanılamıyor" };
@@ -1965,6 +1966,10 @@ const Page = ({ editorSurumId }: PageProps) => {
     if (akilliYonlendirme.eylem === "tanim") return adimaGit(0);
     if (akilliYonlendirme.eylem === "otomatik-test") return otomatikTestiCalistir();
     if (akilliYonlendirme.eylem === "devreye-al") return adimaGit(1, "taslak-devreye-al");
+    if (akilliYonlendirme.eylem === "ana-tablo") {
+      setTestAyrintilariAcik(true);
+      return adimaGit(1, "ana-tablo-gecis");
+    }
     if (akilliYonlendirme.eylem === "kgk") {
       router.push("/FinansalTabloYonetimi/KgkGuncellemeleri");
     }
@@ -2333,6 +2338,16 @@ const Page = ({ editorSurumId }: PageProps) => {
       </Box>
       <Box sx={{ display: !duzenleyiciSayfasi && aktifAdim === 1 ? "block" : "none" }}>
       <Paper variant="outlined" sx={{ p: 2, mb: 2 }}>
+        {teknikDogrulamaGuncelMi && dogrulamaSonucu && !dogrulamaSonucu.gecerliMi && (
+          <Alert severity="error" sx={{ mb: 1.5 }}>
+            <strong>Teknik doğrulama başarısız. Önce şu sorunları düzeltin:</strong>
+            {dogrulamaSonucu.tablolar.flatMap((tablo) => tablo.sorunlar.map((sorun, index) => (
+              <Typography key={`${tablo.tabloId}-${sorun.kod}-${index}`} variant="body2" sx={{ mt: 0.5 }}>
+                {tablo.tabloKod} / {sorun.konum}: {sorun.aciklama}
+              </Typography>
+            )))}
+          </Alert>
+        )}
         {uretimOnizlemeSonucu ? (
           <Stack spacing={1.25}>
             <Alert severity={testTamamlanamadiMi ? "error" : testSonucuSorunluMu ? "warning" : "success"}>
@@ -2508,7 +2523,7 @@ const Page = ({ editorSurumId }: PageProps) => {
               </Paper>}
             </Stack>
           </Paper>
-          <Paper variant="outlined" sx={{ p: 1.5, borderColor: seciliAnaTabloGecisi?.durum === 2 ? "success.main" : "divider" }}>
+          <Paper id="ana-tablo-gecis" variant="outlined" sx={{ p: 1.5, borderColor: seciliAnaTabloGecisi?.durum === 2 ? "success.main" : "divider" }}>
             <Stack spacing={1.25}>
               <Stack direction={{ xs: "column", sm: "row" }} spacing={1} alignItems={{ sm: "center" }}>
                 <Box sx={{ flexGrow: 1 }}>
@@ -2946,6 +2961,7 @@ const Page = ({ editorSurumId }: PageProps) => {
             <Paper variant="outlined" sx={{ p: 1.5 }}>
               <Stack spacing={1.5}>
                 <Stack direction="row" spacing={1} flexWrap="wrap" useFlexGap>
+                  <Button size="small" variant="text" onClick={() => router.push("/FinansalTabloYonetimi")}>Hazırlama adımlarına dön</Button>
                   <Chip label={`Sürüm ${secilenSurum.surumNo} · ${secilenSurum.etiket}`} color={surumDurumKodu(secilenSurum.durum) === 3 ? "success" : "default"} />
                   <Chip label={`Teknik değişiklik sayacı ${secilenSurum.eszamanlilikSurumu}`} variant="outlined" />
                   <Chip label={`${secilenSurum.tabloSayisi} tablo · ${secilenSurum.kalemSayisi} kalem · ${secilenSurum.formulSayisi} formül`} variant="outlined" />
@@ -3356,7 +3372,9 @@ const Page = ({ editorSurumId }: PageProps) => {
           </Typography>
           {aktifAdim === 0 ? (
             <Button variant="contained" onClick={() => adimaGit(1)}>Sonraki: Test et</Button>
-          ) : yeniSurumDevredeMi || (seciliSurumYayindaMi && onizlemeBasariliMi) ? (
+          ) : yeniSurumDevredeMi ? (
+            <Button variant="contained" onClick={() => { setTestAyrintilariAcik(true); adimaGit(1, "ana-tablo-gecis"); }}>Ana tablo geçişine git</Button>
+          ) : seciliSurumYayindaMi && onizlemeBasariliMi ? (
             <Button variant="contained" onClick={() => router.push("/FinansalTabloYonetimi/KgkGuncellemeleri")}>KGK kontrolüne geç</Button>
           ) : seciliSurumTaslakMi && onizlemeBasariliMi ? (
             <Button variant="contained" color="success" onClick={() => adimaGit(1, "taslak-devreye-al")}>Devreye alma alanına git</Button>

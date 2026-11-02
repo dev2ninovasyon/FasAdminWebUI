@@ -135,7 +135,9 @@ test("admin girişinden güvenli doğrulama ve sürüm aktivasyonuna kadar çal�
   const isExpectedTestConsoleError = (value: string) =>
     value.includes("Missing required parameters: sitekey");
 
-  page.on("pageerror", (error) => runtimeErrors.push(error.message));
+  page.on("pageerror", (error) => {
+    if (!isExpectedTestConsoleError(error.message)) runtimeErrors.push(error.message);
+  });
   page.on("console", (message) => {
     if (message.type() === "error"
       && !isCancelledDashboardRequest(message.text())
@@ -225,6 +227,9 @@ test("admin girişinden güvenli doğrulama ve sürüm aktivasyonuna kadar çal�
     if (path.endsWith("/FinansalTabloYonetimi/Surumler/11/Tablolar/21/Kurallar/201") && request.method() === "PUT") {
       ruleUpdateCount += 1;
       ruleUpdatePayload = request.postDataJSON() as Record<string, any>;
+      draftVersion.eszamanlilikSurumu = 7 + ruleUpdateCount;
+      versionDetail.surum.eszamanlilikSurumu = draftVersion.eszamanlilikSurumu;
+      Object.assign(versionDetail.tablolar[0].kurallar[0], ruleUpdatePayload);
       return fulfillJson(route, {
         success: true,
         kuralId: 201,
@@ -380,15 +385,15 @@ test("admin girişinden güvenli doğrulama ve sürüm aktivasyonuna kadar çal�
   });
 
   await page.goto("/FinansalTabloYonetimi");
-  await expect(page.getByText("Finansal tablo hazırlama adımları")).toBeVisible();
+  await expect(page.getByText("Finansal tablo hazırlama", { exact: true })).toBeVisible();
   await expect(page.getByText("BOBİ FRS Münferit Normal", { exact: false }).first()).toBeVisible();
   expect(definitionAuthorization).toBe("Bearer e2e-access-token");
 
-  await page.getByRole("button", { name: "Tanım ve formülleri düzenle" }).click();
-  await expect(page.getByText("Yapılandırılmış kural editörü")).toBeVisible();
+  await page.getByRole("button", { name: "Formülleri düzenle" }).click();
+  await expect(page.getByText("Formül kuralları", { exact: true })).toBeVisible();
 
-  await page.getByText("Kural seçin", { exact: true }).click();
-  await page.getByRole("option", { name: "#201 · Kalem 101" }).click();
+  await page.getByText("Kalem seçin", { exact: true }).last().click();
+  await page.getByRole("option", { name: /TOPLAM_VARLIKLAR.*Kural #201/ }).click();
 
   const sourceItem = page.getByText("Nakit ve nakit benzerleri · 100", { exact: true });
   await expect(sourceItem).toBeVisible();
@@ -416,7 +421,9 @@ test("admin girişinden güvenli doğrulama ve sürüm aktivasyonuna kadar çal�
   expect(savedRule.beklenenEszamanlilikSurumu).toBe(7);
   await expect(page.getByRole("button", { name: "Kuralı kaydet" })).toHaveCount(0);
 
-  await page.getByRole("button", { name: "Otomatik testi çalıştır" }).click();
+  await page.getByRole("button", { name: "Hazırlama adımlarına dön" }).click();
+  await page.getByRole("button", { name: "Sonraki: Test et" }).click();
+  await page.getByRole("button", { name: "Otomatik testi çalıştır" }).first().click();
 
   await expect.poll(() => validationPayload).not.toBeNull();
   expect(validationPayload).toMatchObject({ beklenenEszamanlilikSurumu: 8 });
@@ -436,11 +443,8 @@ test("admin girişinden güvenli doğrulama ve sürüm aktivasyonuna kadar çal�
     bakiyeTransferFisiHaric: 1000,
     paraBirimi: "TRY",
   });
-  await expect(page.getByText("Test mizanı hazır", { exact: true })).toBeVisible();
-  await expect(page.getByText("Admin testi başarıyla tamamlandı", { exact: true })).toBeVisible();
-  await page.getByRole("button", { name: "Ayrıntıları göster" }).click();
-  await expect(page.getByText("Salt-okunur önizleme tamamlandı", { exact: true })).toBeVisible();
-  await expect(page.getByText("Arşivlenmedi", { exact: true })).toBeVisible();
+  await expect(page.getByText("Test başarıyla tamamlandı", { exact: true })).toBeVisible();
+  await page.getByRole("button", { name: "Sonuç ayrıntılarını aç" }).click();
   await expect(page.getByText("FDT · TOPLAM_VARLIKLAR", { exact: true })).toBeVisible();
   await expect(page.getByRole("cell", { name: "1.500" })).toBeVisible();
 
@@ -466,23 +470,27 @@ test("admin girişinden güvenli doğrulama ve sürüm aktivasyonuna kadar çal�
   expect(testTrialBalanceCreateCount).toBe(1);
   expect(previewCount).toBe(1);
 
-  await page.getByRole("button", { name: "Tanımı seç", exact: true }).click();
-  await expect(page.getByRole("button", { name: "Devreye al" })).toBeDisabled();
-  await expect(page.getByText("Devreye alma mevcut raporları değiştirmez", { exact: false })).toBeVisible();
+  await expect(page.getByRole("button", { name: "Devreye al", exact: true })).toBeDisabled();
+  await expect(page.getByText("Önceki raporlar etkilenmez", { exact: false })).toBeVisible();
 
   validationShouldFail = true;
-  await expect(page.getByText("Yapılandırılmış kural editörü", { exact: true })).toBeVisible();
-  await page.getByText("Kural seçin", { exact: true }).click();
-  await page.getByRole("option", { name: "#201 · Kalem 101" }).click();
+  await page.getByRole("button", { name: "Geri", exact: true }).click();
+  await page.getByRole("button", { name: "Formülleri düzenle" }).click();
+  await expect(page.getByText("Formül kuralları", { exact: true })).toBeVisible();
+  await page.getByText("Kalem seçin", { exact: true }).last().click();
+  await page.getByRole("option", { name: /TOPLAM_VARLIKLAR.*Kural #201/ }).click();
   await page.getByText("Ticari alacaklar · 120", { exact: true }).click();
   await page.getByRole("option", { name: "Nakit ve nakit benzerleri · 100" }).click();
   await page.getByRole("button", { name: "Kuralı kaydet" }).click();
   await expect.poll(() => ruleUpdateCount).toBe(2);
   await expect(page.getByRole("button", { name: "Kuralı kaydet" })).toHaveCount(0);
 
-  await page.getByRole("button", { name: "Otomatik testi çalıştır" }).click();
+  await page.getByRole("button", { name: "Hazırlama adımlarına dön" }).click();
+  await page.getByRole("button", { name: "Sonraki: Test et" }).click();
+  await page.getByRole("button", { name: "Otomatik testi çalıştır" }).first().click();
   await expect.poll(() => validationCallCount).toBe(2);
   await expect(page.getByText("Düzeltilmesi gereken tanımlar var", { exact: true })).toBeVisible();
+  await page.getByRole("button", { name: "Sonraki: Test et" }).click();
   await expect(page.getByText("E2E zorunlu kaynak bulunamadı.", { exact: false })).toBeVisible();
   expect(testTrialBalanceCreateCount).toBe(1);
   expect(previewCount).toBe(1);
@@ -493,18 +501,18 @@ test("admin girişinden güvenli doğrulama ve sürüm aktivasyonuna kadar çal�
   draftVersion.eszamanlilikSurumu = 9;
   versionDetail.surum.eszamanlilikSurumu = 9;
   await page.reload();
-  await expect(page.getByText("Sürüm yönetimi etkin", { exact: true })).toBeVisible();
+  await expect(page.getByText("Finansal tablo hazırlama", { exact: true })).toBeVisible();
 
-  await page.getByRole("button", { name: "Otomatik testi çalıştır" }).click();
+  await page.getByRole("button", { name: "Sonraki: Test et" }).click();
+  await page.getByRole("button", { name: "Otomatik testi çalıştır" }).first().click();
   await expect.poll(() => validationCallCount).toBe(3);
   await expect.poll(() => previewCount).toBe(2);
-  await expect(page.getByText("Admin testi başarıyla tamamlandı", { exact: true })).toBeVisible();
+  await expect(page.getByText("Test başarıyla tamamlandı", { exact: true })).toBeVisible();
 
-  await page.getByRole("button", { name: "Tanımı seç", exact: true }).click();
   await page.getByLabel("Etkinlik tarihi").fill("2026-11-01");
-  await page.getByLabel("Admin onay açıklaması").fill("E2E sürüm yayın onayı");
-  await expect(page.getByRole("button", { name: "Devreye al" })).toBeEnabled();
-  await page.getByRole("button", { name: "Devreye al" }).click();
+  await page.getByLabel("Onay nedeni").fill("E2E sürüm yayın onayı");
+  await expect(page.getByRole("button", { name: "Devreye al", exact: true })).toBeEnabled();
+  await page.getByRole("button", { name: "Devreye al", exact: true }).click();
 
   await expect.poll(() => activationPayload).not.toBeNull();
   expect(activationPayload).toMatchObject({
@@ -513,15 +521,15 @@ test("admin girişinden güvenli doğrulama ve sürüm aktivasyonuna kadar çal�
     onayAciklamasi: "E2E sürüm yayın onayı",
   });
   await expect(page.getByText("Sürüm #4 devreye alındı.", { exact: false }).first()).toBeVisible();
-  await expect(page.getByText("Aktif", { exact: true }).first()).toBeVisible();
-  await expect(page.getByRole("button", { name: "Devreye al" })).toHaveCount(0);
+  await expect.poll(() => mainTableTransitionListCount).toBeGreaterThanOrEqual(1);
+  await expect(page.getByText("Sürüm devreye alındı", { exact: true })).toBeVisible();
+  await expect(page.getByRole("button", { name: "Devreye al", exact: true })).toHaveCount(0);
 
-  await page.getByRole("button", { name: "Sonraki: Üretimi test et" }).click();
-  await page.getByRole("button", { name: "Ayrıntıları göster" }).click();
+  await page.getByRole("button", { name: "Ana tablo geçişine git" }).first().click();
   await expect(page.getByText("Ana tabloya kontrollü geçiş", { exact: true })).toBeVisible();
   await expect(page.getByText("Yeni üretim durduruldu", { exact: true }).last()).toBeVisible();
   await page.getByRole("button", { name: "Durumu yenile" }).click();
-  await expect.poll(() => mainTableTransitionListCount).toBe(1);
+  await expect.poll(() => mainTableTransitionListCount).toBeGreaterThanOrEqual(2);
 
   await page.getByLabel("Admin açıklaması").fill("E2E ana tablo geçişi");
   await page.getByRole("button", { name: "Örnek mizanla hazırla" }).click();
