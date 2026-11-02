@@ -465,6 +465,19 @@ test("admin girişinden güvenli doğrulama ve sürüm aktivasyonuna kadar çal�
       },
     },
   });
+  const previewYear = Number(createdTrialBalance.yil);
+  expect(previewPayload!.calistirmaBaglami.donemEslesmeleri).toEqual([
+    {
+      donemDavranisi: 1,
+      donemOfseti: 0,
+      donem: { sabitAnahtar: `1-0-${previewYear}`, baslangicTarihi: `${previewYear}-01-01`, bitisTarihi: `${previewYear}-12-31` },
+    },
+    {
+      donemDavranisi: 2,
+      donemOfseti: -1,
+      donem: { sabitAnahtar: `2--1-${previewYear - 1}`, baslangicTarihi: `${previewYear - 1}-01-01`, bitisTarihi: `${previewYear - 1}-12-31` },
+    },
+  ]);
   expect(ruleUpdateCount).toBe(1);
   expect(validationCallCount).toBe(1);
   expect(testTrialBalanceCreateCount).toBe(1);
