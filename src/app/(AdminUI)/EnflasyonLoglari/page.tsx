@@ -175,14 +175,14 @@ export default function EnflasyonLoglariPage() {
             sx={{
               maxHeight: "65vh",
               borderRadius: 2,
-              bgcolor: "#111827",
-              color: "#e5e7eb",
+              bgcolor: "background.paper",
+              color: "text.primary",
             }}
           >
             {loading && logs.length === 0 ? (
               <Box py={6} textAlign="center">
-                <CircularProgress color="inherit" />
-                <Typography sx={{ mt: 1 }} color="grey.400">
+                <CircularProgress />
+                <Typography sx={{ mt: 1 }} color="text.secondary">
                   Enflasyon logları yükleniyor...
                 </Typography>
               </Box>
@@ -190,9 +190,9 @@ export default function EnflasyonLoglariPage() {
               <Table size="small" stickyHeader>
                 <TableHead>
                   <TableRow>
-                    <TableCell sx={{ bgcolor: "#1f2937", color: "#9ca3af", width: 80 }}>Satır</TableCell>
-                    <TableCell sx={{ bgcolor: "#1f2937", color: "#9ca3af", width: 100 }}>Seviye</TableCell>
-                    <TableCell sx={{ bgcolor: "#1f2937", color: "#9ca3af" }}>Log İçeriği</TableCell>
+                    <TableCell width={80}>Satır</TableCell>
+                    <TableCell width={100}>Seviye</TableCell>
+                    <TableCell>Log İçeriği</TableCell>
                   </TableRow>
                 </TableHead>
                 <TableBody>
@@ -204,12 +204,11 @@ export default function EnflasyonLoglariPage() {
                           key={index}
                           hover
                           sx={{
-                            "&:hover": { bgcolor: "rgba(255, 255, 255, 0.05)" },
                             cursor: "pointer",
                           }}
                           onClick={() => setSelectedLog(log)}
                         >
-                          <TableCell sx={{ color: "#6b7280", fontFamily: "monospace", fontSize: "0.8rem" }}>
+                          <TableCell sx={{ color: "text.secondary", fontSize: "0.8rem" }}>
                             {index + 1}
                           </TableCell>
                           <TableCell>
@@ -224,14 +223,13 @@ export default function EnflasyonLoglariPage() {
                             sx={{
                               color:
                                 color === "error"
-                                  ? "#f87171"
+                                  ? "error.main"
                                   : color === "warning"
-                                  ? "#fbbf24"
+                                  ? "warning.main"
                                   : color === "info"
-                                  ? "#60a5fa"
-                                  : "#e5e7eb",
-                              fontFamily: "monospace",
-                              fontSize: "0.8rem",
+                                  ? "info.main"
+                                  : "text.primary",
+                              fontSize: "0.85rem",
                               whiteSpace: "pre-wrap",
                               wordBreak: "break-all",
                             }}
@@ -243,7 +241,7 @@ export default function EnflasyonLoglariPage() {
                     })
                   ) : (
                     <TableRow>
-                      <TableCell colSpan={3} align="center" sx={{ color: "#9ca3af", py: 4 }}>
+                      <TableCell colSpan={3} align="center" sx={{ color: "text.secondary", py: 4 }}>
                         Henüz gösterilecek log bulunmuyor.
                       </TableCell>
                     </TableRow>
@@ -262,8 +260,8 @@ export default function EnflasyonLoglariPage() {
           <Paper
             sx={{
               p: 2,
-              bgcolor: "#111827",
-              color: "#e5e7eb",
+              bgcolor: "background.paper",
+              color: "text.primary",
               fontFamily: "monospace",
               fontSize: "0.85rem",
               whiteSpace: "pre-wrap",

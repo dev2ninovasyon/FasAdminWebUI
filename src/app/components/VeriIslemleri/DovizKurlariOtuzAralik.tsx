@@ -55,7 +55,7 @@ const DovizKurlariOtuzAralik: React.FC<Props> = ({ verileriCekTiklandimi }) => {
     loadStyles();
   }, [customizer.activeMode]);
 
-  const colHeaders = ["Tarih", "Kodu", "AdÃ„Â±", "DÃƒÂ¶viz AlÃ„Â±Ã…Å¸", "DÃƒÂ¶viz SatÃ„Â±Ã…Å¸"];
+  const colHeaders = ["Tarih", "Kodu", "Adı", "Döviz Alış", "Döviz Satış"];
 
   const columns = [
     {
@@ -81,7 +81,7 @@ const DovizKurlariOtuzAralik: React.FC<Props> = ({ verileriCekTiklandimi }) => {
       allowInvalid: false,
       readOnly: true,
       editor: false,
-    }, // AdÃ„Â±
+    }, // Adı
     {
       type: "numeric",
       numericFormat: { pattern: "0,0.0000", columnSorting: true },
@@ -89,7 +89,7 @@ const DovizKurlariOtuzAralik: React.FC<Props> = ({ verileriCekTiklandimi }) => {
       allowInvalid: false,
       readOnly: true,
       editor: false,
-    }, // DÃƒÂ¶viz AlÃ„Â±Ã…Å¸
+    }, // Döviz Alış
     {
       type: "numeric",
       numericFormat: { pattern: "0,0.0000", columnSorting: true },
@@ -97,7 +97,7 @@ const DovizKurlariOtuzAralik: React.FC<Props> = ({ verileriCekTiklandimi }) => {
       allowInvalid: false,
       readOnly: true,
       editor: false,
-    }, // DÃƒÂ¶viz SatÃ„Â±Ã…Å¸
+    }, // Döviz Satış
   ];
 
   const afterGetColHeader = (col: any, TH: any) => {
@@ -228,7 +228,7 @@ const DovizKurlariOtuzAralik: React.FC<Props> = ({ verileriCekTiklandimi }) => {
       setRowCount(rowsAll.length);
       setFetchedData(rowsAll);
     } catch (error) {
-      console.error("Bir hata oluÃ…Å¸tu:", error);
+      console.error("Bir hata oluştu:", error);
     }
   };
 
@@ -287,9 +287,9 @@ const DovizKurlariOtuzAralik: React.FC<Props> = ({ verileriCekTiklandimi }) => {
           type: "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
         });
         saveAs(blob, "DovizKurlariOtuzAralik.xlsx");
-        console.log("Excel dosyasÃ„Â± baÃ…Å¸arÃ„Â±yla oluÃ…Å¸turuldu");
+        console.log("Excel dosyası başarıyla oluşturuldu");
       } catch (error) {
-        console.error("Excel dosyasÃ„Â± oluÃ…Å¸turulurken bir hata oluÃ…Å¸tu:", error);
+        console.error("Excel dosyası oluşturulurken bir hata oluştu:", error);
       }
     }
     createExcelFile();
