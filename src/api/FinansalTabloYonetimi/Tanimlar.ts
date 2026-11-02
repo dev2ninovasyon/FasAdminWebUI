@@ -1007,11 +1007,42 @@ export type KgkAnaSurum = {
     tanimSetiKodu: string;
     surumNo: number;
     durum: number | string;
+    eszamanlilikSurumu: number;
+    ornekMizanHazirMi: boolean;
   }>;
 };
 
 export const getKgkAnaSurumler = (token: string) =>
   jsonGet<KgkAnaSurum[]>(token, "/Kgk/AnaSurumler");
+
+export const activateKgkAnaSurum = async (
+  token: string,
+  anaSurumId: number,
+  istek: {
+    etkinlikTarihi: string;
+    onayAciklamasi: string;
+    surumler: Array<{ surumId: number; eszamanlilikSurumu: number }>;
+  }
+) => {
+  const response = await fetch(`${url}/FinansalTabloYonetimi/Kgk/AnaSurumler/${anaSurumId}/DevreyeAl`, {
+    method: "POST",
+    headers: {
+      accept: "application/json",
+      "Content-Type": "application/json",
+      Authorization: `Bearer ${token}`,
+    },
+    body: JSON.stringify(istek),
+  });
+  const payload = await response.json().catch(() => ({}));
+  if (!response.ok) {
+    throw new Error(payload?.detail || payload?.message || payload?.Message || "KGK ana sürümü devreye alınamadı.");
+  }
+  return payload as {
+    anaSurumId: number;
+    etkinlikTarihi: string;
+    surumler: FinansalSurumDevreyeAlmaSonucu[];
+  };
+};
 
 export const scanAndArchiveKgkFormats = async (
   token: string,

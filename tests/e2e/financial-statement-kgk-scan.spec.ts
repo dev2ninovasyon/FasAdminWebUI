@@ -67,6 +67,8 @@ test("KGK taraması sürüm seçimi olmadan başlar ve dosya hatasını gösteri
 
 test("başarılı tarama KGK ana sürümünü ve bağlı taslakları gösterir", async ({ page }) => {
   let tarandi = false;
+  let devrede = false;
+  let topluIstegi: Record<string, unknown> | null = null;
   await page.route("**/api/**", async (route) => {
     const path = new URL(route.request().url()).pathname;
     const json = (body: unknown) => route.fulfill({
@@ -105,8 +107,20 @@ test("başarılı tarama KGK ana sürümünü ve bağlı taslakları gösterir",
       dosyaManifestiSha256: "a".repeat(64),
       dosyaSayisi: 3,
       olusturmaTarihi: "2026-11-02T12:00:00Z",
-      surumler: [{ id: 11, tanimSetiId: 5, tanimSetiKodu: "BOBI-MUNFERIT", surumNo: 4, durum: 1 }],
+      surumler: [
+        { id: 11, tanimSetiId: 5, tanimSetiKodu: "BOBI-MUNFERIT", surumNo: 4, durum: devrede ? 3 : 1, eszamanlilikSurumu: 7, ornekMizanHazirMi: true },
+        { id: 12, tanimSetiId: 6, tanimSetiKodu: "TFRS-MUNFERIT", surumNo: 2, durum: devrede ? 3 : 1, eszamanlilikSurumu: 3, ornekMizanHazirMi: true },
+      ],
     }] : []);
+    if (path.endsWith("/FinansalTabloYonetimi/Kgk/AnaSurumler/7/DevreyeAl")) {
+      topluIstegi = route.request().postDataJSON() as Record<string, unknown>;
+      devrede = true;
+      return json({
+        anaSurumId: 7,
+        etkinlikTarihi: "2026-11-02",
+        surumler: [{ surumId: 11 }, { surumId: 12 }],
+      });
+    }
     if (path.endsWith("/FinansalTabloYonetimi/Kgk/TaramaGecmisi")) return json(tarandi ? [{
       taramaId: "3f8c2b7c-6b78-42d5-9c3e-e3700a0b9bf4",
       bitis: "2026-11-02T12:00:00Z",
@@ -138,5 +152,16 @@ test("başarılı tarama KGK ana sürümünü ve bağlı taslakları gösterir",
 
   await expect(page.getByText("KGK ana sürüm #2 hazır.", { exact: false })).toBeVisible();
   await page.getByText("KGK ana sürümleri (1)").click();
-  await expect(page.getByRole("button", { name: "BOBI-MUNFERIT · #4" })).toBeVisible();
+  await expect(page.getByRole("button", { name: "BOBI-MUNFERIT · #4 · Hazır" })).toBeVisible();
+  await page.getByRole("button", { name: "Toplu devreye al" }).click();
+  await page.getByRole("textbox", { name: "Onay nedeni" }).fill("KGK tablo sürümleri onaylandı");
+  await page.getByRole("button", { name: "Tüm taslakları devreye al" }).click();
+  await expect.poll(() => topluIstegi).not.toBeNull();
+  expect(topluIstegi).toMatchObject({
+    surumler: [
+      { surumId: 11, eszamanlilikSurumu: 7 },
+      { surumId: 12, eszamanlilikSurumu: 3 },
+    ],
+  });
+  await expect(page.getByText("2 rapor sürümü devreye alındı.", { exact: false })).toBeVisible();
 });

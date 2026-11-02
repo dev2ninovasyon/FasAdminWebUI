@@ -72,6 +72,7 @@ import {
   createKgkTaslakFromDifferences,
   getKgkAnaSurumler,
   KgkAnaSurum,
+  activateKgkAnaSurum,
   applyKgkFormulFarklari,
   createFinansalTabloUretimi,
   previewFinansalTabloUretimi,
@@ -364,6 +365,12 @@ const Page = ({ editorSurumId }: PageProps) => {
   const [kgkTaramaDenemesi, setKgkTaramaDenemesi] = useState(3);
   const [kgkTaramaGecmisi, setKgkTaramaGecmisi] = useState<KgkTaramaGecmisi[]>([]);
   const [kgkAnaSurumler, setKgkAnaSurumler] = useState<KgkAnaSurum[]>([]);
+  const [kgkTopluTarih, setKgkTopluTarih] = useState(() => format(new Date(), "yyyy-MM-dd"));
+  const [kgkTopluNeden, setKgkTopluNeden] = useState("");
+  const [kgkTopluYukleniyor, setKgkTopluYukleniyor] = useState(false);
+  const [kgkTopluHatasi, setKgkTopluHatasi] = useState("");
+  const [kgkTopluMesaji, setKgkTopluMesaji] = useState("");
+  const [kgkTopluSeciliId, setKgkTopluSeciliId] = useState(0);
   const [kgkGecmisYukleniyor, setKgkGecmisYukleniyor] = useState(false);
   const [kgkWorkbookSonucu, setKgkWorkbookSonucu] = useState<KgkWorkbookFarkSonucu | null>(null);
   const [kgkFarkBaglami, setKgkFarkBaglami] = useState<KgkFarkBaglami | null>(null);
@@ -1093,6 +1100,37 @@ const Page = ({ editorSurumId }: PageProps) => {
       setTanimHatasi(error instanceof Error ? error.message : "KGK tarama geçmişi okunamadı.");
     } finally {
       setKgkGecmisYukleniyor(false);
+    }
+  };
+
+  const kgkAnaSurumuDevreyeAl = async (anaSurum: KgkAnaSurum) => {
+    if (!user.token || kgkTopluYukleniyor) return;
+    if (!kgkTopluTarih || kgkTopluNeden.trim().length < 10 ||
+        anaSurum.surumler.length === 0 ||
+        anaSurum.surumler.some((surum) => surumDurumKodu(surum.durum) !== 1 || !surum.ornekMizanHazirMi)) {
+      setKgkTopluHatasi("Tüm bağlı taslaklar örnek mizanla hazırlanmalı; etkinlik tarihi ve en az 10 karakterlik onay nedeni girilmelidir.");
+      return;
+    }
+    setKgkTopluYukleniyor(true);
+    setKgkTopluHatasi("");
+    setKgkTopluMesaji("");
+    try {
+      const sonuc = await activateKgkAnaSurum(user.token, anaSurum.id, {
+        etkinlikTarihi: kgkTopluTarih,
+        onayAciklamasi: kgkTopluNeden.trim(),
+        surumler: anaSurum.surumler.map((surum) => ({
+          surumId: surum.id,
+          eszamanlilikSurumu: surum.eszamanlilikSurumu,
+        })),
+      });
+      setKgkTopluMesaji(`KGK ana sürüm #${anaSurum.surumNo} kapsamındaki ${sonuc.surumler.length} rapor sürümü devreye alındı. Önceki rapor kayıtları değişmedi.`);
+      setKgkTopluNeden("");
+      setKgkTopluSeciliId(0);
+      await kgkTaramaGecmisiniYukle();
+    } catch (error) {
+      setKgkTopluHatasi(error instanceof Error ? error.message : "KGK ana sürümü devreye alınamadı.");
+    } finally {
+      setKgkTopluYukleniyor(false);
     }
   };
 
@@ -2065,7 +2103,7 @@ const Page = ({ editorSurumId }: PageProps) => {
         </AccordionSummary>
         <AccordionDetails sx={{ pt: 0, overflowX: "auto" }}>
           <Table size="small">
-            <TableHead><TableRow><TableCell>Kaynak dönemi</TableCell><TableCell>Ana sürüm</TableCell><TableCell align="right">Dosya</TableCell><TableCell>Bağlı rapor sürümleri</TableCell></TableRow></TableHead>
+            <TableHead><TableRow><TableCell>Kaynak dönemi</TableCell><TableCell>Ana sürüm</TableCell><TableCell align="right">Dosya</TableCell><TableCell>Bağlı rapor sürümleri</TableCell><TableCell>İşlem</TableCell></TableRow></TableHead>
             <TableBody>{kgkAnaSurumler.map((anaSurum) => <TableRow key={anaSurum.id}>
               <TableCell>{kgkKaynakDonemleri.find((donem) => donem.kod === anaSurum.kaynakDonemKodu)?.ad || anaSurum.kaynakDonemKodu}</TableCell>
               <TableCell>#{anaSurum.surumNo}<br /><Typography variant="caption" color="text.secondary">{new Date(anaSurum.olusturmaTarihi).toLocaleDateString("tr-TR")}</Typography></TableCell>
@@ -2074,10 +2112,44 @@ const Page = ({ editorSurumId }: PageProps) => {
                 ? <Typography variant="body2" color="text.secondary">Henüz taslak bağlanmadı.</Typography>
                 : <Stack direction="row" spacing={0.5} flexWrap="wrap" useFlexGap>{anaSurum.surumler.map((surum) =>
                   <Button key={surum.id} size="small" variant="text" onClick={() => router.push(`/FinansalTabloYonetimi/Surum/${surum.id}`)}>
-                    {surum.tanimSetiKodu} · #{surum.surumNo}
+                    {surum.tanimSetiKodu} · #{surum.surumNo}{surumDurumKodu(surum.durum) === 1 ? surum.ornekMizanHazirMi ? " · Hazır" : " · Örnek mizan eksik" : surumDurumKodu(surum.durum) === 3 ? " · Devrede" : " · Geçmiş"}
                   </Button>)}</Stack>}</TableCell>
+              <TableCell>{anaSurum.surumler.length > 0 && anaSurum.surumler.every((surum) => surumDurumKodu(surum.durum) === 1)
+                ? <Button size="small" variant="outlined" onClick={() => { setKgkTopluSeciliId(anaSurum.id); setKgkTopluHatasi(""); setKgkTopluMesaji(""); }}>
+                    Toplu devreye al
+                  </Button>
+                : null}</TableCell>
             </TableRow>)}</TableBody>
           </Table>
+          {kgkTopluHatasi && <Alert severity="error" sx={{ mt: 1 }} onClose={() => setKgkTopluHatasi("")}>{kgkTopluHatasi}</Alert>}
+          {kgkTopluMesaji && <Alert severity="success" sx={{ mt: 1 }} onClose={() => setKgkTopluMesaji("")}>{kgkTopluMesaji}</Alert>}
+          {kgkAnaSurumler.filter((anaSurum) => anaSurum.id === kgkTopluSeciliId).map((anaSurum) => (
+            <Paper key={anaSurum.id} variant="outlined" sx={{ p: 1.5, mt: 1.5 }}>
+              <Stack spacing={1}>
+                <Typography variant="subtitle2">KGK ana sürüm #{anaSurum.surumNo} · {anaSurum.surumler.length} taslak</Typography>
+                <Typography variant="body2" color="text.secondary">
+                  Tüm bağlı taslaklar teknik olarak yeniden doğrulanır ve tek işlemde devreye alınır. Her taslak için güncel örnek mizan hazırlığı gerekir. Eski rapor kayıtları korunur.
+                </Typography>
+                {anaSurum.surumler.some((surum) => !surum.ornekMizanHazirMi) && (
+                  <Alert severity="warning">Örnek mizan hazırlığı eksik olan taslakları açıp test edin.</Alert>
+                )}
+                <Stack direction={{ xs: "column", md: "row" }} spacing={1} alignItems={{ md: "flex-start" }}>
+                  <TextField size="small" type="date" label="Etkinlik tarihi" value={kgkTopluTarih}
+                    onChange={(event) => setKgkTopluTarih(event.target.value)} InputLabelProps={{ shrink: true }} sx={{ minWidth: 180 }} />
+                  <TextField size="small" fullWidth label="Onay nedeni" value={kgkTopluNeden}
+                    onChange={(event) => setKgkTopluNeden(event.target.value)} inputProps={{ maxLength: 500 }}
+                    helperText="Değişikliği en az 10 karakterle açıklayın." />
+                  <Button size="small" variant="contained" color="success"
+                    onClick={() => kgkAnaSurumuDevreyeAl(anaSurum)}
+                    disabled={kgkTopluYukleniyor || !kgkTopluTarih || kgkTopluNeden.trim().length < 10 ||
+                      anaSurum.surumler.some((surum) => surumDurumKodu(surum.durum) !== 1 || !surum.ornekMizanHazirMi)}
+                    sx={{ minWidth: 190, minHeight: 40 }}>
+                    {kgkTopluYukleniyor ? <CircularProgress size={18} color="inherit" /> : "Tüm taslakları devreye al"}
+                  </Button>
+                </Stack>
+              </Stack>
+            </Paper>
+          ))}
         </AccordionDetails>
       </Accordion>}
       <ParentCard title="KGK format güncelleme kontrolü">
