@@ -20,6 +20,7 @@ export type FinansalSurum = {
   gecerlilikBaslangici: string;
   gecerlilikBitisi?: string | null;
   kaynakSurumId?: number | null;
+  kgkAnaSurumId?: number | null;
   aciklama?: string | null;
   olusturmaTarihi: string;
   guncellemeTarihi?: string | null;
@@ -52,6 +53,21 @@ export type FinansalSurumDetay = {
     kurallar: Array<{ id: number; kalemId?: number | null; hucreId?: number | null; hesaplamaTuru: number; isaretPolitikasi: number; bosDegerPolitikasi: number; sabitDeger?: number | null; aciklama?: string | null; hamFormul?: string | null; kgkExcelHedefi?: string | null; aktifMi: boolean; terimler: Array<{ id: number; sira: number; hamTerim?: string | null; kaynakTuru: number; kaynakAnahtari: string; operator: number; degerAlani: number; donemDavranisi: number; donemOfseti: number; katsayi: number; isaretPolitikasi: number; zorunluMu: boolean; hesaplamaSekli: number; karsilastirmaDegerAlani: number; karsilastirmaDonemDavranisi: number; karsilastirmaDonemOfseti: number; karsilastirmaIsaretPolitikasi: number; farkYonu: number; sonucIsaretPolitikasi: number; katsayiKaynakTuru?: number | null; katsayiKaynakAnahtari?: string | null; katsayiDonemDavranisi?: number; katsayiDonemOfseti?: number; asgariMutlakFark?: number }> }>;
     kontrolKurallari: Array<{ id: number; kod: string; ad: string; tolerans: number; seviye: number; aktifMi: boolean; terimler: Array<{ id: number; taraf: number; sira: number; kalemSabitAnahtari: string; operator: number; katsayi: number; donemDavranisi: number; donemOfseti: number }> }>;
   }>;
+};
+
+export type FinansalTabloTabloRevizyonu = {
+  id: number;
+  surumId: number;
+  tabloId: number;
+  tabloKod: string;
+  revizyonNo: number;
+  surumEszamanlilikSurumu: number;
+  islem: string;
+  hedefAnahtar?: string | null;
+  aciklama: string;
+  degisiklikJson?: string | null;
+  kullaniciId?: number | null;
+  tarih: string;
 };
 
 export type FinansalSurumDogrulamaSonucu = {
@@ -101,6 +117,9 @@ export const getFinansalTanimSetleri = (
 
 export const getFinansalSurumDetay = (token: string, surumId: number) =>
   jsonGet<FinansalSurumDetay>(token, `/Surumler/${surumId}/Tanim`);
+
+export const getFinansalTabloTabloRevizyonlari = (token: string, surumId: number) =>
+  jsonGet<FinansalTabloTabloRevizyonu[]>(token, `/Surumler/${surumId}/TabloRevizyonlari`);
 
 export type FinansalTabloAnaTabloGecisi = {
   id: number;
@@ -953,6 +972,8 @@ export type KgkTaramaSonucu = {
   arsivler: KgkArsivKaydi[];
   hatalar: Array<{ url: string; dosyaAdi: string; denemeSayisi: number; hata: string }>;
   toplamDenemeSayisi: number;
+  anaSurumId?: number | null;
+  anaSurumNo?: number | null;
 };
 
 export type KgkTaramaGecmisi = {
@@ -968,6 +989,59 @@ export type KgkTaramaGecmisi = {
   toplamDenemeSayisi: number;
   kaynakDonemKodu?: string | null;
   kaynakDonemAdi?: string | null;
+  anaSurumId?: number | null;
+  anaSurumNo?: number | null;
+};
+
+export type KgkAnaSurum = {
+  id: number;
+  kaynakDonemKodu: string;
+  surumNo: number;
+  kaynakUrl: string;
+  dosyaManifestiSha256: string;
+  dosyaSayisi: number;
+  olusturmaTarihi: string;
+  surumler: Array<{
+    id: number;
+    tanimSetiId: number;
+    tanimSetiKodu: string;
+    surumNo: number;
+    durum: number | string;
+    eszamanlilikSurumu: number;
+    ornekMizanHazirMi: boolean;
+  }>;
+};
+
+export const getKgkAnaSurumler = (token: string) =>
+  jsonGet<KgkAnaSurum[]>(token, "/Kgk/AnaSurumler");
+
+export const activateKgkAnaSurum = async (
+  token: string,
+  anaSurumId: number,
+  istek: {
+    etkinlikTarihi: string;
+    onayAciklamasi: string;
+    surumler: Array<{ surumId: number; eszamanlilikSurumu: number }>;
+  }
+) => {
+  const response = await fetch(`${url}/FinansalTabloYonetimi/Kgk/AnaSurumler/${anaSurumId}/DevreyeAl`, {
+    method: "POST",
+    headers: {
+      accept: "application/json",
+      "Content-Type": "application/json",
+      Authorization: `Bearer ${token}`,
+    },
+    body: JSON.stringify(istek),
+  });
+  const payload = await response.json().catch(() => ({}));
+  if (!response.ok) {
+    throw new Error(payload?.detail || payload?.message || payload?.Message || "KGK ana sürümü devreye alınamadı.");
+  }
+  return payload as {
+    anaSurumId: number;
+    etkinlikTarihi: string;
+    surumler: FinansalSurumDevreyeAlmaSonucu[];
+  };
 };
 
 export const scanAndArchiveKgkFormats = async (
@@ -992,7 +1066,8 @@ export const scanAndArchiveKgkFormats = async (
   });
   const payload = await response.json().catch(() => ({}));
   if (!response.ok) {
-    throw new Error(payload?.detail || payload?.message || payload?.Message || "KGK taraması tamamlanamadı.");
+    const neden = payload?.detail || payload?.message || payload?.Message || payload?.title;
+    throw new Error(neden || `KGK taraması tamamlanamadı (HTTP ${response.status}). API durumunu ve KGK bağlantısını kontrol edin.`);
   }
   return payload as KgkTaramaSonucu;
 };
@@ -1145,6 +1220,9 @@ export const createKgkTaslakFromDifferences = async (
     aciklama?: string | null;
     beklenenKaynakEszamanlilikSurumu: number;
     kalemFarklari: KgkWorkbookFarkSonucu["kalemFarklari"];
+    kgkAnaSurumId?: number;
+    kgkDosyaUrl?: string;
+    kgkDosyaSha256?: string;
   }
 ) => {
   const response = await fetch(`${url}/FinansalTabloYonetimi/Surumler/${kaynakSurumId}/KgkTaslakOlustur`, {
