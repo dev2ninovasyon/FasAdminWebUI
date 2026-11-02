@@ -1,0 +1,66 @@
+import { expect, test } from "@playwright/test";
+
+test("KGK taraması sürüm seçimi olmadan başlar ve dosya hatasını gösterir", async ({ page }) => {
+  let taramaIstegi: Record<string, unknown> | null = null;
+  let uretimSayisi = 0;
+
+  await page.route("**/api/**", async (route) => {
+    const request = route.request();
+    const path = new URL(request.url()).pathname;
+    const json = (body: unknown, status = 200) => route.fulfill({
+      status,
+      contentType: "application/json; charset=utf-8",
+      body: JSON.stringify(body),
+    });
+
+    if (path.endsWith("/Auth/AdminLogin")) return json({
+      token: "e2e-access-token",
+      refreshToken: "e2e-refresh-token",
+      userId: 1,
+      denetciId: 1,
+      denetciFirmaAdi: "E2E Denetim",
+      yetki: "FasAdmin",
+      rol: ["FasAdmin"],
+      claims: ["FasAdmin"],
+      kullaniciAdi: "E2E Admin",
+      unvan: "FasAdmin",
+      bddkmi: false,
+      kurulumTamamlandi: true,
+      kurulumAdimi: 0,
+      setupWizardProgress: "{}",
+      turTamamlandi: true,
+    });
+    if (path.endsWith("/FinansalTabloYonetimi/TanimSetleri")) return json([]);
+    if (path.endsWith("/FinansalTabloYonetimi/SurumYonetimi/Durum")) return json({ etkin: true, mevcutRaporlarKorunuyor: true });
+    if (path.endsWith("/FinansalTabloYonetimi/Kgk/TaramaGecmisi")) return json([]);
+    if (path.endsWith("/FinansalTabloYonetimi/Kgk/KaynakDonemleri")) return json([{
+      kod: "KGK_2023_VE_SONRASI",
+      ad: "31.12.2023 ve sonrası",
+      kaynakUrl: "https://kgk.gov.tr/DynamicContentDetail/11690/Elektronik-Finansal-Raporlama",
+      onerilenMi: true,
+    }]);
+    if (path.endsWith("/FinansalTabloYonetimi/Kgk/TaraVeArsivle")) {
+      taramaIstegi = request.postDataJSON() as Record<string, unknown>;
+      return json({ detail: "KGK taraması durduruldu: FDT.xlsm indirilemedi. HTTP 404. Hiçbir tarama sonucu başarılı olarak kaydedilmedi." }, 502);
+    }
+    if (path.endsWith("/FinansalTabloYonetimi/Uretimler") && request.method() === "POST") uretimSayisi++;
+    return json(request.method() === "GET" ? [] : {});
+  });
+
+  await page.goto("/");
+  await page.getByLabel("Email").fill("e2e@local.test");
+  await page.getByLabel("Şifre").fill("E2E-only-password");
+  await page.getByRole("button", { name: "Giriş yap" }).click();
+  await page.waitForURL("**/Anasayfa");
+
+  await page.goto("/FinansalTabloYonetimi/KgkGuncellemeleri");
+  const dugme = page.getByRole("button", { name: "KGK güncellemesini otomatik kontrol et" });
+  await expect(dugme).toBeEnabled();
+  await dugme.click();
+
+  await expect.poll(() => taramaIstegi).not.toBeNull();
+  expect(taramaIstegi).toMatchObject({ kaynakDonemKodu: "KGK_2023_VE_SONRASI", arsivle: true });
+  await expect(page.getByText("KGK taraması durduruldu: FDT.xlsm indirilemedi.", { exact: false })).toBeVisible();
+  await expect(page.getByText("Üretim için yayımlanmış sürüm", { exact: false })).toHaveCount(0);
+  expect(uretimSayisi).toBe(0);
+});
