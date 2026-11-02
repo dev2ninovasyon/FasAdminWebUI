@@ -7,7 +7,6 @@ import {
   IconBuildingSkyscraper,
   IconTemplate,
   IconBarcode,
-  IconNumbers,
   IconChartLine,
   IconSettings,
   IconActivity,
@@ -66,20 +65,6 @@ const Menuitems: MenuitemsType[] = [
         title: "Email Şablonları",
         icon: IconPoint,
         href: "/EmailSablonlari",
-      },
-    ],
-  },
-  {
-    id: uniqueId(),
-    title: "Formül İşlemleri",
-    icon: IconNumbers,
-    href: "/",
-    children: [
-      {
-        id: uniqueId(),
-        title: "Mevcut Sistem Formülleri",
-        icon: IconPoint,
-        href: "/Formuller",
       },
     ],
   },

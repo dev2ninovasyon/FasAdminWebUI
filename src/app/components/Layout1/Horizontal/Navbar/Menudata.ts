@@ -55,7 +55,6 @@ import {
   IconTemplate,
   IconBarcode,
   IconNumber,
-  IconNumbers,
 } from "@tabler/icons-react";
 import { uniqueId } from "lodash";
 
@@ -85,20 +84,6 @@ const Menuitems = [
         title: "Formatlar",
         icon: IconPoint,
         href: "/Formatlar",
-      },
-    ],
-  },
-  {
-    id: uniqueId(),
-    title: "Formül İşlemleri",
-    icon: IconNumbers,
-    href: "//",
-    children: [
-      {
-        id: uniqueId(),
-        title: "Formüller",
-        icon: IconPoint,
-        href: "/Formuller",
       },
     ],
   },
