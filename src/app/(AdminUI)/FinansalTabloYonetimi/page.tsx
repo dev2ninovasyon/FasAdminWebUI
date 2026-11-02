@@ -403,6 +403,7 @@ const Page = ({ editorSurumId }: PageProps) => {
   { "yil": ${new Date().getFullYear()}, "detayKodu": "100.01", "hesapAdi": "Kasa", "borc": 1000, "alacak": 0 },
   { "yil": ${new Date().getFullYear()}, "detayKodu": "320.01", "hesapAdi": "Satıcılar", "borc": 0, "alacak": 1000 }
 ]`);
+  const [testMizanSatirlariDuzenlendiMi, setTestMizanSatirlariDuzenlendiMi] = useState(false);
   const [testMizanYukleniyor, setTestMizanYukleniyor] = useState(false);
   const [testMizanListesiYukleniyor, setTestMizanListesiYukleniyor] = useState(false);
   const [mevcutMizanYukleniyor, setMevcutMizanYukleniyor] = useState(false);
@@ -1370,8 +1371,8 @@ const Page = ({ editorSurumId }: PageProps) => {
     }
   };
 
-  const testMizanSatirlariniOku = (): FinansalTabloTestMizanOlusturmaIstegi["satirlar"] => {
-    const parsed = JSON.parse(testMizanSatirlariJson) as unknown;
+  const testMizanSatirlariniOku = (satirlarJson = testMizanSatirlariJson): FinansalTabloTestMizanOlusturmaIstegi["satirlar"] => {
+    const parsed = JSON.parse(satirlarJson) as unknown;
     if (!Array.isArray(parsed) || parsed.length === 0) {
       throw new Error("Test mizanı için en az bir satır içeren JSON dizisi girin.");
     }
@@ -1491,6 +1492,7 @@ const Page = ({ editorSurumId }: PageProps) => {
         };
       }));
       setTestMizanSatirlariJson(JSON.stringify(fixtureSatirlari, null, 2));
+      setTestMizanSatirlariDuzenlendiMi(true);
       setTestMizanAdi(`Mevcut mizan snapshotı ${denetlenenId}-${yil}`);
       setSeciliTestMizani(null);
       setUretimOnizlemeSonucu(null);
@@ -1503,7 +1505,30 @@ const Page = ({ editorSurumId }: PageProps) => {
     }
   };
 
-  const testMizaniOlustur = async (): Promise<FinansalTabloTestMizan | null> => {
+  const otomatikTestSatirlariOlustur = (): FinansalTabloTestMizanOlusturmaIstegi["satirlar"] | null => {
+    const kaynak = secilenKalemTablosu?.kurallar
+      .filter((kural) => kural.aktifMi)
+      .flatMap((kural) => kural.terimler)
+      .find((terim) => (terim.kaynakTuru === 1 || terim.kaynakTuru === 2)
+        && /^\d+(?:\.\d+)*$/.test(terim.kaynakAnahtari.trim()));
+    const yil = Number(uretimYil);
+    if (!kaynak || !Number.isInteger(yil) || yil < 1902 || yil > 2200) return null;
+    const hesapKodu = kaynak.kaynakTuru === 2
+      ? `${kaynak.kaynakAnahtari.trim()}.01`
+      : kaynak.kaynakAnahtari.trim();
+    const karsiHesap = hesapKodu === "999999.99" ? "888888.88" : "999999.99";
+    return [yil, yil - 1, yil - 2].flatMap((satirYili, index) => {
+      const tutar = 1000 - index * 200;
+      return [
+        { yil: satirYili, detayKodu: hesapKodu, hesapAdi: "Formül test hesabı", borc: tutar, alacak: 0 },
+        { yil: satirYili, detayKodu: karsiHesap, hesapAdi: "Dengeleme hesabı", borc: 0, alacak: tutar },
+      ];
+    });
+  };
+
+  const testMizaniOlustur = async (
+    otomatikSatirlar?: FinansalTabloTestMizanOlusturmaIstegi["satirlar"] | null
+  ): Promise<FinansalTabloTestMizan | null> => {
     if (!user.token) return null;
     const denetlenenId = Number(uretimDenetlenenId);
     const yil = Number(uretimYil);
@@ -1519,8 +1544,9 @@ const Page = ({ editorSurumId }: PageProps) => {
         denetlenenId,
         yil,
         konsolidasyonMu: uretimKonsolide,
-        satirlar: testMizanSatirlariniOku(),
+        satirlar: testMizanSatirlariniOku(otomatikSatirlar ? JSON.stringify(otomatikSatirlar) : testMizanSatirlariJson),
       });
+      if (otomatikSatirlar) setTestMizanSatirlariJson(JSON.stringify(otomatikSatirlar, null, 2));
       setSeciliTestMizani(kayit);
       setTestMizanlari((onceki) => [kayit, ...onceki.filter((aday) => aday.id !== kayit.id)]);
       setUretimGirdiAnahtari(`TEST-MIZAN-${kayit.id.slice(0, 8).toUpperCase()}`);
@@ -1935,11 +1961,15 @@ const Page = ({ editorSurumId }: PageProps) => {
   const basarisizTestSonucuSayisi = uretimOnizlemeSonucu
     ? uretimOnizlemeSonucu.sonuclar.length - basariliTestSonucuSayisi
     : 0;
+  const tumTestTutarlariSifirMi = Boolean(
+    uretimOnizlemeSonucu?.basariliMi && uretimOnizlemeSonucu.sonuclar.length > 0
+    && uretimOnizlemeSonucu.sonuclar.every((sonuc) => sonuc.durum === 1 && sonuc.deger === 0)
+  );
   const onizlemeBasariliMi = Boolean(
     uretimOnizlemeSonucu &&
     uretimOnizlemeSonucu.basariliMi === true &&
     uretimOnizlemeSonucu.sonuclar.length > 0 &&
-    basarisizTestSonucuSayisi === 0
+    basarisizTestSonucuSayisi === 0 && !tumTestTutarlariSifirMi
   );
   const testSonucuSorunluMu = Boolean(uretimOnizlemeSonucu && !onizlemeBasariliMi);
   const testTamamlanamadiMi = Boolean(
@@ -1948,6 +1978,8 @@ const Page = ({ editorSurumId }: PageProps) => {
   );
   const testBasarisizlikEtiketi = basarisizTestSonucuSayisi > 0
     ? `${basarisizTestSonucuSayisi} başarısız`
+    : tumTestTutarlariSifirMi
+      ? "Tüm tutarlar sıfır"
     : testSonucuSorunluMu
       ? "Test tamamlanamadı"
       : "0 başarısız";
@@ -1961,7 +1993,7 @@ const Page = ({ editorSurumId }: PageProps) => {
     if (seciliSurumTaslakMi && !teknikDogrulamaBasariliMi) return { seviye: "error" as const, baslik: "Düzeltilmesi gereken tanımlar var", aciklama: "Sorunlu tablo ve formüller aşağıda gösterildi. Düzeltmeden yayınlama yapılamaz.", eylem: "tanim", dugme: "Sorunları incele" };
     if (yeniSurumDevredeMi) return { seviye: "success" as const, baslik: "Sürüm devreye alındı", aciklama: "Ana tablolarda kullanmak için örnek mizanla hazırlayıp geçişi etkinleştirin. Önceki raporlar korunur.", eylem: "ana-tablo", dugme: "Ana tablo geçişine git" };
     if (!seciliTestMizani) return { seviye: "info" as const, baslik: "İzole test başlatılabilir", aciklama: "Sistem dengeli örnek mizanı hazırlayıp salt-okunur önizlemeyi kendisi çalıştıracak. Gerçek veriler ve mevcut raporlar etkilenmeyecek.", eylem: "otomatik-test", dugme: "Otomatik testi çalıştır" };
-    if (!onizlemeBasariliMi) return { seviye: uretimOnizlemeSonucu ? "warning" as const : "info" as const, baslik: uretimOnizlemeSonucu ? "Test yeniden çalıştırılmalı" : "Yeni motor önizlemeye hazır", aciklama: uretimOnizlemeSonucu?.aciklama || "Seçili tanım ve test mizanıyla salt-okunur finansal tablo üretilecek.", eylem: "otomatik-test", dugme: "Otomatik testi çalıştır" };
+    if (!onizlemeBasariliMi) return { seviye: uretimOnizlemeSonucu ? "warning" as const : "info" as const, baslik: uretimOnizlemeSonucu ? "Test yeniden çalıştırılmalı" : "Yeni motor önizlemeye hazır", aciklama: tumTestTutarlariSifirMi ? "Tüm tutarlar sıfır. Test mizanı seçili formülleri tetiklemedi; hesap kodlarını kontrol edip yeniden deneyin." : uretimOnizlemeSonucu?.aciklama || "Seçili tanım ve test mizanıyla salt-okunur finansal tablo üretilecek.", eylem: "otomatik-test", dugme: "Otomatik testi çalıştır" };
     if (seciliSurumTaslakMi && surumYonetimiDurumu?.etkin !== true) return { seviye: "warning" as const, baslik: "Devreye alma bekliyor", aciklama: surumYonetimiDurumu?.aciklama || "Sürüm yönetimi durumu doğrulanamadı.", eylem: "bekle", dugme: "Devreye alma kullanılamıyor" };
     if (seciliSurumTaslakMi) return { seviye: "success" as const, baslik: "Taslak devreye alınabilir", aciklama: `${uretimOnizlemeSonucu?.sonuclar.length ?? 0} tablo sonucu başarılı. Etkinlik tarihi ve onay nedenini girerek sürümü devreye alın.`, eylem: "devreye-al", dugme: "Devreye almaya geç" };
     return { seviye: "success" as const, baslik: "Admin testi başarıyla tamamlandı", aciklama: `${uretimOnizlemeSonucu?.sonuclar.length ?? 0} finansal tablo sonucu üretildi; mevcut raporlar ve üretim arşivi değiştirilmedi.`, eylem: "kgk", dugme: "KGK kontrolüne geç" };
@@ -1994,7 +2026,9 @@ const Page = ({ editorSurumId }: PageProps) => {
     }
 
     adimaGit(1);
-    const testMizani = seciliTestMizani || await testMizaniOlustur();
+    const testMizani = seciliTestMizani || await testMizaniOlustur(
+      testMizanSatirlariDuzenlendiMi ? null : otomatikTestSatirlariOlustur()
+    );
     if (!testMizani) return;
     await finansalTabloOnizle(testMizani, dogrulananSnapshotSha256);
   };
@@ -2391,12 +2425,16 @@ const Page = ({ editorSurumId }: PageProps) => {
               <strong>
                 {testTamamlanamadiMi
                   ? "Test tamamlanamadı"
+                  : tumTestTutarlariSifirMi
+                    ? "Örnek mizan formülleri tetiklemedi"
                   : testSonucuSorunluMu
                     ? "Bazı tablo sonuçları incelenmeli"
                     : "Test başarıyla tamamlandı"}
               </strong>
               <br />
-              {uretimOnizlemeSonucu.aciklama || "Örnek mizan, seçili tanım ve formüllerle kontrol edildi. Gerçek finansal tablolar değiştirilmedi."}
+              {tumTestTutarlariSifirMi
+                ? "Hesaplama çalıştı ancak tüm tutarlar sıfır. Test mizanındaki hesap kodlarını formüllerle eşleştirip yeniden deneyin; bu sonuç yayımlama için yeterli değildir."
+                : uretimOnizlemeSonucu.aciklama || "Örnek mizan, seçili tanım ve formüllerle kontrol edildi. Gerçek finansal tablolar değiştirilmedi."}
               {ilkTestSorunu && (
                 <>
                   <br />
@@ -2525,7 +2563,12 @@ const Page = ({ editorSurumId }: PageProps) => {
                 minRows={5}
                 label="Test mizanı satırları (JSON)"
                 value={testMizanSatirlariJson}
-                onChange={(event) => setTestMizanSatirlariJson(event.target.value)}
+                onChange={(event) => {
+                  setTestMizanSatirlariJson(event.target.value);
+                  setTestMizanSatirlariDuzenlendiMi(true);
+                  setSeciliTestMizani(null);
+                  setUretimOnizlemeSonucu(null);
+                }}
                 helperText="Her satırda detayKodu, borc ve alacak zorunludur; bakiye alanları boşsa otomatik hesaplanır."
               />
               <Stack direction="row" spacing={1} alignItems="center" flexWrap="wrap" useFlexGap>

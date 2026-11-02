@@ -19,7 +19,7 @@ const draftVersion = {
   eszamanlilikSurumu: 7,
   tabloSayisi: 1,
   kalemSayisi: 3,
-  formulSayisi: 1,
+  formulSayisi: 2,
   kontrolKuraliSayisi: 0,
 };
 
@@ -98,6 +98,43 @@ const versionDetail = {
         katsayiDonemDavranisi: 1,
         katsayiDonemOfseti: 0,
       }],
+    }, {
+      id: 202,
+      kalemId: 102,
+      hucreId: null,
+      hesaplamaTuru: 1,
+      isaretPolitikasi: 1,
+      bosDegerPolitikasi: 1,
+      sabitDeger: null,
+      aciklama: "Hesap önekiyle örnek mizan kontrolü",
+      hamFormul: "314",
+      kgkExcelHedefi: "FDT!B11",
+      aktifMi: true,
+      terimler: [{
+        id: 302,
+        sira: 0,
+        hamTerim: "314",
+        kaynakTuru: 2,
+        kaynakAnahtari: "314",
+        operator: 1,
+        degerAlani: 1,
+        donemDavranisi: 1,
+        donemOfseti: 0,
+        katsayi: 1,
+        isaretPolitikasi: 1,
+        zorunluMu: true,
+        hesaplamaSekli: 1,
+        karsilastirmaDegerAlani: 1,
+        karsilastirmaDonemDavranisi: 2,
+        karsilastirmaDonemOfseti: -1,
+        karsilastirmaIsaretPolitikasi: 1,
+        farkYonu: 1,
+        sonucIsaretPolitikasi: 1,
+        katsayiKaynakTuru: null,
+        katsayiKaynakAnahtari: null,
+        katsayiDonemDavranisi: 1,
+        katsayiDonemOfseti: 0,
+      }],
     }],
     kontrolKurallari: [],
   }],
@@ -124,6 +161,7 @@ test("admin girişinden güvenli doğrulama ve sürüm aktivasyonuna kadar çal�
   let validationCallCount = 0;
   let testTrialBalanceCreateCount = 0;
   let previewCount = 0;
+  let previewZeroMode = false;
   let productionWriteCount = 0;
   let mainTableTransitionListCount = 0;
   let validationShouldFail = false;
@@ -347,7 +385,7 @@ test("admin girişinden güvenli doğrulama ve sürüm aktivasyonuna kadar çal�
             donemSabitAnahtari: "CARI",
           },
           durum: 1,
-          deger: 1500,
+          deger: previewZeroMode ? 0 : 1500,
           izAnahtari: "e2e-trace",
           hataKodu: null,
           aciklama: null,
@@ -434,15 +472,21 @@ test("admin girişinden güvenli doğrulama ve sürüm aktivasyonuna kadar çal�
     denetlenenId: 999999,
     konsolidasyonMu: false,
   });
-  expect(createdTrialBalance.satirlar).toHaveLength(2);
+  expect(createdTrialBalance.satirlar).toHaveLength(6);
   expect(createdTrialBalance.satirlar[0]).toMatchObject({
-    detayKodu: "100.01",
+    detayKodu: "314.01",
     borc: 1000,
     alacak: 0,
     bakiye: 1000,
     bakiyeTransferFisiHaric: 1000,
     paraBirimi: "TRY",
   });
+  expect(createdTrialBalance.satirlar.map((satir: Record<string, unknown>) => satir.yil)).toEqual([
+    createdTrialBalance.yil, createdTrialBalance.yil,
+    createdTrialBalance.yil - 1, createdTrialBalance.yil - 1,
+    createdTrialBalance.yil - 2, createdTrialBalance.yil - 2,
+  ]);
+  expect(createdTrialBalance.satirlar[1]).toMatchObject({ detayKodu: "999999.99", borc: 0, alacak: 1000 });
   await expect(page.getByText("Test başarıyla tamamlandı", { exact: true })).toBeVisible();
   await page.getByRole("button", { name: "Sonuç ayrıntılarını aç" }).click();
   await expect(page.getByText("FDT · TOPLAM_VARLIKLAR", { exact: true })).toBeVisible();
@@ -485,6 +529,29 @@ test("admin girişinden güvenli doğrulama ve sürüm aktivasyonuna kadar çal�
 
   await expect(page.getByRole("button", { name: "Devreye al", exact: true })).toBeDisabled();
   await expect(page.getByText("Önceki raporlar etkilenmez", { exact: false })).toBeVisible();
+  await page.getByLabel("Onay nedeni").fill("E2E örnek mizan denetimi");
+  await expect(page.getByRole("button", { name: "Devreye al", exact: true })).toBeEnabled();
+
+  previewZeroMode = true;
+  await page.getByRole("button", { name: "Testi yeniden çalıştır" }).click();
+  await expect.poll(() => previewCount).toBe(2);
+  await expect(page.getByText("Örnek mizan formülleri tetiklemedi", { exact: true })).toBeVisible();
+  await expect(page.getByRole("button", { name: "Devreye al", exact: true })).toHaveCount(0);
+
+  previewZeroMode = false;
+  await page.getByRole("button", { name: "Testi yeniden çalıştır" }).click();
+  await expect.poll(() => previewCount).toBe(3);
+  await expect(page.getByText("Test başarıyla tamamlandı", { exact: true })).toBeVisible();
+
+  const mizanEditor = page.getByLabel("Test mizanı satırları (JSON)");
+  await mizanEditor.fill((await mizanEditor.inputValue()).replace("314.01", "314.02"));
+  await expect(page.getByRole("button", { name: "Devreye al", exact: true })).toHaveCount(0);
+  await page.getByRole("button", { name: "Otomatik testi çalıştır" }).first().click();
+  await expect.poll(() => testTrialBalanceCreateCount).toBe(2);
+  await expect.poll(() => previewCount).toBe(4);
+  const editedTrialBalance = testTrialBalancePayload as unknown as Record<string, any>;
+  expect(editedTrialBalance.satirlar[0].detayKodu).toBe("314.02");
+  await expect(page.getByText("Test başarıyla tamamlandı", { exact: true })).toBeVisible();
 
   validationShouldFail = true;
   await page.getByRole("button", { name: "Geri", exact: true }).click();
@@ -505,8 +572,8 @@ test("admin girişinden güvenli doğrulama ve sürüm aktivasyonuna kadar çal�
   await expect(page.getByText("Düzeltilmesi gereken tanımlar var", { exact: true })).toBeVisible();
   await page.getByRole("button", { name: "Sonraki: Test et" }).click();
   await expect(page.getByText("E2E zorunlu kaynak bulunamadı.", { exact: false })).toBeVisible();
-  expect(testTrialBalanceCreateCount).toBe(1);
-  expect(previewCount).toBe(1);
+  expect(testTrialBalanceCreateCount).toBe(2);
+  expect(previewCount).toBe(4);
   expect(productionWriteCount).toBe(0);
   expect(runtimeErrors).toEqual([]);
 
@@ -519,7 +586,7 @@ test("admin girişinden güvenli doğrulama ve sürüm aktivasyonuna kadar çal�
   await page.getByRole("button", { name: "Sonraki: Test et" }).click();
   await page.getByRole("button", { name: "Otomatik testi çalıştır" }).first().click();
   await expect.poll(() => validationCallCount).toBe(3);
-  await expect.poll(() => previewCount).toBe(2);
+  await expect.poll(() => previewCount).toBe(5);
   await expect(page.getByText("Test başarıyla tamamlandı", { exact: true })).toBeVisible();
 
   await page.getByLabel("Etkinlik tarihi").fill("2026-11-01");
