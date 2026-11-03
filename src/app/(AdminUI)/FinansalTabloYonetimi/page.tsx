@@ -2711,6 +2711,9 @@ const Page = ({ editorSurumId }: PageProps) => {
                   color={seciliAnaTabloGecisi?.durum === 2 ? "success" : seciliAnaTabloGecisi?.durum === 1 ? "warning" : "default"}
                   label={seciliAnaTabloGecisi?.durum === 2 ? "Yeni sürüm etkin" : seciliAnaTabloGecisi?.durum === 1 ? "Hazır · etkinleştirme bekliyor" : "Yeni üretim durduruldu"}
                 />
+                <Button size="small" variant="text" onClick={() => router.push("/FinansalTabloYonetimi/AnaTabloGecmisi")}>
+                  Önceki tabloları gör
+                </Button>
               </Stack>
               {seciliAnaTabloGecisi && <Stack direction="row" spacing={1} flexWrap="wrap" useFlexGap>
                 <Chip size="small" variant="outlined" label={`Sürüm ${seciliAnaTabloGecisi.surumEtiketi}`} />

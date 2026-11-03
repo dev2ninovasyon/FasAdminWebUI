@@ -171,6 +171,53 @@ export const getFinansalTabloAnaTabloGecisleri = (
   return jsonGet<FinansalTabloAnaTabloGecisi[]>(token, `/AnaTabloGecisleri${suffix}`);
 };
 
+export type AnaTabloGecmisKaydi = {
+  id: number;
+  denetlenenId: number;
+  yil: number;
+  konsolidasyonMu: boolean;
+  hedefSurumId: number;
+  arsivlemeTarihi: string;
+  satirSayisi: number;
+  ozkaynakSatirSayisi: number;
+  icerikSha256: string;
+};
+
+export type AnaTabloGecmisSatiri = {
+  Id: number;
+  TabloAdi: string;
+  KalemKodu: string;
+  KalemAdi: string;
+  Dipnot: string | null;
+  TutarYil1: number;
+  TutarYil2: number;
+  TutarYil3: number;
+};
+
+export type AnaTabloGecmisOzkaynakSatiri = {
+  Id: number;
+  DikeyKalemAdi: string;
+  YatayKalemAdi: string;
+  Dipnot: string | null;
+  Tutar: number;
+};
+
+export const getFinansalTabloAnaTabloGecmisi = (
+  token: string,
+  filtre: { denetlenenId: number; yil: number; konsolidasyonMu: boolean; sayfa: number }
+) => {
+  const query = new URLSearchParams(Object.entries(filtre).map(([key, value]) => [key, String(value)]));
+  return jsonGet<{ kayitlar: AnaTabloGecmisKaydi[]; toplam: number; sayfa: number; sayfaBoyutu: number }>(
+    token, `/AnaTabloGecmisi?${query}`
+  );
+};
+
+export const getFinansalTabloAnaTabloGecmisiDetayi = (token: string, id: number) =>
+  jsonGet<AnaTabloGecmisKaydi & {
+    satirlar: AnaTabloGecmisSatiri[];
+    ozkaynaklar: AnaTabloGecmisOzkaynakSatiri[];
+  }>(token, `/AnaTabloGecmisi/${id}`);
+
 export const prepareFinansalTabloAnaTabloGecisi = (
   token: string,
   istek: { surumId: number; testMizanId: string; aciklama?: string | null }
