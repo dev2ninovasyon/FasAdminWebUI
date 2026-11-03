@@ -1107,6 +1107,7 @@ export type KgkBirlesikTaslakOzeti = {
   id: number;
   kgkAnaSurumId: number;
   raporlamaStandardi: number;
+  olusturucuSurumu: number;
   tabloSayisi: number;
   ortakKalemSayisi: number;
   kapsamaOzelKalemSayisi: number;
@@ -1133,9 +1134,25 @@ export type KgkBirlesikSatir = {
   konsolideMi: boolean;
 };
 
+export type KgkMatrisSutunu = {
+  sabitAnahtar: string;
+  sayfaAdi: string;
+  sutun: string;
+  baslikSatiri: number;
+  ad: string;
+  ustSabitAnahtar: string | null;
+  ilkSutunNo: number;
+  sonSutunNo: number;
+};
+
+export type KgkBirlesikKaynak = { sutunlar?: KgkMatrisSutunu[] | null };
+
 export type KgkBirlesikTaslakDetay = {
   ozet: KgkBirlesikTaslakOzeti;
-  icerik: { raporlamaStandardi: number; tablolar: Array<{ ad: string; kalemler: KgkBirlesikSatir[] }> };
+  icerik: { raporlamaStandardi: number; tablolar: Array<{
+    ad: string; kalemler: KgkBirlesikSatir[];
+    munferit: KgkBirlesikKaynak; konsolide: KgkBirlesikKaynak;
+  }> };
 };
 
 export type KgkBirlesikFormulVaryanti = {

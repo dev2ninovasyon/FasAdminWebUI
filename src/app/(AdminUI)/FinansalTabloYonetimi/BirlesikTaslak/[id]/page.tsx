@@ -61,6 +61,18 @@ export default function BirlesikTaslakSayfasi() {
   }, [son, tabloAdi, satirAnahtari, kapsam, donusumTipi]);
 
   const tablo = taslak?.icerik.tablolar.find((x) => x.ad === tabloAdi);
+  const matrisSutunlari = (kapsam === 1 ? tablo?.munferit : tablo?.konsolide)?.sutunlar || [];
+  const sutunHaritasi = new Map(matrisSutunlari.map((x) => [x.sabitAnahtar, x]));
+  const sutunDerinligi = (anahtar: string | null) => {
+    let derinlik = 0;
+    const ziyaret = new Set<string>();
+    while (anahtar && sutunHaritasi.has(anahtar) && !ziyaret.has(anahtar)) {
+      ziyaret.add(anahtar);
+      derinlik++;
+      anahtar = sutunHaritasi.get(anahtar)?.ustSabitAnahtar || null;
+    }
+    return derinlik;
+  };
   const gorunenSatirlar = (tablo?.kalemler || []).filter((x) =>
     x.eslesmeAnahtari.toLocaleLowerCase("tr-TR").includes(arama.toLocaleLowerCase("tr-TR"))).slice(0, 100);
   const satir = tablo?.kalemler.find((x) => x.eslesmeAnahtari === satirAnahtari);
@@ -117,6 +129,25 @@ export default function BirlesikTaslakSayfasi() {
             {x.eslesmeAnahtari} · {x.durum}
           </MenuItem>)}
         </TextField>
+        {(tablo?.munferit?.sutunlar?.length || tablo?.konsolide?.sutunlar?.length) ? <Paper variant="outlined" sx={{ p: 1.5 }}>
+          <Stack spacing={1}>
+            <Typography variant="subtitle2">Özkaynak sütun hiyerarşisi</Typography>
+            <Stack direction="row" spacing={1}>
+              <Button size="small" variant={kapsam === 1 ? "contained" : "outlined"} onClick={() => setKapsam(1)}>Münferit</Button>
+              <Button size="small" variant={kapsam === 2 ? "contained" : "outlined"} onClick={() => setKapsam(2)}>Konsolide</Button>
+            </Stack>
+            <Box sx={{ maxHeight: 320, overflowY: "auto" }}>
+              {matrisSutunlari.length === 0 ? <Typography variant="body2" color="text.secondary">Bu taslakta sütun ekseni kaydı yok.</Typography> :
+                matrisSutunlari.map((x) => <Box key={x.sabitAnahtar} sx={{ pl: Math.min(sutunDerinligi(x.ustSabitAnahtar), 4) * 2,
+                  py: 0.5, borderBottom: "1px solid", borderColor: "divider" }}>
+                  <Typography variant="body2"><strong>{x.sutun}</strong> · {x.ad}</Typography>
+                  {x.ustSabitAnahtar && <Typography variant="caption" color="text.secondary">
+                    Üst başlık: {sutunHaritasi.get(x.ustSabitAnahtar)?.ad || "Bulunamadı"}
+                  </Typography>}
+                </Box>)}
+            </Box>
+          </Stack>
+        </Paper> : null}
         {satir && <Paper variant="outlined" sx={{ p: 1.5 }}><Stack spacing={1.5}>
           <Stack direction={{ xs: "column", md: "row" }} spacing={1}>
             <TextField select size="small" label="Kapsam" value={kapsam} onChange={(e) => setKapsam(Number(e.target.value))} sx={{ minWidth: 180 }}>
