@@ -60,6 +60,8 @@ import {
   KgkFormatKontrolSonucu,
   KgkKaynakDonemi,
   getKgkKaynakDonemleri,
+  getKgkArsivKalemleri,
+  KgkArsivKalemi,
   kontrolEtKgkFormatlari,
   downloadKgkFormat,
   archiveKgkFormat,
@@ -373,6 +375,8 @@ const Page = ({ editorSurumId }: PageProps) => {
   const [kgkTopluSeciliId, setKgkTopluSeciliId] = useState(0);
   const [kgkGecmisYukleniyor, setKgkGecmisYukleniyor] = useState(false);
   const [kgkWorkbookSonucu, setKgkWorkbookSonucu] = useState<KgkWorkbookFarkSonucu | null>(null);
+  const [kgkBaslangicKalemleri, setKgkBaslangicKalemleri] = useState<{ dosyaAdi: string; kalemler: KgkArsivKalemi[] } | null>(null);
+  const [kgkBaslangicYukleniyor, setKgkBaslangicYukleniyor] = useState("");
   const [kgkFarkBaglami, setKgkFarkBaglami] = useState<KgkFarkBaglami | null>(null);
   const [kgkKalemFarkiUygulandiMi, setKgkKalemFarkiUygulandiMi] = useState(false);
   const [kgkFormulFarkiUygulandiMi, setKgkFormulFarkiUygulandiMi] = useState(false);
@@ -1204,6 +1208,21 @@ const Page = ({ editorSurumId }: PageProps) => {
       setTanimHatasi(error instanceof Error ? error.message : "KGK formatı arşivlenemedi.");
     } finally {
       setKgkArsivlenenUrl("");
+    }
+  };
+
+  const kgkBaslangicKalemleriniGetir = async (dosya: KgkDosyasi) => {
+    if (!user.token || !dosya.sha256) return;
+    setKgkBaslangicYukleniyor(dosya.url);
+    setKgkTaramaHatasi("");
+    try {
+      const sonuc = await getKgkArsivKalemleri(user.token, dosya.url, dosya.sha256);
+      setKgkBaslangicKalemleri({ dosyaAdi: sonuc.dosyaAdi, kalemler: sonuc.kalemler });
+    } catch (error) {
+      setKgkBaslangicKalemleri(null);
+      setKgkTaramaHatasi(error instanceof Error ? error.message : "KGK satırları okunamadı.");
+    } finally {
+      setKgkBaslangicYukleniyor("");
     }
   };
 
@@ -2385,6 +2404,11 @@ const Page = ({ editorSurumId }: PageProps) => {
                         <TableCell align="right">
                           <Stack direction="row" spacing={0.5} justifyContent="flex-end" alignItems="center">
                             <Button size="small" component="a" href={dosya.url} target="_blank" rel="noreferrer">Kaynağı aç</Button>
+                            {dosya.sha256 && /^(xlsx|xlsm)$/i.test(dosya.dosyaTuru) && <Button
+                              size="small" variant="outlined" onClick={() => kgkBaslangicKalemleriniGetir(dosya)}
+                              disabled={kgkBaslangicYukleniyor === dosya.url}>
+                              {kgkBaslangicYukleniyor === dosya.url ? <CircularProgress size={16} /> : "KGK satırlarını gör"}
+                            </Button>}
                             {incelenebilirMi && hedefUyumsuzlugu && <Chip size="small" variant="outlined" label="Seçili tanımla uyumsuz" title={hedefUyumsuzlugu} />}
                             {incelenebilirMi && !hedefUyumsuzlugu && (
                               <Button size="small" variant="contained" color="info" onClick={() => kgkArsivWorkbookKarsilastir(dosya)} disabled={!secilenSurum || kgkArsivWorkbookYukleniyor === dosya.url}>
@@ -2398,6 +2422,19 @@ const Page = ({ editorSurumId }: PageProps) => {
                   })}
                 </TableBody>
               </Table>
+              {kgkBaslangicKalemleri && <Paper variant="outlined" sx={{ mt: 1.5, p: 1, maxHeight: 300, overflow: "auto" }}>
+                <Typography variant="subtitle2" sx={{ mb: 1 }}>
+                  {kgkBaslangicKalemleri.dosyaAdi} · {kgkBaslangicKalemleri.kalemler.length} KGK satırı
+                </Typography>
+                <Table size="small">
+                  <TableHead><TableRow><TableCell>Sayfa</TableCell><TableCell>Satır</TableCell><TableCell>KGK kalemi</TableCell><TableCell>Tür</TableCell></TableRow></TableHead>
+                  <TableBody>{kgkBaslangicKalemleri.kalemler.map((kalem) => <TableRow key={kalem.sabitAnahtar}>
+                    <TableCell>{kalem.sayfaAdi}</TableCell><TableCell>{kalem.satirNo}</TableCell>
+                    <TableCell sx={{ pl: 1 + Math.min(kalem.girinti, 8) * 1.5 }}>{kalem.ad}</TableCell>
+                    <TableCell>{kalem.kalemTuru}</TableCell>
+                  </TableRow>)}</TableBody>
+                </Table>
+              </Paper>}
               {kgkKontrolSonucu.degisenDosyaSayisi === 0 && <Alert severity={kgkKontrolSonucu.dosyalar.some((dosya) => !dosya.karsilastirmaVarMi) ? "info" : "success"} sx={{ mt: 1 }}>
                 {kgkKontrolSonucu.dosyalar.some((dosya) => !dosya.karsilastirmaVarMi)
                   ? "İlk tarama KGK dosyaları için karşılaştırma temeli oluşturdu. Bu dosyaların sonraki değişiklikleri burada görünecek."
