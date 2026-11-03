@@ -56,18 +56,18 @@ const versionDetail = {
       zorunluMu: true,
     }],
     kalemler: [
-      { id: 101, ustKalemId: null, sabitAnahtar: "TOPLAM_VARLIKLAR", kod: "TV", ad: "Toplam varlıklar", sira: 1, kalemTuru: 4, eksen: 1, varsayilanGorunurMu: true, aktifMi: true },
-      { id: 102, ustKalemId: 101, sabitAnahtar: "NAKIT", kod: "100", ad: "Nakit ve nakit benzerleri", sira: 2, kalemTuru: 2, eksen: 1, varsayilanGorunurMu: true, aktifMi: true },
-      { id: 103, ustKalemId: 101, sabitAnahtar: "TICARI_ALACAKLAR", kod: "120", ad: "Ticari alacaklar", sira: 3, kalemTuru: 2, eksen: 1, varsayilanGorunurMu: true, aktifMi: true },
+      { id: 101, ustKalemId: null, sabitAnahtar: "TOPLAM_VARLIKLAR", kod: "TV", ad: "Toplam varlıklar", sira: 1, kalemTuru: "Toplam", eksen: "Satir", varsayilanGorunurMu: true, aktifMi: true },
+      { id: 102, ustKalemId: 101, sabitAnahtar: "NAKIT", kod: "100", ad: "Nakit ve nakit benzerleri", sira: 2, kalemTuru: "Veri", eksen: "Satir", varsayilanGorunurMu: true, aktifMi: true },
+      { id: 103, ustKalemId: 101, sabitAnahtar: "TICARI_ALACAKLAR", kod: "120", ad: "Ticari alacaklar", sira: 3, kalemTuru: "Veri", eksen: "Satir", varsayilanGorunurMu: true, aktifMi: true },
     ],
     hucreler: [],
     kurallar: [{
       id: 201,
       kalemId: 101,
       hucreId: null,
-      hesaplamaTuru: 2,
-      isaretPolitikasi: 1,
-      bosDegerPolitikasi: 1,
+      hesaplamaTuru: "SatirFormulu",
+      isaretPolitikasi: "OlduguGibi",
+      bosDegerPolitikasi: "SifirKabulEt",
       sabitDeger: null,
       aciklama: "Alt finansal kalemleri toplar",
       hamFormul: "NAKIT + TICARI_ALACAKLAR",
@@ -77,14 +77,14 @@ const versionDetail = {
         id: 301,
         sira: 0,
         hamTerim: "NAKIT",
-        kaynakTuru: 3,
+        kaynakTuru: "Kalem",
         kaynakAnahtari: "NAKIT",
-        operator: 1,
-        degerAlani: 1,
-        donemDavranisi: 1,
+        operator: "Topla",
+        degerAlani: "BakiyeTransferFisiHaric",
+        donemDavranisi: "CariDonem",
         donemOfseti: 0,
-        katsayi: 1,
-        isaretPolitikasi: 1,
+        katsayi: 2,
+        isaretPolitikasi: "OlduguGibi",
         zorunluMu: true,
         hesaplamaSekli: 1,
         karsilastirmaDegerAlani: 1,
@@ -428,10 +428,22 @@ test("admin girişinden güvenli doğrulama ve sürüm aktivasyonuna kadar çal�
   expect(definitionAuthorization).toBe("Bearer e2e-access-token");
 
   await page.getByRole("button", { name: "Formülleri düzenle" }).click();
-  await expect(page.getByText("Formül kuralları", { exact: true })).toBeVisible();
+  await expect(page.getByRole("columnheader", { name: "Formül", exact: true })).toBeVisible();
 
-  await page.getByText("Kalem seçin", { exact: true }).last().click();
-  await page.getByRole("option", { name: /TOPLAM_VARLIKLAR.*Kural #201/ }).click();
+  const kalemTablosu = page.getByRole("table").filter({ has: page.getByRole("columnheader", { name: "Formül" }) });
+  await expect(kalemTablosu.getByRole("row", { name: /Toplam varlıklar\s*Toplam/ })).toBeVisible();
+  await expect(kalemTablosu.getByRole("row", { name: /Ticari alacaklar\s*Veri/ })).toBeVisible();
+  await expect(kalemTablosu.getByText("NAKIT + TICARI_ALACAKLAR", { exact: true })).toBeVisible();
+  await kalemTablosu.getByRole("row", { name: /Toplam varlıklar/ }).click();
+  await expect(page.getByText("Kural #201", { exact: false })).toBeVisible();
+  await expect(page.getByLabel("Katsayı", { exact: true })).toHaveCount(0);
+  await expect(page.getByText("Değer alanı", { exact: true })).toHaveCount(0);
+  await expect(page.getByText("Katsayı kaynağı", { exact: true })).toHaveCount(0);
+  await page.getByRole("button", { name: "Kalem bilgileri" }).click();
+  await expect(page.getByText("Kalem türü", { exact: true }).locator("..").getByRole("combobox")).toHaveText("Toplam");
+  await expect(page.getByText("Eksen", { exact: true }).locator("..").getByRole("combobox")).toHaveText("Satır");
+  expect(await page.evaluate(() => document.documentElement.scrollWidth <= document.documentElement.clientWidth)).toBe(true);
+  await page.screenshot({ path: "test-results/surum-formul-tablosu.png", fullPage: true });
 
   const sourceItem = page.getByText("Nakit ve nakit benzerleri · 100", { exact: true });
   await expect(sourceItem).toBeVisible();
@@ -440,23 +452,15 @@ test("admin girişinden güvenli doğrulama ve sürüm aktivasyonuna kadar çal�
   await expect(page.getByRole("option", { name: /Toplam varlıklar/ })).toHaveCount(0);
   await page.getByRole("option", { name: "Ticari alacaklar · 120" }).click();
 
-  await page.getByText("Katsayı kaynağı", { exact: true }).locator("..").getByRole("combobox").click();
-  await page.getByRole("option", { name: "Sunum endeksi" }).click();
-  await page.getByText("Katsayı dönemi", { exact: true }).locator("..").getByRole("combobox").click();
-  await page.getByRole("option", { name: "Önceki dönem" }).last().click();
-  await page.getByRole("spinbutton", { name: "Katsayı ofseti" }).fill("-1");
-
   await page.getByRole("button", { name: "Kuralı kaydet" }).click();
   await expect.poll(() => ruleUpdatePayload).not.toBeNull();
   const savedRule = ruleUpdatePayload as unknown as Record<string, any>;
   expect(savedRule.terimler?.[0]?.kaynakAnahtari).toBe("TICARI_ALACAKLAR");
-  expect(savedRule.terimler?.[0]).toMatchObject({
-    katsayiKaynakTuru: 5,
-    katsayiKaynakAnahtari: "SUNUM_ENDEKSI",
-    katsayiDonemDavranisi: 2,
-    katsayiDonemOfseti: -1,
-  });
+  // Ekrandan kaldırılan katsayı ve değer alanı mevcut kuraldaki değerleriyle korunur.
+  expect(savedRule.terimler?.[0]).toMatchObject({ kaynakTuru: 3, operator: 1, katsayi: 2, degerAlani: 7, donemDavranisi: 1 });
+  expect(savedRule.hesaplamaTuru).toBe(2);
   expect(savedRule.beklenenEszamanlilikSurumu).toBe(7);
+  await page.getByRole("button", { name: "Paneli kapat" }).click();
   await expect(page.getByRole("button", { name: "Kuralı kaydet" })).toHaveCount(0);
 
   await page.getByRole("button", { name: "Hazırlama adımlarına dön" }).click();
@@ -516,11 +520,6 @@ test("admin girişinden güvenli doğrulama ve sürüm aktivasyonuna kadar çal�
       donemOfseti: 0,
       donem: { sabitAnahtar: `1-0-${previewYear}`, baslangicTarihi: `${previewYear}-01-01`, bitisTarihi: `${previewYear}-12-31` },
     },
-    {
-      donemDavranisi: 2,
-      donemOfseti: -1,
-      donem: { sabitAnahtar: `2--1-${previewYear - 1}`, baslangicTarihi: `${previewYear - 1}-01-01`, bitisTarihi: `${previewYear - 1}-12-31` },
-    },
   ]);
   expect(ruleUpdateCount).toBe(1);
   expect(validationCallCount).toBe(1);
@@ -556,13 +555,13 @@ test("admin girişinden güvenli doğrulama ve sürüm aktivasyonuna kadar çal�
   validationShouldFail = true;
   await page.getByRole("button", { name: "Geri", exact: true }).click();
   await page.getByRole("button", { name: "Formülleri düzenle" }).click();
-  await expect(page.getByText("Formül kuralları", { exact: true })).toBeVisible();
-  await page.getByText("Kalem seçin", { exact: true }).last().click();
-  await page.getByRole("option", { name: /TOPLAM_VARLIKLAR.*Kural #201/ }).click();
+  await expect(page.getByRole("columnheader", { name: "Formül", exact: true })).toBeVisible();
+  await page.getByRole("row", { name: /Toplam varlıklar/ }).click();
   await page.getByText("Ticari alacaklar · 120", { exact: true }).click();
   await page.getByRole("option", { name: "Nakit ve nakit benzerleri · 100" }).click();
   await page.getByRole("button", { name: "Kuralı kaydet" }).click();
   await expect.poll(() => ruleUpdateCount).toBe(2);
+  await page.getByRole("button", { name: "Paneli kapat" }).click();
   await expect(page.getByRole("button", { name: "Kuralı kaydet" })).toHaveCount(0);
 
   await page.getByRole("button", { name: "Hazırlama adımlarına dön" }).click();

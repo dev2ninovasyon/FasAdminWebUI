@@ -1165,11 +1165,23 @@ export const createKgkBirlesikTaslak = async (
   return payload as KgkBirlesikTaslakOzeti;
 };
 
+export type KgkKaynakKalemi = {
+  sabitAnahtar: string;
+  sayfaAdi: string;
+  satirNo: number;
+  ad: string;
+  girinti: number;
+  ustSabitAnahtar: string | null;
+  kalemTuru: string;
+};
+
 export type KgkBirlesikSatir = {
   eslesmeAnahtari: string;
   durum: string;
   munferitMi: boolean;
   konsolideMi: boolean;
+  munferitKaynaklari?: KgkKaynakKalemi[] | null;
+  konsolideKaynaklari?: KgkKaynakKalemi[] | null;
 };
 
 export type KgkMatrisSutunu = {
@@ -1183,7 +1195,7 @@ export type KgkMatrisSutunu = {
   sonSutunNo: number;
 };
 
-export type KgkBirlesikKaynak = { sutunlar?: KgkMatrisSutunu[] | null };
+export type KgkBirlesikKaynak = { baslik?: string | null; sutunlar?: KgkMatrisSutunu[] | null };
 
 export type KgkBirlesikTaslakDetay = {
   ozet: KgkBirlesikTaslakOzeti;
@@ -1247,6 +1259,43 @@ export const saveKgkBirlesikFormulVaryanti = async (
   const payload = await response.json().catch(() => ({}));
   if (!response.ok) throw new Error(payload?.message || "Formül varyantı kaydedilemedi.");
   return payload as { id: number; surumNo: number; varyantSayisi: number };
+};
+
+export type KgkBirlesikOnizlemeHucresi = {
+  eslesmeAnahtari: string;
+  yataySutunAnahtari: string | null;
+  kapsam: number;
+  donusumTipi: number;
+  hazirMi: boolean;
+  deger: number | null;
+  hata: string | null;
+};
+
+export type KgkBirlesikOnizlemeSonucu = {
+  formulSurumNo: number;
+  tabloAdi: string;
+  testMizanId: string | null;
+  testMizanAdi: string | null;
+  motorSurumu: string;
+  varyantlar: Array<{
+    kapsam: number; donusumTipi: number; durum: string; aciklama: string | null;
+    hazirHucreSayisi: number; hataliHucreSayisi: number;
+  }>;
+  hucreler: KgkBirlesikOnizlemeHucresi[];
+};
+
+/** Formül alt sürümünü yeni motorla derler; test mizanı verilirse salt okunur hesaplar. */
+export const previewKgkBirlesikFormulSurumu = async (
+  token: string, id: number, istek: { formulSurumNo: number; tabloAdi: string; testMizanId?: string | null }
+) => {
+  const response = await fetch(`${url}/FinansalTabloYonetimi/Kgk/BirlesikTaslaklar/${id}/Onizle`, {
+    method: "POST",
+    headers: { accept: "application/json", "Content-Type": "application/json", Authorization: `Bearer ${token}` },
+    body: JSON.stringify(istek),
+  });
+  const payload = await response.json().catch(() => ({}));
+  if (!response.ok) throw new Error(payload?.message || "Formüller motorla denetlenemedi.");
+  return enumlariSayiyaCevir(payload as KgkBirlesikOnizlemeSonucu);
 };
 
 export const activateKgkAnaSurum = async (

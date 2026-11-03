@@ -11,6 +11,8 @@ import {
   CircularProgress,
   Divider,
   FormControl,
+  IconButton,
+  InputAdornment,
   InputLabel,
   MenuItem,
   Paper,
@@ -36,6 +38,9 @@ import { usePathname, useRouter } from "next/navigation";
 import PageContainer from "@/app/components/Container/PageContainer";
 import Breadcrumb from "@/app/components/Layout/Shared/Breadcrumb/Breadcrumb";
 import ParentCard from "@/app/components/Shared/ParentCard";
+import { IconTrash, IconX } from "@tabler/icons-react";
+import KalemFormulTablosu, { KALEM_TURLERI } from "./KalemFormulTablosu";
+import { EXCEL } from "./excelStili";
 import { useSelector } from "@/store/hooks";
 import { AppState } from "@/store/store";
 import {
@@ -205,19 +210,6 @@ const degerAlaniEtiketi = (deger: number) => ({
   10: "Transfer fişi hariç kontrol bakiye",
 } as Record<number, string>)[deger] ?? `Alan ${deger}`;
 
-const donemEtiketi = (davranis: number, ofset: number) => {
-  const ad = ({ 1: "Cari dönem", 2: "Önceki dönem", 3: "Açılış", 4: "Değişim", 5: "Özel" } as Record<number, string>)[davranis] ?? `Dönem ${davranis}`;
-  return `${ad}${ofset ? ` (${ofset > 0 ? "+" : ""}${ofset})` : ""}`;
-};
-
-const isaretEtiketi = (deger: number) => ({
-  1: "olduğu gibi",
-  2: "mutlak",
-  3: "yalnız pozitif",
-  4: "yalnız negatif",
-  5: "ters işaret",
-} as Record<number, string>)[deger] ?? `işaret ${deger}`;
-
 const yeniKuralTerimi = (sira: number): KuralTerimiFormu => ({
   id: 0,
   sira,
@@ -244,19 +236,6 @@ const yeniKuralTerimi = (sira: number): KuralTerimiFormu => ({
   katsayiDonemOfseti: 0,
   asgariMutlakFark: 0,
 });
-
-const terimOzeti = (terim: KuralTerimiFormu) => {
-  const kaynak = `${terim.kaynakAnahtari || "hesap"}.${degerAlaniEtiketi(terim.degerAlani)} [${donemEtiketi(terim.donemDavranisi, terim.donemOfseti)}; ${isaretEtiketi(terim.isaretPolitikasi)}]`;
-  const karsilastirma = `${terim.kaynakAnahtari || "hesap"}.${degerAlaniEtiketi(terim.karsilastirmaDegerAlani)} [${donemEtiketi(terim.karsilastirmaDonemDavranisi, terim.karsilastirmaDonemOfseti)}; ${isaretEtiketi(terim.karsilastirmaIsaretPolitikasi)}]`;
-  const fark = terim.farkYonu === 2 ? `${karsilastirma} − ${kaynak}` : `${kaynak} − ${karsilastirma}`;
-  const hesap = terim.hesaplamaSekli === 2
-    ? `(${fark}) → ${isaretEtiketi(terim.sonucIsaretPolitikasi)}${terim.asgariMutlakFark > 0 ? `; |fark| < ${terim.asgariMutlakFark} ise 0` : ""}`
-    : kaynak;
-  const dinamikKatsayi = terim.katsayiKaynakTuru
-    ? ` × ${terim.katsayiKaynakAnahtari || "dinamik katsayı"} [${donemEtiketi(terim.katsayiDonemDavranisi, terim.katsayiDonemOfseti)}]`
-    : "";
-  return `${terim.operator === 2 ? "Çıkar" : "Topla"}: ${hesap}${terim.katsayi !== 1 ? ` × ${terim.katsayi}` : ""}${dinamikKatsayi}`;
-};
 
 const surumDurumKodu = (durum: number | string) => {
   if (typeof durum === "number") return durum;
@@ -448,6 +427,7 @@ const Page = ({ editorSurumId }: PageProps) => {
   const [kuralKaydediliyor, setKuralKaydediliyor] = useState(false);
   const [yeniKuralAcik, setYeniKuralAcik] = useState(false);
   const [yeniKuralKalemId, setYeniKuralKalemId] = useState(0);
+  const [panelKalemId, setPanelKalemId] = useState(0);
   const [kuralForm, setKuralForm] = useState({ hesaplamaTuru: 1, isaretPolitikasi: 1, bosDegerPolitikasi: 1, sabitDeger: "", aciklama: "", hamFormul: "", kgkExcelHedefi: "", aktifMi: true, terimler: [] as KuralTerimiFormu[] });
   const secilenSetIdRef = useRef(0);
   const sonSecilenSurumIdRef = useRef(0);
@@ -563,6 +543,7 @@ const Page = ({ editorSurumId }: PageProps) => {
   const duzenlenenKural = secilenKalemTablosu?.kurallar.find((kural) => kural.id === duzenlenenKuralId);
   const kuralHedefKalemId = yeniKuralAcik ? yeniKuralKalemId : duzenlenenKural?.kalemId;
   const kuralKaynakKalemleri = secilenKalemTablosu?.kalemler.filter((kalem) => kalem.id !== kuralHedefKalemId) || [];
+  const panelKalem = secilenKalemTablosu?.kalemler.find((kalem) => kalem.id === panelKalemId);
 
   const kgkFarkiniTemizle = () => {
     setKgkWorkbookSonucu(null);
@@ -847,43 +828,6 @@ const Page = ({ editorSurumId }: PageProps) => {
     }));
   };
 
-  const kuralTerimiSablonuUygula = (index: number, sablon: string) => {
-    const ortak: Partial<KuralTerimiFormu> = {
-      hesaplamaSekli: 1,
-      donemDavranisi: 1,
-      donemOfseti: 0,
-      isaretPolitikasi: 1,
-      karsilastirmaDonemDavranisi: 2,
-      karsilastirmaDonemOfseti: -1,
-      karsilastirmaIsaretPolitikasi: 1,
-      farkYonu: 1,
-      sonucIsaretPolitikasi: 1,
-      asgariMutlakFark: 0,
-    };
-    const sablonlar: Record<string, Partial<KuralTerimiFormu>> = {
-      cariBakiye: { ...ortak, degerAlani: 1 },
-      cariTransferHaric: { ...ortak, degerAlani: 7 },
-      cariEksiOncekiTransferHaric: { ...ortak, hesaplamaSekli: 2, degerAlani: 7, karsilastirmaDegerAlani: 7 },
-      oncekiEksiCariTransferHaric: { ...ortak, hesaplamaSekli: 2, degerAlani: 7, karsilastirmaDegerAlani: 7, farkYonu: 2 },
-      transferHaricArtis: { ...ortak, hesaplamaSekli: 2, degerAlani: 7, karsilastirmaDegerAlani: 7, sonucIsaretPolitikasi: 3, asgariMutlakFark: 1 },
-      transferHaricAzalis: { ...ortak, hesaplamaSekli: 2, degerAlani: 7, karsilastirmaDegerAlani: 7, farkYonu: 2, sonucIsaretPolitikasi: 3, asgariMutlakFark: 1 },
-      kontrolBakiye: { ...ortak, degerAlani: 6 },
-      transferHaricKontrol: { ...ortak, degerAlani: 10 },
-      sunumEndeksliOncekiUretim: {
-        ...ortak,
-        kaynakTuru: 4,
-        kaynakAnahtari: "",
-        donemDavranisi: 2,
-        donemOfseti: -1,
-        katsayiKaynakTuru: 5,
-        katsayiKaynakAnahtari: "SUNUM_ENDEKSI",
-        katsayiDonemDavranisi: 2,
-        katsayiDonemOfseti: -1,
-      },
-    };
-    if (sablonlar[sablon]) kuralTerimiGuncelle(index, sablonlar[sablon]);
-  };
-
   const kuralTerimiSil = (index: number) => {
     setKuralForm((onceki) => ({
       ...onceki,
@@ -930,7 +874,7 @@ const Page = ({ editorSurumId }: PageProps) => {
         ...set,
         surumler: set.surumler.map((surum) => surum.id === secilenSurum.id ? { ...surum, eszamanlilikSurumu: sonuc.eszamanlilikSurumu, guncellemeTarihi: sonuc.guncellemeTarihi } : surum),
       })));
-      setDuzenlenenKuralId(0);
+      setSurumYonetimiMesaji("Formül kaydedildi. Taslak otomatik yayınlanmadı.");
       await revizyonlariYenile(secilenSurum.id);
     } catch (error) {
       setTanimHatasi(error instanceof Error ? error.message : "Hesaplama kuralı güncellenemedi.");
@@ -939,11 +883,11 @@ const Page = ({ editorSurumId }: PageProps) => {
     }
   };
 
-  const yeniKuralBaslat = () => {
+  const yeniKuralBaslat = (kalemId?: number) => {
     const tablo = secilenKalemTablosu;
     const hedef = tablo?.kalemler.find((kalem) => !tablo.kurallar.some((kural) => kural.kalemId === kalem.id));
     setDuzenlenenKuralId(0);
-    setYeniKuralKalemId(hedef?.id || 0);
+    setYeniKuralKalemId(kalemId ?? hedef?.id ?? 0);
     setYeniKuralAcik(true);
     setKuralForm({
       hesaplamaTuru: 1,
@@ -956,6 +900,32 @@ const Page = ({ editorSurumId }: PageProps) => {
       aktifMi: true,
       terimler: [yeniKuralTerimi(0)],
     });
+  };
+
+  type TabloKalemi = NonNullable<FinansalSurumDetay>["tablolar"][number]["kalemler"][number];
+  type TabloKurali = NonNullable<FinansalSurumDetay>["tablolar"][number]["kurallar"][number];
+  // Excel tablosunda satır seçimi: kuralı varsa düzenler, yoksa o kalem için yeni formül açar.
+  const panelKalemSec = (kalem: TabloKalemi, kural?: TabloKurali) => {
+    setPanelKalemId(kalem.id);
+    setDuzenlenenKalemId(0);
+    if (kural) {
+      setYeniKuralAcik(false);
+      kuralDuzenle(kural);
+    } else {
+      yeniKuralBaslat(kalem.id);
+    }
+  };
+  const panelHucreKuraliSec = (kural: TabloKurali) => {
+    setPanelKalemId(0);
+    setDuzenlenenKalemId(0);
+    setYeniKuralAcik(false);
+    kuralDuzenle(kural);
+  };
+  const paneliKapat = () => {
+    setPanelKalemId(0);
+    setDuzenlenenKalemId(0);
+    setDuzenlenenKuralId(0);
+    setYeniKuralAcik(false);
   };
 
   const kuralOlustur = async () => {
@@ -999,6 +969,8 @@ const Page = ({ editorSurumId }: PageProps) => {
       setTanimSetleri((onceki) => onceki.map((set) => ({ ...set, surumler: set.surumler.map((surum) => surum.id === secilenSurum.id ? { ...surum, eszamanlilikSurumu: sonuc.eszamanlilikSurumu, guncellemeTarihi: sonuc.guncellemeTarihi, formulSayisi: surum.formulSayisi + 1 } : surum) })));
       setYeniKuralAcik(false);
       setYeniKuralKalemId(0);
+      setDuzenlenenKuralId(sonuc.kuralId);
+      setSurumYonetimiMesaji("Formül kaydedildi. Taslak otomatik yayınlanmadı.");
       await revizyonlariYenile(secilenSurum.id);
     } catch (error) {
       setTanimHatasi(error instanceof Error ? error.message : "Hesaplama kuralı oluşturulamadı.");
@@ -3306,14 +3278,12 @@ const Page = ({ editorSurumId }: PageProps) => {
                     </Stack>
                   </Paper>
                 )}
-                {surumDetayi && seciliSurumTaslakMi && secilenKalemTablosu && (
+                {surumDetayi && secilenKalemTablosu && (
                   <FormControl size="small" fullWidth>
                     <InputLabel>Finansal tablo</InputLabel>
                     <Select label="Finansal tablo" value={secilenKalemTablosu.id} onChange={(event) => {
                       setKalemTabloId(Number(event.target.value));
-                      setDuzenlenenKalemId(0);
-                      setDuzenlenenKuralId(0);
-                      setYeniKuralAcik(false);
+                      paneliKapat();
                     }}>
                       {surumDetayi.tablolar.map((tablo) => <MenuItem key={tablo.id} value={tablo.id}>{tablo.kod} — {tablo.ad}</MenuItem>)}
                     </Select>
@@ -3368,144 +3338,74 @@ const Page = ({ editorSurumId }: PageProps) => {
                     </Table>
                   </Box>
                 )}
-                {editorAyrintilariAcik && surumDetayi && surumDurumKodu(secilenSurum.durum) === 1 && secilenKalemTablosu && (
-                  <Paper variant="outlined" sx={{ p: 1.5, bgcolor: "action.hover" }}>
-                    <Stack spacing={1.5}>
-                      <Stack direction="row" spacing={1} alignItems="center">
-                        <Typography variant="subtitle2" sx={{ flexGrow: 1 }}>Taslak kalem düzenleyici</Typography>
-                      </Stack>
-                      <Alert severity="info" variant="outlined">
-                        Kalem ekleme veya kaldırma elle yapılmaz. KGK Excel sürümleri arasındaki farktan tespit edilen kalemler taslak sürüme aktarılır; bu ekran yalnızca gelen taslağın metadata ve formül incelemesi içindir.
-                      </Alert>
-                      <Table size="small">
-                        <TableHead><TableRow><TableCell>Sabit anahtar</TableCell><TableCell>Kalem</TableCell><TableCell align="right">Sıra</TableCell><TableCell>Durum</TableCell><TableCell align="right">İşlem</TableCell></TableRow></TableHead>
-                        <TableBody>
-                          {secilenKalemTablosu.kalemler.map((kalem) => (
-                            <TableRow key={kalem.id} hover>
-                              <TableCell>{kalem.sabitAnahtar}</TableCell>
-                              <TableCell>{kalem.ad}{kalem.kod ? ` (${kalem.kod})` : ""}</TableCell>
-                              <TableCell align="right">{kalem.sira}</TableCell>
-                              <TableCell>{kalem.aktifMi ? "Aktif" : "Pasif"}</TableCell>
-                              <TableCell align="right"><Button size="small" onClick={() => kalemDuzenle(kalem)}>Düzenle</Button></TableCell>
-                            </TableRow>
-                          ))}
-                        </TableBody>
-                      </Table>
+                {surumDetayi && secilenKalemTablosu && (
+                  <Stack direction={{ xs: "column", lg: "row" }} spacing={1.5} alignItems="flex-start">
+                    <KalemFormulTablosu tablo={secilenKalemTablosu} seciliKalemId={panelKalemId} seciliKuralId={duzenlenenKuralId}
+                      onKalemSec={panelKalemSec} onHucreKuraliSec={panelHucreKuraliSec} />
+                    {seciliSurumTaslakMi && (panelKalem || duzenlenenKural) && (
+                      <Paper variant="outlined" sx={{ width: { xs: "100%", lg: 460, xl: 560 }, flexShrink: 0, p: 2, borderRadius: 0, borderColor: EXCEL.kenar,
+                        borderTop: `3px solid ${EXCEL.yesil}`, position: { lg: "sticky" }, top: { lg: 88 }, maxHeight: { lg: "calc(100vh - 110px)" }, overflowY: "auto" }}>
+                        <Stack spacing={1.5}>
+                          <Stack direction="row" spacing={1} alignItems="flex-start">
+                            <Box sx={{ flex: 1, minWidth: 0 }}>
+                              <Typography variant="subtitle1" fontWeight={600} sx={{ overflowWrap: "anywhere" }}>{panelKalem?.ad ?? "Özkaynak hücresi"}</Typography>
+                              <Typography variant="caption" color="text.secondary">
+                                {panelKalem ? `${KALEM_TURLERI[panelKalem.kalemTuru] || "Tür yok"} · sıra ${panelKalem.sira}` : "Hücre formülü"}
+                                {duzenlenenKural ? ` · Kural #${duzenlenenKural.id}` : yeniKuralAcik ? " · yeni formül" : ""}
+                              </Typography>
+                            </Box>
+                            {panelKalem && duzenlenenKalemId !== panelKalem.id && <Button size="small" onClick={() => kalemDuzenle(panelKalem)}>Kalem bilgileri</Button>}
+                            <IconButton size="small" aria-label="Paneli kapat" onClick={paneliKapat}><IconX size={18} /></IconButton>
+                          </Stack>
                       {duzenlenenKalemId > 0 && (
                         <Grid container spacing={1.5}>
-                          <Grid item xs={12} md={4}><TextField fullWidth size="small" label="Kalem adı" value={kalemForm.ad} onChange={(event) => setKalemForm((onceki) => ({ ...onceki, ad: event.target.value }))} /></Grid>
-                          <Grid item xs={12} md={3}><TextField fullWidth size="small" label="Kod" value={kalemForm.kod} onChange={(event) => setKalemForm((onceki) => ({ ...onceki, kod: event.target.value }))} /></Grid>
-                          <Grid item xs={12} md={2}><TextField fullWidth size="small" type="number" label="Sıra" value={kalemForm.sira} onChange={(event) => setKalemForm((onceki) => ({ ...onceki, sira: Number(event.target.value) }))} /></Grid>
-                          <Grid item xs={12} md={3}>
-                            <FormControl size="small" fullWidth><InputLabel>Üst kalem</InputLabel><Select label="Üst kalem" value={kalemForm.ustKalemId} onChange={(event) => setKalemForm((onceki) => ({ ...onceki, ustKalemId: Number(event.target.value) }))}><MenuItem value={0}>Yok</MenuItem>{secilenKalemTablosu.kalemler.filter((kalem) => kalem.id !== duzenlenenKalemId).map((kalem) => <MenuItem key={kalem.id} value={kalem.id}>{kalem.sabitAnahtar}</MenuItem>)}</Select></FormControl>
+                          <Grid item xs={12}><TextField fullWidth size="small" label="Kalem adı" value={kalemForm.ad} onChange={(event) => setKalemForm((onceki) => ({ ...onceki, ad: event.target.value }))} /></Grid>
+                          <Grid item xs={12} sm={6}><TextField fullWidth size="small" label="Kod" value={kalemForm.kod} onChange={(event) => setKalemForm((onceki) => ({ ...onceki, kod: event.target.value }))} /></Grid>
+                          <Grid item xs={12} sm={6}><TextField fullWidth size="small" type="number" label="Sıra" value={kalemForm.sira} onChange={(event) => setKalemForm((onceki) => ({ ...onceki, sira: Number(event.target.value) }))} /></Grid>
+                          <Grid item xs={12} sm={6}>
+                            <FormControl size="small" fullWidth><InputLabel>Üst kalem</InputLabel><Select label="Üst kalem" value={kalemForm.ustKalemId} onChange={(event) => setKalemForm((onceki) => ({ ...onceki, ustKalemId: Number(event.target.value) }))}><MenuItem value={0}>Yok</MenuItem>{secilenKalemTablosu.kalemler.filter((kalem) => kalem.id !== duzenlenenKalemId).map((kalem) => <MenuItem key={kalem.id} value={kalem.id}>{kalem.ad} · sıra {kalem.sira}</MenuItem>)}</Select></FormControl>
                           </Grid>
-                          <Grid item xs={12} md={3}>
+                          <Grid item xs={12} sm={6}>
                             <FormControl size="small" fullWidth><InputLabel>Kalem türü</InputLabel><Select label="Kalem türü" value={kalemForm.kalemTuru} onChange={(event) => setKalemForm((onceki) => ({ ...onceki, kalemTuru: Number(event.target.value) }))}><MenuItem value={1}>Başlık</MenuItem><MenuItem value={2}>Veri</MenuItem><MenuItem value={3}>Ara toplam</MenuItem><MenuItem value={4}>Toplam</MenuItem><MenuItem value={5}>Manuel</MenuItem></Select></FormControl>
                           </Grid>
-                          <Grid item xs={12} md={3}>
+                          <Grid item xs={12} sm={6}>
                             <FormControl size="small" fullWidth><InputLabel>Eksen</InputLabel><Select label="Eksen" value={kalemForm.eksen} onChange={(event) => setKalemForm((onceki) => ({ ...onceki, eksen: Number(event.target.value) }))}><MenuItem value={1}>Satır</MenuItem><MenuItem value={2}>Dikey</MenuItem><MenuItem value={3}>Yatay</MenuItem></Select></FormControl>
                           </Grid>
-                          <Grid item xs={12} md={3}>
+                          <Grid item xs={12} sm={6}>
                             <FormControl size="small" fullWidth><InputLabel>Görünürlük</InputLabel><Select label="Görünürlük" value={kalemForm.varsayilanGorunurMu ? 1 : 0} onChange={(event) => setKalemForm((onceki) => ({ ...onceki, varsayilanGorunurMu: Number(event.target.value) === 1 }))}><MenuItem value={1}>Görünür</MenuItem><MenuItem value={0}>Gizli</MenuItem></Select></FormControl>
                           </Grid>
                           <Grid item xs={12}><Stack direction="row" spacing={1}><Button variant="contained" size="small" onClick={kalemKaydet} disabled={kalemKaydediliyor || !kalemForm.ad.trim()}>{kalemKaydediliyor ? <CircularProgress size={18} color="inherit" /> : "Kalemi kaydet"}</Button><Button size="small" onClick={() => setDuzenlenenKalemId(0)} disabled={kalemKaydediliyor}>İptal</Button></Stack></Grid>
                         </Grid>
                       )}
-                    </Stack>
-                  </Paper>
-                )}
-                {surumDetayi && surumDurumKodu(secilenSurum.durum) === 1 && secilenKalemTablosu && (
-                  <Paper variant="outlined" sx={{ p: 1.5, bgcolor: "action.hover" }}>
-                    <Stack spacing={1.5}>
-                      <Stack direction="row" spacing={1} alignItems="center">
-                        <Typography variant="subtitle2" sx={{ flexGrow: 1 }}>Formül kuralları</Typography>
-                        <Button size="small" variant="outlined" onClick={yeniKuralBaslat}>{yeniKuralAcik ? "Yeni kuralı kapat" : "Yeni kural"}</Button>
-                      </Stack>
-                      <FormControl size="small" fullWidth>
-                        <InputLabel>Finansal tablo kalemi</InputLabel>
-                        <Select label="Finansal tablo kalemi" value={duzenlenenKuralId} onChange={(event) => { const id = Number(event.target.value); const kural = secilenKalemTablosu.kurallar.find((aday) => aday.id === id); if (kural) kuralDuzenle(kural); }}>
-                          <MenuItem value={0}>Kalem seçin</MenuItem>
-                          {secilenKalemTablosu.kurallar.map((kural) => {
-                            const kalem = secilenKalemTablosu.kalemler.find((aday) => aday.id === kural.kalemId);
-                            return <MenuItem key={kural.id} value={kural.id}>{kalem ? `${kalem.sabitAnahtar} — ${kalem.ad}` : `Hücre ${kural.hucreId}`} · Kural #{kural.id}</MenuItem>;
-                          })}
-                        </Select>
-                      </FormControl>
-                      {yeniKuralAcik && (
-                        <FormControl size="small" fullWidth>
-                          <InputLabel>Hedef kalem</InputLabel>
-                          <Select label="Hedef kalem" value={yeniKuralKalemId} onChange={(event) => setYeniKuralKalemId(Number(event.target.value))}>
-                            <MenuItem value={0}>Kalem seçin</MenuItem>
-                            {secilenKalemTablosu.kalemler.filter((kalem) => !secilenKalemTablosu.kurallar.some((kural) => kural.kalemId === kalem.id)).map((kalem) => <MenuItem key={kalem.id} value={kalem.id}>{kalem.sabitAnahtar} — {kalem.ad}</MenuItem>)}
-                          </Select>
-                        </FormControl>
-                      )}
                       {(duzenlenenKuralId > 0 || yeniKuralAcik) && (
                         <Grid container spacing={1.5}>
-                          <Grid item xs={12} md={3}><FormControl size="small" fullWidth><InputLabel>Hesaplama türü</InputLabel><Select label="Hesaplama türü" value={kuralForm.hesaplamaTuru} onChange={(event) => setKuralForm((onceki) => ({ ...onceki, hesaplamaTuru: Number(event.target.value) }))}><MenuItem value={1}>Hesap formülü</MenuItem><MenuItem value={2}>Satır formülü</MenuItem><MenuItem value={3}>Alt kalem toplamı</MenuItem><MenuItem value={4}>Sabit değer</MenuItem><MenuItem value={5}>Manuel değer</MenuItem></Select></FormControl></Grid>
-                          <Grid item xs={12} md={3}><FormControl size="small" fullWidth><InputLabel>İşaret politikası</InputLabel><Select label="İşaret politikası" value={kuralForm.isaretPolitikasi} onChange={(event) => setKuralForm((onceki) => ({ ...onceki, isaretPolitikasi: Number(event.target.value) }))}><MenuItem value={1}>Olduğu gibi</MenuItem><MenuItem value={2}>Mutlak değer</MenuItem><MenuItem value={3}>Yalnız pozitif</MenuItem><MenuItem value={4}>Yalnız negatif</MenuItem><MenuItem value={5}>Ters işaret</MenuItem></Select></FormControl></Grid>
-                          <Grid item xs={12} md={3}><FormControl size="small" fullWidth><InputLabel>Boş değer</InputLabel><Select label="Boş değer" value={kuralForm.bosDegerPolitikasi} onChange={(event) => setKuralForm((onceki) => ({ ...onceki, bosDegerPolitikasi: Number(event.target.value) }))}><MenuItem value={1}>Sıfır kabul et</MenuItem><MenuItem value={2}>Uyarı</MenuItem><MenuItem value={3}>Hata</MenuItem></Select></FormControl></Grid>
-                          <Grid item xs={12} md={3}><TextField fullWidth size="small" label="Sabit değer" type="number" value={kuralForm.sabitDeger} onChange={(event) => setKuralForm((onceki) => ({ ...onceki, sabitDeger: event.target.value }))} disabled={kuralForm.hesaplamaTuru !== 4} /></Grid>
-                          <Grid item xs={12} md={6}><TextField fullWidth size="small" label="Ham formül" value={kuralForm.hamFormul} onChange={(event) => setKuralForm((onceki) => ({ ...onceki, hamFormul: event.target.value }))} /></Grid>
-                          <Grid item xs={12} md={6}><TextField fullWidth size="small" label="KGK Excel hedefi" value={kuralForm.kgkExcelHedefi} onChange={(event) => setKuralForm((onceki) => ({ ...onceki, kgkExcelHedefi: event.target.value }))} /></Grid>
-                          <Grid item xs={12}><TextField fullWidth size="small" multiline minRows={2} label="Açıklama" value={kuralForm.aciklama} onChange={(event) => setKuralForm((onceki) => ({ ...onceki, aciklama: event.target.value }))} /></Grid>
+                          <Grid item xs={12} sm={4}><FormControl size="small" fullWidth><InputLabel>Hesaplama türü</InputLabel><Select label="Hesaplama türü" value={kuralForm.hesaplamaTuru} onChange={(event) => setKuralForm((onceki) => ({ ...onceki, hesaplamaTuru: Number(event.target.value) }))}><MenuItem value={1}>Hesap formülü</MenuItem><MenuItem value={2}>Satır formülü</MenuItem><MenuItem value={3}>Alt kalem toplamı</MenuItem><MenuItem value={4}>Sabit değer</MenuItem><MenuItem value={5}>Manuel değer</MenuItem></Select></FormControl></Grid>
+                          <Grid item xs={12} sm={4}><FormControl size="small" fullWidth><InputLabel>İşaret politikası</InputLabel><Select label="İşaret politikası" value={kuralForm.isaretPolitikasi} onChange={(event) => setKuralForm((onceki) => ({ ...onceki, isaretPolitikasi: Number(event.target.value) }))}><MenuItem value={1}>Olduğu gibi</MenuItem><MenuItem value={2}>Mutlak değer</MenuItem><MenuItem value={3}>Yalnız pozitif</MenuItem><MenuItem value={4}>Yalnız negatif</MenuItem><MenuItem value={5}>Ters işaret</MenuItem></Select></FormControl></Grid>
+                          <Grid item xs={12} sm={4}><FormControl size="small" fullWidth><InputLabel>Boş değer</InputLabel><Select label="Boş değer" value={kuralForm.bosDegerPolitikasi} onChange={(event) => setKuralForm((onceki) => ({ ...onceki, bosDegerPolitikasi: Number(event.target.value) }))}><MenuItem value={1}>Sıfır kabul et</MenuItem><MenuItem value={2}>Uyarı</MenuItem><MenuItem value={3}>Hata</MenuItem></Select></FormControl></Grid>
+                          {kuralForm.hesaplamaTuru === 4 && <Grid item xs={12} sm={4}><TextField fullWidth size="small" label="Sabit değer" type="number" value={kuralForm.sabitDeger} onChange={(event) => setKuralForm((onceki) => ({ ...onceki, sabitDeger: event.target.value }))} disabled={kuralForm.hesaplamaTuru !== 4} /></Grid>}
+                          <Grid item xs={12}><TextField fullWidth size="small" label="Ham formül" value={kuralForm.hamFormul} onChange={(event) => setKuralForm((onceki) => ({ ...onceki, hamFormul: event.target.value }))} helperText="Tabloda görünen ifade; hesaplama aşağıdaki terimlerle yapılır." slotProps={{ htmlInput: { spellCheck: false, style: { fontFamily: "Consolas, monospace" } }, input: { startAdornment: <InputAdornment position="start"><Typography sx={{ fontStyle: "italic", fontFamily: "Cambria, Georgia, serif", color: EXCEL.yesil, fontWeight: 700 }}>fx</Typography></InputAdornment> } }} /></Grid>
+                          {kuralForm.kgkExcelHedefi && <Grid item xs={12}><Typography variant="caption" color="text.secondary">KGK Excel hedefi: {kuralForm.kgkExcelHedefi}</Typography></Grid>}
+                          <Grid item xs={12}><TextField fullWidth size="small" label="Açıklama" value={kuralForm.aciklama} onChange={(event) => setKuralForm((onceki) => ({ ...onceki, aciklama: event.target.value }))} /></Grid>
                           <Grid item xs={12}>
                             <Stack direction="row" spacing={1} alignItems="center">
                               <Box sx={{ flexGrow: 1 }}>
                                 <Typography variant="subtitle2">Formül terimleri</Typography>
-                                <Typography variant="caption" color="text.secondary">Kaynak, dönem, değer alanı, işaret ve katsayı tamamen tanımdan yönetilir; kod değişikliği gerekmez.</Typography>
+                                <Typography variant="caption" color="text.secondary">Katsayı, değer alanı, işaret ve enflasyon katsayısı tüm kalemlerde sabittir; burada yalnız kaynak, işlem ve dönem seçilir.</Typography>
                               </Box>
                               <Button size="small" variant="outlined" onClick={kuralTerimiEkle}>Terim ekle</Button>
                             </Stack>
                           </Grid>
                           {kuralForm.terimler.map((terim, index) => (
                             <Grid item xs={12} key={`${terim.id}-${terim.sira}-${index}`}>
-                              <Paper variant="outlined" sx={{ p: 1.25 }}>
-                                <Stack direction={{ xs: "column", sm: "row" }} spacing={1} alignItems={{ sm: "center" }} sx={{ mb: 1 }}>
-                                  <Typography variant="caption" color="text.secondary" sx={{ flexGrow: 1 }}>
-                                    Terim {index + 1} · {terimOzeti(terim)}
-                                  </Typography>
-                                  <FormControl size="small" sx={{ minWidth: 240 }}>
-                                    <InputLabel>Hazır hareket şablonu</InputLabel>
-                                    <Select label="Hazır hareket şablonu" value="" onChange={(event) => kuralTerimiSablonuUygula(index, String(event.target.value))}>
-                                      <MenuItem value=""><em>Şablon seçin</em></MenuItem>
-                                      <MenuItem value="cariBakiye">Cari bakiye</MenuItem>
-                                      <MenuItem value="cariTransferHaric">Cari transfer fişi hariç bakiye</MenuItem>
-                                      <MenuItem value="cariEksiOncekiTransferHaric">Cari − önceki, transfer fişi hariç</MenuItem>
-                                      <MenuItem value="oncekiEksiCariTransferHaric">Önceki − cari, transfer fişi hariç</MenuItem>
-                                      <MenuItem value="transferHaricArtis">Transfer fişi hariç yalnız artış</MenuItem>
-                                      <MenuItem value="transferHaricAzalis">Transfer fişi hariç yalnız azalış</MenuItem>
-                                      <MenuItem value="kontrolBakiye">Cari kontrol bakiye</MenuItem>
-                                      <MenuItem value="transferHaricKontrol">Transfer fişi hariç kontrol bakiye</MenuItem>
-                                      <MenuItem value="sunumEndeksliOncekiUretim">Sunum endeksli önceki üretim</MenuItem>
+                              <Paper variant="outlined" sx={{ p: 1, borderRadius: 0, borderColor: EXCEL.kenar }}>
+                                <Stack spacing={1}>
+                                  <Stack direction="row" spacing={1} alignItems="center">
+                                    <Select size="small" value={terim.operator} aria-label="İşlem" onChange={(event) => kuralTerimiGuncelle(index, { operator: Number(event.target.value) })} sx={{ width: 64, flexShrink: 0, fontWeight: 700 }}>
+                                      <MenuItem value={1}>+</MenuItem><MenuItem value={2}>−</MenuItem>
                                     </Select>
-                                  </FormControl>
-                                </Stack>
-                                <Grid container spacing={1} alignItems="center">
-                                  <Grid item xs={12} md={2}>
-                                    <FormControl size="small" fullWidth>
-                                      <InputLabel>Hesaplama biçimi</InputLabel>
-                                      <Select
-                                        label="Hesaplama biçimi"
-                                        value={terim.hesaplamaSekli}
-                                        onChange={(event) => {
-                                          const hesaplamaSekli = Number(event.target.value);
-                                          kuralTerimiGuncelle(index, {
-                                            hesaplamaSekli,
-                                            ...(hesaplamaSekli === 2 ? { karsilastirmaDegerAlani: terim.degerAlani } : {}),
-                                          });
-                                        }}
-                                      >
-                                        <MenuItem value={1}>Tek dönem değeri</MenuItem>
-                                        <MenuItem value={2}>Dönem farkı</MenuItem>
-                                      </Select>
-                                    </FormControl>
-                                  </Grid>
-                                  <Grid item xs={12} md={2}>
-                                    <FormControl size="small" fullWidth><InputLabel>Kaynak türü</InputLabel><Select label="Kaynak türü" value={terim.kaynakTuru} onChange={(event) => { const kaynakTuru = Number(event.target.value); kuralTerimiGuncelle(index, { kaynakTuru, ...(kaynakTuru !== terim.kaynakTuru ? { kaynakAnahtari: "" } : {}) }); }}><MenuItem value={1}>Hesap kodu</MenuItem><MenuItem value={2}>Hesap kodu öneki</MenuItem><MenuItem value={3}>Finansal kalem</MenuItem><MenuItem value={4}>Önceki üretim</MenuItem><MenuItem value={5}>Sistem parametresi</MenuItem><MenuItem value={6}>Sabit</MenuItem></Select></FormControl>
-                                  </Grid>
-                                  <Grid item xs={12} md={3}>
-                                    {terim.kaynakTuru === 3 ? (
+                                    <FormControl size="small" sx={{ width: 160, flexShrink: 0 }}><InputLabel>Kaynak</InputLabel><Select label="Kaynak" value={terim.kaynakTuru} onChange={(event) => { const kaynakTuru = Number(event.target.value); kuralTerimiGuncelle(index, { kaynakTuru, ...(kaynakTuru !== terim.kaynakTuru ? { kaynakAnahtari: "" } : {}) }); }}><MenuItem value={1}>Hesap kodu</MenuItem><MenuItem value={2}>Hesap kodu öneki</MenuItem><MenuItem value={3}>Finansal kalem</MenuItem><MenuItem value={4}>Önceki üretim</MenuItem><MenuItem value={5}>Sistem parametresi</MenuItem><MenuItem value={6}>Sabit</MenuItem></Select></FormControl>
+                                    <Box sx={{ flex: 1, minWidth: 0 }}>
+                                      {terim.kaynakTuru === 3 ? (
                                       <FormControl size="small" fullWidth required>
                                         <InputLabel>Kaynak finansal kalem</InputLabel>
                                         <Select
@@ -3551,103 +3451,54 @@ const Page = ({ editorSurumId }: PageProps) => {
                                         onChange={(event) => kuralTerimiGuncelle(index, { kaynakAnahtari: event.target.value })}
                                       />
                                     )}
-                                  </Grid>
-                                  <Grid item xs={6} md={1.5}>
-                                    <FormControl size="small" fullWidth><InputLabel>İşlem</InputLabel><Select label="İşlem" value={terim.operator} onChange={(event) => kuralTerimiGuncelle(index, { operator: Number(event.target.value) })}><MenuItem value={1}>Topla</MenuItem><MenuItem value={2}>Çıkar</MenuItem></Select></FormControl>
-                                  </Grid>
-                                  <Grid item xs={6} md={1.5}><TextField size="small" label="Katsayı" type="number" fullWidth error={terim.katsayi === 0} helperText={terim.katsayi === 0 ? "Sıfır olamaz" : ""} value={terim.katsayi} onChange={(event) => kuralTerimiGuncelle(index, { katsayi: Number(event.target.value) })} /></Grid>
-                                  <Grid item xs={12} md={2}>
-                                    <FormControl size="small" fullWidth><InputLabel>Değer alanı</InputLabel><Select label="Değer alanı" value={terim.degerAlani} onChange={(event) => kuralTerimiGuncelle(index, { degerAlani: Number(event.target.value) })}><MenuItem value={1}>Bakiye</MenuItem><MenuItem value={2}>Borç</MenuItem><MenuItem value={3}>Alacak</MenuItem><MenuItem value={4}>Rapor borç</MenuItem><MenuItem value={5}>Rapor alacak</MenuItem><MenuItem value={6}>Kontrol bakiye</MenuItem><MenuItem value={7}>Transfer fişi hariç bakiye</MenuItem><MenuItem value={8}>Transfer fişi hariç rapor borç</MenuItem><MenuItem value={9}>Transfer fişi hariç rapor alacak</MenuItem><MenuItem value={10}>Transfer fişi hariç kontrol bakiye</MenuItem></Select></FormControl>
-                                  </Grid>
-                                  <Grid item xs={12} md={2}><Button color="error" size="small" onClick={() => kuralTerimiSil(index)}>Terimi kaldır</Button></Grid>
-                                  <Grid item xs={12} md={2}>
-                                    <FormControl size="small" fullWidth><InputLabel>Dönem</InputLabel><Select label="Dönem" value={terim.donemDavranisi} onChange={(event) => kuralTerimiGuncelle(index, { donemDavranisi: Number(event.target.value) })}><MenuItem value={1}>Cari dönem</MenuItem><MenuItem value={2}>Önceki dönem</MenuItem><MenuItem value={3}>Açılış</MenuItem><MenuItem value={4}>Değişim</MenuItem><MenuItem value={5}>Özel</MenuItem></Select></FormControl>
-                                  </Grid>
-                                  <Grid item xs={6} md={1.5}><TextField size="small" label="Dönem ofseti" type="number" fullWidth inputProps={{ min: -100, max: 100 }} value={terim.donemOfseti} onChange={(event) => kuralTerimiGuncelle(index, { donemOfseti: Number(event.target.value) })} /></Grid>
-                                  <Grid item xs={12} md={2}>
-                                    <FormControl size="small" fullWidth><InputLabel>Kaynak değer işareti</InputLabel><Select label="Kaynak değer işareti" value={terim.isaretPolitikasi} onChange={(event) => kuralTerimiGuncelle(index, { isaretPolitikasi: Number(event.target.value) })}><MenuItem value={1}>Olduğu gibi</MenuItem><MenuItem value={2}>Mutlak değer</MenuItem><MenuItem value={3}>Yalnız pozitif</MenuItem><MenuItem value={4}>Yalnız negatif</MenuItem><MenuItem value={5}>Ters işaret</MenuItem></Select></FormControl>
-                                  </Grid>
-                                  <Grid item xs={12}>
-                                    <Paper variant="outlined" sx={{ p: 1, bgcolor: terim.katsayiKaynakTuru ? "action.selected" : "transparent" }}>
-                                      <Typography variant="caption" fontWeight={600}>Dinamik katsayı</Typography>
-                                      <Grid container spacing={1} sx={{ mt: 0.25 }} alignItems="center">
-                                        <Grid item xs={12} md={3}>
-                                          <FormControl size="small" fullWidth>
-                                            <InputLabel>Katsayı kaynağı</InputLabel>
-                                            <Select
-                                              label="Katsayı kaynağı"
-                                              value={terim.katsayiKaynakTuru ?? 0}
-                                              onChange={(event) => {
-                                                const kaynakTuru = Number(event.target.value);
-                                                kuralTerimiGuncelle(index, kaynakTuru === 0
-                                                  ? { katsayiKaynakTuru: null, katsayiKaynakAnahtari: "", katsayiDonemDavranisi: 1, katsayiDonemOfseti: 0 }
-                                                  : { katsayiKaynakTuru: 5, katsayiKaynakAnahtari: "SUNUM_ENDEKSI" });
-                                              }}
-                                            >
-                                              <MenuItem value={0}>Kullanma</MenuItem>
-                                              <MenuItem value={5}>Sunum endeksi</MenuItem>
-                                            </Select>
-                                          </FormControl>
-                                        </Grid>
-                                        <Grid item xs={12} md={3}>
-                                          <TextField size="small" fullWidth label="Sistem parametresi" value={terim.katsayiKaynakAnahtari} disabled={!terim.katsayiKaynakTuru} InputProps={{ readOnly: true }} />
-                                        </Grid>
-                                        <Grid item xs={12} md={2.5}>
-                                          <FormControl size="small" fullWidth disabled={!terim.katsayiKaynakTuru}>
-                                            <InputLabel>Katsayı dönemi</InputLabel>
-                                            <Select label="Katsayı dönemi" value={terim.katsayiDonemDavranisi} onChange={(event) => kuralTerimiGuncelle(index, { katsayiDonemDavranisi: Number(event.target.value) })}>
-                                              <MenuItem value={1}>Cari dönem</MenuItem><MenuItem value={2}>Önceki dönem</MenuItem><MenuItem value={3}>Açılış</MenuItem><MenuItem value={4}>Değişim</MenuItem><MenuItem value={5}>Özel</MenuItem>
-                                            </Select>
-                                          </FormControl>
-                                        </Grid>
-                                        <Grid item xs={6} md={1.5}>
-                                          <TextField size="small" label="Katsayı ofseti" type="number" fullWidth disabled={!terim.katsayiKaynakTuru} inputProps={{ min: -100, max: 100 }} value={terim.katsayiDonemOfseti} onChange={(event) => kuralTerimiGuncelle(index, { katsayiDonemOfseti: Number(event.target.value) })} />
-                                        </Grid>
-                                        <Grid item xs={12} md={2}>
-                                          <Typography variant="caption" color="text.secondary">Önceki üretim tutarını seçilen dönem endeksiyle çarpar.</Typography>
-                                        </Grid>
-                                      </Grid>
-                                    </Paper>
-                                  </Grid>
+                                    </Box>
+                                    <IconButton size="small" color="error" aria-label="Terimi kaldır" onClick={() => kuralTerimiSil(index)}><IconTrash size={16} /></IconButton>
+                                  </Stack>
+                                  <Stack direction="row" spacing={1} alignItems="center" flexWrap="wrap" useFlexGap>
+                                    <FormControl size="small" sx={{ width: 150 }}><InputLabel>Dönem</InputLabel><Select label="Dönem" value={terim.donemDavranisi} onChange={(event) => kuralTerimiGuncelle(index, { donemDavranisi: Number(event.target.value) })}><MenuItem value={1}>Cari dönem</MenuItem><MenuItem value={2}>Önceki dönem</MenuItem><MenuItem value={3}>Açılış</MenuItem><MenuItem value={4}>Değişim</MenuItem><MenuItem value={5}>Özel</MenuItem></Select></FormControl>
+                                    {(terim.donemDavranisi === 5 || terim.donemOfseti !== 0) && <TextField size="small" label="Ofset" type="number" sx={{ width: 90 }} value={terim.donemOfseti} onChange={(event) => kuralTerimiGuncelle(index, { donemOfseti: Number(event.target.value) })} />}
+                                    <FormControl size="small" sx={{ width: 170 }}><InputLabel>Hesaplama biçimi</InputLabel><Select label="Hesaplama biçimi" value={terim.hesaplamaSekli} onChange={(event) => { const hesaplamaSekli = Number(event.target.value); kuralTerimiGuncelle(index, { hesaplamaSekli, ...(hesaplamaSekli === 2 ? { karsilastirmaDegerAlani: terim.degerAlani } : {}) }); }}><MenuItem value={1}>Tek dönem değeri</MenuItem><MenuItem value={2}>Dönem farkı</MenuItem></Select></FormControl>
+                                    <Stack direction="row" spacing={0.5} alignItems="center"><Switch size="small" checked={terim.zorunluMu} onChange={(event) => kuralTerimiGuncelle(index, { zorunluMu: event.target.checked })} /><Typography variant="caption">Kaynak zorunlu</Typography></Stack>
+                                  </Stack>
                                   {terim.hesaplamaSekli === 2 && (
                                     <Grid item xs={12}>
                                       <Paper variant="outlined" sx={{ p: 1, bgcolor: "action.selected" }}>
                                         <Typography variant="caption" fontWeight={600}>Dönem farkı ayarları</Typography>
                                         <Grid container spacing={1} sx={{ mt: 0.25 }}>
-                                          <Grid item xs={12} md={2.5}>
+                                          <Grid item xs={12} sm={6}>
                                             <FormControl size="small" fullWidth><InputLabel>Karşılaştırma alanı</InputLabel><Select label="Karşılaştırma alanı" value={terim.karsilastirmaDegerAlani} onChange={(event) => kuralTerimiGuncelle(index, { karsilastirmaDegerAlani: Number(event.target.value) })}><MenuItem value={1}>Bakiye</MenuItem><MenuItem value={2}>Borç</MenuItem><MenuItem value={3}>Alacak</MenuItem><MenuItem value={4}>Rapor borç</MenuItem><MenuItem value={5}>Rapor alacak</MenuItem><MenuItem value={6}>Kontrol bakiye</MenuItem><MenuItem value={7}>Transfer fişi hariç bakiye</MenuItem><MenuItem value={8}>Transfer fişi hariç rapor borç</MenuItem><MenuItem value={9}>Transfer fişi hariç rapor alacak</MenuItem><MenuItem value={10}>Transfer fişi hariç kontrol bakiye</MenuItem></Select></FormControl>
                                           </Grid>
-                                          <Grid item xs={12} md={2}>
+                                          <Grid item xs={12} sm={6}>
                                             <FormControl size="small" fullWidth><InputLabel>Karşılaştırma dönemi</InputLabel><Select label="Karşılaştırma dönemi" value={terim.karsilastirmaDonemDavranisi} onChange={(event) => kuralTerimiGuncelle(index, { karsilastirmaDonemDavranisi: Number(event.target.value) })}><MenuItem value={1}>Cari dönem</MenuItem><MenuItem value={2}>Önceki dönem</MenuItem><MenuItem value={3}>Açılış</MenuItem><MenuItem value={4}>Değişim</MenuItem><MenuItem value={5}>Özel</MenuItem></Select></FormControl>
                                           </Grid>
-                                          <Grid item xs={6} md={1.25}><TextField size="small" label="Ofset" type="number" fullWidth inputProps={{ min: -100, max: 100 }} value={terim.karsilastirmaDonemOfseti} onChange={(event) => kuralTerimiGuncelle(index, { karsilastirmaDonemOfseti: Number(event.target.value) })} /></Grid>
-                                          <Grid item xs={12} md={2}>
+                                          <Grid item xs={6} sm={6}><TextField size="small" label="Ofset" type="number" fullWidth inputProps={{ min: -100, max: 100 }} value={terim.karsilastirmaDonemOfseti} onChange={(event) => kuralTerimiGuncelle(index, { karsilastirmaDonemOfseti: Number(event.target.value) })} /></Grid>
+                                          <Grid item xs={12} sm={6}>
                                             <FormControl size="small" fullWidth><InputLabel>Karşılaştırma işareti</InputLabel><Select label="Karşılaştırma işareti" value={terim.karsilastirmaIsaretPolitikasi} onChange={(event) => kuralTerimiGuncelle(index, { karsilastirmaIsaretPolitikasi: Number(event.target.value) })}><MenuItem value={1}>Olduğu gibi</MenuItem><MenuItem value={2}>Mutlak değer</MenuItem><MenuItem value={3}>Yalnız pozitif</MenuItem><MenuItem value={4}>Yalnız negatif</MenuItem><MenuItem value={5}>Ters işaret</MenuItem></Select></FormControl>
                                           </Grid>
-                                          <Grid item xs={12} md={2}>
+                                          <Grid item xs={12} sm={6}>
                                             <FormControl size="small" fullWidth><InputLabel>Fark yönü</InputLabel><Select label="Fark yönü" value={terim.farkYonu} onChange={(event) => kuralTerimiGuncelle(index, { farkYonu: Number(event.target.value) })}><MenuItem value={1}>Kaynak − karşılaştırma</MenuItem><MenuItem value={2}>Karşılaştırma − kaynak</MenuItem></Select></FormControl>
                                           </Grid>
-                                          <Grid item xs={12} md={2.25}>
+                                          <Grid item xs={12} sm={6}>
                                             <FormControl size="small" fullWidth><InputLabel>Fark sonucu</InputLabel><Select label="Fark sonucu" value={terim.sonucIsaretPolitikasi} onChange={(event) => kuralTerimiGuncelle(index, { sonucIsaretPolitikasi: Number(event.target.value) })}><MenuItem value={1}>Olduğu gibi</MenuItem><MenuItem value={2}>Mutlak değer</MenuItem><MenuItem value={3}>Yalnız pozitif</MenuItem><MenuItem value={4}>Yalnız negatif</MenuItem><MenuItem value={5}>Ters işaret</MenuItem></Select></FormControl>
                                           </Grid>
-                                          <Grid item xs={12} md={2}>
+                                          <Grid item xs={12} sm={6}>
                                             <TextField size="small" label="Asgari mutlak fark" type="number" fullWidth inputProps={{ min: 0, step: "any" }} value={terim.asgariMutlakFark} onChange={(event) => kuralTerimiGuncelle(index, { asgariMutlakFark: Math.max(0, Number(event.target.value)) })} helperText="Bu değerin altındaki hareketler sıfır kabul edilir." />
                                           </Grid>
                                         </Grid>
                                       </Paper>
                                     </Grid>
                                   )}
-                                  <Grid item xs={12} md={4}><TextField size="small" label="Kaynak formül notu" fullWidth value={terim.hamTerim} onChange={(event) => kuralTerimiGuncelle(index, { hamTerim: event.target.value })} /></Grid>
-                                  <Grid item xs={12} md={2.5}><Stack direction="row" spacing={0.5} alignItems="center"><Switch size="small" checked={terim.zorunluMu} onChange={(event) => kuralTerimiGuncelle(index, { zorunluMu: event.target.checked })} /><Typography variant="caption">Kaynak zorunlu</Typography></Stack></Grid>
-                                </Grid>
+                                </Stack>
                               </Paper>
                             </Grid>
                           ))}
                           <Grid item xs={12}><Stack direction="row" spacing={1}><Button variant="contained" size="small" onClick={yeniKuralAcik ? kuralOlustur : kuralKaydet} disabled={kuralKaydediliyor || (yeniKuralAcik && !yeniKuralKalemId) || kuralForm.terimler.some((terim) => !terim.kaynakAnahtari.trim() || terim.katsayi === 0 || terim.asgariMutlakFark < 0 || (terim.katsayiKaynakTuru !== null && !terim.katsayiKaynakAnahtari.trim()))}>{kuralKaydediliyor ? <CircularProgress size={18} color="inherit" /> : yeniKuralAcik ? "Yeni kuralı kaydet" : "Kuralı kaydet"}</Button><Button size="small" onClick={() => { setDuzenlenenKuralId(0); setYeniKuralAcik(false); }} disabled={kuralKaydediliyor}>İptal</Button></Stack></Grid>
                         </Grid>
                       )}
-                    </Stack>
-                  </Paper>
+                        </Stack>
+                      </Paper>
+                    )}
+                  </Stack>
                 )}
               </Stack>
             </Paper>
