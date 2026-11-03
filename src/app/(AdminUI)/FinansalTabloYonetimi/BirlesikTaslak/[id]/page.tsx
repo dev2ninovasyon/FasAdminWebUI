@@ -25,6 +25,7 @@ export default function BirlesikTaslakSayfasi() {
   const [tabloAdi, setTabloAdi] = useState("");
   const [arama, setArama] = useState("");
   const [satirAnahtari, setSatirAnahtari] = useState("");
+  const [sutunAnahtari, setSutunAnahtari] = useState("");
   const [kapsam, setKapsam] = useState(1);
   const [donusumTipi, setDonusumTipi] = useState(1);
   const [formul, setFormul] = useState("");
@@ -54,14 +55,17 @@ export default function BirlesikTaslakSayfasi() {
 
   useEffect(() => {
     const onceki = son?.varyantlar?.find((x) => x.tabloAdi === tabloAdi &&
-      x.eslesmeAnahtari === satirAnahtari && x.kapsam === kapsam && x.donusumTipi === donusumTipi);
+      x.eslesmeAnahtari === satirAnahtari && x.yataySutunAnahtari === (sutunAnahtari || null) &&
+      x.kapsam === kapsam && x.donusumTipi === donusumTipi);
     setFormul(onceki?.hamFormul || "");
     setDipnot(onceki?.dipnot || "");
     setKaynak(onceki?.kaynak || "");
-  }, [son, tabloAdi, satirAnahtari, kapsam, donusumTipi]);
+  }, [son, tabloAdi, satirAnahtari, sutunAnahtari, kapsam, donusumTipi]);
 
   const tablo = taslak?.icerik.tablolar.find((x) => x.ad === tabloAdi);
   const matrisSutunlari = (kapsam === 1 ? tablo?.munferit : tablo?.konsolide)?.sutunlar || [];
+  const veriSutunlari = matrisSutunlari.filter((x) => x.ilkSutunNo === x.sonSutunNo &&
+    !matrisSutunlari.some((alt) => alt.ustSabitAnahtar === x.sabitAnahtar));
   const sutunHaritasi = new Map(matrisSutunlari.map((x) => [x.sabitAnahtar, x]));
   const sutunDerinligi = (anahtar: string | null) => {
     let derinlik = 0;
@@ -77,7 +81,10 @@ export default function BirlesikTaslakSayfasi() {
     x.eslesmeAnahtari.toLocaleLowerCase("tr-TR").includes(arama.toLocaleLowerCase("tr-TR"))).slice(0, 100);
   const satir = tablo?.kalemler.find((x) => x.eslesmeAnahtari === satirAnahtari);
   const mevcut = son?.varyantlar?.find((x) => x.tabloAdi === tabloAdi &&
-    x.eslesmeAnahtari === satirAnahtari && x.kapsam === kapsam && x.donusumTipi === donusumTipi);
+    x.eslesmeAnahtari === satirAnahtari && x.yataySutunAnahtari === (sutunAnahtari || null) &&
+    x.kapsam === kapsam && x.donusumTipi === donusumTipi);
+
+  useEffect(() => { setSutunAnahtari(""); }, [tabloAdi, kapsam]);
 
   useEffect(() => {
     if (satir && !satir.munferitMi && satir.konsolideMi) setKapsam(2);
@@ -85,11 +92,12 @@ export default function BirlesikTaslakSayfasi() {
   }, [satir?.eslesmeAnahtari, satir?.munferitMi, satir?.konsolideMi]);
 
   const kaydet = async () => {
-    if (!token || !taslak || !satir || yukleniyor) return;
+    if (!token || !taslak || !satir || yukleniyor || (matrisSutunlari.length > 0 && !sutunAnahtari)) return;
     setHata(""); setMesaj(""); setYukleniyor(true);
     try {
       const sonuc = await saveKgkBirlesikFormulVaryanti(token, id, son?.surumNo || 0, {
-        tabloAdi, eslesmeAnahtari: satirAnahtari, kapsam, donusumTipi,
+        tabloAdi, eslesmeAnahtari: satirAnahtari, yataySutunAnahtari: sutunAnahtari || null,
+        kapsam, donusumTipi,
         hamFormul: formul.trim() || null, dipnot: dipnot.trim() || null,
         hesaplamaKurali: null, kaynak: kaynak.trim() || null,
       }, aciklama.trim());
@@ -158,12 +166,21 @@ export default function BirlesikTaslakSayfasi() {
               <MenuItem value={1}>Normal</MenuItem><MenuItem value={2}>Enflasyon düzeltmesi</MenuItem>
             </TextField>
           </Stack>
-          {mevcut && <Typography variant="caption" color="text.secondary">Bu kapsam ve formül türü için kayıtlı değer mevcut; düzenleme yeni revizyon oluşturur.</Typography>}
+          {matrisSutunlari.length > 0 && <TextField select size="small" label="Özkaynak sütunu"
+            value={sutunAnahtari} onChange={(e) => setSutunAnahtari(e.target.value)} fullWidth
+            helperText="Formül seçilen satır ve sütun hücresine kaydedilir.">
+            <MenuItem value="">Sütun seçin</MenuItem>
+            {veriSutunlari.map((x) => <MenuItem key={x.sabitAnahtar} value={x.sabitAnahtar}>
+              {x.sutun} · {x.ad}
+            </MenuItem>)}
+          </TextField>}
+          {mevcut && <Typography variant="caption" color="text.secondary">Bu satır, sütun, kapsam ve formül türü için kayıtlı değer mevcut; düzenleme yeni revizyon oluşturur.</Typography>}
           <TextField label="Ham formül" value={formul} onChange={(e) => setFormul(e.target.value)} multiline minRows={2} fullWidth />
           <TextField label="Dipnot" value={dipnot} onChange={(e) => setDipnot(e.target.value)} fullWidth />
           <TextField label="Kaynak açıklaması" value={kaynak} onChange={(e) => setKaynak(e.target.value)} fullWidth />
           <TextField label="Değişiklik nedeni" value={aciklama} onChange={(e) => setAciklama(e.target.value)} fullWidth />
           <Box><Button variant="contained" onClick={kaydet} disabled={yukleniyor || satir.durum === "Belirsiz" ||
+            (matrisSutunlari.length > 0 && !sutunAnahtari) ||
             (!formul.trim() && !dipnot.trim()) || !aciklama.trim()}>{yukleniyor ? "Kaydediliyor..." : "Yeni revizyon olarak kaydet"}</Button></Box>
         </Stack></Paper>}
         <Box>
