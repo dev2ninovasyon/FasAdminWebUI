@@ -2323,6 +2323,9 @@ const Page = ({ editorSurumId }: PageProps) => {
             {" "}{kgkBirlesikSonuc.kapsamaOzelKalemSayisi} kapsama özel satır.
             {kgkBirlesikSonuc.belirsizEslesmeSayisi > 0 && ` ${kgkBirlesikSonuc.belirsizEslesmeSayisi} belirsiz eşleşme inceleme gerektiriyor.`}
             {" "}Bu kaynak taslağı rapor üretimini henüz değiştirmez.
+            <Button size="small" variant="text" onClick={() => router.push(`/FinansalTabloYonetimi/BirlesikTaslak/${kgkBirlesikSonuc.id}`)}>
+              Formülleri ve dipnotları aç
+            </Button>
           </Alert>}
           {kgkTopluHatasi && <Alert severity="error" sx={{ mt: 1 }} onClose={() => setKgkTopluHatasi("")}>{kgkTopluHatasi}</Alert>}
           {kgkTopluMesaji && <Alert severity="success" sx={{ mt: 1 }} onClose={() => setKgkTopluMesaji("")}>{kgkTopluMesaji}</Alert>}
