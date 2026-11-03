@@ -1,7 +1,7 @@
 "use client";
 
 import { useParams } from "next/navigation";
-import FinansalTabloYonetimi from "../../page";
+import FinansalTabloYonetimi from "../../FinansalTabloYonetimiSayfasi";
 
 export default function SurumDuzenlemeSayfasi() {
   const { surumId } = useParams<{ surumId: string }>();
