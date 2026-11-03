@@ -1113,8 +1113,11 @@ export const scanAndArchiveKgkFormats = async (
   });
   const payload = await response.json().catch(() => ({}));
   if (!response.ok) {
+    if (response.status === 405) {
+      throw new Error("KGK tarama isteği API tarafından kabul edilmedi (HTTP 405). Admin arayüzü ile yayımlı API sürümü veya istek yolu uyuşmuyor. API sürümünü ve /Kgk/TaraVeArsivle POST yolunu kontrol edin.");
+    }
     const neden = payload?.detail || payload?.message || payload?.Message || payload?.title;
-    throw new Error(neden || `KGK taraması tamamlanamadı (HTTP ${response.status}). API durumunu ve KGK bağlantısını kontrol edin.`);
+    throw new Error(neden || `KGK taraması tamamlanamadı (HTTP ${response.status}). API yanıtını kontrol edin.`);
   }
   return payload as KgkTaramaSonucu;
 };
