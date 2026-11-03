@@ -36,6 +36,7 @@ export type FinansalTabloTestMizan = {
   sha256: string;
   satirlar: FinansalTabloTestMizanSatiri[];
   fisSatirlari?: FinansalTabloTestFisiSatiri[] | null;
+  manuelDegerler?: Array<{ yil: number; satirAnahtari: string; tutar: number }> | null;
 };
 
 export type FinansalTabloTestMizanOlusturmaIstegi = {
@@ -61,6 +62,7 @@ export type FinansalTabloTestMizanOlusturmaIstegi = {
     paraBirimi?: string;
   }>;
   fisSatirlari?: FinansalTabloTestFisiSatiri[];
+  manuelDegerler?: Array<{ yil: number; satirAnahtari: string; tutar: number }>;
 };
 
 export type FinansalTabloMevcutMizanSatiri = {
