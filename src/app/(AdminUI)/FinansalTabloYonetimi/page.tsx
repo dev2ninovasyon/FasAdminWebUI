@@ -61,6 +61,8 @@ import {
   KgkKaynakDonemi,
   getKgkKaynakDonemleri,
   getKgkArsivKalemleri,
+  getKgkKapsamFarklari,
+  KgkKapsamKarsilastirmaSonucu,
   KgkArsivKalemi,
   kontrolEtKgkFormatlari,
   downloadKgkFormat,
@@ -377,6 +379,8 @@ const Page = ({ editorSurumId }: PageProps) => {
   const [kgkWorkbookSonucu, setKgkWorkbookSonucu] = useState<KgkWorkbookFarkSonucu | null>(null);
   const [kgkBaslangicKalemleri, setKgkBaslangicKalemleri] = useState<{ dosyaAdi: string; kalemler: KgkArsivKalemi[] } | null>(null);
   const [kgkBaslangicYukleniyor, setKgkBaslangicYukleniyor] = useState("");
+  const [kgkKapsamFarklari, setKgkKapsamFarklari] = useState<KgkKapsamKarsilastirmaSonucu | null>(null);
+  const [kgkKapsamFarkiYukleniyor, setKgkKapsamFarkiYukleniyor] = useState("");
   const [kgkFarkBaglami, setKgkFarkBaglami] = useState<KgkFarkBaglami | null>(null);
   const [kgkKalemFarkiUygulandiMi, setKgkKalemFarkiUygulandiMi] = useState(false);
   const [kgkFormulFarkiUygulandiMi, setKgkFormulFarkiUygulandiMi] = useState(false);
@@ -1223,6 +1227,22 @@ const Page = ({ editorSurumId }: PageProps) => {
       setKgkTaramaHatasi(error instanceof Error ? error.message : "KGK satırları okunamadı.");
     } finally {
       setKgkBaslangicYukleniyor("");
+    }
+  };
+
+  const kgkKapsamlariKarsilastir = async (munferit: KgkDosyasi, konsolide: KgkDosyasi) => {
+    if (!user.token || !munferit.sha256 || !konsolide.sha256) return;
+    setKgkKapsamFarkiYukleniyor(munferit.url);
+    setKgkTaramaHatasi("");
+    try {
+      setKgkKapsamFarklari(await getKgkKapsamFarklari(user.token,
+        { url: munferit.url, sha256: munferit.sha256 },
+        { url: konsolide.url, sha256: konsolide.sha256 }));
+    } catch (error) {
+      setKgkKapsamFarklari(null);
+      setKgkTaramaHatasi(error instanceof Error ? error.message : "KGK kapsam farkları okunamadı.");
+    } finally {
+      setKgkKapsamFarkiYukleniyor("");
     }
   };
 
@@ -2395,6 +2415,10 @@ const Page = ({ editorSurumId }: PageProps) => {
                   {kgkKontrolSonucu.dosyalar.map((dosya) => {
                     const hedefUyumsuzlugu = secilenSet ? kgkDosyaUyumsuzlugu(dosya, secilenSet) : "Hedef tanım seçilmedi.";
                     const incelenebilirMi = Boolean(dosya.degistiMi && dosya.oncekiSha256 && dosya.sha256 && /^(xlsx|xlsm)$/i.test(dosya.dosyaTuru));
+                    const kapsamAdi = (baslik: string) => baslik.replace(/\s*\((Münferit|Konsolide)\)\s*/i, " ").replace(/\s+/g, " ").trim().toLocaleLowerCase("tr-TR");
+                    const konsolideEs = /\(Münferit\)/i.test(dosya.baslik) ? kgkKontrolSonucu.dosyalar.find((aday) =>
+                      aday.grup === dosya.grup && /\(Konsolide\)/i.test(aday.baslik) &&
+                      kapsamAdi(aday.baslik) === kapsamAdi(dosya.baslik)) : undefined;
                     return (
                       <TableRow key={dosya.url} hover>
                         <TableCell>{dosya.grup}</TableCell>
@@ -2408,6 +2432,11 @@ const Page = ({ editorSurumId }: PageProps) => {
                               size="small" variant="outlined" onClick={() => kgkBaslangicKalemleriniGetir(dosya)}
                               disabled={kgkBaslangicYukleniyor === dosya.url}>
                               {kgkBaslangicYukleniyor === dosya.url ? <CircularProgress size={16} /> : "KGK satırlarını gör"}
+                            </Button>}
+                            {dosya.sha256 && konsolideEs?.sha256 && <Button size="small" variant="outlined"
+                              disabled={kgkKapsamFarkiYukleniyor === dosya.url}
+                              onClick={() => kgkKapsamlariKarsilastir(dosya, konsolideEs)}>
+                              {kgkKapsamFarkiYukleniyor === dosya.url ? <CircularProgress size={16} /> : "Kapsam farkını gör"}
                             </Button>}
                             {incelenebilirMi && hedefUyumsuzlugu && <Chip size="small" variant="outlined" label="Seçili tanımla uyumsuz" title={hedefUyumsuzlugu} />}
                             {incelenebilirMi && !hedefUyumsuzlugu && (
@@ -2432,6 +2461,19 @@ const Page = ({ editorSurumId }: PageProps) => {
                     <TableCell>{kalem.sayfaAdi}</TableCell><TableCell>{kalem.satirNo}</TableCell>
                     <TableCell sx={{ pl: 1 + Math.min(kalem.girinti, 8) * 1.5 }}>{kalem.ad}</TableCell>
                     <TableCell>{kalem.kalemTuru}</TableCell>
+                  </TableRow>)}</TableBody>
+                </Table>
+              </Paper>}
+              {kgkKapsamFarklari && <Paper variant="outlined" sx={{ mt: 1.5, p: 1, maxHeight: 300, overflow: "auto" }}>
+                <Typography variant="subtitle2" sx={{ mb: 1 }}>
+                  Münferit {kgkKapsamFarklari.munferitKalemSayisi} · Konsolide {kgkKapsamFarklari.konsolideKalemSayisi} ·
+                  Ortak {kgkKapsamFarklari.ortakKalemSayisi} · İncelenecek {kgkKapsamFarklari.farklar.length}
+                </Typography>
+                <Table size="small"><TableHead><TableRow><TableCell>Kalem</TableCell><TableCell>Durum</TableCell><TableCell>Münferit satır</TableCell><TableCell>Konsolide satır</TableCell></TableRow></TableHead>
+                  <TableBody>{kgkKapsamFarklari.farklar.map((fark) => <TableRow key={fark.eslesmeAnahtari}>
+                    <TableCell>{fark.munferit?.ad || fark.konsolide?.ad || fark.eslesmeAnahtari}</TableCell>
+                    <TableCell>{fark.durum === "Belirsiz" ? "Eşleşme belirsiz" : fark.durum === "YalnizKonsolide" ? "Yalnız konsolide" : fark.durum === "YalnizMunferit" ? "Yalnız münferit" : "Yapı farkı"}</TableCell>
+                    <TableCell>{fark.munferit?.satirNo ?? "—"}</TableCell><TableCell>{fark.konsolide?.satirNo ?? "—"}</TableCell>
                   </TableRow>)}</TableBody>
                 </Table>
               </Paper>}

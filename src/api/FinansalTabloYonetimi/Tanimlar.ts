@@ -925,6 +925,29 @@ export const getKgkArsivKalemleri = (token: string, dosyaUrl: string, sha256: st
   );
 };
 
+export type KgkKapsamFarki = {
+  eslesmeAnahtari: string;
+  durum: "Belirsiz" | "YalnizKonsolide" | "YalnizMunferit" | "YapiFarki";
+  munferit?: KgkArsivKalemi | null;
+  konsolide?: KgkArsivKalemi | null;
+};
+
+export type KgkKapsamKarsilastirmaSonucu = {
+  munferitKalemSayisi: number;
+  konsolideKalemSayisi: number;
+  ortakKalemSayisi: number;
+  belirsizEslesmeSayisi: number;
+  farklar: KgkKapsamFarki[];
+};
+
+export const getKgkKapsamFarklari = (token: string, munferit: { url: string; sha256: string }, konsolide: { url: string; sha256: string }) => {
+  const query = new URLSearchParams({
+    munferitUrl: munferit.url, munferitSha256: munferit.sha256,
+    konsolideUrl: konsolide.url, konsolideSha256: konsolide.sha256,
+  });
+  return jsonGet<KgkKapsamKarsilastirmaSonucu>(token, `/Kgk/KapsamFarklari?${query}`);
+};
+
 export type KgkKaynakDonemi = {
   kod: string;
   ad: string;
