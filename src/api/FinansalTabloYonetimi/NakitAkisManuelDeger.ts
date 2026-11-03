@@ -13,6 +13,9 @@ export type NakitAkisManuelGecmisi = {
 export type NakitAkisManuelListe = {
   degerler: NakitAkisManuelDegeri[]; gecmis: NakitAkisManuelGecmisi[];
 };
+export type NakitAkisManuelGecmisSayfasi = {
+  kayitlar: NakitAkisManuelGecmisi[]; toplam: number; sayfa: number; sayfaBoyutu: number;
+};
 
 const istek = async <T>(token: string, yol: string, init?: RequestInit): Promise<T> => {
   const yanit = await fetch(`${url}/FinansalTabloYonetimi/${yol}`, {
@@ -33,6 +36,12 @@ export const nakitAkisManuelDegerleriniGetir = (
   token: string, denetlenenId: number, yil: number, konsolidasyonMu: boolean
 ) => istek<NakitAkisManuelListe>(token,
   `NakitAkisManuelDegerleri?denetlenenId=${denetlenenId}&yil=${yil}&konsolidasyonMu=${konsolidasyonMu}`);
+
+export const nakitAkisManuelGecmisiniGetir = (
+  token: string, denetlenenId: number, yil: number, konsolidasyonMu: boolean,
+  satirAnahtari: string, sayfa: number
+) => istek<NakitAkisManuelGecmisSayfasi>(token,
+  `NakitAkisManuelDegerGecmisi?denetlenenId=${denetlenenId}&yil=${yil}&konsolidasyonMu=${konsolidasyonMu}&satirAnahtari=${encodeURIComponent(satirAnahtari)}&sayfa=${sayfa}`);
 
 export const nakitAkisManuelDegeriniKaydet = (token: string, veri: {
   denetlenenId: number; yil: number; konsolidasyonMu: boolean; satirAnahtari: string;

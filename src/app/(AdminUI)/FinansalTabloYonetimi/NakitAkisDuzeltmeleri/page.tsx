@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { Alert, Box, Button, FormControlLabel, MenuItem, Paper, Stack, Switch, Table, TableBody, TableCell, TableHead, TableRow, TextField, Typography } from "@mui/material";
 import PageContainer from "@/app/components/Container/PageContainer";
 import Breadcrumb from "@/app/components/Layout/Shared/Breadcrumb/Breadcrumb";
@@ -8,7 +8,8 @@ import ParentCard from "@/app/components/Shared/ParentCard";
 import { useSelector } from "@/store/hooks";
 import { AppState } from "@/store/store";
 import {
-  NakitAkisManuelListe, NakitAkisSatiri, nakitAkisManuelDegeriniKaydet, nakitAkisManuelDegeriniKaldir,
+  NakitAkisManuelGecmisSayfasi, NakitAkisManuelListe, NakitAkisSatiri,
+  nakitAkisManuelDegeriniKaydet, nakitAkisManuelDegeriniKaldir, nakitAkisManuelGecmisiniGetir,
   nakitAkisManuelDegerleriniGetir, nakitAkisSatirlariniGetir,
 } from "@/api/FinansalTabloYonetimi/NakitAkisManuelDeger";
 
@@ -24,6 +25,11 @@ export default function NakitAkisDuzeltmeleri() {
   const [satirlar, setSatirlar] = useState<NakitAkisSatiri[]>([]);
   const [seciliSatir, setSeciliSatir] = useState("");
   const [liste, setListe] = useState<NakitAkisManuelListe>({ degerler: [], gecmis: [] });
+  const [gecmisSayfasi, setGecmisSayfasi] = useState<NakitAkisManuelGecmisSayfasi | null>(null);
+  const [sayfa, setSayfa] = useState(1);
+  const [gecmisYenileme, setGecmisYenileme] = useState(0);
+  const [gecmisYukleniyor, setGecmisYukleniyor] = useState(false);
+  const [gecmisHatasi, setGecmisHatasi] = useState("");
   const [yuklenenBaglam, setYuklenenBaglam] = useState("");
   const [tutar, setTutar] = useState("");
   const [aciklama, setAciklama] = useState("");
@@ -31,9 +37,24 @@ export default function NakitAkisDuzeltmeleri() {
   const [mesaj, setMesaj] = useState("");
   const [yukleniyor, setYukleniyor] = useState(false);
   const onceki = liste.degerler.find((deger) => deger.kaynakAnahtari === seciliSatir);
-  const gecmis = liste.gecmis.filter((deger) => deger.kaynakAnahtari === seciliSatir);
   const baglam = `${denetlenenId}/${yil}/${konsolidasyonMu}`;
   const baglamHazir = yuklenenBaglam === baglam;
+
+  useEffect(() => {
+    if (!token || !baglamHazir || !seciliSatir) {
+      setGecmisSayfasi(null);
+      return;
+    }
+    let gecerli = true;
+    setGecmisSayfasi(null);
+    setGecmisHatasi("");
+    setGecmisYukleniyor(true);
+    nakitAkisManuelGecmisiniGetir(token, Number(denetlenenId), Number(yil), konsolidasyonMu, seciliSatir, sayfa)
+      .then((sonuc) => { if (gecerli) setGecmisSayfasi(sonuc); })
+      .catch((error) => { if (gecerli) setGecmisHatasi(error instanceof Error ? error.message : "Geçmiş yüklenemedi."); })
+      .finally(() => { if (gecerli) setGecmisYukleniyor(false); });
+    return () => { gecerli = false; };
+  }, [token, baglamHazir, denetlenenId, yil, konsolidasyonMu, seciliSatir, sayfa, gecmisYenileme]);
 
   const listele = async () => {
     if (!token || Number(denetlenenId) <= 0 || Number(yil) < 1900) return;
@@ -46,6 +67,8 @@ export default function NakitAkisDuzeltmeleri() {
       setSatirlar(yeniSatirlar);
       setListe(yeniListe);
       setSeciliSatir((anahtar) => yeniSatirlar.some((satir) => satir.sabitAnahtar === anahtar) ? anahtar : "");
+      setSayfa(1);
+      setGecmisYenileme((deger) => deger + 1);
       setYuklenenBaglam(baglam);
     } catch (error) {
       setSatirlar([]); setSeciliSatir("");
@@ -64,6 +87,7 @@ export default function NakitAkisDuzeltmeleri() {
         beklenenOncekiTutar: onceki?.tutar ?? null, aciklama: aciklama.trim(),
       });
       setListe(await nakitAkisManuelDegerleriniGetir(token, Number(denetlenenId), Number(yil), konsolidasyonMu));
+      setSayfa(1); setGecmisYenileme((deger) => deger + 1);
       setMesaj("Düzeltme kaydedildi. Sonraki nakit akışı üretiminde bu değer kullanılacak.");
       setAciklama("");
     } catch (error) { setHata(error instanceof Error ? error.message : "Düzeltme kaydedilemedi."); }
@@ -79,6 +103,7 @@ export default function NakitAkisDuzeltmeleri() {
         satirAnahtari: seciliSatir, beklenenOncekiTutar: onceki.tutar, aciklama: aciklama.trim(),
       });
       setListe(await nakitAkisManuelDegerleriniGetir(token, Number(denetlenenId), Number(yil), konsolidasyonMu));
+      setSayfa(1); setGecmisYenileme((deger) => deger + 1);
       setTutar(""); setAciklama(""); setMesaj(sonuc.message);
     } catch (error) { setHata(error instanceof Error ? error.message : "Manuel düzeltme kaldırılamadı."); }
     finally { setYukleniyor(false); }
@@ -95,7 +120,7 @@ export default function NakitAkisDuzeltmeleri() {
           <FormControlLabel control={<Switch checked={konsolidasyonMu} onChange={(e) => setKonsolidasyonMu(e.target.checked)} />} label="Konsolide" />
           <Button variant="outlined" onClick={listele} disabled={yukleniyor || Number(denetlenenId) <= 0}>Değerleri getir</Button>
         </Stack>
-        <TextField select size="small" fullWidth label="Nakit akışı satırı" value={seciliSatir} disabled={!baglamHazir || yukleniyor} onChange={(e) => { setSeciliSatir(e.target.value); setTutar(""); }}>
+        <TextField select size="small" fullWidth label="Nakit akışı satırı" value={seciliSatir} disabled={!baglamHazir || yukleniyor} onChange={(e) => { setSeciliSatir(e.target.value); setSayfa(1); setTutar(""); }}>
           {satirlar.map((satir) => <MenuItem key={satir.sabitAnahtar} value={satir.sabitAnahtar}>{satir.ad} · {satir.kod}</MenuItem>)}
         </TextField>
         {seciliSatir && baglamHazir && <Paper variant="outlined" sx={{ p: 1.5 }}>
@@ -111,9 +136,18 @@ export default function NakitAkisDuzeltmeleri() {
         {hata && <Alert severity="error">{hata}</Alert>}{mesaj && <Alert severity="success">{mesaj}</Alert>}
         {seciliSatir && baglamHazir && <Box>
           <Typography variant="subtitle2" gutterBottom>Önceki değerler ve değişiklik geçmişi</Typography>
-          {gecmis.length === 0 ? <Typography variant="body2" color="text.secondary">Bu satır için henüz değişiklik yok.</Typography> :
+          {gecmisHatasi && <Alert severity="error">{gecmisHatasi}</Alert>}
+          {gecmisYukleniyor && <Typography variant="body2">Geçmiş yükleniyor...</Typography>}
+          {!gecmisYukleniyor && gecmisSayfasi?.kayitlar.length === 0 && <Typography variant="body2" color="text.secondary">Bu satır için henüz değişiklik yok.</Typography>}
+          {gecmisSayfasi && gecmisSayfasi.kayitlar.length > 0 && <>
             <Table size="small"><TableHead><TableRow><TableCell>Tarih</TableCell><TableCell align="right">Önceki</TableCell><TableCell align="right">Yeni</TableCell><TableCell>Gerekçe</TableCell><TableCell>Kullanıcı</TableCell></TableRow></TableHead>
-              <TableBody>{gecmis.map((kayit) => <TableRow key={kayit.id}><TableCell>{new Date(kayit.islemTarihi).toLocaleString("tr-TR")}</TableCell><TableCell align="right">{para(kayit.oncekiTutar)}</TableCell><TableCell align="right">{kayit.yeniTutar === null ? "Formüle dönüldü" : para(kayit.yeniTutar)}</TableCell><TableCell>{kayit.aciklama}</TableCell><TableCell>{kayit.kullaniciId}</TableCell></TableRow>)}</TableBody></Table>}
+              <TableBody>{gecmisSayfasi.kayitlar.map((kayit) => <TableRow key={kayit.id}><TableCell>{new Date(kayit.islemTarihi).toLocaleString("tr-TR")}</TableCell><TableCell align="right">{para(kayit.oncekiTutar)}</TableCell><TableCell align="right">{kayit.yeniTutar === null ? "Formüle dönüldü" : para(kayit.yeniTutar)}</TableCell><TableCell>{kayit.aciklama}</TableCell><TableCell>{kayit.kullaniciId}</TableCell></TableRow>)}</TableBody></Table>
+            <Stack direction="row" spacing={1} alignItems="center" justifyContent="flex-end" sx={{ mt: 1 }}>
+              <Typography variant="caption">{gecmisSayfasi.toplam} işlem · Sayfa {gecmisSayfasi.sayfa}</Typography>
+              <Button size="small" disabled={gecmisYukleniyor || sayfa <= 1} onClick={() => setSayfa((deger) => deger - 1)}>Önceki</Button>
+              <Button size="small" disabled={gecmisYukleniyor || sayfa * gecmisSayfasi.sayfaBoyutu >= gecmisSayfasi.toplam} onClick={() => setSayfa((deger) => deger + 1)}>Sonraki</Button>
+            </Stack>
+          </>}
         </Box>}
       </Stack>
     </ParentCard>
