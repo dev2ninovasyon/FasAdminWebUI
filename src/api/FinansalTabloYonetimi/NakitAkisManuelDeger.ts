@@ -7,7 +7,7 @@ export type NakitAkisManuelDegeri = {
   guncelleyenKullaniciId: number; guncellemeTarihi: string;
 };
 export type NakitAkisManuelGecmisi = {
-  id: number; kaynakAnahtari: string; oncekiTutar: number | null; yeniTutar: number;
+  id: number; kaynakAnahtari: string; oncekiTutar: number | null; yeniTutar: number | null;
   aciklama: string; kullaniciId: number; islemTarihi: string;
 };
 export type NakitAkisManuelListe = {
@@ -39,4 +39,11 @@ export const nakitAkisManuelDegeriniKaydet = (token: string, veri: {
   tutar: number; beklenenOncekiTutar: number | null; aciklama: string;
 }) => istek<NakitAkisManuelDegeri>(token, "NakitAkisManuelDegerleri", {
   method: "PUT", headers: { "Content-Type": "application/json" }, body: JSON.stringify(veri),
+});
+
+export const nakitAkisManuelDegeriniKaldir = (token: string, veri: {
+  denetlenenId: number; yil: number; konsolidasyonMu: boolean; satirAnahtari: string;
+  beklenenOncekiTutar: number; aciklama: string;
+}) => istek<{ message: string }>(token, "NakitAkisManuelDegeriniKaldir", {
+  method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify(veri),
 });
