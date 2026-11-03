@@ -98,8 +98,8 @@ export default function KalemFormulTablosu({ tablo, seciliKalemId, seciliKuralId
 
   const hucreSx = { py: 0.25, px: 1, borderRight: "1px solid", borderRightColor: EXCEL.izgara, borderBottom: "1px solid", borderBottomColor: EXCEL.izgara };
 
-  // width 0: kaydırmalı tablonun içerik genişliği sayfa sarmalayıcısını taşırmasın.
-  return <Stack spacing={1} sx={{ flex: 1, minWidth: 0, width: { xs: "100%", lg: 0 } }}>
+  // width 0 + minWidth: kaydırmalı tablonun içerik genişliği sayfa sarmalayıcısını taşırmasın.
+  return <Stack spacing={1} sx={{ width: 0, minWidth: "100%" }}>
     <Stack direction="row" spacing={1} alignItems="center">
       <TextField size="small" placeholder="Kalem ara" value={arama} onChange={(e) => setArama(e.target.value)} sx={{ width: 300, maxWidth: "100%" }}
         slotProps={{ input: {

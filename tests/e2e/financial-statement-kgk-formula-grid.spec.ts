@@ -150,6 +150,13 @@ test("birleşik KGK formülleri Excel tablosunda düzenlenir ve motorla hesaplan
   // Hücre seçimi paneli açar; formül yazarken satır adına tıklamak referans ekler.
   await page.getByRole("button", { name: "Ticari Alacaklar Münferit Normal" }).click();
   await expect(page.getByText("Münferit · Normal · Excel satırı 13", { exact: true })).toBeVisible();
+  // Formül düzenleme sağdan çekmece olarak açılır; tablo çekmece kadar daralır, sütunlar örtülmez.
+  const cekmece = page.locator(".MuiDrawer-paper").filter({ hasText: "Ticari Alacaklar" });
+  await expect(cekmece).toBeVisible();
+  await expect.poll(async () => {
+    const [tabloKutusu, cekmeceKutusu] = await Promise.all([tablo.boundingBox(), cekmece.boundingBox()]);
+    return Math.round((tabloKutusu?.x ?? 0) + (tabloKutusu?.width ?? 0)) <= Math.round(cekmeceKutusu?.x ?? 0);
+  }).toBe(true);
   const formul = page.getByLabel("Formül", { exact: true });
   await formul.fill("120-");
   await tablo.getByText("Nakit ve Nakit Benzerleri", { exact: true }).click();

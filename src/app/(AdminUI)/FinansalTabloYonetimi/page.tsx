@@ -38,9 +38,10 @@ import { usePathname, useRouter } from "next/navigation";
 import PageContainer from "@/app/components/Container/PageContainer";
 import Breadcrumb from "@/app/components/Layout/Shared/Breadcrumb/Breadcrumb";
 import ParentCard from "@/app/components/Shared/ParentCard";
-import { IconTrash, IconX } from "@tabler/icons-react";
+import { IconTrash } from "@tabler/icons-react";
 import KalemFormulTablosu, { KALEM_TURLERI } from "./KalemFormulTablosu";
 import { EXCEL } from "./excelStili";
+import FormulCekmecesi, { useCekmeceBoslugu } from "./FormulCekmecesi";
 import { useSelector } from "@/store/hooks";
 import { AppState } from "@/store/store";
 import {
@@ -122,6 +123,8 @@ import {
   getFinansalTabloMevcutMizani,
   getFinansalTabloTestMizanlari,
 } from "@/api/FinansalTabloYonetimi/TestMizan";
+
+const FORMUL_CEKMECESI_GENISLIGI = 480;
 
 const sayi = (value?: number) =>
   new Intl.NumberFormat("tr-TR").format(value ?? 0);
@@ -544,6 +547,8 @@ const Page = ({ editorSurumId }: PageProps) => {
   const kuralHedefKalemId = yeniKuralAcik ? yeniKuralKalemId : duzenlenenKural?.kalemId;
   const kuralKaynakKalemleri = secilenKalemTablosu?.kalemler.filter((kalem) => kalem.id !== kuralHedefKalemId) || [];
   const panelKalem = secilenKalemTablosu?.kalemler.find((kalem) => kalem.id === panelKalemId);
+  const formulCekmecesiAcik = surumDurumKodu(secilenSurum?.durum ?? 0) === 1 && Boolean(panelKalem || duzenlenenKural);
+  const cekmece = useCekmeceBoslugu(formulCekmecesiAcik, FORMUL_CEKMECESI_GENISLIGI);
 
   const kgkFarkiniTemizle = () => {
     setKgkWorkbookSonucu(null);
@@ -3223,7 +3228,8 @@ const Page = ({ editorSurumId }: PageProps) => {
           )}
           {secilenSurum && duzenleyiciSayfasi && (
             <Paper variant="outlined" sx={{ p: 1.5 }}>
-              <Stack spacing={1.5}>
+              {/* Açık formül çekmecesi kadar sağ boşluk: araç çubukları ve tablo örtülmesin. */}
+              <Stack spacing={1.5} ref={cekmece.ref} sx={{ pr: `${cekmece.bosluk}px`, transition: "padding-right 225ms" }}>
                 <Stack direction="row" spacing={1} flexWrap="wrap" useFlexGap>
                   <Button size="small" variant="text" onClick={() => router.push("/FinansalTabloYonetimi")}>Hazırlama adımlarına dön</Button>
                   <Chip label={`Sürüm ${secilenSurum.surumNo} · ${secilenSurum.etiket}`} color={surumDurumKodu(secilenSurum.durum) === 3 ? "success" : "default"} />
@@ -3339,24 +3345,19 @@ const Page = ({ editorSurumId }: PageProps) => {
                   </Box>
                 )}
                 {surumDetayi && secilenKalemTablosu && (
-                  <Stack direction={{ xs: "column", lg: "row" }} spacing={1.5} alignItems="flex-start">
+                  <Box>
                     <KalemFormulTablosu tablo={secilenKalemTablosu} seciliKalemId={panelKalemId} seciliKuralId={duzenlenenKuralId}
                       onKalemSec={panelKalemSec} onHucreKuraliSec={panelHucreKuraliSec} />
-                    {seciliSurumTaslakMi && (panelKalem || duzenlenenKural) && (
-                      <Paper variant="outlined" sx={{ width: { xs: "100%", lg: 460, xl: 560 }, flexShrink: 0, p: 2, borderRadius: 0, borderColor: EXCEL.kenar,
-                        borderTop: `3px solid ${EXCEL.yesil}`, position: { lg: "sticky" }, top: { lg: 88 }, maxHeight: { lg: "calc(100vh - 110px)" }, overflowY: "auto" }}>
+                    <FormulCekmecesi acik={formulCekmecesiAcik} genislik={FORMUL_CEKMECESI_GENISLIGI} onKapat={paneliKapat}
+                      onKeyDown={(olay) => { if (olay.key === "Escape") paneliKapat(); }}
+                      baslik={panelKalem?.ad ?? "Özkaynak hücresi"}
+                      altBaslik={<>
+                        {panelKalem ? `${KALEM_TURLERI[panelKalem.kalemTuru] || "Tür yok"} · sıra ${panelKalem.sira}` : "Hücre formülü"}
+                        {duzenlenenKural ? ` · Kural #${duzenlenenKural.id}` : yeniKuralAcik ? " · yeni formül" : ""}
+                      </>}
+                      eylem={panelKalem && duzenlenenKalemId !== panelKalem.id
+                        ? <Button size="small" onClick={() => kalemDuzenle(panelKalem)}>Kalem bilgileri</Button> : undefined}>
                         <Stack spacing={1.5}>
-                          <Stack direction="row" spacing={1} alignItems="flex-start">
-                            <Box sx={{ flex: 1, minWidth: 0 }}>
-                              <Typography variant="subtitle1" fontWeight={600} sx={{ overflowWrap: "anywhere" }}>{panelKalem?.ad ?? "Özkaynak hücresi"}</Typography>
-                              <Typography variant="caption" color="text.secondary">
-                                {panelKalem ? `${KALEM_TURLERI[panelKalem.kalemTuru] || "Tür yok"} · sıra ${panelKalem.sira}` : "Hücre formülü"}
-                                {duzenlenenKural ? ` · Kural #${duzenlenenKural.id}` : yeniKuralAcik ? " · yeni formül" : ""}
-                              </Typography>
-                            </Box>
-                            {panelKalem && duzenlenenKalemId !== panelKalem.id && <Button size="small" onClick={() => kalemDuzenle(panelKalem)}>Kalem bilgileri</Button>}
-                            <IconButton size="small" aria-label="Paneli kapat" onClick={paneliKapat}><IconX size={18} /></IconButton>
-                          </Stack>
                       {duzenlenenKalemId > 0 && (
                         <Grid container spacing={1.5}>
                           <Grid item xs={12}><TextField fullWidth size="small" label="Kalem adı" value={kalemForm.ad} onChange={(event) => setKalemForm((onceki) => ({ ...onceki, ad: event.target.value }))} /></Grid>
@@ -3492,13 +3493,12 @@ const Page = ({ editorSurumId }: PageProps) => {
                               </Paper>
                             </Grid>
                           ))}
-                          <Grid item xs={12}><Stack direction="row" spacing={1}><Button variant="contained" size="small" onClick={yeniKuralAcik ? kuralOlustur : kuralKaydet} disabled={kuralKaydediliyor || (yeniKuralAcik && !yeniKuralKalemId) || kuralForm.terimler.some((terim) => !terim.kaynakAnahtari.trim() || terim.katsayi === 0 || terim.asgariMutlakFark < 0 || (terim.katsayiKaynakTuru !== null && !terim.katsayiKaynakAnahtari.trim()))}>{kuralKaydediliyor ? <CircularProgress size={18} color="inherit" /> : yeniKuralAcik ? "Yeni kuralı kaydet" : "Kuralı kaydet"}</Button><Button size="small" onClick={() => { setDuzenlenenKuralId(0); setYeniKuralAcik(false); }} disabled={kuralKaydediliyor}>İptal</Button></Stack></Grid>
+                          <Grid item xs={12}><Stack direction="row" spacing={1}><Button variant="contained" size="small" onClick={yeniKuralAcik ? kuralOlustur : kuralKaydet} disabled={kuralKaydediliyor || (yeniKuralAcik && !yeniKuralKalemId) || kuralForm.terimler.some((terim) => !terim.kaynakAnahtari.trim() || terim.katsayi === 0 || terim.asgariMutlakFark < 0 || (terim.katsayiKaynakTuru !== null && !terim.katsayiKaynakAnahtari.trim()))}>{kuralKaydediliyor ? <CircularProgress size={18} color="inherit" /> : yeniKuralAcik ? "Yeni kuralı kaydet" : "Kuralı kaydet"}</Button><Button size="small" onClick={paneliKapat} disabled={kuralKaydediliyor}>İptal</Button></Stack></Grid>
                         </Grid>
                       )}
                         </Stack>
-                      </Paper>
-                    )}
-                  </Stack>
+                    </FormulCekmecesi>
+                  </Box>
                 )}
               </Stack>
             </Paper>

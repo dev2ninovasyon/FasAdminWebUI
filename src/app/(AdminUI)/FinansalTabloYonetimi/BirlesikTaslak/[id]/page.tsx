@@ -24,6 +24,7 @@ import {
 import { getFinansalTabloTestMizanlari, FinansalTabloTestMizan } from "@/api/FinansalTabloYonetimi/TestMizan";
 import { KgkAgacSatiri, gorunurSatirlar, kgkAgaciOlustur, sutunBasliklari } from "./kgkAgaci";
 import { EXCEL, EXCEL_SATIR_YUKSEKLIGI as SATIR_YUKSEKLIGI, excelBaslikHucresi } from "../../excelStili";
+import FormulCekmecesi, { useCekmeceBoslugu } from "../../FormulCekmecesi";
 
 type Gecmis = Pick<KgkBirlesikFormulSurumu, "id" | "surumNo" | "aciklama" | "olusturmaTarihi">;
 type Hucre = { satir: string; sutun: string | null; kapsam: number; donusum: number };
@@ -35,6 +36,7 @@ const VARYANTLAR = [
 const KAPSAM = ["", "Münferit", "Konsolide"];
 const DONUSUM = ["", "Normal", "Enflasyon"];
 const BOS_FORM: Form = { formul: "", dipnot: "", kaynak: "" };
+const CEKMECE_GENISLIGI = 440;
 const tutar = new Intl.NumberFormat("tr-TR", { maximumFractionDigits: 2 });
 const hucreAnahtari = (satir: string, sutun: string | null, kapsam: number, donusum: number) =>
   `${satir}\u0001${sutun ?? ""}\u0001${kapsam}\u0001${donusum}`;
@@ -107,6 +109,7 @@ export default function BirlesikTaslakSayfasi() {
       : []), [onizleme, tabloAdi, son?.surumNo]);
   const hataliSayisi = [...sonuclar.values()].filter((x) => x.hata).length;
   const seciliSatir = secili ? satirHaritasi.get(secili.satir) : undefined;
+  const cekmece = useCekmeceBoslugu(Boolean(secili && seciliSatir), CEKMECE_GENISLIGI);
   const seciliSutun = secili?.sutun ? matris.yapraklar.find((x) => x.sabitAnahtar === secili.sutun) : undefined;
   const seciliSonuc = secili ? sonuclar.get(hucreAnahtari(secili.satir, secili.sutun, secili.kapsam, secili.donusum)) : undefined;
   const degisti = form.formul !== kayitliForm.formul || form.dipnot !== kayitliForm.dipnot || form.kaynak !== kayitliForm.kaynak;
@@ -276,7 +279,8 @@ export default function BirlesikTaslakSayfasi() {
   return <PageContainer title="Birleşik KGK formülleri" description="KGK kalemleri ve formül alt sürümleri">
     <Breadcrumb title="Birleşik KGK formülleri" items={[{ title: "Finansal Tablolar", to: "/FinansalTabloYonetimi" }, { title: "Birleşik taslak" }]} />
     <ParentCard title={taslak ? `KGK taslağı #${taslak.ozet.id}` : "KGK taslağı yükleniyor"}>
-      <Stack spacing={1.5}>
+      {/* Açık formül çekmecesi kadar sağ boşluk: araç çubuğu ve tablo örtülmesin. */}
+      <Stack spacing={1.5} ref={cekmece.ref} sx={{ pr: `${cekmece.bosluk}px`, transition: "padding-right 225ms" }}>
         {hata && <Alert severity="error" onClose={() => setHata("")}>{hata}</Alert>}
         {mesaj && <Alert severity="success" onClose={() => setMesaj("")}>{mesaj}</Alert>}
         <Stack direction={{ xs: "column", md: "row" }} spacing={1} alignItems={{ md: "center" }} justifyContent="space-between">
@@ -344,9 +348,9 @@ export default function BirlesikTaslakSayfasi() {
           Değerler “{onizleme.testMizanAdi}” test mizanından, alt sürüm #{onizleme.formulSurumNo} ile hesaplandı (cari dönem bakiyesi).
         </Typography>}
 
-        <Stack direction={{ xs: "column", lg: "row" }} spacing={1.5} alignItems="flex-start">
-          {/* width 0: kaydırmalı tablonun içerik genişliği sayfa sarmalayıcısını taşırmasın. */}
-          <TableContainer component={Paper} variant="outlined" sx={{ flex: 1, minWidth: 0, width: { xs: "100%", lg: 0 }, maxHeight: "calc(100vh - 330px)", minHeight: 320,
+        <Box>
+          {/* width 0 + minWidth: kaydırmalı tablonun içerik genişliği sayfa sarmalayıcısını taşırmasın. */}
+          <TableContainer component={Paper} variant="outlined" sx={{ width: 0, minWidth: "100%", maxHeight: "calc(100vh - 330px)", minHeight: 320,
             borderRadius: 0, borderColor: EXCEL.kenar, scrollPaddingLeft: 56 + 280, scrollPaddingTop: SATIR_YUKSEKLIGI * seviyeSayisi }}>
             <Table size="small" stickyHeader sx={{ borderCollapse: "separate" }}>
               <TableHead>
@@ -388,57 +392,50 @@ export default function BirlesikTaslakSayfasi() {
             </Table>
           </TableContainer>
 
-          {secili && seciliSatir && <Paper variant="outlined" onKeyDown={tusla}
-            sx={{ width: { xs: "100%", lg: 380 }, flexShrink: 0, p: 2, position: { lg: "sticky" }, top: { lg: 88 },
-              borderRadius: 0, borderColor: EXCEL.kenar, borderTop: `3px solid ${EXCEL.yesil}` }}>
-            <Stack spacing={1.5}>
-              <Stack direction="row" alignItems="flex-start" spacing={1}>
-                <Box sx={{ flex: 1, minWidth: 0 }}>
-                  <Typography variant="subtitle1" fontWeight={600} sx={{ overflowWrap: "anywhere" }}>{seciliSatir.ad}</Typography>
-                  <Typography variant="caption" color="text.secondary">
-                    {KAPSAM[secili.kapsam]} · {DONUSUM[secili.donusum]}{seciliSutun ? ` · ${seciliSutun.ad}` : ""}
-                    {kapsamKaynagi(seciliSatir, secili.kapsam) ? ` · Excel satırı ${kapsamKaynagi(seciliSatir, secili.kapsam)!.satirNo}` : ""}
-                  </Typography>
-                </Box>
-                <IconButton size="small" aria-label="Kapat" onClick={kapat}><IconX size={18} /></IconButton>
-              </Stack>
-              <TextField label="Formül" value={form.formul} inputRef={formulRef} multiline minRows={3} fullWidth
-                onChange={(e) => setForm((x) => ({ ...x, formul: e.target.value }))}
-                slotProps={{
-                  htmlInput: { spellCheck: false, style: { fontFamily: "Consolas, monospace", fontSize: 13 } },
-                  input: { startAdornment: <InputAdornment position="start" sx={{ alignSelf: "flex-start", mt: 1.25 }}>
-                    <Typography sx={{ fontStyle: "italic", fontFamily: "Cambria, Georgia, serif", color: EXCEL.yesil, fontWeight: 700 }}>fx</Typography>
-                  </InputAdornment> },
-                }}
-                helperText={matrisMi ? "Hesap kodu önekleri: 500 + 501 - 502"
-                  : "Hesap kodu (100), satır (C12), TOPLA(C10:C15) veya ALT. Yazarken satır adına tıklayınca referans eklenir."} />
-              {seciliSonuc?.hata && <Alert severity="error" sx={{ py: 0 }}>{seciliSonuc.hata}</Alert>}
-              {!seciliSonuc?.hata && seciliSonuc?.deger != null && <Typography variant="body2">
-                Örnek mizan sonucu: <strong>{tutar.format(seciliSonuc.deger)}</strong>
-              </Typography>}
-              <TextField size="small" label="Dipnot" value={form.dipnot} fullWidth
-                onChange={(e) => setForm((x) => ({ ...x, dipnot: e.target.value }))} />
-              <TextField size="small" label="Kaynak notu" value={form.kaynak} fullWidth
-                onChange={(e) => setForm((x) => ({ ...x, kaynak: e.target.value }))} />
-              <TextField size="small" label="Değişiklik nedeni" value={aciklama} fullWidth placeholder="Boş bırakılırsa otomatik yazılır"
-                onChange={(e) => setAciklama(e.target.value)} />
-              <Stack direction="row" spacing={1} alignItems="center">
-                <Button variant="contained" onClick={kaydet} sx={{ bgcolor: EXCEL.yesil, "&:hover": { bgcolor: EXCEL.koyuYesil } }}
-                  disabled={kaydediliyor || !degisti || (!form.formul.trim() && !form.dipnot.trim())}>
-                  {kaydediliyor ? "Kaydediliyor..." : "Kaydet"}
-                </Button>
-                <Button color="inherit" onClick={kapat}>Vazgeç</Button>
-                <Typography variant="caption" color="text.secondary" sx={{ flex: 1, textAlign: "right" }}>
-                  Ctrl+Enter · alt sürüm #{(son?.surumNo ?? 0) + 1}
-                </Typography>
-              </Stack>
-              {sonGecmis && <Typography variant="caption" color="text.secondary">
-                Son kayıt #{sonGecmis.surumNo} · {new Date(sonGecmis.olusturmaTarihi).toLocaleString("tr-TR")}
-              </Typography>}
-            </Stack>
-          </Paper>}
-        </Stack>
+        </Box>
       </Stack>
+      <FormulCekmecesi acik={Boolean(secili && seciliSatir)} genislik={CEKMECE_GENISLIGI} onKapat={kapat} onKeyDown={tusla}
+        baslik={seciliSatir?.ad}
+        altBaslik={secili && seciliSatir ? <>
+          {KAPSAM[secili.kapsam]} · {DONUSUM[secili.donusum]}{seciliSutun ? ` · ${seciliSutun.ad}` : ""}
+          {kapsamKaynagi(seciliSatir, secili.kapsam) ? ` · Excel satırı ${kapsamKaynagi(seciliSatir, secili.kapsam)!.satirNo}` : ""}
+        </> : null}>
+        {secili && seciliSatir && <Stack spacing={1.5}>
+          <TextField label="Formül" value={form.formul} inputRef={formulRef} multiline minRows={3} fullWidth
+            onChange={(e) => setForm((x) => ({ ...x, formul: e.target.value }))}
+            slotProps={{
+              htmlInput: { spellCheck: false, style: { fontFamily: "Consolas, monospace", fontSize: 13 } },
+              input: { startAdornment: <InputAdornment position="start" sx={{ alignSelf: "flex-start", mt: 1.25 }}>
+                <Typography sx={{ fontStyle: "italic", fontFamily: "Cambria, Georgia, serif", color: EXCEL.yesil, fontWeight: 700 }}>fx</Typography>
+              </InputAdornment> },
+            }}
+            helperText={matrisMi ? "Hesap kodu önekleri: 500 + 501 - 502"
+              : "Hesap kodu (100), satır (C12), TOPLA(C10:C15) veya ALT. Yazarken satır adına tıklayınca referans eklenir."} />
+          {seciliSonuc?.hata && <Alert severity="error" sx={{ py: 0 }}>{seciliSonuc.hata}</Alert>}
+          {!seciliSonuc?.hata && seciliSonuc?.deger != null && <Typography variant="body2">
+            Örnek mizan sonucu: <strong>{tutar.format(seciliSonuc.deger)}</strong>
+          </Typography>}
+          <TextField size="small" label="Dipnot" value={form.dipnot} fullWidth
+            onChange={(e) => setForm((x) => ({ ...x, dipnot: e.target.value }))} />
+          <TextField size="small" label="Kaynak notu" value={form.kaynak} fullWidth
+            onChange={(e) => setForm((x) => ({ ...x, kaynak: e.target.value }))} />
+          <TextField size="small" label="Değişiklik nedeni" value={aciklama} fullWidth placeholder="Boş bırakılırsa otomatik yazılır"
+            onChange={(e) => setAciklama(e.target.value)} />
+          <Stack direction="row" spacing={1} alignItems="center">
+            <Button variant="contained" onClick={kaydet} sx={{ bgcolor: EXCEL.yesil, "&:hover": { bgcolor: EXCEL.koyuYesil } }}
+              disabled={kaydediliyor || !degisti || (!form.formul.trim() && !form.dipnot.trim())}>
+              {kaydediliyor ? "Kaydediliyor..." : "Kaydet"}
+            </Button>
+            <Button color="inherit" onClick={kapat}>Vazgeç</Button>
+            <Typography variant="caption" color="text.secondary" sx={{ flex: 1, textAlign: "right" }}>
+              Ctrl+Enter · alt sürüm #{(son?.surumNo ?? 0) + 1}
+            </Typography>
+          </Stack>
+          {sonGecmis && <Typography variant="caption" color="text.secondary">
+            Son kayıt #{sonGecmis.surumNo} · {new Date(sonGecmis.olusturmaTarihi).toLocaleString("tr-TR")}
+          </Typography>}
+        </Stack>}
+      </FormulCekmecesi>
     </ParentCard>
   </PageContainer>;
 }
