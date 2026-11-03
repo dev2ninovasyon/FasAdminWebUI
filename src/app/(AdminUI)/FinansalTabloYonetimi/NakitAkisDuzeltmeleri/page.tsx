@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { useState } from "react";
 import { Alert, Box, Button, FormControlLabel, MenuItem, Paper, Stack, Switch, Table, TableBody, TableCell, TableHead, TableRow, TextField, Typography } from "@mui/material";
 import PageContainer from "@/app/components/Container/PageContainer";
 import Breadcrumb from "@/app/components/Layout/Shared/Breadcrumb/Breadcrumb";
@@ -35,18 +35,22 @@ export default function NakitAkisDuzeltmeleri() {
   const baglam = `${denetlenenId}/${yil}/${konsolidasyonMu}`;
   const baglamHazir = yuklenenBaglam === baglam;
 
-  useEffect(() => {
-    if (!token) return;
-    nakitAkisSatirlariniGetir(token).then(setSatirlar).catch((error) => setHata(error.message));
-  }, [token]);
-
   const listele = async () => {
     if (!token || Number(denetlenenId) <= 0 || Number(yil) < 1900) return;
-    setHata(""); setMesaj(""); setYukleniyor(true);
+    setHata(""); setMesaj(""); setYukleniyor(true); setYuklenenBaglam("");
     try {
-      setListe(await nakitAkisManuelDegerleriniGetir(token, Number(denetlenenId), Number(yil), konsolidasyonMu));
+      const [yeniSatirlar, yeniListe] = await Promise.all([
+        nakitAkisSatirlariniGetir(token, Number(denetlenenId), Number(yil), konsolidasyonMu),
+        nakitAkisManuelDegerleriniGetir(token, Number(denetlenenId), Number(yil), konsolidasyonMu),
+      ]);
+      setSatirlar(yeniSatirlar);
+      setListe(yeniListe);
+      setSeciliSatir((anahtar) => yeniSatirlar.some((satir) => satir.sabitAnahtar === anahtar) ? anahtar : "");
       setYuklenenBaglam(baglam);
-    } catch (error) { setHata(error instanceof Error ? error.message : "Düzeltmeler yüklenemedi."); }
+    } catch (error) {
+      setSatirlar([]); setSeciliSatir("");
+      setHata(error instanceof Error ? error.message : "Düzeltmeler yüklenemedi.");
+    }
     finally { setYukleniyor(false); }
   };
 
@@ -70,14 +74,14 @@ export default function NakitAkisDuzeltmeleri() {
     <Breadcrumb title="Nakit Akışı Düzeltmeleri" items={[{ to: "/FinansalTabloYonetimi", title: "Finansal Tablo Yönetimi" }]} />
     <ParentCard title="Nakit akışı satır düzeltmesi">
       <Stack spacing={2}>
-        <Alert severity="info">Düzeltme yalnız seçilen firma ve yılın nakit akışı satırına uygulanır. Önceki tutarlar aşağıdaki geçmişte saklanır.</Alert>
+        <Alert severity="info">Etkin finansal tablo sürümündeki nakit akışı satırları gösterilir. Önceki tutarlar aşağıdaki geçmişte saklanır.</Alert>
         <Stack direction={{ xs: "column", md: "row" }} spacing={1} alignItems={{ md: "center" }}>
           <TextField size="small" label="Firma ID" type="number" value={denetlenenId} onChange={(e) => setDenetlenenId(e.target.value)} />
           <TextField size="small" label="Yıl" type="number" value={yil} onChange={(e) => setYil(e.target.value)} />
           <FormControlLabel control={<Switch checked={konsolidasyonMu} onChange={(e) => setKonsolidasyonMu(e.target.checked)} />} label="Konsolide" />
           <Button variant="outlined" onClick={listele} disabled={yukleniyor || Number(denetlenenId) <= 0}>Değerleri getir</Button>
         </Stack>
-        <TextField select size="small" fullWidth label="Nakit akışı satırı" value={seciliSatir} onChange={(e) => { setSeciliSatir(e.target.value); setTutar(""); }}>
+        <TextField select size="small" fullWidth label="Nakit akışı satırı" value={seciliSatir} disabled={!baglamHazir || yukleniyor} onChange={(e) => { setSeciliSatir(e.target.value); setTutar(""); }}>
           {satirlar.map((satir) => <MenuItem key={satir.sabitAnahtar} value={satir.sabitAnahtar}>{satir.ad} · {satir.kod}</MenuItem>)}
         </TextField>
         {seciliSatir && baglamHazir && <Paper variant="outlined" sx={{ p: 1.5 }}>
