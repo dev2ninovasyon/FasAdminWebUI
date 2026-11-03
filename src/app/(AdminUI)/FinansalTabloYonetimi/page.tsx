@@ -403,7 +403,7 @@ const Page = ({ editorSurumId }: PageProps) => {
   { "yil": ${new Date().getFullYear()}, "detayKodu": "100.01", "hesapAdi": "Kasa", "borc": 1000, "alacak": 0 },
   { "yil": ${new Date().getFullYear()}, "detayKodu": "320.01", "hesapAdi": "Satıcılar", "borc": 0, "alacak": 1000 }
 ]`);
-  const [testMizanSatirlariDuzenlendiMi, setTestMizanSatirlariDuzenlendiMi] = useState(false);
+  const [testVerisiDuzenlendiMi, setTestVerisiDuzenlendiMi] = useState(false);
   const [testMizanFisSatirlariJson, setTestMizanFisSatirlariJson] = useState("[]");
   const [testMizanYukleniyor, setTestMizanYukleniyor] = useState(false);
   const [testMizanListesiYukleniyor, setTestMizanListesiYukleniyor] = useState(false);
@@ -1520,7 +1520,7 @@ const Page = ({ editorSurumId }: PageProps) => {
       }));
       setTestMizanSatirlariJson(JSON.stringify(fixtureSatirlari, null, 2));
       setTestMizanFisSatirlariJson("[]");
-      setTestMizanSatirlariDuzenlendiMi(true);
+      setTestVerisiDuzenlendiMi(true);
       setTestMizanAdi(`Mevcut mizan snapshotı ${denetlenenId}-${yil}`);
       setSeciliTestMizani(null);
       setUretimOnizlemeSonucu(null);
@@ -1600,6 +1600,7 @@ const Page = ({ editorSurumId }: PageProps) => {
 
   const testMizaniSec = (kayit: FinansalTabloTestMizan) => {
     setSeciliTestMizani(kayit);
+    setTestVerisiDuzenlendiMi(true);
     setTestMizanAdi(kayit.ad);
     setTestMizanSatirlariJson(JSON.stringify(kayit.satirlar, null, 2));
     setTestMizanFisSatirlariJson(JSON.stringify(kayit.fisSatirlari ?? [], null, 2));
@@ -2062,7 +2063,7 @@ const Page = ({ editorSurumId }: PageProps) => {
 
     adimaGit(1);
     const testMizani = seciliTestMizani || await testMizaniOlustur(
-      testMizanSatirlariDuzenlendiMi ? null : otomatikTestSatirlariOlustur()
+      testVerisiDuzenlendiMi ? null : otomatikTestSatirlariOlustur()
     );
     if (!testMizani) return;
     await finansalTabloOnizle(testMizani, dogrulananSnapshotSha256);
@@ -2600,7 +2601,7 @@ const Page = ({ editorSurumId }: PageProps) => {
                 value={testMizanSatirlariJson}
                 onChange={(event) => {
                   setTestMizanSatirlariJson(event.target.value);
-                  setTestMizanSatirlariDuzenlendiMi(true);
+                  setTestVerisiDuzenlendiMi(true);
                   setSeciliTestMizani(null);
                   setUretimOnizlemeSonucu(null);
                 }}
@@ -2620,6 +2621,7 @@ const Page = ({ editorSurumId }: PageProps) => {
                     value={testMizanFisSatirlariJson}
                     onChange={(event) => {
                       setTestMizanFisSatirlariJson(event.target.value);
+                      setTestVerisiDuzenlendiMi(true);
                       setSeciliTestMizani(null);
                       setUretimOnizlemeSonucu(null);
                     }}
