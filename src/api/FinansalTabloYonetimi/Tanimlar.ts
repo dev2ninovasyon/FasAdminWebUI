@@ -1126,6 +1126,73 @@ export const createKgkBirlesikTaslak = async (
   return payload as KgkBirlesikTaslakOzeti;
 };
 
+export type KgkBirlesikSatir = {
+  eslesmeAnahtari: string;
+  durum: string;
+  munferitMi: boolean;
+  konsolideMi: boolean;
+};
+
+export type KgkBirlesikTaslakDetay = {
+  ozet: KgkBirlesikTaslakOzeti;
+  icerik: { raporlamaStandardi: number; tablolar: Array<{ ad: string; kalemler: KgkBirlesikSatir[] }> };
+};
+
+export type KgkBirlesikFormulVaryanti = {
+  tabloAdi: string;
+  eslesmeAnahtari: string;
+  kapsam: number;
+  donusumTipi: number;
+  hamFormul: string | null;
+  dipnot: string | null;
+  hesaplamaKurali: null;
+  kaynak: string | null;
+};
+
+export type KgkBirlesikFormulSurumu = {
+  id: number;
+  birlesikTaslakId: number;
+  surumNo: number;
+  kaynakSurumId: number | null;
+  icerikSha256: string;
+  aciklama: string;
+  olusturmaTarihi: string;
+  varyantlar: KgkBirlesikFormulVaryanti[];
+};
+
+export const getKgkBirlesikTaslak = (token: string, id: number) =>
+  jsonGet<KgkBirlesikTaslakDetay>(token, `/Kgk/BirlesikTaslaklar/${id}`);
+
+export const getKgkBirlesikFormulSurumleri = (token: string, id: number) =>
+  jsonGet<Array<Pick<KgkBirlesikFormulSurumu, "id" | "surumNo" | "aciklama" | "olusturmaTarihi">>>(
+    token, `/Kgk/BirlesikTaslaklar/${id}/FormulSurumleri`);
+
+export const getKgkBirlesikSonFormulSurumu = async (
+  token: string, id: number
+): Promise<KgkBirlesikFormulSurumu | null> => {
+  const response = await fetch(`${url}/FinansalTabloYonetimi/Kgk/BirlesikTaslaklar/${id}/FormulSurumleri/Son`, {
+    headers: { accept: "application/json", Authorization: `Bearer ${token}` },
+  });
+  if (response.status === 404) return null;
+  const payload = await response.json().catch(() => ({}));
+  if (!response.ok) throw new Error(payload?.message || "Formül sürümü okunamadı.");
+  return payload as KgkBirlesikFormulSurumu;
+};
+
+export const saveKgkBirlesikFormulVaryanti = async (
+  token: string, id: number, beklenenSurumNo: number,
+  varyant: KgkBirlesikFormulVaryanti, aciklama: string
+) => {
+  const response = await fetch(`${url}/FinansalTabloYonetimi/Kgk/BirlesikTaslaklar/${id}/FormulVaryantlari`, {
+    method: "POST",
+    headers: { accept: "application/json", "Content-Type": "application/json", Authorization: `Bearer ${token}` },
+    body: JSON.stringify({ beklenenSurumNo, varyant, aciklama }),
+  });
+  const payload = await response.json().catch(() => ({}));
+  if (!response.ok) throw new Error(payload?.message || "Formül varyantı kaydedilemedi.");
+  return payload as { id: number; surumNo: number; varyantSayisi: number };
+};
+
 export const activateKgkAnaSurum = async (
   token: string,
   anaSurumId: number,
