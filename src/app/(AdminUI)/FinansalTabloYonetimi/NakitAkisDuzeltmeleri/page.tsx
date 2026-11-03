@@ -8,7 +8,7 @@ import ParentCard from "@/app/components/Shared/ParentCard";
 import { useSelector } from "@/store/hooks";
 import { AppState } from "@/store/store";
 import {
-  NakitAkisManuelListe, NakitAkisSatiri, nakitAkisManuelDegeriniKaydet,
+  NakitAkisManuelListe, NakitAkisSatiri, nakitAkisManuelDegeriniKaydet, nakitAkisManuelDegeriniKaldir,
   nakitAkisManuelDegerleriniGetir, nakitAkisSatirlariniGetir,
 } from "@/api/FinansalTabloYonetimi/NakitAkisManuelDeger";
 
@@ -70,11 +70,25 @@ export default function NakitAkisDuzeltmeleri() {
     finally { setYukleniyor(false); }
   };
 
+  const formuleDon = async () => {
+    if (!token || !baglamHazir || !seciliSatir || !onceki || aciklama.trim().length < 10) return;
+    setHata(""); setMesaj(""); setYukleniyor(true);
+    try {
+      const sonuc = await nakitAkisManuelDegeriniKaldir(token, {
+        denetlenenId: Number(denetlenenId), yil: Number(yil), konsolidasyonMu,
+        satirAnahtari: seciliSatir, beklenenOncekiTutar: onceki.tutar, aciklama: aciklama.trim(),
+      });
+      setListe(await nakitAkisManuelDegerleriniGetir(token, Number(denetlenenId), Number(yil), konsolidasyonMu));
+      setTutar(""); setAciklama(""); setMesaj(sonuc.message);
+    } catch (error) { setHata(error instanceof Error ? error.message : "Manuel düzeltme kaldırılamadı."); }
+    finally { setYukleniyor(false); }
+  };
+
   return <PageContainer title="Nakit Akışı Düzeltmeleri" description="Firma ve yıl bazında nakit akışı satır düzeltmeleri">
     <Breadcrumb title="Nakit Akışı Düzeltmeleri" items={[{ to: "/FinansalTabloYonetimi", title: "Finansal Tablo Yönetimi" }]} />
     <ParentCard title="Nakit akışı satır düzeltmesi">
       <Stack spacing={2}>
-        <Alert severity="info">Etkin finansal tablo sürümündeki nakit akışı satırları gösterilir. Önceki tutarlar aşağıdaki geçmişte saklanır.</Alert>
+        <Alert severity="info">Etkin sürümün nakit akışı satırları gösterilir. Manuel değeri kaldırırsanız sonraki üretimde satır yeniden formülle hesaplanır. İşlem geçmişi saklanır.</Alert>
         <Stack direction={{ xs: "column", md: "row" }} spacing={1} alignItems={{ md: "center" }}>
           <TextField size="small" label="Firma ID" type="number" value={denetlenenId} onChange={(e) => setDenetlenenId(e.target.value)} />
           <TextField size="small" label="Yıl" type="number" value={yil} onChange={(e) => setYil(e.target.value)} />
@@ -92,13 +106,14 @@ export default function NakitAkisDuzeltmeleri() {
           <TextField size="small" label="Yeni tutar" value={tutar} onChange={(e) => setTutar(e.target.value)} inputMode="decimal" />
           <TextField size="small" label="Düzeltme gerekçesi" value={aciklama} onChange={(e) => setAciklama(e.target.value)} inputProps={{ maxLength: 500 }} sx={{ flexGrow: 1 }} />
           <Button variant="contained" onClick={kaydet} disabled={yukleniyor || !baglamHazir || !seciliSatir || !tutar.trim() || aciklama.trim().length < 10}>Kaydet</Button>
+          <Button variant="outlined" color="warning" onClick={formuleDon} disabled={yukleniyor || !baglamHazir || !onceki || aciklama.trim().length < 10}>Formüle dön</Button>
         </Stack>
         {hata && <Alert severity="error">{hata}</Alert>}{mesaj && <Alert severity="success">{mesaj}</Alert>}
         {seciliSatir && baglamHazir && <Box>
           <Typography variant="subtitle2" gutterBottom>Önceki değerler ve değişiklik geçmişi</Typography>
           {gecmis.length === 0 ? <Typography variant="body2" color="text.secondary">Bu satır için henüz değişiklik yok.</Typography> :
             <Table size="small"><TableHead><TableRow><TableCell>Tarih</TableCell><TableCell align="right">Önceki</TableCell><TableCell align="right">Yeni</TableCell><TableCell>Gerekçe</TableCell><TableCell>Kullanıcı</TableCell></TableRow></TableHead>
-              <TableBody>{gecmis.map((kayit) => <TableRow key={kayit.id}><TableCell>{new Date(kayit.islemTarihi).toLocaleString("tr-TR")}</TableCell><TableCell align="right">{para(kayit.oncekiTutar)}</TableCell><TableCell align="right">{para(kayit.yeniTutar)}</TableCell><TableCell>{kayit.aciklama}</TableCell><TableCell>{kayit.kullaniciId}</TableCell></TableRow>)}</TableBody></Table>}
+              <TableBody>{gecmis.map((kayit) => <TableRow key={kayit.id}><TableCell>{new Date(kayit.islemTarihi).toLocaleString("tr-TR")}</TableCell><TableCell align="right">{para(kayit.oncekiTutar)}</TableCell><TableCell align="right">{kayit.yeniTutar === null ? "Formüle dönüldü" : para(kayit.yeniTutar)}</TableCell><TableCell>{kayit.aciklama}</TableCell><TableCell>{kayit.kullaniciId}</TableCell></TableRow>)}</TableBody></Table>}
         </Box>}
       </Stack>
     </ParentCard>
