@@ -404,6 +404,7 @@ const Page = ({ editorSurumId }: PageProps) => {
   { "yil": ${new Date().getFullYear()}, "detayKodu": "320.01", "hesapAdi": "Satıcılar", "borc": 0, "alacak": 1000 }
 ]`);
   const [testMizanSatirlariDuzenlendiMi, setTestMizanSatirlariDuzenlendiMi] = useState(false);
+  const [testMizanFisSatirlariJson, setTestMizanFisSatirlariJson] = useState("[]");
   const [testMizanYukleniyor, setTestMizanYukleniyor] = useState(false);
   const [testMizanListesiYukleniyor, setTestMizanListesiYukleniyor] = useState(false);
   const [mevcutMizanYukleniyor, setMevcutMizanYukleniyor] = useState(false);
@@ -1412,8 +1413,33 @@ const Page = ({ editorSurumId }: PageProps) => {
         raporBorcTransferFisiHaric: sayiOku("raporBorcTransferFisiHaric", sayiOku("raporBorc", sayiOku("borc"))),
         raporAlacakTransferFisiHaric: sayiOku("raporAlacakTransferFisiHaric", sayiOku("raporAlacak", sayiOku("alacak"))),
         kontrolBakiyeTransferFisiHaric: sayiOku("kontrolBakiyeTransferFisiHaric", sayiOku("bakiyeTransferFisiHaric", sayiOku("bakiye", sayiOku("borc") - sayiOku("alacak")))),
+        ...(satir.duzeltmeBakiye == null ? {} : { duzeltmeBakiye: sayiOku("duzeltmeBakiye") }),
         paraBirimi: String(satir.paraBirimi || "TRY"),
       };
+    });
+  };
+
+  const testMizanFisSatirlariniOku = (): NonNullable<FinansalTabloTestMizanOlusturmaIstegi["fisSatirlari"]> => {
+    const parsed = JSON.parse(testMizanFisSatirlariJson.trim() || "[]") as unknown;
+    if (!Array.isArray(parsed) || parsed.length > 5000) {
+      throw new Error("Enflasyon fişleri en fazla 5.000 satırlık JSON dizisi olmalıdır.");
+    }
+    return parsed.map((hamFis, index) => {
+      if (!hamFis || typeof hamFis !== "object" || Array.isArray(hamFis)) {
+        throw new Error(`Enflasyon fişi ${index + 1}. satırında JSON nesnesi bekleniyor.`);
+      }
+      const fis = hamFis as Record<string, unknown>;
+      const yil = Number(fis.yil ?? uretimYil);
+      const yevmiyeNo = Number(fis.yevmiyeNo);
+      const hesapKodu = String(fis.hesapKodu ?? "").trim();
+      const borc = Number(fis.borc ?? 0);
+      const alacak = Number(fis.alacak ?? 0);
+      if (!Number.isInteger(yil) || yil < 1900 || yil > 2200 ||
+          !Number.isInteger(yevmiyeNo) || yevmiyeNo <= 0 || !hesapKodu ||
+          !Number.isFinite(borc) || !Number.isFinite(alacak)) {
+        throw new Error(`Enflasyon fişi ${index + 1}. satırında yıl, fiş numarası, hesap kodu, borç ve alacak değerlerini kontrol edin.`);
+      }
+      return { yil, yevmiyeNo, hesapKodu, borc, alacak };
     });
   };
 
@@ -1488,10 +1514,12 @@ const Page = ({ editorSurumId }: PageProps) => {
             satir.kontrolBakiyeTransferFisiHaric,
             sayiOku(satir.raporBorcTransferFisiHaric, raporBorc) - sayiOku(satir.raporAlacakTransferFisiHaric, raporAlacak)
           ),
+          ...(satir.duzeltmeBakiye == null ? {} : { duzeltmeBakiye: sayiOku(satir.duzeltmeBakiye) }),
           paraBirimi: String(satir.paraBirimi || "TRY"),
         };
       }));
       setTestMizanSatirlariJson(JSON.stringify(fixtureSatirlari, null, 2));
+      setTestMizanFisSatirlariJson("[]");
       setTestMizanSatirlariDuzenlendiMi(true);
       setTestMizanAdi(`Mevcut mizan snapshotı ${denetlenenId}-${yil}`);
       setSeciliTestMizani(null);
@@ -1548,6 +1576,7 @@ const Page = ({ editorSurumId }: PageProps) => {
         yil,
         konsolidasyonMu: uretimKonsolide,
         satirlar: testMizanSatirlariniOku(otomatikSatirlar ? JSON.stringify(otomatikSatirlar) : testMizanSatirlariJson),
+        fisSatirlari: testMizanFisSatirlariniOku(),
       });
       if (otomatikSatirlar) setTestMizanSatirlariJson(JSON.stringify(otomatikSatirlar, null, 2));
       setSeciliTestMizani(kayit);
@@ -1559,7 +1588,7 @@ const Page = ({ editorSurumId }: PageProps) => {
       setUretimBaslangic((onceki) => onceki || `${kayit.yil}-01-01`);
       setUretimBitis((onceki) => onceki || `${kayit.yil}-12-31`);
       setUretimOnizlemeSonucu(null);
-      setSurumYonetimiMesaji(`Test mizanı oluşturuldu: ${kayit.ad} · ${kayit.satirlar.length} satır. Salt-okunur önizlemeye hazır.`);
+      setSurumYonetimiMesaji(`Test mizanı oluşturuldu: ${kayit.ad} · ${kayit.satirlar.length} mizan, ${kayit.fisSatirlari?.length ?? 0} fiş satırı. Önizlemeye hazır.`);
       return kayit;
     } catch (error) {
       setTanimHatasi(error instanceof Error ? error.message : "Test mizanı oluşturulamadı.");
@@ -1571,6 +1600,9 @@ const Page = ({ editorSurumId }: PageProps) => {
 
   const testMizaniSec = (kayit: FinansalTabloTestMizan) => {
     setSeciliTestMizani(kayit);
+    setTestMizanAdi(kayit.ad);
+    setTestMizanSatirlariJson(JSON.stringify(kayit.satirlar, null, 2));
+    setTestMizanFisSatirlariJson(JSON.stringify(kayit.fisSatirlari ?? [], null, 2));
     setUretimGirdiAnahtari(`TEST-MIZAN-${kayit.id.slice(0, 8).toUpperCase()}`);
     setUretimGirdiSha256(kayit.sha256);
     setUretimDenetlenenId(String(kayit.denetlenenId));
@@ -2572,8 +2604,29 @@ const Page = ({ editorSurumId }: PageProps) => {
                   setSeciliTestMizani(null);
                   setUretimOnizlemeSonucu(null);
                 }}
-                helperText="Her satırda detayKodu, borc ve alacak zorunludur; bakiye alanları boşsa otomatik hesaplanır."
+                helperText="Her satırda detayKodu, borc ve alacak zorunludur; bakiye alanları boşsa otomatik hesaplanır. Önceki yıl nakit düzeltmesi varsa duzeltmeBakiye ekleyin."
               />
+              <Accordion variant="outlined" disableGutters>
+                <AccordionSummary expandIcon={<ExpandMoreIcon />}>
+                  <Typography variant="body2">Nakit enflasyon fişleri (isteğe bağlı)</Typography>
+                </AccordionSummary>
+                <AccordionDetails>
+                  <TextField
+                    fullWidth
+                    size="small"
+                    multiline
+                    minRows={3}
+                    label="Enflasyon fişi satırları (JSON)"
+                    value={testMizanFisSatirlariJson}
+                    onChange={(event) => {
+                      setTestMizanFisSatirlariJson(event.target.value);
+                      setSeciliTestMizani(null);
+                      setUretimOnizlemeSonucu(null);
+                    }}
+                    helperText="Nakit akışı testi için aynı fiş numarasındaki hesapları birlikte girin: yil, yevmiyeNo, hesapKodu, borc, alacak. Fiş yoksa [] bırakın; etki 0 olur."
+                  />
+                </AccordionDetails>
+              </Accordion>
               <Stack direction="row" spacing={1} alignItems="center" flexWrap="wrap" useFlexGap>
                 <Button variant="contained" color="info" size="small" onClick={() => void testMizaniOlustur()} disabled={testMizanYukleniyor}>
                   {testMizanYukleniyor ? <CircularProgress size={18} color="inherit" /> : "Test mizanı oluştur"}
@@ -3313,6 +3366,22 @@ const Page = ({ editorSurumId }: PageProps) => {
                                               {kalem.ad} · {kalem.kod || kalem.sabitAnahtar}
                                             </MenuItem>
                                           ))}
+                                        </Select>
+                                      </FormControl>
+                                    ) : terim.kaynakTuru === 5 ? (
+                                      <FormControl size="small" fullWidth required>
+                                        <InputLabel>Sistem parametresi</InputLabel>
+                                        <Select
+                                          label="Sistem parametresi"
+                                          value={terim.kaynakAnahtari}
+                                          onChange={(event) => kuralTerimiGuncelle(index, { kaynakAnahtari: String(event.target.value) })}
+                                        >
+                                          <MenuItem value=""><em>Seçin</em></MenuItem>
+                                          <MenuItem value="SUNUM_ENDEKSI">Sunum endeksi</MenuItem>
+                                          <MenuItem value="NAKIT_ENFLASYON_ETKISI">Nakit enflasyon etkisi</MenuItem>
+                                          {terim.kaynakAnahtari && !["SUNUM_ENDEKSI", "NAKIT_ENFLASYON_ETKISI"].includes(terim.kaynakAnahtari) && (
+                                            <MenuItem value={terim.kaynakAnahtari} disabled>Tanımlanmayan parametre · {terim.kaynakAnahtari}</MenuItem>
+                                          )}
                                         </Select>
                                       </FormControl>
                                     ) : (
