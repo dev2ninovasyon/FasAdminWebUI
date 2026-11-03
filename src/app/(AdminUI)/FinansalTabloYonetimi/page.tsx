@@ -405,6 +405,7 @@ const Page = ({ editorSurumId }: PageProps) => {
 ]`);
   const [testVerisiDuzenlendiMi, setTestVerisiDuzenlendiMi] = useState(false);
   const [testMizanFisSatirlariJson, setTestMizanFisSatirlariJson] = useState("[]");
+  const [testMizanManuelDegerlerJson, setTestMizanManuelDegerlerJson] = useState("[]");
   const [testMizanYukleniyor, setTestMizanYukleniyor] = useState(false);
   const [testMizanListesiYukleniyor, setTestMizanListesiYukleniyor] = useState(false);
   const [mevcutMizanYukleniyor, setMevcutMizanYukleniyor] = useState(false);
@@ -1443,6 +1444,21 @@ const Page = ({ editorSurumId }: PageProps) => {
     });
   };
 
+  const testMizanManuelDegerleriniOku = (): NonNullable<FinansalTabloTestMizanOlusturmaIstegi["manuelDegerler"]> => {
+    const parsed = JSON.parse(testMizanManuelDegerlerJson.trim() || "[]") as unknown;
+    if (!Array.isArray(parsed) || parsed.length > 5000) throw new Error("Manuel değerler en fazla 5.000 satırlık JSON dizisi olmalıdır.");
+    return parsed.map((ham, index) => {
+      if (!ham || typeof ham !== "object" || Array.isArray(ham)) throw new Error(`Manuel değer ${index + 1} geçersiz.`);
+      const deger = ham as Record<string, unknown>;
+      const yil = Number(deger.yil);
+      const satirAnahtari = String(deger.satirAnahtari ?? "").trim();
+      const tutar = Number(deger.tutar);
+      if (!Number.isInteger(yil) || yil < 1900 || yil > 2200 || !satirAnahtari || !Number.isFinite(tutar))
+        throw new Error(`Manuel değer ${index + 1} için yıl, satır anahtarı ve tutarı kontrol edin.`);
+      return { yil, satirAnahtari, tutar };
+    });
+  };
+
   const testMizanListesiniYukle = async () => {
     if (!user.token) return;
     setTestMizanListesiYukleniyor(true);
@@ -1520,6 +1536,7 @@ const Page = ({ editorSurumId }: PageProps) => {
       }));
       setTestMizanSatirlariJson(JSON.stringify(fixtureSatirlari, null, 2));
       setTestMizanFisSatirlariJson("[]");
+      setTestMizanManuelDegerlerJson("[]");
       setTestVerisiDuzenlendiMi(true);
       setTestMizanAdi(`Mevcut mizan snapshotı ${denetlenenId}-${yil}`);
       setSeciliTestMizani(null);
@@ -1577,6 +1594,7 @@ const Page = ({ editorSurumId }: PageProps) => {
         konsolidasyonMu: uretimKonsolide,
         satirlar: testMizanSatirlariniOku(otomatikSatirlar ? JSON.stringify(otomatikSatirlar) : testMizanSatirlariJson),
         fisSatirlari: testMizanFisSatirlariniOku(),
+        manuelDegerler: testMizanManuelDegerleriniOku(),
       });
       if (otomatikSatirlar) setTestMizanSatirlariJson(JSON.stringify(otomatikSatirlar, null, 2));
       setSeciliTestMizani(kayit);
@@ -1604,6 +1622,7 @@ const Page = ({ editorSurumId }: PageProps) => {
     setTestMizanAdi(kayit.ad);
     setTestMizanSatirlariJson(JSON.stringify(kayit.satirlar, null, 2));
     setTestMizanFisSatirlariJson(JSON.stringify(kayit.fisSatirlari ?? [], null, 2));
+    setTestMizanManuelDegerlerJson(JSON.stringify(kayit.manuelDegerler ?? [], null, 2));
     setUretimGirdiAnahtari(`TEST-MIZAN-${kayit.id.slice(0, 8).toUpperCase()}`);
     setUretimGirdiSha256(kayit.sha256);
     setUretimDenetlenenId(String(kayit.denetlenenId));
@@ -2627,6 +2646,23 @@ const Page = ({ editorSurumId }: PageProps) => {
                     }}
                     helperText="Nakit akışı testi için aynı fiş numarasındaki hesapları birlikte girin: yil, yevmiyeNo, hesapKodu, borc, alacak. Fiş yoksa [] bırakın; etki 0 olur."
                   />
+                </AccordionDetails>
+              </Accordion>
+              <Accordion variant="outlined" disableGutters>
+                <AccordionSummary expandIcon={<ExpandMoreIcon />}>
+                  <Typography variant="body2">Nakit akışı manuel değerleri (isteğe bağlı)</Typography>
+                </AccordionSummary>
+                <AccordionDetails>
+                  <TextField fullWidth size="small" multiline minRows={3}
+                    label="Manuel nakit akışı satırları (JSON)"
+                    value={testMizanManuelDegerlerJson}
+                    onChange={(event) => {
+                      setTestMizanManuelDegerlerJson(event.target.value);
+                      setTestVerisiDuzenlendiMi(true);
+                      setSeciliTestMizani(null);
+                      setUretimOnizlemeSonucu(null);
+                    }}
+                    helperText='Örnek: [{"yil":2026,"satirAnahtari":"rapor-v1:satir:1035","tutar":7080823}]. Boş bırakmak için [] kullanın.' />
                 </AccordionDetails>
               </Accordion>
               <Stack direction="row" spacing={1} alignItems="center" flexWrap="wrap" useFlexGap>

@@ -92,6 +92,12 @@ const Menuitems: MenuitemsType[] = [
         icon: IconPoint,
         href: "/FinansalTabloYonetimi/KgkGuncellemeleri",
       },
+      {
+        id: uniqueId(),
+        title: "Nakit Akışı Düzeltmeleri",
+        icon: IconPoint,
+        href: "/FinansalTabloYonetimi/NakitAkisDuzeltmeleri",
+      },
     ],
   },
   {
