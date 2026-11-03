@@ -2,7 +2,7 @@
 
 import { useMemo, useState } from "react";
 import {
-  Box, IconButton, InputAdornment, Paper, Stack, Table, TableBody, TableCell, TableContainer, TableHead, TableRow,
+  Alert, Box, Button, IconButton, InputAdornment, Paper, Stack, Table, TableBody, TableCell, TableContainer, TableHead, TableRow,
   TextField, Tooltip, Typography,
 } from "@mui/material";
 import { IconChevronDown, IconChevronRight, IconChevronsDown, IconChevronsUp, IconSearch, IconX } from "@tabler/icons-react";
@@ -66,9 +66,17 @@ type Props = {
 /** Sürüm tablosunun kalem kırılımlarını Excel görünümünde ve formülleriyle listeler. */
 export default function KalemFormulTablosu({ tablo, seciliKalemId, seciliKuralId, onKalemSec, onHucreKuraliSec }: Props) {
   const [arama, setArama] = useState("");
+  const [yalnizEksik, setYalnizEksik] = useState(false);
   const [kapali, setKapali] = useState<Set<number>>(new Set());
   const agac = useMemo(() => agacOlustur(tablo.kalemler), [tablo.kalemler]);
   const kuralByKalem = useMemo(() => new Map(tablo.kurallar.filter((x) => x.kalemId).map((x) => [x.kalemId!, x])), [tablo.kurallar]);
+  const nakitAkisMi = tablo.kod.startsWith("NAKIT_AKIS");
+  const eksikMi = (kalem: Kalem) => {
+    const kural = kuralByKalem.get(kalem.id);
+    return kalem.aktifMi && !nakitAkisMi && kalem.kalemTuru !== 1 &&
+      (!kural || !kural.aktifMi || kural.hesaplamaTuru === 5);
+  };
+  const eksikSayisi = tablo.kalemler.filter(eksikMi).length;
   const hucreKurallari = useMemo(() => tablo.kurallar.filter((x) => x.hucreId).map((kural) => {
     const hucre = tablo.hucreler.find((h) => h.id === kural.hucreId);
     const dikey = tablo.kalemler.find((k) => k.id === hucre?.dikeyKalemId);
@@ -82,6 +90,21 @@ export default function KalemFormulTablosu({ tablo, seciliKalemId, seciliKuralId
       const goster = new Set<number>();
       agac.filter((x) => aramaAnahtari(`${x.kalem.ad} ${x.kalem.kod ?? ""} ${x.kalem.sabitAnahtar}`).includes(aranan))
         .forEach((x) => { for (let a: number | null = x.kalem.id; a && !goster.has(a); a = ustler.get(a) ?? null) goster.add(a); });
+      if (yalnizEksik) {
+        const eksikUstleri = new Set<number>();
+        agac.filter((x) => eksikMi(x.kalem) && goster.has(x.kalem.id)).forEach((x) => {
+          for (let a: number | null = x.kalem.id; a && !eksikUstleri.has(a); a = ustler.get(a) ?? null) eksikUstleri.add(a);
+        });
+        return agac.filter((x) => eksikUstleri.has(x.kalem.id));
+      }
+      return agac.filter((x) => goster.has(x.kalem.id));
+    }
+    if (yalnizEksik) {
+      const ustler = new Map(agac.map((x) => [x.kalem.id, x.ust]));
+      const goster = new Set<number>();
+      agac.filter((x) => eksikMi(x.kalem)).forEach((x) => {
+        for (let a: number | null = x.kalem.id; a && !goster.has(a); a = ustler.get(a) ?? null) goster.add(a);
+      });
       return agac.filter((x) => goster.has(x.kalem.id));
     }
     const sonuc: Satir[] = [];
@@ -93,7 +116,7 @@ export default function KalemFormulTablosu({ tablo, seciliKalemId, seciliKuralId
       if (satir.altSayisi > 0 && kapali.has(satir.kalem.id)) gizli = satir.derinlik;
     }
     return sonuc;
-  }, [agac, kapali, arama]);
+  }, [agac, kapali, arama, yalnizEksik, kuralByKalem, nakitAkisMi]);
   const formulSayisi = tablo.kurallar.filter((x) => x.aktifMi).length;
 
   const hucreSx = { py: 0.25, px: 1, borderRight: "1px solid", borderRightColor: EXCEL.izgara, borderBottom: "1px solid", borderBottomColor: EXCEL.izgara };
@@ -108,9 +131,14 @@ export default function KalemFormulTablosu({ tablo, seciliKalemId, seciliKuralId
         } }} />
       <Tooltip title="Tümünü aç"><IconButton size="small" aria-label="Tümünü aç" onClick={() => setKapali(new Set())}><IconChevronsDown size={18} /></IconButton></Tooltip>
       <Tooltip title="Tümünü daralt"><IconButton size="small" aria-label="Tümünü daralt" onClick={() => setKapali(new Set(agac.filter((x) => x.altSayisi > 0).map((x) => x.kalem.id)))}><IconChevronsUp size={18} /></IconButton></Tooltip>
+      {eksikSayisi > 0 && <Button size="small" variant={yalnizEksik ? "contained" : "outlined"} color="warning"
+        onClick={() => setYalnizEksik((deger) => !deger)}>Eksik formüller ({eksikSayisi})</Button>}
       <Box sx={{ flex: 1 }} />
       <Typography variant="caption" color="text.secondary">{tablo.kalemler.length} kalem · {formulSayisi} formül</Typography>
     </Stack>
+    {eksikSayisi > 0 && <Alert severity="warning" sx={{ py: 0 }}>
+      {eksikSayisi} satırın çalışır hesap kuralı yok. Alt kalemleri bulunan satırlar da doğrulanmadan otomatik toplama çevrilmez; önceki raporlarla tutarlar karşılaştırılmalıdır.
+    </Alert>}
     <TableContainer component={Paper} variant="outlined" sx={{ maxHeight: "calc(100vh - 300px)", minHeight: 320, borderRadius: 0, borderColor: EXCEL.kenar, scrollPaddingLeft: 52, scrollPaddingTop: EXCEL_SATIR_YUKSEKLIGI }}>
       <Table size="small" stickyHeader sx={{ borderCollapse: "separate" }}>
         <TableHead>
@@ -151,11 +179,12 @@ export default function KalemFormulTablosu({ tablo, seciliKalemId, seciliKuralId
                 </Stack>
               </TableCell>
               <TableCell sx={{ ...hucreSx, fontSize: 12, color: "text.secondary", whiteSpace: "nowrap" }}>
-                {KALEM_TURLERI[kalem.kalemTuru] || "—"}{kalem.eksen === 3 ? " · sütun" : ""}
+                {eksikMi(kalem) ? "Formül eksik" : KALEM_TURLERI[kalem.kalemTuru] || "—"}{kalem.eksen === 3 ? " · sütun" : ""}
               </TableCell>
               <TableCell sx={{ ...hucreSx, maxWidth: 420 }} title={formul || undefined}>
                 <Typography noWrap sx={{ ...excelFormulYazisi, color: kural && !kural.aktifMi ? "text.disabled" : "text.primary" }}>
-                  {formul || (baslik ? "" : <Box component="span" sx={{ color: "text.disabled" }}>formül yok</Box>)}
+                  {eksikMi(kalem) ? <Box component="span" sx={{ color: "warning.main", fontFamily: "inherit" }}>Hesap kuralı tamamlanmalı</Box> :
+                    formul || (baslik ? "" : <Box component="span" sx={{ color: "text.disabled" }}>formül yok</Box>)}
                 </Typography>
               </TableCell>
             </TableRow>;
