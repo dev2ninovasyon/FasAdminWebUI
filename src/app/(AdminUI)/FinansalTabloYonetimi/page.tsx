@@ -41,7 +41,7 @@ import ParentCard from "@/app/components/Shared/ParentCard";
 import { IconTrash } from "@tabler/icons-react";
 import KalemFormulTablosu, { KALEM_TURLERI } from "./KalemFormulTablosu";
 import { EXCEL } from "./excelStili";
-import FormulCekmecesi, { useCekmeceBoslugu } from "./FormulCekmecesi";
+import FormulCekmecesi from "./FormulCekmecesi";
 import { useSelector } from "@/store/hooks";
 import { AppState } from "@/store/store";
 import {
@@ -548,7 +548,6 @@ const Page = ({ editorSurumId }: PageProps) => {
   const kuralKaynakKalemleri = secilenKalemTablosu?.kalemler.filter((kalem) => kalem.id !== kuralHedefKalemId) || [];
   const panelKalem = secilenKalemTablosu?.kalemler.find((kalem) => kalem.id === panelKalemId);
   const formulCekmecesiAcik = surumDurumKodu(secilenSurum?.durum ?? 0) === 1 && Boolean(panelKalem || duzenlenenKural);
-  const cekmece = useCekmeceBoslugu(formulCekmecesiAcik, FORMUL_CEKMECESI_GENISLIGI);
 
   const kgkFarkiniTemizle = () => {
     setKgkWorkbookSonucu(null);
@@ -3228,8 +3227,7 @@ const Page = ({ editorSurumId }: PageProps) => {
           )}
           {secilenSurum && duzenleyiciSayfasi && (
             <Paper variant="outlined" sx={{ p: 1.5 }}>
-              {/* Açık formül çekmecesi kadar sağ boşluk: araç çubukları ve tablo örtülmesin. */}
-              <Stack spacing={1.5} ref={cekmece.ref} sx={{ pr: `${cekmece.bosluk}px`, transition: "padding-right 225ms" }}>
+              <Stack spacing={1.5}>
                 <Stack direction="row" spacing={1} flexWrap="wrap" useFlexGap>
                   <Button size="small" variant="text" onClick={() => router.push("/FinansalTabloYonetimi")}>Hazırlama adımlarına dön</Button>
                   <Chip label={`Sürüm ${secilenSurum.surumNo} · ${secilenSurum.etiket}`} color={surumDurumKodu(secilenSurum.durum) === 3 ? "success" : "default"} />
@@ -3349,7 +3347,6 @@ const Page = ({ editorSurumId }: PageProps) => {
                     <KalemFormulTablosu tablo={secilenKalemTablosu} seciliKalemId={panelKalemId} seciliKuralId={duzenlenenKuralId}
                       onKalemSec={panelKalemSec} onHucreKuraliSec={panelHucreKuraliSec} />
                     <FormulCekmecesi acik={formulCekmecesiAcik} genislik={FORMUL_CEKMECESI_GENISLIGI} onKapat={paneliKapat}
-                      onKeyDown={(olay) => { if (olay.key === "Escape") paneliKapat(); }}
                       baslik={panelKalem?.ad ?? "Özkaynak hücresi"}
                       altBaslik={<>
                         {panelKalem ? `${KALEM_TURLERI[panelKalem.kalemTuru] || "Tür yok"} · sıra ${panelKalem.sira}` : "Hücre formülü"}

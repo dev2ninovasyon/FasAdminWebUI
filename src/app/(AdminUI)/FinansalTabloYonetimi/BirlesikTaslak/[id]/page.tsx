@@ -1,7 +1,7 @@
 "use client";
 
-import { Fragment, useCallback, useEffect, useMemo, useRef, useState } from "react";
-import type { KeyboardEvent, MouseEvent } from "react";
+import { Fragment, useCallback, useEffect, useMemo, useState } from "react";
+import type { KeyboardEvent } from "react";
 import { useParams } from "next/navigation";
 import {
   Alert, Box, Button, Chip, IconButton, InputAdornment, List, ListItem, ListItemText, MenuItem, Paper, Popover,
@@ -24,17 +24,19 @@ import {
 import { getFinansalTabloTestMizanlari, FinansalTabloTestMizan } from "@/api/FinansalTabloYonetimi/TestMizan";
 import { KgkAgacSatiri, gorunurSatirlar, kgkAgaciOlustur, sutunBasliklari } from "./kgkAgaci";
 import { EXCEL, EXCEL_SATIR_YUKSEKLIGI as SATIR_YUKSEKLIGI, excelBaslikHucresi } from "../../excelStili";
-import FormulCekmecesi, { useCekmeceBoslugu } from "../../FormulCekmecesi";
+import FormulCekmecesi from "../../FormulCekmecesi";
 
 type Gecmis = Pick<KgkBirlesikFormulSurumu, "id" | "surumNo" | "aciklama" | "olusturmaTarihi">;
-type Hucre = { satir: string; sutun: string | null; kapsam: number; donusum: number };
+type Hucre = { satir: string; sutun: string | null; kapsam: number };
 type Form = { formul: string; dipnot: string; kaynak: string };
 
-const VARYANTLAR = [
-  { kapsam: 1, donusum: 1 }, { kapsam: 1, donusum: 2 }, { kapsam: 2, donusum: 1 }, { kapsam: 2, donusum: 2 },
-];
+// Formüller tek tiptir: enflasyon düzeltmesi kodda uygulanır, ayrı enflasyon formülü girilmez.
+const NORMAL = 1;
+const KAPSAMLAR = [1, 2];
 const KAPSAM = ["", "Münferit", "Konsolide"];
-const DONUSUM = ["", "Normal", "Enflasyon"];
+// Özkaynak başlıkları Excel'deki gibi sarılır; sabit yükseklik yapışkan başlık ofsetlerini korur.
+const HARF_YUKSEKLIGI = 22;
+const BASLIK_YUKSEKLIGI = 52;
 const BOS_FORM: Form = { formul: "", dipnot: "", kaynak: "" };
 const CEKMECE_GENISLIGI = 440;
 const tutar = new Intl.NumberFormat("tr-TR", { maximumFractionDigits: 2 });
@@ -59,7 +61,6 @@ export default function BirlesikTaslakSayfasi() {
   const [arama, setArama] = useState("");
   const [kapali, setKapali] = useState<Set<string>>(new Set());
   const [matrisKapsam, setMatrisKapsam] = useState(1);
-  const [matrisDonusum, setMatrisDonusum] = useState(1);
   const [secili, setSecili] = useState<Hucre | null>(null);
   const [form, setForm] = useState<Form>(BOS_FORM);
   const [kayitliForm, setKayitliForm] = useState<Form>(BOS_FORM);
@@ -72,7 +73,6 @@ export default function BirlesikTaslakSayfasi() {
   const [gecmisAnchor, setGecmisAnchor] = useState<HTMLElement | null>(null);
   const [hata, setHata] = useState("");
   const [mesaj, setMesaj] = useState("");
-  const formulRef = useRef<HTMLTextAreaElement | null>(null);
 
   useEffect(() => {
     if (!token || !Number.isInteger(id) || id <= 0) return;
@@ -109,9 +109,8 @@ export default function BirlesikTaslakSayfasi() {
       : []), [onizleme, tabloAdi, son?.surumNo]);
   const hataliSayisi = [...sonuclar.values()].filter((x) => x.hata).length;
   const seciliSatir = secili ? satirHaritasi.get(secili.satir) : undefined;
-  const cekmece = useCekmeceBoslugu(Boolean(secili && seciliSatir), CEKMECE_GENISLIGI);
   const seciliSutun = secili?.sutun ? matris.yapraklar.find((x) => x.sabitAnahtar === secili.sutun) : undefined;
-  const seciliSonuc = secili ? sonuclar.get(hucreAnahtari(secili.satir, secili.sutun, secili.kapsam, secili.donusum)) : undefined;
+  const seciliSonuc = secili ? sonuclar.get(hucreAnahtari(secili.satir, secili.sutun, secili.kapsam, NORMAL)) : undefined;
   const degisti = form.formul !== kayitliForm.formul || form.dipnot !== kayitliForm.dipnot || form.kaynak !== kayitliForm.kaynak;
 
   const denetle = useCallback(async (mizanId: string | null) => {
@@ -130,10 +129,9 @@ export default function BirlesikTaslakSayfasi() {
 
   const sec = (hucre: Hucre) => {
     if (degisti && !window.confirm("Kaydedilmemiş formül değişikliği var. Vazgeçilsin mi?")) return;
-    const kayit = varyantlar.get(hucreAnahtari(hucre.satir, hucre.sutun, hucre.kapsam, hucre.donusum));
+    const kayit = varyantlar.get(hucreAnahtari(hucre.satir, hucre.sutun, hucre.kapsam, NORMAL));
     const yeni = { formul: kayit?.hamFormul ?? "", dipnot: kayit?.dipnot ?? "", kaynak: kayit?.kaynak ?? "" };
     setSecili(hucre); setForm(yeni); setKayitliForm(yeni); setAciklama(""); setMesaj("");
-    setTimeout(() => formulRef.current?.focus(), 0);
   };
 
   const kapat = () => {
@@ -146,31 +144,14 @@ export default function BirlesikTaslakSayfasi() {
     setTabloAdi(ad); setSecili(null); setKapali(new Set()); setArama("");
   };
 
-  // Excel'deki gibi: formül yazarken satır adına tıklamak o satırın referansını imlece ekler.
-  const satirReferansiEkle = (satir: KgkAgacSatiri, olay: MouseEvent) => {
-    const alan = formulRef.current;
-    if (!secili || matrisMi || !alan || document.activeElement !== alan) return false;
-    const no = kapsamKaynagi(satir, secili.kapsam)?.satirNo;
-    if (!no || satir.anahtar === secili.satir) return false;
-    olay.preventDefault();
-    const bas = alan.selectionStart ?? form.formul.length;
-    const son = alan.selectionEnd ?? bas;
-    const once = form.formul.slice(0, bas);
-    const ek = `${once.trim() && !/[+\-=(:]\s*$/.test(once) ? "+" : ""}C${no}`;
-    const formul = once + ek + form.formul.slice(son);
-    setForm((x) => ({ ...x, formul }));
-    setTimeout(() => { alan.focus(); alan.setSelectionRange(bas + ek.length, bas + ek.length); }, 0);
-    return true;
-  };
-
   const kaydet = async () => {
     if (!token || !secili || !seciliSatir || kaydediliyor || (!form.formul.trim() && !form.dipnot.trim())) return;
     setHata(""); setMesaj(""); setKaydediliyor(true);
-    const varsayilan = `${seciliSatir.ad} · ${KAPSAM[secili.kapsam]} ${DONUSUM[secili.donusum].toLocaleLowerCase("tr-TR")}${seciliSutun ? ` · ${seciliSutun.ad}` : ""} formülü güncellendi`;
+    const varsayilan = `${seciliSatir.ad} · ${KAPSAM[secili.kapsam]}${seciliSutun ? ` · ${seciliSutun.ad}` : ""} formülü güncellendi`;
     try {
       const varyant: KgkBirlesikFormulVaryanti = {
         tabloAdi, eslesmeAnahtari: secili.satir, yataySutunAnahtari: secili.sutun,
-        kapsam: secili.kapsam, donusumTipi: secili.donusum,
+        kapsam: secili.kapsam, donusumTipi: NORMAL,
         hamFormul: form.formul.trim() || null, dipnot: form.dipnot.trim() || null,
         hesaplamaKurali: null, kaynak: form.kaynak.trim() || null,
       };
@@ -191,23 +172,23 @@ export default function BirlesikTaslakSayfasi() {
 
   const tusla = (olay: KeyboardEvent) => {
     if (olay.key === "Enter" && (olay.ctrlKey || olay.metaKey)) { olay.preventDefault(); void kaydet(); }
-    if (olay.key === "Escape") { olay.preventDefault(); kapat(); }
   };
 
-  const formulHucresi = (satir: KgkAgacSatiri, sutun: string | null, kapsam: number, donusum: number) => {
+  const formulHucresi = (satir: KgkAgacSatiri, sutun: KgkMatrisSutunu | null, kapsam: number) => {
+    const sutunAnahtari = sutun?.sabitAnahtar ?? null;
     const acik = kullanilabilir(satir, kapsam) && (!sutun || Boolean(kapsamKaynagi(satir, kapsam)));
-    const anahtar = hucreAnahtari(satir.anahtar, sutun, kapsam, donusum);
+    const anahtar = hucreAnahtari(satir.anahtar, sutunAnahtari, kapsam, NORMAL);
     const kayit = varyantlar.get(anahtar);
     const sonuc = sonuclar.get(anahtar);
-    const seciliMi = secili?.satir === satir.anahtar && secili.sutun === sutun && secili.kapsam === kapsam && secili.donusum === donusum;
-    const ac = () => acik && sec({ satir: satir.anahtar, sutun, kapsam, donusum });
+    const seciliMi = secili?.satir === satir.anahtar && secili.sutun === sutunAnahtari && secili.kapsam === kapsam;
+    const ac = () => acik && sec({ satir: satir.anahtar, sutun: sutunAnahtari, kapsam });
     return <TableCell key={anahtar} onClick={ac} tabIndex={acik ? 0 : -1} role={acik ? "button" : undefined}
-      aria-label={`${satir.ad} ${KAPSAM[kapsam]} ${DONUSUM[donusum]}`}
+      aria-label={`${satir.ad} ${sutun ? sutun.ad : KAPSAM[kapsam]}`}
       onKeyDown={(e) => { if (e.key === "Enter") ac(); }}
       title={!acik ? (satir.kalem.durum === "Belirsiz" ? "Belirsiz eşleşme; formül atanamaz." : `Bu satır ${KAPSAM[kapsam].toLocaleLowerCase("tr-TR")} tabloda yok.`)
         : sonuc?.hata || kayit?.hamFormul || kayit?.dipnot || "Formül eklemek için tıklayın"}
       sx={{
-        minWidth: 150, maxWidth: 240, py: 0.25, px: 0.75, cursor: acik ? "cell" : "not-allowed", position: "relative",
+        minWidth: sutun ? 120 : 260, maxWidth: sutun ? 180 : 420, py: 0.25, px: 0.75, cursor: acik ? "cell" : "not-allowed", position: "relative",
         borderRight: "1px solid", borderRightColor: EXCEL.izgara, borderBottomColor: EXCEL.izgara,
         bgcolor: !acik ? EXCEL.bos : seciliMi ? EXCEL.seciliHucre : "inherit",
         outline: seciliMi ? `2px solid ${EXCEL.yesil}` : "none", outlineOffset: -2,
@@ -253,8 +234,7 @@ export default function BirlesikTaslakSayfasi() {
             {kapali.has(satir.anahtar) ? <IconChevronRight size={16} /> : <IconChevronDown size={16} />}
           </IconButton> : <Box sx={{ width: 24, flexShrink: 0 }} />}
           <Typography variant="body2" noWrap title={satir.anahtar}
-            onMouseDown={(e) => satirReferansiEkle(satir, e)}
-            sx={{ fontWeight: satir.baslikMi || satir.altSayisi > 0 ? 700 : 400, fontSize: 13, cursor: secili && !matrisMi ? "copy" : "default" }}>
+            sx={{ fontWeight: satir.baslikMi || satir.altSayisi > 0 ? 700 : 400, fontSize: 13, cursor: "default" }}>
             {satir.ad}
           </Typography>
           {satir.kalem.durum === "Belirsiz" && <Chip size="small" color="warning" variant="outlined" label="Belirsiz" />}
@@ -265,13 +245,15 @@ export default function BirlesikTaslakSayfasi() {
   };
 
   const ustHucre = excelBaslikHucresi;
-  const varyantDurumu = (kapsam: number, donusum: number) =>
-    onizleme?.tabloAdi === tabloAdi ? onizleme.varyantlar.find((x) => x.kapsam === kapsam && x.donusumTipi === donusum) : undefined;
-  const seviyeSayisi = matrisMi ? matris.satirlar.length : 2;
-  const solBaslik = (seviyeSayisi: number) => <>
-    <TableCell rowSpan={seviyeSayisi} sx={{ ...ustHucre, position: "sticky", left: 0, top: 0, zIndex: 4, width: 56, textAlign: "right" }}>Satır</TableCell>
-    <TableCell rowSpan={seviyeSayisi} sx={{ ...ustHucre, position: "sticky", left: 56, top: 0, zIndex: 4, minWidth: 280 }}>KGK kalemi</TableCell>
+  const varyantDurumu = (kapsam: number) =>
+    onizleme?.tabloAdi === tabloAdi ? onizleme.varyantlar.find((x) => x.kapsam === kapsam && x.donusumTipi === NORMAL) : undefined;
+  const seviyeSayisi = matrisMi ? matris.satirlar.length : 1;
+  const baslikUstu = matrisMi ? HARF_YUKSEKLIGI : 0;
+  const solBaslik = (seviyeSayisi: number, ust: number) => <>
+    <TableCell rowSpan={seviyeSayisi} sx={{ ...ustHucre, position: "sticky", left: 0, top: ust, zIndex: 4, width: 56, textAlign: "center" }}>Satır</TableCell>
+    <TableCell rowSpan={seviyeSayisi} sx={{ ...ustHucre, position: "sticky", left: 56, top: ust, zIndex: 4, minWidth: 280 }}>KGK kalemi</TableCell>
   </>;
+  const harfHucresi = { ...ustHucre, height: HARF_YUKSEKLIGI, py: 0, fontSize: 11.5, fontWeight: 400, color: "text.secondary", textAlign: "center" } as const;
 
   const formulSayisi = (son?.varyantlar ?? []).filter((x) => x.tabloAdi === tabloAdi).length;
   const sonGecmis = gecmis[0];
@@ -279,8 +261,7 @@ export default function BirlesikTaslakSayfasi() {
   return <PageContainer title="Birleşik KGK formülleri" description="KGK kalemleri ve formül alt sürümleri">
     <Breadcrumb title="Birleşik KGK formülleri" items={[{ title: "Finansal Tablolar", to: "/FinansalTabloYonetimi" }, { title: "Birleşik taslak" }]} />
     <ParentCard title={taslak ? `KGK taslağı #${taslak.ozet.id}` : "KGK taslağı yükleniyor"}>
-      {/* Açık formül çekmecesi kadar sağ boşluk: araç çubuğu ve tablo örtülmesin. */}
-      <Stack spacing={1.5} ref={cekmece.ref} sx={{ pr: `${cekmece.bosluk}px`, transition: "padding-right 225ms" }}>
+      <Stack spacing={1.5}>
         {hata && <Alert severity="error" onClose={() => setHata("")}>{hata}</Alert>}
         {mesaj && <Alert severity="success" onClose={() => setMesaj("")}>{mesaj}</Alert>}
         <Stack direction={{ xs: "column", md: "row" }} spacing={1} alignItems={{ md: "center" }} justifyContent="space-between">
@@ -324,9 +305,6 @@ export default function BirlesikTaslakSayfasi() {
             <ToggleButtonGroup size="small" exclusive value={matrisKapsam} onChange={(_, v) => { if (v) { setMatrisKapsam(v); setSecili(null); } }}>
               <ToggleButton value={1}>Münferit</ToggleButton><ToggleButton value={2}>Konsolide</ToggleButton>
             </ToggleButtonGroup>
-            <ToggleButtonGroup size="small" exclusive value={matrisDonusum} onChange={(_, v) => { if (v) { setMatrisDonusum(v); setSecili(null); } }}>
-              <ToggleButton value={1}>Normal</ToggleButton><ToggleButton value={2}>Enflasyon</ToggleButton>
-            </ToggleButtonGroup>
           </Stack>}
           <Box sx={{ flex: 1 }} />
           <Typography variant="caption" color={hataliSayisi ? "error.main" : "text.secondary"} sx={{ whiteSpace: "nowrap" }}>
@@ -351,39 +329,45 @@ export default function BirlesikTaslakSayfasi() {
         <Box>
           {/* width 0 + minWidth: kaydırmalı tablonun içerik genişliği sayfa sarmalayıcısını taşırmasın. */}
           <TableContainer component={Paper} variant="outlined" sx={{ width: 0, minWidth: "100%", maxHeight: "calc(100vh - 330px)", minHeight: 320,
-            borderRadius: 0, borderColor: EXCEL.kenar, scrollPaddingLeft: 56 + 280, scrollPaddingTop: SATIR_YUKSEKLIGI * seviyeSayisi }}>
+            borderRadius: 0, borderColor: EXCEL.kenar, scrollPaddingLeft: 56 + 280,
+            scrollPaddingTop: matrisMi ? HARF_YUKSEKLIGI + BASLIK_YUKSEKLIGI * seviyeSayisi : SATIR_YUKSEKLIGI }}>
             <Table size="small" stickyHeader sx={{ borderCollapse: "separate" }}>
               <TableHead>
-                {matrisMi ? matris.satirlar.map((seviye, i) => <TableRow key={i}>
-                  {i === 0 && solBaslik(seviyeSayisi)}
-                  {seviye.map((b) => <TableCell key={b.sutun.sabitAnahtar} colSpan={b.colSpan} rowSpan={b.rowSpan}
-                    title={b.sutun.ad} sx={{ ...ustHucre, top: i * SATIR_YUKSEKLIGI, textAlign: "center", maxWidth: 240 }}>
-                    <Typography noWrap variant="inherit">{b.sutun.ad}</Typography>
-                  </TableCell>)}
-                </TableRow>) : <>
+                {matrisMi ? <>
+                  {/* Excel sütun harfleri: KGK dosyasındaki sütunla birebir eşleşir. */}
                   <TableRow>
-                    {solBaslik(2)}
-                    {[1, 2].map((k) => <TableCell key={k} colSpan={2} sx={{ ...ustHucre, top: 0, textAlign: "center" }}>{KAPSAM[k]}</TableCell>)}
+                    <TableCell sx={{ ...harfHucresi, position: "sticky", left: 0, top: 0, zIndex: 5, width: 56 }} />
+                    <TableCell sx={{ ...harfHucresi, position: "sticky", left: 56, top: 0, zIndex: 5 }}>A</TableCell>
+                    {matris.yapraklar.map((s) => <TableCell key={s.sabitAnahtar} sx={{ ...harfHucresi, top: 0,
+                      ...(secili?.sutun === s.sabitAnahtar ? { bgcolor: EXCEL.seciliBaslik, color: EXCEL.yesil, fontWeight: 700 } : {}) }}>{s.sutun}</TableCell>)}
                   </TableRow>
-                  <TableRow>
-                    {VARYANTLAR.map((v) => {
-                      const durum = varyantDurumu(v.kapsam, v.donusum);
-                      return <TableCell key={`${v.kapsam}${v.donusum}`} sx={{ ...ustHucre, top: SATIR_YUKSEKLIGI, textAlign: "center", fontWeight: 500 }}
-                        title={durum?.aciklama ?? undefined}>
-                        {DONUSUM[v.donusum]}
-                        {durum?.hataliHucreSayisi ? <Typography component="span" variant="caption" color="error.main"> · {durum.hataliHucreSayisi} hata</Typography> : null}
-                      </TableCell>;
-                    })}
-                  </TableRow>
-                </>}
+                  {matris.satirlar.map((seviye, i) => <TableRow key={i}>
+                    {i === 0 && solBaslik(seviyeSayisi, baslikUstu)}
+                    {seviye.map((b) => <TableCell key={b.sutun.sabitAnahtar} colSpan={b.colSpan} rowSpan={b.rowSpan} title={b.sutun.ad}
+                      sx={{ ...ustHucre, height: BASLIK_YUKSEKLIGI * b.rowSpan, top: HARF_YUKSEKLIGI + i * BASLIK_YUKSEKLIGI,
+                        textAlign: "center", verticalAlign: "middle", minWidth: b.colSpan === 1 ? 120 : undefined, maxWidth: b.colSpan === 1 ? 180 : undefined,
+                        fontSize: 11.5, lineHeight: 1.25, whiteSpace: "normal" }}>
+                      <Box sx={{ display: "-webkit-box", WebkitLineClamp: 3, WebkitBoxOrient: "vertical", overflow: "hidden" }}>{b.sutun.ad}</Box>
+                    </TableCell>)}
+                  </TableRow>)}
+                </> : <TableRow>
+                  {solBaslik(1, 0)}
+                  {KAPSAMLAR.map((k) => {
+                    const durum = varyantDurumu(k);
+                    return <TableCell key={k} sx={{ ...ustHucre, top: 0, textAlign: "center" }} title={durum?.aciklama ?? undefined}>
+                      {KAPSAM[k]}
+                      {durum?.hataliHucreSayisi ? <Typography component="span" variant="caption" color="error.main"> · {durum.hataliHucreSayisi} hata</Typography> : null}
+                    </TableCell>;
+                  })}
+                </TableRow>}
               </TableHead>
               <TableBody>
                 {satirlar.map((satir) => <TableRow key={satir.anahtar} sx={{ height: SATIR_YUKSEKLIGI,
                   bgcolor: satir.baslikMi ? EXCEL.baslikSatiri : "background.paper" }}>
                   {satirEtiketi(satir, matrisKapsam)}
                   {matrisMi
-                    ? matris.yapraklar.map((s: KgkMatrisSutunu) => formulHucresi(satir, s.sabitAnahtar, matrisKapsam, matrisDonusum))
-                    : VARYANTLAR.map((v) => <Fragment key={`${v.kapsam}${v.donusum}`}>{formulHucresi(satir, null, v.kapsam, v.donusum)}</Fragment>)}
+                    ? matris.yapraklar.map((s) => formulHucresi(satir, s, matrisKapsam))
+                    : KAPSAMLAR.map((k) => <Fragment key={k}>{formulHucresi(satir, null, k)}</Fragment>)}
                 </TableRow>)}
                 {taslak && satirlar.length === 0 && <TableRow><TableCell colSpan={8}>
                   <Typography variant="body2" color="text.secondary">{arama ? "Aramayla eşleşen satır yok." : "Bu tabloda satır yok."}</Typography>
@@ -397,11 +381,11 @@ export default function BirlesikTaslakSayfasi() {
       <FormulCekmecesi acik={Boolean(secili && seciliSatir)} genislik={CEKMECE_GENISLIGI} onKapat={kapat} onKeyDown={tusla}
         baslik={seciliSatir?.ad}
         altBaslik={secili && seciliSatir ? <>
-          {KAPSAM[secili.kapsam]} · {DONUSUM[secili.donusum]}{seciliSutun ? ` · ${seciliSutun.ad}` : ""}
+          {KAPSAM[secili.kapsam]}{seciliSutun ? ` · ${seciliSutun.ad}` : ""}
           {kapsamKaynagi(seciliSatir, secili.kapsam) ? ` · Excel satırı ${kapsamKaynagi(seciliSatir, secili.kapsam)!.satirNo}` : ""}
         </> : null}>
         {secili && seciliSatir && <Stack spacing={1.5}>
-          <TextField label="Formül" value={form.formul} inputRef={formulRef} multiline minRows={3} fullWidth
+          <TextField label="Formül" value={form.formul} multiline minRows={3} fullWidth
             onChange={(e) => setForm((x) => ({ ...x, formul: e.target.value }))}
             slotProps={{
               htmlInput: { spellCheck: false, style: { fontFamily: "Consolas, monospace", fontSize: 13 } },
@@ -410,7 +394,7 @@ export default function BirlesikTaslakSayfasi() {
               </InputAdornment> },
             }}
             helperText={matrisMi ? "Hesap kodu önekleri: 500 + 501 - 502"
-              : "Hesap kodu (100), satır (C12), TOPLA(C10:C15) veya ALT. Yazarken satır adına tıklayınca referans eklenir."} />
+              : "Hesap kodu (100), satır (C12), TOPLA(C10:C15) veya ALT. Satır numarası tablonun Satır sütunundadır."} />
           {seciliSonuc?.hata && <Alert severity="error" sx={{ py: 0 }}>{seciliSonuc.hata}</Alert>}
           {!seciliSonuc?.hata && seciliSonuc?.deger != null && <Typography variant="body2">
             Örnek mizan sonucu: <strong>{tutar.format(seciliSonuc.deger)}</strong>

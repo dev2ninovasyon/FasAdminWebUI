@@ -67,14 +67,15 @@ test.use({ viewport: { width: 1680, height: 1000 } });
 
 test("birleşik KGK formülleri Excel tablosunda düzenlenir ve motorla hesaplanır", async ({ page }) => {
   const hatalar: string[] = [];
-  page.on("pageerror", (hata) => hatalar.push(hata.message));
+  // Giriş sayfasındaki reCAPTCHA betiği yerel ortamda site anahtarı olmadan bu uyarıyı verebilir.
+  page.on("pageerror", (hata) => { if (!hata.message.includes("Missing required parameters: sitekey")) hatalar.push(hata.message); });
   const son = {
     id: 33, birlesikTaslakId: 7, surumNo: 3, kaynakSurumId: 32, icerikSha256: "a".repeat(64), aciklama: "İlk formüller",
     olusturmaTarihi: "2026-11-03T10:00:00Z",
     varyantlar: [
       varyant(FDT, NAKIT, "Munferit", "Normal", "100+102"),
       varyant(FDT, TOPLAM, "Munferit", "Normal", "C12+C13"),
-      varyant(FDT, NAKIT, "Konsolide", "EnflasyonDuzeltilmis", "100", "5"),
+      varyant(FDT, NAKIT, "Konsolide", "Normal", "100", "5"),
       varyant(ODT, ACILIS, "Munferit", "Normal", "500", null, "S:SERMAYE"),
     ],
   };
@@ -135,7 +136,9 @@ test("birleşik KGK formülleri Excel tablosunda düzenlenir ve motorla hesaplan
   await expect(tablo.getByText("#HATA", { exact: true })).toBeVisible();
   await expect(page.getByText("· 1 hata", { exact: false }).first()).toBeVisible();
   await expect(tablo.getByText("5", { exact: true })).toBeVisible();
-  await expect(tablo.locator('td[title="Bu satır münferit tabloda yok."]')).toHaveCount(2);
+  // Formüller tek tip: yalnız Münferit ve Konsolide sütunları var (Normal/Enflasyon ayrımı yok).
+  await expect(tablo.getByRole("columnheader", { name: "Enflasyon" })).toHaveCount(0);
+  await expect(tablo.locator('td[title="Bu satır münferit tabloda yok."]')).toHaveCount(1);
 
   // Ağaç: daraltınca alt kalemler gizlenir, aramada Türkçe I/İ farkı önemsizdir.
   await tablo.getByRole("row", { name: /Dönen Varlıklar/ }).first().getByRole("button", { name: "Daralt" }).click();
@@ -147,20 +150,19 @@ test("birleşik KGK formülleri Excel tablosunda düzenlenir ve motorla hesaplan
   await expect(tablo.getByText("Nakit ve Nakit Benzerleri", { exact: true })).toHaveCount(0);
   await page.getByRole("button", { name: "Aramayı temizle" }).click();
 
-  // Hücre seçimi paneli açar; formül yazarken satır adına tıklamak referans ekler.
-  await page.getByRole("button", { name: "Ticari Alacaklar Münferit Normal" }).click();
-  await expect(page.getByText("Münferit · Normal · Excel satırı 13", { exact: true })).toBeVisible();
-  // Formül düzenleme sağdan çekmece olarak açılır; tablo çekmece kadar daralır, sütunlar örtülmez.
+  // Hücre seçimi formül panelini MUI Drawer olarak sayfanın üstüne açar; sayfa boyutu değişmez.
+  const tabloKutusu = page.locator("table").first();
+  const tabloGenisligi = (await tabloKutusu.boundingBox())!.width;
+  await page.getByRole("button", { name: "Ticari Alacaklar Münferit" }).click();
+  await expect(page.getByText("Münferit · Excel satırı 13", { exact: true })).toBeVisible();
   const cekmece = page.locator(".MuiDrawer-paper").filter({ hasText: "Ticari Alacaklar" });
   await expect(cekmece).toBeVisible();
-  await expect.poll(async () => {
-    const [tabloKutusu, cekmeceKutusu] = await Promise.all([tablo.boundingBox(), cekmece.boundingBox()]);
-    return Math.round((tabloKutusu?.x ?? 0) + (tabloKutusu?.width ?? 0)) <= Math.round(cekmeceKutusu?.x ?? 0);
-  }).toBe(true);
+  await expect(page.locator(".MuiDrawer-root > .MuiBackdrop-root")).toBeVisible();
+  expect(Math.abs((await tabloKutusu.boundingBox())!.width - tabloGenisligi)).toBeLessThanOrEqual(1);
+  await page.screenshot({ path: "test-results/kgk-formul-cekmece.png" });
   const formul = page.getByLabel("Formül", { exact: true });
-  await formul.fill("120-");
-  await tablo.getByText("Nakit ve Nakit Benzerleri", { exact: true }).click();
-  await expect(formul).toHaveValue("120-C12");
+  await expect(formul).toBeFocused();
+  await formul.fill("120-C12");
   await formul.press("Control+Enter");
   await expect.poll(() => kayitIstegi).not.toBeNull();
   expect(kayitIstegi).toMatchObject({
@@ -169,6 +171,8 @@ test("birleşik KGK formülleri Excel tablosunda düzenlenir ve motorla hesaplan
   });
   expect(kayitIstegi!.aciklama).toContain("Ticari Alacaklar");
   await expect(page.getByText("Alt sürüm #4 kaydedildi", { exact: false })).toBeVisible();
+  await page.keyboard.press("Escape");
+  await expect(cekmece).toBeHidden();
   await expect(tablo.getByText("120-C12", { exact: true })).toBeVisible();
 
   await page.getByRole("button", { name: "Örnek mizanla hesapla" }).click();
@@ -181,6 +185,8 @@ test("birleşik KGK formülleri Excel tablosunda düzenlenir ve motorla hesaplan
   // Özkaynak: sütun başlık hiyerarşisi korunur, kapsam anahtarı hücreleri değiştirir.
   await page.getByRole("tab", { name: "Özkaynak Değişim Tablosu" }).click();
   await expect(page.getByRole("columnheader", { name: "Özkaynaklar" })).toBeVisible();
+  for (const harf of ["A", "C", "D", "E"]) await expect(page.getByRole("columnheader", { name: harf, exact: true })).toBeVisible();
+  await expect(page.getByRole("button", { name: "Normal", exact: true })).toHaveCount(0);
   await expect(page.getByRole("columnheader", { name: "Ödenmiş Sermaye" })).toBeVisible();
   await expect(page.getByRole("columnheader", { name: "Toplam", exact: true })).toBeVisible();
   await expect(tablo.getByText("500", { exact: true })).toBeVisible();
