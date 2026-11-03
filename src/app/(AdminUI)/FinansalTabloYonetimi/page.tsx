@@ -76,6 +76,8 @@ import {
   createKgkTaslakFromDifferences,
   getKgkAnaSurumler,
   KgkAnaSurum,
+  createKgkBirlesikTaslak,
+  KgkBirlesikTaslakOzeti,
   activateKgkAnaSurum,
   applyKgkFormulFarklari,
   createFinansalTabloUretimi,
@@ -369,6 +371,9 @@ const Page = ({ editorSurumId }: PageProps) => {
   const [kgkTaramaDenemesi, setKgkTaramaDenemesi] = useState(3);
   const [kgkTaramaGecmisi, setKgkTaramaGecmisi] = useState<KgkTaramaGecmisi[]>([]);
   const [kgkAnaSurumler, setKgkAnaSurumler] = useState<KgkAnaSurum[]>([]);
+  const [kgkBirlesikYukleniyor, setKgkBirlesikYukleniyor] = useState("");
+  const [kgkBirlesikSonuc, setKgkBirlesikSonuc] = useState<KgkBirlesikTaslakOzeti | null>(null);
+  const [kgkBirlesikHata, setKgkBirlesikHata] = useState("");
   const [kgkTopluTarih, setKgkTopluTarih] = useState(() => format(new Date(), "yyyy-MM-dd"));
   const [kgkTopluNeden, setKgkTopluNeden] = useState("");
   const [kgkTopluYukleniyor, setKgkTopluYukleniyor] = useState(false);
@@ -1112,6 +1117,20 @@ const Page = ({ editorSurumId }: PageProps) => {
       setTanimHatasi(error instanceof Error ? error.message : "KGK tarama geçmişi okunamadı.");
     } finally {
       setKgkGecmisYukleniyor(false);
+    }
+  };
+
+  const kgkBirlesikTaslakOlustur = async (anaSurumId: number, standart: number) => {
+    if (!user.token || kgkBirlesikYukleniyor) return;
+    setKgkBirlesikYukleniyor(`${anaSurumId}-${standart}`);
+    setKgkBirlesikHata("");
+    setKgkBirlesikSonuc(null);
+    try {
+      setKgkBirlesikSonuc(await createKgkBirlesikTaslak(user.token, anaSurumId, standart));
+    } catch (error) {
+      setKgkBirlesikHata(error instanceof Error ? error.message : "Birleşik KGK taslağı oluşturulamadı.");
+    } finally {
+      setKgkBirlesikYukleniyor("");
     }
   };
 
@@ -2284,13 +2303,27 @@ const Page = ({ editorSurumId }: PageProps) => {
                   <Button key={surum.id} size="small" variant="text" onClick={() => router.push(`/FinansalTabloYonetimi/Surum/${surum.id}`)}>
                     {surum.tanimSetiKodu} · #{surum.surumNo}{surumDurumKodu(surum.durum) === 1 ? surum.ornekMizanHazirMi ? " · Hazır" : " · Örnek mizan eksik" : surumDurumKodu(surum.durum) === 3 ? " · Devrede" : " · Geçmiş"}
                   </Button>)}</Stack>}</TableCell>
-              <TableCell>{anaSurum.surumler.length > 0 && anaSurum.surumler.every((surum) => surumDurumKodu(surum.durum) === 1)
-                ? <Button size="small" variant="outlined" onClick={() => { setKgkTopluSeciliId(anaSurum.id); setKgkTopluHatasi(""); setKgkTopluMesaji(""); }}>
+              <TableCell><Stack direction="row" spacing={0.5} flexWrap="wrap" useFlexGap>
+                {[{ ad: "BOBİ FRS", kod: 1 }, { ad: "TFRS", kod: 2 }].map((standart) =>
+                  <Button key={standart.kod} size="small" variant="outlined"
+                    disabled={Boolean(kgkBirlesikYukleniyor)}
+                    onClick={() => kgkBirlesikTaslakOlustur(anaSurum.id, standart.kod)}>
+                    {kgkBirlesikYukleniyor === `${anaSurum.id}-${standart.kod}` ? <CircularProgress size={16} /> : `${standart.ad} taslağı`}
+                  </Button>)}
+                {anaSurum.surumler.length > 0 && anaSurum.surumler.every((surum) => surumDurumKodu(surum.durum) === 1)
+                ? <Button size="small" variant="text" onClick={() => { setKgkTopluSeciliId(anaSurum.id); setKgkTopluHatasi(""); setKgkTopluMesaji(""); }}>
                     Toplu devreye al
                   </Button>
-                : null}</TableCell>
+                : null}</Stack></TableCell>
             </TableRow>)}</TableBody>
           </Table>
+          {kgkBirlesikHata && <Alert severity="error" sx={{ mt: 1 }} onClose={() => setKgkBirlesikHata("")}>{kgkBirlesikHata}</Alert>}
+          {kgkBirlesikSonuc && <Alert severity="success" sx={{ mt: 1 }} onClose={() => setKgkBirlesikSonuc(null)}>
+            Birleşik taslak #{kgkBirlesikSonuc.id}: {kgkBirlesikSonuc.tabloSayisi} tablo, {kgkBirlesikSonuc.ortakKalemSayisi} ortak,
+            {" "}{kgkBirlesikSonuc.kapsamaOzelKalemSayisi} kapsama özel satır.
+            {kgkBirlesikSonuc.belirsizEslesmeSayisi > 0 && ` ${kgkBirlesikSonuc.belirsizEslesmeSayisi} belirsiz eşleşme inceleme gerektiriyor.`}
+            {" "}Bu kaynak taslağı rapor üretimini henüz değiştirmez.
+          </Alert>}
           {kgkTopluHatasi && <Alert severity="error" sx={{ mt: 1 }} onClose={() => setKgkTopluHatasi("")}>{kgkTopluHatasi}</Alert>}
           {kgkTopluMesaji && <Alert severity="success" sx={{ mt: 1 }} onClose={() => setKgkTopluMesaji("")}>{kgkTopluMesaji}</Alert>}
           {kgkAnaSurumler.filter((anaSurum) => anaSurum.id === kgkTopluSeciliId).map((anaSurum) => (

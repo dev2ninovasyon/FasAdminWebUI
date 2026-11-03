@@ -1103,6 +1103,29 @@ export type KgkAnaSurum = {
 export const getKgkAnaSurumler = (token: string) =>
   jsonGet<KgkAnaSurum[]>(token, "/Kgk/AnaSurumler");
 
+export type KgkBirlesikTaslakOzeti = {
+  id: number;
+  kgkAnaSurumId: number;
+  raporlamaStandardi: number;
+  tabloSayisi: number;
+  ortakKalemSayisi: number;
+  kapsamaOzelKalemSayisi: number;
+  belirsizEslesmeSayisi: number;
+};
+
+export const createKgkBirlesikTaslak = async (
+  token: string, anaSurumId: number, raporlamaStandardi: number
+): Promise<KgkBirlesikTaslakOzeti> => {
+  const response = await fetch(`${url}/FinansalTabloYonetimi/Kgk/AnaSurumler/${anaSurumId}/BirlesikTaslak`, {
+    method: "POST",
+    headers: { accept: "application/json", "Content-Type": "application/json", Authorization: `Bearer ${token}` },
+    body: JSON.stringify({ raporlamaStandardi }),
+  });
+  const payload = await response.json().catch(() => ({}));
+  if (!response.ok) throw new Error(payload?.message || "Birleşik KGK taslağı oluşturulamadı.");
+  return payload as KgkBirlesikTaslakOzeti;
+};
+
 export const activateKgkAnaSurum = async (
   token: string,
   anaSurumId: number,
