@@ -115,8 +115,46 @@ export const getFinansalTanimSetleri = (
   return jsonGet<FinansalTanimSeti[]>(token, `/TanimSetleri${suffix}`);
 };
 
-export const getFinansalSurumDetay = (token: string, surumId: number) =>
-  jsonGet<FinansalSurumDetay>(token, `/Surumler/${surumId}/Tanim`);
+// API enum alanlarını metin olarak döndürür ("Veri", "Satir"); formlar sayısal kod beklediği için
+// tanım yanıtı tek noktada sayısal koda çevrilir.
+const ENUM_KODLARI: Record<string, Record<string, number>> = {
+  kalemTuru: { Baslik: 1, Veri: 2, AraToplam: 3, Toplam: 4, Manuel: 5 },
+  eksen: { Satir: 1, Dikey: 2, Yatay: 3 },
+  hesaplamaTuru: { HesapFormulu: 1, SatirFormulu: 2, AltKalemToplami: 3, SabitDeger: 4, ManuelDeger: 5 },
+  isaretPolitikasi: { OlduguGibi: 1, MutlakDeger: 2, YalnizPozitif: 3, YalnizNegatif: 4, TersIsaret: 5 },
+  bosDegerPolitikasi: { SifirKabulEt: 1, Uyari: 2, Hata: 3 },
+  kaynakTuru: { HesapKodu: 1, HesapKoduOneki: 2, Kalem: 3, OncekiUretimDegeri: 4, SistemParametresi: 5, Sabit: 6 },
+  operator: { Topla: 1, Cikar: 2 },
+  degerAlani: {
+    Bakiye: 1, Borc: 2, Alacak: 3, RaporBorc: 4, RaporAlacak: 5, KontrolBakiye: 6, BakiyeTransferFisiHaric: 7,
+    RaporBorcTransferFisiHaric: 8, RaporAlacakTransferFisiHaric: 9, KontrolBakiyeTransferFisiHaric: 10,
+  },
+  donemDavranisi: { CariDonem: 1, OncekiDonem: 2, Acilis: 3, Degisim: 4, Ozel: 5 },
+  hesaplamaSekli: { Deger: 1, DonemFarki: 2 },
+  farkYonu: { KaynakEksiKarsilastirma: 1, KarsilastirmaEksiKaynak: 2 },
+  seviye: { Bilgi: 1, Uyari: 2, Hata: 3 },
+  taraf: { Sol: 1, Sag: 2 },
+  kapsam: { Munferit: 1, Konsolide: 2 },
+  donusumTipi: { Normal: 1, EnflasyonDuzeltilmis: 2 },
+};
+const ENUM_ESLERI: Record<string, string> = {
+  karsilastirmaDegerAlani: "degerAlani", karsilastirmaDonemDavranisi: "donemDavranisi",
+  karsilastirmaIsaretPolitikasi: "isaretPolitikasi", sonucIsaretPolitikasi: "isaretPolitikasi",
+  katsayiKaynakTuru: "kaynakTuru", katsayiDonemDavranisi: "donemDavranisi",
+};
+
+const enumlariSayiyaCevir = <T>(deger: T): T => {
+  if (Array.isArray(deger)) return deger.map(enumlariSayiyaCevir) as T;
+  if (!deger || typeof deger !== "object") return deger;
+  return Object.fromEntries(Object.entries(deger).map(([alan, icerik]) => {
+    const kodlar = ENUM_KODLARI[ENUM_ESLERI[alan] ?? alan];
+    if (kodlar && typeof icerik === "string" && icerik in kodlar) return [alan, kodlar[icerik]];
+    return [alan, enumlariSayiyaCevir(icerik)];
+  })) as T;
+};
+
+export const getFinansalSurumDetay = async (token: string, surumId: number) =>
+  enumlariSayiyaCevir(await jsonGet<FinansalSurumDetay>(token, `/Surumler/${surumId}/Tanim`));
 
 export const getFinansalTabloTabloRevizyonlari = (token: string, surumId: number) =>
   jsonGet<FinansalTabloTabloRevizyonu[]>(token, `/Surumler/${surumId}/TabloRevizyonlari`);
@@ -1194,7 +1232,7 @@ export const getKgkBirlesikSonFormulSurumu = async (
   if (response.status === 404) return null;
   const payload = await response.json().catch(() => ({}));
   if (!response.ok) throw new Error(payload?.message || "Formül sürümü okunamadı.");
-  return payload as KgkBirlesikFormulSurumu;
+  return enumlariSayiyaCevir(payload as KgkBirlesikFormulSurumu);
 };
 
 export const saveKgkBirlesikFormulVaryanti = async (
