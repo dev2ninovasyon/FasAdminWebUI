@@ -39,7 +39,7 @@ import PageContainer from "@/app/components/Container/PageContainer";
 import Breadcrumb from "@/app/components/Layout/Shared/Breadcrumb/Breadcrumb";
 import ParentCard from "@/app/components/Shared/ParentCard";
 import { IconTrash } from "@tabler/icons-react";
-import KalemFormulTablosu, { KALEM_TURLERI } from "./KalemFormulTablosu";
+import KalemFormulTablosu, { KALEM_TURLERI, hucreAdi } from "./KalemFormulTablosu";
 import { EXCEL } from "./excelStili";
 import FormulCekmecesi from "./FormulCekmecesi";
 import { useSelector } from "@/store/hooks";
@@ -125,6 +125,8 @@ import {
 } from "@/api/FinansalTabloYonetimi/TestMizan";
 
 const FORMUL_CEKMECESI_GENISLIGI = 480;
+// Sistem tek tip (Normal) tanım setiyle çalışır; set adındaki "Normal" eki gösterilmez.
+const tanimSetiAdi = (ad?: string | null) => (ad ?? "").replace(/\s+Normal$/u, "");
 
 const sayi = (value?: number) =>
   new Intl.NumberFormat("tr-TR").format(value ?? 0);
@@ -310,7 +312,6 @@ const Page = ({ editorSurumId }: PageProps) => {
   const [tanimFiltresi, setTanimFiltresi] = useState({
     raporlamaStandardi: 0,
     kapsam: 0,
-    donusumTipi: 0,
     aktifMi: true,
   });
   const [secilenSetId, setSecilenSetId] = useState(0);
@@ -449,7 +450,6 @@ const Page = ({ editorSurumId }: PageProps) => {
     getFinansalTanimSetleri(user.token, duzenleyiciSayfasi ? {} : {
       raporlamaStandardi: tanimFiltresi.raporlamaStandardi || undefined,
       kapsam: tanimFiltresi.kapsam || undefined,
-      donusumTipi: tanimFiltresi.donusumTipi || undefined,
       aktifMi: tanimFiltresi.aktifMi,
     })
       .then((data) => {
@@ -2180,7 +2180,7 @@ const Page = ({ editorSurumId }: PageProps) => {
                 size="small"
                 variant="outlined"
                 color={akilliYonlendirme.seviye}
-                label={secilenSurum ? `${secilenSet?.ad} · ${seciliSurumYayindaMi ? "Yayında" : "Taslak"}` : "Tanım bekleniyor"}
+                label={secilenSurum ? `${tanimSetiAdi(secilenSet?.ad)} · ${seciliSurumYayindaMi ? "Yayında" : "Taslak"}` : "Tanım bekleniyor"}
               />
             </Stack>
             <Typography variant="body2" color="text.secondary" sx={{ mt: 0.5 }}>
@@ -2221,7 +2221,7 @@ const Page = ({ editorSurumId }: PageProps) => {
               <FormControl fullWidth size="small">
                 <InputLabel>Hedef tanım seti</InputLabel>
                 <Select label="Hedef tanım seti" value={secilenSet ? secilenSetId : ""} onChange={(event) => tanimSetiSec(Number(event.target.value))}>
-                  {tanimSetleri.map((set) => <MenuItem key={set.id} value={set.id}>{set.kod} — {set.ad}</MenuItem>)}
+                  {tanimSetleri.map((set) => <MenuItem key={set.id} value={set.id}>{tanimSetiAdi(set.ad)}</MenuItem>)}
                 </Select>
               </FormControl>
             </Grid>
@@ -3102,7 +3102,7 @@ const Page = ({ editorSurumId }: PageProps) => {
             </AccordionSummary>
             <AccordionDetails>
           <Grid container spacing={1.5}>
-            <Grid item xs={12} sm={6} md={3}>
+            <Grid item xs={12} sm={4}>
               <FormControl fullWidth size="small">
                 <InputLabel>Raporlama standardı</InputLabel>
                 <Select label="Raporlama standardı" value={tanimFiltresi.raporlamaStandardi} onChange={(event) => setTanimFiltresi((onceki) => ({ ...onceki, raporlamaStandardi: Number(event.target.value) }))}>
@@ -3110,7 +3110,7 @@ const Page = ({ editorSurumId }: PageProps) => {
                 </Select>
               </FormControl>
             </Grid>
-            <Grid item xs={12} sm={6} md={3}>
+            <Grid item xs={12} sm={4}>
               <FormControl fullWidth size="small">
                 <InputLabel>Kapsam</InputLabel>
                 <Select label="Kapsam" value={tanimFiltresi.kapsam} onChange={(event) => setTanimFiltresi((onceki) => ({ ...onceki, kapsam: Number(event.target.value) }))}>
@@ -3118,15 +3118,7 @@ const Page = ({ editorSurumId }: PageProps) => {
                 </Select>
               </FormControl>
             </Grid>
-            <Grid item xs={12} sm={6} md={3}>
-              <FormControl fullWidth size="small">
-                <InputLabel>Dönüşüm tipi</InputLabel>
-                <Select label="Dönüşüm tipi" value={tanimFiltresi.donusumTipi} onChange={(event) => setTanimFiltresi((onceki) => ({ ...onceki, donusumTipi: Number(event.target.value) }))}>
-                  <MenuItem value={0}>Tümü</MenuItem><MenuItem value={1}>Normal</MenuItem><MenuItem value={2}>Enflasyon düzeltilmiş</MenuItem>
-                </Select>
-              </FormControl>
-            </Grid>
-            <Grid item xs={12} sm={6} md={3}>
+            <Grid item xs={12} sm={4}>
               <FormControl fullWidth size="small">
                 <InputLabel>Durum</InputLabel>
                 <Select label="Durum" value={tanimFiltresi.aktifMi ? 1 : 0} onChange={(event) => setTanimFiltresi((onceki) => ({ ...onceki, aktifMi: Number(event.target.value) === 1 }))}>
@@ -3146,7 +3138,7 @@ const Page = ({ editorSurumId }: PageProps) => {
                 <FormControl fullWidth size="small">
                   <InputLabel>Tanım seti</InputLabel>
                   <Select label="Tanım seti" value={secilenSet ? secilenSetId : ""} onChange={(event) => tanimSetiSec(Number(event.target.value))}>
-                    {tanimSetleri.map((set) => <MenuItem key={set.id} value={set.id}>{set.kod} — {set.ad}</MenuItem>)}
+                    {tanimSetleri.map((set) => <MenuItem key={set.id} value={set.id}>{tanimSetiAdi(set.ad)}</MenuItem>)}
                   </Select>
                 </FormControl>
               </Grid>
@@ -3347,7 +3339,7 @@ const Page = ({ editorSurumId }: PageProps) => {
                     <KalemFormulTablosu tablo={secilenKalemTablosu} seciliKalemId={panelKalemId} seciliKuralId={duzenlenenKuralId}
                       onKalemSec={panelKalemSec} onHucreKuraliSec={panelHucreKuraliSec} />
                     <FormulCekmecesi acik={formulCekmecesiAcik} genislik={FORMUL_CEKMECESI_GENISLIGI} onKapat={paneliKapat}
-                      baslik={panelKalem?.ad ?? "Özkaynak hücresi"}
+                      baslik={panelKalem?.ad ?? hucreAdi(secilenKalemTablosu, duzenlenenKural?.hucreId)}
                       altBaslik={<>
                         {panelKalem ? `${KALEM_TURLERI[panelKalem.kalemTuru] || "Tür yok"} · sıra ${panelKalem.sira}` : "Hücre formülü"}
                         {duzenlenenKural ? ` · Kural #${duzenlenenKural.id}` : yeniKuralAcik ? " · yeni formül" : ""}

@@ -424,7 +424,10 @@ test("admin girişinden güvenli doğrulama ve sürüm aktivasyonuna kadar çal�
 
   await page.goto("/FinansalTabloYonetimi");
   await expect(page.getByText("Finansal tablo hazırlama", { exact: true })).toBeVisible();
-  await expect(page.getByText("BOBİ FRS Münferit Normal", { exact: false }).first()).toBeVisible();
+  // Sistem tek tip (Normal) çalışır: set adında "Normal" eki ve dönüşüm tipi filtresi gösterilmez.
+  await expect(page.getByText("BOBİ FRS Münferit", { exact: false }).first()).toBeVisible();
+  await expect(page.getByText("BOBİ FRS Münferit Normal", { exact: false })).toHaveCount(0);
+  await expect(page.getByText("Dönüşüm tipi", { exact: true })).toHaveCount(0);
   expect(definitionAuthorization).toBe("Bearer e2e-access-token");
 
   await page.getByRole("button", { name: "Formülleri düzenle" }).click();
@@ -432,7 +435,9 @@ test("admin girişinden güvenli doğrulama ve sürüm aktivasyonuna kadar çal�
 
   const kalemTablosu = page.getByRole("table").filter({ has: page.getByRole("columnheader", { name: "Formül" }) });
   await expect(kalemTablosu.getByRole("row", { name: /Toplam varlıklar\s*Toplam/ })).toBeVisible();
-  await expect(kalemTablosu.getByRole("row", { name: /Ticari alacaklar\s*Veri/ })).toBeVisible();
+  // Kuralı olmayan veri satırı eksik olarak işaretlenir.
+  await expect(kalemTablosu.getByRole("row", { name: /Ticari alacaklar\s*Formül eksik/ })).toBeVisible();
+  await expect(page.getByRole("button", { name: "Eksik formüller (1)" })).toBeVisible();
   await expect(kalemTablosu.getByText("NAKIT + TICARI_ALACAKLAR", { exact: true })).toBeVisible();
   await kalemTablosu.getByRole("row", { name: /Toplam varlıklar/ }).click();
   await expect(page.getByText("Kural #201", { exact: false })).toBeVisible();
