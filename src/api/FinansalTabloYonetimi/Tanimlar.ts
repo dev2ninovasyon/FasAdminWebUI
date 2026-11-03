@@ -907,6 +907,24 @@ export type KgkFormatKontrolSonucu = {
   }>;
 };
 
+export type KgkArsivKalemi = {
+  sabitAnahtar: string;
+  sayfaAdi: string;
+  satirNo: number;
+  ad: string;
+  girinti: number;
+  ustSabitAnahtar?: string | null;
+  kalemTuru: string;
+  etiketKolonu: string;
+};
+
+export const getKgkArsivKalemleri = (token: string, dosyaUrl: string, sha256: string) => {
+  const query = new URLSearchParams({ url: dosyaUrl, sha256 });
+  return jsonGet<{ dosyaAdi: string; sha256: string; kalemSayisi: number; kalemler: KgkArsivKalemi[] }>(
+    token, `/Kgk/ArsivKalemleri?${query}`
+  );
+};
+
 export type KgkKaynakDonemi = {
   kod: string;
   ad: string;
