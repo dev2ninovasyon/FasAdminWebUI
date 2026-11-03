@@ -24,8 +24,10 @@ const istek = async <T>(token: string, yol: string, init?: RequestInit): Promise
   return veri as T;
 };
 
-export const nakitAkisSatirlariniGetir = (token: string) =>
-  istek<NakitAkisSatiri[]>(token, "NakitAkisSatirlari");
+export const nakitAkisSatirlariniGetir = (
+  token: string, denetlenenId: number, yil: number, konsolidasyonMu: boolean
+) => istek<NakitAkisSatiri[]>(token,
+  `NakitAkisSatirlari?denetlenenId=${denetlenenId}&yil=${yil}&konsolidasyonMu=${konsolidasyonMu}`);
 
 export const nakitAkisManuelDegerleriniGetir = (
   token: string, denetlenenId: number, yil: number, konsolidasyonMu: boolean
