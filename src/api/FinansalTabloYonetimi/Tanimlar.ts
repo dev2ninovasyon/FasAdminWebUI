@@ -1158,6 +1158,7 @@ export type KgkBirlesikTaslakDetay = {
 export type KgkBirlesikFormulVaryanti = {
   tabloAdi: string;
   eslesmeAnahtari: string;
+  yataySutunAnahtari: string | null;
   kapsam: number;
   donusumTipi: number;
   hamFormul: string | null;
