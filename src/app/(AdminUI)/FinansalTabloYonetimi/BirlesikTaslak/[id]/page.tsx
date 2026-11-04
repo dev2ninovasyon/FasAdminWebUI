@@ -216,6 +216,7 @@ export default function BirlesikTaslakSayfasi() {
     if (olay.key === "Enter" && (olay.ctrlKey || olay.metaKey)) { olay.preventDefault(); void kaydet(); }
   };
 
+
   const formulHucresi = (satir: KgkAgacSatiri, sutun: KgkMatrisSutunu | null, kapsam: number) => {
     const sutunAnahtari = sutun?.sabitAnahtar ?? null;
     const kaynakSatir = kapsamKaynagi(satir, kapsam);
@@ -330,7 +331,7 @@ export default function BirlesikTaslakSayfasi() {
         </Alert>}
         {kgkAdaylari && kgkAdaylari.toplam > 0 && <Alert severity="info" sx={{ py: 0 }}>
           KGK Excel toplamları: {kgkAdaylari.toplam} hücre; {kgkAdaylari.eklenecek} formül incelenmeyi bekliyor.
-          Mevcut yönetici formülleri korunur. Özkaynak tablosunda mavi KGK hücresini açarak öneriyi görebilirsiniz.
+          Önce toplamların dayandığı giriş hücrelerine formül girin. Özkaynak tablosunda mavi KGK hücresini açarak öneriyi görebilirsiniz.
         </Alert>}
         <Stack direction={{ xs: "column", md: "row" }} spacing={1} alignItems={{ md: "center" }} justifyContent="space-between">
           <Typography variant="body2" color="text.secondary">
