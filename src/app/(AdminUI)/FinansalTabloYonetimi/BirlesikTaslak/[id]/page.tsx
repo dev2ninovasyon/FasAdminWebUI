@@ -57,8 +57,10 @@ const ozkaynakAdayDurumu = {
 const tabloEtiketi = (tablo: KgkBirlesikTaslakDetay["icerik"]["tablolar"][number]) =>
   (tablo.munferit?.baslik || tablo.konsolide?.baslik || tablo.ad).replace(/\s*\((Münferit|Konsolide)\)\s*/gi, " ").trim();
 const kapsamKaynagi = (satir: KgkAgacSatiri, kapsam: number) => kapsam === 1 ? satir.munferit : satir.konsolide;
-const kullanilabilir = (satir: KgkAgacSatiri, kapsam: number) => satir.kalem.durum !== "Belirsiz" &&
-  (kapsam === 1 ? satir.kalem.munferitMi : satir.kalem.konsolideMi);
+const kullanilabilir = (satir: KgkAgacSatiri, kapsam: number) => {
+  const kaynaklar = kapsam === 1 ? satir.kalem.munferitKaynaklari : satir.kalem.konsolideKaynaklari;
+  return satir.kalem.durum !== "Belirsiz" && kaynaklar?.length === 1 && kaynaklar[0].kalemTuru !== "Baslik";
+};
 
 export default function BirlesikTaslakSayfasi() {
   const params = useParams<{ id: string }>();
@@ -384,7 +386,7 @@ export default function BirlesikTaslakSayfasi() {
     return <TableCell key={anahtar} onClick={ac} tabIndex={acik ? 0 : -1} role={acik ? "button" : undefined}
       aria-label={`${satir.ad} ${sutun ? sutun.ad : KAPSAM[kapsam]}`}
       onKeyDown={(e) => { if (e.key === "Enter") ac(); }}
-      title={!acik ? (!maskeUygun ? "Bu kesişim KGK Excel'inde kullanılmıyor." : satir.kalem.durum === "Belirsiz" ? "Belirsiz eşleşme; formül atanamaz." : `Bu satır ${KAPSAM[kapsam].toLocaleLowerCase("tr-TR")} tabloda yok.`)
+      title={!acik ? (!maskeUygun ? "Bu kesişim KGK Excel'inde kullanılmıyor." : kaynakSatir?.kalemTuru === "Baslik" ? "KGK başlık satırına formül atanamaz." : satir.kalem.durum === "Belirsiz" ? "Belirsiz eşleşme; formül atanamaz." : `Bu satır ${KAPSAM[kapsam].toLocaleLowerCase("tr-TR")} tabloda yok veya tekil değil.`)
         : sonuc?.hata || kayit?.hamFormul || aday?.varyant.hamFormul || kayit?.dipnot || "Formül eklemek için tıklayın"}
       sx={{
         minWidth: sutun ? 120 : 260, maxWidth: sutun ? 180 : 420, py: 0.25, px: 0.75, cursor: acik ? "cell" : "not-allowed", position: "relative",
@@ -510,8 +512,9 @@ export default function BirlesikTaslakSayfasi() {
           <Typography variant="caption" color="text.secondary">Bu işlem tabloları yayımlamaz.</Typography>
         </Stack>}
         {kgkAdaylari && kgkAdaylari.toplam > 0 && <Alert severity="info" sx={{ py: 0 }}>
-          KGK Excel toplamları: {kgkAdaylari.toplam} hücre; {kgkAdaylari.eklenecek} formül incelenmeyi bekliyor.
-          Önce toplamların dayandığı giriş hücrelerine formül girin. Özkaynak tablosunda mavi KGK hücresini açarak öneriyi görebilirsiniz.
+          KGK Excel toplamları: {kgkAdaylari.toplam} hücre; {kgkAdaylari.adaylar.filter((x) => x.durum === "Eklenecek" && !x.aciklama).length} şu anda derlenebilir,
+          {" "}{kgkAdaylari.adaylar.filter((x) => x.durum === "Eklenecek" && x.aciklama).length} alt hücre formülü bekliyor.
+          Özkaynak tablosunda KGK hücresini açarak öneriyi inceleyin.
         </Alert>}
         <Stack direction={{ xs: "column", md: "row" }} spacing={1} alignItems={{ md: "center" }} justifyContent="space-between">
           <Typography variant="body2" color="text.secondary">
@@ -713,7 +716,7 @@ export default function BirlesikTaslakSayfasi() {
               {seciliAday.varyant.hamFormul}
             </Typography>
             {seciliAday.durum === "Eklenecek" && <Typography variant="caption" sx={{ display: "block" }}>
-              {seciliAday.aciklama || "Alt hücreleri tamamladıktan sonra toplamı önizlemede kontrol edin."}
+              {seciliAday.aciklama || "Formül derlenebilir; kaydetmeden önce önizleme ve mizan tutarını kontrol edin."}
             </Typography>}
             {eksikBagimlilik && <Button size="small" onClick={() => {
               if (sec(eksikBagimlilik.hucre)) {
