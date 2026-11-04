@@ -525,7 +525,7 @@ export default function BirlesikTaslakSayfasi() {
           {kapsamKaynagi(seciliSatir, secili.kapsam) ? ` · Excel satırı ${kapsamKaynagi(seciliSatir, secili.kapsam)!.satirNo}` : ""}
         </> : null}>
         {secili && seciliSatir && <Stack spacing={1.5}>
-          {seciliAday && <Alert severity={seciliAday.durum === "YoneticiFormuluVar" ? "warning" : "info"} sx={{ py: 0 }}>
+          {seciliAday && <Alert severity={seciliAday.aciklama ? "warning" : "info"} sx={{ py: 0 }}>
             <Typography variant="caption" sx={{ display: "block", fontWeight: 700 }}>
               KGK Excel {seciliAday.hucreAdresi} · {seciliAday.durum === "Eklenecek" ? "Excel toplam formülü" :
                 seciliAday.durum === "Ayni" ? "mevcut formülle aynı" : "yönetici formülü farklı"}
@@ -534,8 +534,10 @@ export default function BirlesikTaslakSayfasi() {
               {seciliAday.varyant.hamFormul}
             </Typography>
             {seciliAday.durum === "Eklenecek" && <Typography variant="caption" sx={{ display: "block" }}>
-              Alt hücrelerin formülleri eksikse bu toplam hesaplanmaz. Kaydettikten sonra önizleme sonucunu kontrol edin.
+              {seciliAday.aciklama || "Alt hücreleri tamamladıktan sonra toplamı önizlemede kontrol edin."}
             </Typography>}
+            {seciliAday.durum === "YoneticiFormuluVar" && seciliAday.aciklama &&
+              <Typography variant="caption" sx={{ display: "block" }}>{seciliAday.aciklama}</Typography>}
             {seciliAday.durum !== "Ayni" && <Button size="small" onClick={() => setForm((x) => ({
               ...x, formul: seciliAday.varyant.hamFormul ?? "", kaynak: seciliAday.varyant.kaynak ?? "",
             }))}>KGK formülünü düzenleyiciye al</Button>}
