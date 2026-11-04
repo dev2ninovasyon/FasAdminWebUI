@@ -48,6 +48,7 @@ const ozkaynakAdayDurumu = {
   EskiAdresCoklu: "Eski adreste birden fazla kayıt var",
   OzelFormulIncelenmeli: "Özel * formülü elle incelenmeli",
   EskiFormulIncelenmeli: "Eski formül otomatik çevrilemedi",
+  KontrolBakiyesiAdayi: "* hesabı kontrol bakiyesi olarak çevrildi; tutarı mizanda doğrulayın",
   YinelenenBakiyeFormuluIncelenmeli: "Aynı bakiye formülü sonraki satırda yinelenmiş; hareket tutarını elle doğrulayın",
 };
 // Tablo anahtarı invariant büyük harftir ("FINANSAL"); okunur ad KGK dosya başlığından alınır.
@@ -627,7 +628,8 @@ export default function BirlesikTaslakSayfasi() {
             }))}>Eski formülü düzenleyiciye al</Button> :
               <Typography variant="caption">Bu kayıt otomatik formüle çevrilemez.</Typography>}
           </Alert>}
-          {seciliOzkaynakAdayi && <Alert severity={seciliOzkaynakAdayi.varyant ? "info" : "warning"} sx={{ py: 0 }}>
+          {seciliOzkaynakAdayi && <Alert severity={seciliOzkaynakAdayi.varyant &&
+            seciliOzkaynakAdayi.durum !== "KontrolBakiyesiAdayi" ? "info" : "warning"} sx={{ py: 0 }}>
             <Typography variant="caption" sx={{ display: "block", fontWeight: 700 }}>
               Eski özkaynak kaydı {seciliOzkaynakAdayi.eskiKayitId ? `#${seciliOzkaynakAdayi.eskiKayitId}` : "birden fazla"}
               {` · KGK ${seciliOzkaynakAdayi.hucreAdresi} · ${ozkaynakAdayDurumu[seciliOzkaynakAdayi.durum]}`}
