@@ -527,12 +527,15 @@ export default function BirlesikTaslakSayfasi() {
         {secili && seciliSatir && <Stack spacing={1.5}>
           {seciliAday && <Alert severity={seciliAday.durum === "YoneticiFormuluVar" ? "warning" : "info"} sx={{ py: 0 }}>
             <Typography variant="caption" sx={{ display: "block", fontWeight: 700 }}>
-              KGK Excel {seciliAday.hucreAdresi} · {seciliAday.durum === "Eklenecek" ? "önerilen toplam" :
+              KGK Excel {seciliAday.hucreAdresi} · {seciliAday.durum === "Eklenecek" ? "Excel toplam formülü" :
                 seciliAday.durum === "Ayni" ? "mevcut formülle aynı" : "yönetici formülü farklı"}
             </Typography>
             <Typography variant="body2" sx={{ fontFamily: "Consolas, monospace", overflowWrap: "anywhere" }}>
               {seciliAday.varyant.hamFormul}
             </Typography>
+            {seciliAday.durum === "Eklenecek" && <Typography variant="caption" sx={{ display: "block" }}>
+              Alt hücrelerin formülleri eksikse bu toplam hesaplanmaz. Kaydettikten sonra önizleme sonucunu kontrol edin.
+            </Typography>}
             {seciliAday.durum !== "Ayni" && <Button size="small" onClick={() => setForm((x) => ({
               ...x, formul: seciliAday.varyant.hamFormul ?? "", kaynak: seciliAday.varyant.kaynak ?? "",
             }))}>KGK formülünü düzenleyiciye al</Button>}
@@ -541,6 +544,7 @@ export default function BirlesikTaslakSayfasi() {
             <Typography variant="caption" sx={{ display: "block", fontWeight: 700 }}>
               Eski formül kaydı {seciliEskiAday.eskiKayitId ? `#${seciliEskiAday.eskiKayitId}` : "birden fazla"}
               {seciliEskiAday.durum === "AdFarkli" ? " · kalem adları farklı, inceleyin" : ""}
+              {seciliEskiAday.durum === "AdFarkliIncelenmeli" ? " · TFRS kalem adı farklı; bu formül önerilmiyor" : ""}
               {seciliEskiAday.durum === "KontrolBakiyesiAdayi" ? " · * hesabı kontrol bakiyesi olarak önerildi; tutarı doğrulayın" : ""}
             </Typography>
             {seciliEskiAday.eskiKalemAdi && seciliEskiAday.eskiKalemAdi !== seciliEskiAday.kgkKalemAdi &&
