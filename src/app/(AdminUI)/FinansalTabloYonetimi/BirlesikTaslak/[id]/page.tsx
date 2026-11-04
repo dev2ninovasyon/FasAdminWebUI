@@ -158,6 +158,24 @@ export default function BirlesikTaslakSayfasi() {
   const seciliSonuc = secili ? sonuclar.get(hucreAnahtari(secili.satir, secili.sutun, secili.kapsam, NORMAL)) : undefined;
   const seciliAday = secili ? adaylar.get(hucreAnahtari(secili.satir, secili.sutun, secili.kapsam, NORMAL)) : undefined;
   const seciliEskiAday = secili && !secili.sutun ? eskiAdaylar.get(hucreAnahtari(secili.satir, null, secili.kapsam, NORMAL)) : undefined;
+  const eksikBagimlilik = useMemo(() => {
+    if (!secili || !seciliSatir || !tablo || !seciliAday?.aciklama) return null;
+    const adres = /\b([A-Z]{1,3})(\d+) hücresinin çalışır formülü yok\./u.exec(seciliAday.aciklama);
+    if (!adres) return null;
+    const kaynak = secili.kapsam === 1 ? tablo.munferit : tablo.konsolide;
+    const sayfa = kapsamKaynagi(seciliSatir, secili.kapsam)?.sayfaAdi;
+    const satirNo = Number(adres[2]);
+    const hedefSatir = tablo.kalemler.find((kalem) =>
+      (secili.kapsam === 1 ? kalem.munferitKaynaklari : kalem.konsolideKaynaklari)
+        ?.some((x) => x.sayfaAdi === sayfa && x.satirNo === satirNo));
+    const hedefSutun = kaynak.sutunlar?.find((x) => x.sayfaAdi === sayfa && x.sutun === adres[1] &&
+      x.ilkSutunNo === x.sonSutunNo && !kaynak.sutunlar?.some((alt) => alt.ustSabitAnahtar === x.sabitAnahtar));
+    if (!sayfa || !hedefSatir || hedefSatir.durum === "Belirsiz" || !hedefSutun ||
+      !kaynak.matrisHucreleri?.some((x) => x.sayfaAdi === sayfa && x.satirNo === satirNo && x.sutun === adres[1]))
+      return null;
+    return { hucre: { satir: hedefSatir.eslesmeAnahtari, sutun: hedefSutun.sabitAnahtar,
+      kapsam: secili.kapsam }, ad: hedefSatir.munferitKaynaklari?.[0]?.ad || hedefSatir.konsolideKaynaklari?.[0]?.ad || "Eksik hücre" };
+  }, [secili, seciliSatir, seciliAday, tablo]);
   const eskiKayit = secili ? karsilastirma?.varyantlar.find((x) => x.tabloAdi === tabloAdi &&
     x.eslesmeAnahtari === secili.satir && x.yataySutunAnahtari === secili.sutun &&
     x.kapsam === secili.kapsam && x.donusumTipi === NORMAL) : undefined;
@@ -178,10 +196,11 @@ export default function BirlesikTaslakSayfasi() {
   useEffect(() => { void denetle(degerMizani); }, [denetle, degerMizani]);
 
   const sec = (hucre: Hucre) => {
-    if (degisti && !window.confirm("Kaydedilmemiş formül değişikliği var. Vazgeçilsin mi?")) return;
+    if (degisti && !window.confirm("Kaydedilmemiş formül değişikliği var. Vazgeçilsin mi?")) return false;
     const kayit = varyantlar.get(hucreAnahtari(hucre.satir, hucre.sutun, hucre.kapsam, NORMAL));
     const yeni = { formul: kayit?.hamFormul ?? "", dipnot: kayit?.dipnot ?? "", kaynak: kayit?.kaynak ?? "" };
     setSecili(hucre); setForm(yeni); setKayitliForm(yeni); setAciklama(""); setMesaj("");
+    return true;
   };
 
   const kapat = () => {
@@ -546,6 +565,12 @@ export default function BirlesikTaslakSayfasi() {
             {seciliAday.durum === "Eklenecek" && <Typography variant="caption" sx={{ display: "block" }}>
               {seciliAday.aciklama || "Alt hücreleri tamamladıktan sonra toplamı önizlemede kontrol edin."}
             </Typography>}
+            {eksikBagimlilik && <Button size="small" onClick={() => {
+              if (sec(eksikBagimlilik.hucre)) {
+                setMatrisKapsam(eksikBagimlilik.hucre.kapsam);
+                setArama(eksikBagimlilik.ad);
+              }
+            }}>Eksik hücreye git ({eksikBagimlilik.ad})</Button>}
             {seciliAday.durum === "YoneticiFormuluVar" && seciliAday.aciklama &&
               <Typography variant="caption" sx={{ display: "block" }}>{seciliAday.aciklama}</Typography>}
             {seciliAday.durum !== "Ayni" && <Button size="small" onClick={() => setForm((x) => ({
