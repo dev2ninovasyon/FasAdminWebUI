@@ -1249,7 +1249,7 @@ export type KgkEskiOzkaynakFormulAdaylari = {
     tabloAdi: string; eslesmeAnahtari: string; kapsam: number; yataySutunAnahtari: string;
     hucreAdresi: string; eskiKayitId: number | null; eskiSatirAdi: string | null;
     eskiSutunAdi: string | null; hamEskiFormul: string | null;
-    durum: "AdAyni" | "AdFarkliIncelenmeli" | "EskiAdresCoklu" | "OzelFormulIncelenmeli" | "EskiFormulIncelenmeli";
+    durum: "AdAyni" | "AdFarkliIncelenmeli" | "EskiAdresCoklu" | "OzelFormulIncelenmeli" | "EskiFormulIncelenmeli" | "YinelenenBakiyeFormuluIncelenmeli";
     varyant: KgkBirlesikFormulVaryanti | null;
   }>;
 };

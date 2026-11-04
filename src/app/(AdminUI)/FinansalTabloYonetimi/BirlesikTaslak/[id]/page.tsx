@@ -48,6 +48,7 @@ const ozkaynakAdayDurumu = {
   EskiAdresCoklu: "Eski adreste birden fazla kayıt var",
   OzelFormulIncelenmeli: "Özel * formülü elle incelenmeli",
   EskiFormulIncelenmeli: "Eski formül otomatik çevrilemedi",
+  YinelenenBakiyeFormuluIncelenmeli: "Aynı bakiye formülü sonraki satırda yinelenmiş; hareket tutarını elle doğrulayın",
 };
 // Tablo anahtarı invariant büyük harftir ("FINANSAL"); okunur ad KGK dosya başlığından alınır.
 const tabloEtiketi = (tablo: KgkBirlesikTaslakDetay["icerik"]["tablolar"][number]) =>
