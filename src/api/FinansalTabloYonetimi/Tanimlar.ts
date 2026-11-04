@@ -1195,7 +1195,8 @@ export type KgkMatrisSutunu = {
   sonSutunNo: number;
 };
 
-export type KgkBirlesikKaynak = { baslik?: string | null; sutunlar?: KgkMatrisSutunu[] | null };
+export type KgkMatrisHucresi = { sayfaAdi: string; satirNo: number; sutun: string; excelFormuluMu: boolean; hamFormul: string | null };
+export type KgkBirlesikKaynak = { baslik?: string | null; sutunlar?: KgkMatrisSutunu[] | null; matrisHucreleri?: KgkMatrisHucresi[] | null };
 
 export type KgkBirlesikTaslakDetay = {
   ozet: KgkBirlesikTaslakOzeti;
@@ -1216,6 +1217,16 @@ export type KgkBirlesikFormulVaryanti = {
   hesaplamaKurali: null;
   kaynak: string | null;
 };
+
+export type KgkExcelFormulAdaylari = {
+  taslakId: number; formulSurumNo: number; toplam: number; eklenecek: number;
+  mevcutAyni: number; yoneticiFormuluVar: number;
+  adaylar: Array<{ varyant: KgkBirlesikFormulVaryanti; hucreAdresi: string; durum: string; aciklama: string | null }>;
+};
+
+export const getKgkExcelFormulAdaylari = async (token: string, id: number) =>
+  enumlariSayiyaCevir(await jsonGet<KgkExcelFormulAdaylari>(token,
+    `/Kgk/BirlesikTaslaklar/${id}/KgkExcelFormulAdaylari`));
 
 export type KgkBirlesikFormulSurumu = {
   id: number;
