@@ -17,9 +17,9 @@ import ParentCard from "@/app/components/Shared/ParentCard";
 import { useSelector } from "@/store/hooks";
 import { AppState } from "@/store/store";
 import {
-  getKgkBirlesikTaslak, getKgkBirlesikFormulSurumleri, getKgkBirlesikSonFormulSurumu, previewKgkBirlesikFormulSurumu,
+  getKgkBirlesikTaslak, getKgkBirlesikFormulSurumleri, getKgkBirlesikSonFormulSurumu, getKgkBirlesikFormulHazirligi, previewKgkBirlesikFormulSurumu,
   saveKgkBirlesikFormulVaryanti, KgkBirlesikTaslakDetay, KgkBirlesikFormulSurumu, KgkBirlesikFormulVaryanti,
-  KgkBirlesikOnizlemeHucresi, KgkBirlesikOnizlemeSonucu, KgkMatrisSutunu,
+  KgkBirlesikFormulHazirligi, KgkBirlesikOnizlemeHucresi, KgkBirlesikOnizlemeSonucu, KgkMatrisSutunu,
 } from "@/api/FinansalTabloYonetimi/Tanimlar";
 import { getFinansalTabloTestMizanlari, FinansalTabloTestMizan } from "@/api/FinansalTabloYonetimi/TestMizan";
 import { KgkAgacSatiri, gorunurSatirlar, kgkAgaciOlustur, sutunBasliklari } from "./kgkAgaci";
@@ -55,6 +55,7 @@ export default function BirlesikTaslakSayfasi() {
   const token = useSelector((state: AppState) => state.userReducer.token);
   const [taslak, setTaslak] = useState<KgkBirlesikTaslakDetay | null>(null);
   const [son, setSon] = useState<KgkBirlesikFormulSurumu | null>(null);
+  const [hazirlik, setHazirlik] = useState<KgkBirlesikFormulHazirligi | null>(null);
   const [gecmis, setGecmis] = useState<Gecmis[]>([]);
   const [testMizanlari, setTestMizanlari] = useState<FinansalTabloTestMizan[]>([]);
   const [tabloAdi, setTabloAdi] = useState("");
@@ -80,13 +81,15 @@ export default function BirlesikTaslakSayfasi() {
     Promise.all([
       getKgkBirlesikTaslak(token, id),
       getKgkBirlesikSonFormulSurumu(token, id),
+      getKgkBirlesikFormulHazirligi(token, id),
       getKgkBirlesikFormulSurumleri(token, id),
       getFinansalTabloTestMizanlari(token, 20).catch(() => [] as FinansalTabloTestMizan[]),
-    ]).then(([kaynakTaslak, formulSurumu, tarihce, mizanlar]) => {
+    ]).then(([kaynakTaslak, formulSurumu, kapsamDurumu, tarihce, mizanlar]) => {
       if (!aktif) return;
       setTaslak(kaynakTaslak);
       setTabloAdi((eski) => eski || kaynakTaslak.icerik.tablolar[0]?.ad || "");
       setSon(formulSurumu);
+      setHazirlik(kapsamDurumu);
       setGecmis(tarihce);
       setTestMizanlari(mizanlar);
       setTestMizanId((eski) => eski || mizanlar[0]?.id || "");
@@ -157,10 +160,11 @@ export default function BirlesikTaslakSayfasi() {
       };
       const sonuc = await saveKgkBirlesikFormulVaryanti(token, id, son?.surumNo || 0, varyant,
         (aciklama.trim() || varsayilan).slice(0, 500));
-      const [guncel, tarihce] = await Promise.all([
-        getKgkBirlesikSonFormulSurumu(token, id), getKgkBirlesikFormulSurumleri(token, id),
+      const [guncel, kapsamDurumu, tarihce] = await Promise.all([
+        getKgkBirlesikSonFormulSurumu(token, id), getKgkBirlesikFormulHazirligi(token, id),
+        getKgkBirlesikFormulSurumleri(token, id),
       ]);
-      setSon(guncel); setGecmis(tarihce);
+      setSon(guncel); setHazirlik(kapsamDurumu); setGecmis(tarihce);
       setKayitliForm(form); setAciklama("");
       setMesaj(`Alt sürüm #${sonuc.surumNo} kaydedildi; önceki sürümler korunuyor.`);
     } catch (error) {
@@ -237,6 +241,10 @@ export default function BirlesikTaslakSayfasi() {
             sx={{ fontWeight: satir.baslikMi || satir.altSayisi > 0 ? 700 : 400, fontSize: 13, cursor: "default" }}>
             {satir.ad}
           </Typography>
+          {satir.kalem.durum === "YalnizKonsolide" &&
+            <Chip size="small" variant="outlined" color="primary" label="Yalnız konsolide" />}
+          {satir.kalem.durum === "YalnizMunferit" &&
+            <Chip size="small" variant="outlined" label="Yalnız münferit" />}
           {satir.kalem.durum === "Belirsiz" && <Chip size="small" color="warning" variant="outlined" label="Belirsiz" />}
           {satir.kalem.durum === "YapiFarki" && <Chip size="small" variant="outlined" label="Yapı farkı" />}
         </Stack>
@@ -256,6 +264,8 @@ export default function BirlesikTaslakSayfasi() {
   const harfHucresi = { ...ustHucre, height: HARF_YUKSEKLIGI, py: 0, fontSize: 11.5, fontWeight: 400, color: "text.secondary", textAlign: "center" } as const;
 
   const formulSayisi = (son?.varyantlar ?? []).filter((x) => x.tabloAdi === tabloAdi).length;
+  const tabloEksikleri = hazirlik?.sonuc.eksikler.filter((x) => x.tabloAdi === tabloAdi) ?? [];
+  const tabloYapiSorunlari = hazirlik?.sonuc.yapiSorunlari.filter((x) => x.startsWith(`${tabloAdi} /`)) ?? [];
   const sonGecmis = gecmis[0];
 
   return <PageContainer title="Birleşik KGK formülleri" description="KGK kalemleri ve formül alt sürümleri">
@@ -264,9 +274,18 @@ export default function BirlesikTaslakSayfasi() {
       <Stack spacing={1.5}>
         {hata && <Alert severity="error" onClose={() => setHata("")}>{hata}</Alert>}
         {mesaj && <Alert severity="success" onClose={() => setMesaj("")}>{mesaj}</Alert>}
+        {hazirlik && !hazirlik.sonuc.hazirMi && <Alert severity="error">
+          Formül kapsamı eksik: {hazirlik.sonuc.mevcutFormulSayisi}/{hazirlik.sonuc.gerekliFormulSayisi} gerekli hücre dolu;
+          {" "}{hazirlik.sonuc.eksikler.length} eksik formül, {hazirlik.sonuc.yapiSorunlari.length} yapı sorunu,
+          {" "}{hazirlik.sonuc.derlemeSorunlari.length} derleme sorunu var.
+          Bu taslak üretim için hazır değildir. Aşağıdaki tabloda eksik hücreleri tamamlayıp tekrar denetleyin.
+        </Alert>}
+        {hazirlik?.sonuc.hazirMi && <Alert severity="info">
+          Gerekli formüller mevcut. Üretime geçmeden motor hesapları ve gerçek mizan karşılaştırması ayrıca doğrulanmalıdır.
+        </Alert>}
         <Stack direction={{ xs: "column", md: "row" }} spacing={1} alignItems={{ md: "center" }} justifyContent="space-between">
           <Typography variant="body2" color="text.secondary">
-            {taslak ? `${taslak.ozet.tabloSayisi} tablo · ${taslak.ozet.ortakKalemSayisi + taslak.ozet.kapsamaOzelKalemSayisi} satır` : "Yükleniyor"}
+            {taslak ? `${taslak.ozet.tabloSayisi} tablo · ${taslak.icerik.tablolar.reduce((toplam, x) => toplam + x.kalemler.length, 0)} satır` : "Yükleniyor"}
             {" · "}Formüller yeni motorla derlenir ve örnek mizanla salt okunur hesaplanır; yayındaki tablolar, eski raporlar ve dipnotlar değişmez.
           </Typography>
           <Button size="small" variant="text" color="inherit" startIcon={<IconHistory size={16} />}
@@ -289,6 +308,17 @@ export default function BirlesikTaslakSayfasi() {
           {taslak?.icerik.tablolar.map((x) => <Tab key={x.ad} value={x.ad}
             label={tabloEtiketi(x)} />)}
         </Tabs>
+
+        {tabloEksikleri.length > 0 && <Alert severity="warning">
+          Bu tabloda {tabloEksikleri.length} eksik formül var. İlk eksikler:{" "}
+          {tabloEksikleri.slice(0, 6).map((x, i) => <Button key={`${x.eslesmeAnahtari}-${x.kapsam}-${x.yataySutunAnahtari}`} size="small"
+            onClick={() => { setArama(x.kalemAdi); setMatrisKapsam(x.kapsam); }}>
+            {i + 1}. {x.kalemAdi} ({KAPSAM[x.kapsam]})
+          </Button>)}
+        </Alert>}
+        {tabloYapiSorunlari.length > 0 && <Alert severity="error">{tabloYapiSorunlari.slice(0, 4).join("; ")}</Alert>}
+        {hazirlik?.sonuc.derlemeSorunlari.some((x) => x.startsWith(`${tabloAdi} /`)) &&
+          <Alert severity="error">{hazirlik.sonuc.derlemeSorunlari.filter((x) => x.startsWith(`${tabloAdi} /`)).join("; ")}</Alert>}
 
         <Stack direction={{ xs: "column", md: "row" }} spacing={1} alignItems={{ md: "center" }}>
           <TextField size="small" placeholder="Satır ara" value={arama} onChange={(e) => setArama(e.target.value)}

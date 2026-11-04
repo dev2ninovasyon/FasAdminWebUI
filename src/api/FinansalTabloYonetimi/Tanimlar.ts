@@ -1247,6 +1247,25 @@ export const getKgkBirlesikSonFormulSurumu = async (
   return enumlariSayiyaCevir(payload as KgkBirlesikFormulSurumu);
 };
 
+export type KgkBirlesikFormulHazirligi = {
+  surumNo: number;
+  sonuc: {
+    hazirMi: boolean;
+    gerekliFormulSayisi: number;
+    mevcutFormulSayisi: number;
+    eksikler: Array<{
+      tabloAdi: string; eslesmeAnahtari: string; kapsam: number;
+      yataySutunAnahtari: string | null; kalemAdi: string; satirNo: number;
+    }>;
+    yapiSorunlari: string[];
+    derlemeSorunlari: string[];
+  };
+};
+
+export const getKgkBirlesikFormulHazirligi = async (token: string, id: number) =>
+  enumlariSayiyaCevir(await jsonGet<KgkBirlesikFormulHazirligi>(token,
+    `/Kgk/BirlesikTaslaklar/${id}/FormulHazirligi`));
+
 export const saveKgkBirlesikFormulVaryanti = async (
   token: string, id: number, beklenenSurumNo: number,
   varyant: KgkBirlesikFormulVaryanti, aciklama: string
