@@ -17,7 +17,7 @@ import ParentCard from "@/app/components/Shared/ParentCard";
 import { useSelector } from "@/store/hooks";
 import { AppState } from "@/store/store";
 import {
-  getKgkBirlesikTaslak, getKgkBirlesikFormulSurumleri, getKgkBirlesikSonFormulSurumu, getKgkBirlesikFormulSurumu, getKgkBirlesikFormulHazirligi, getKgkExcelFormulAdaylari, getKgkEskiFormulAdaylari, getKgkEskiOzkaynakFormulAdaylari, previewKgkBirlesikFormulSurumu,
+  getKgkBirlesikTaslak, getKgkBirlesikFormulSurumleri, getKgkBirlesikSonFormulSurumu, getKgkBirlesikFormulSurumu, getKgkBirlesikFormulHazirligi, createKgkBirlesikYayinTaslagi, getKgkExcelFormulAdaylari, getKgkEskiFormulAdaylari, getKgkEskiOzkaynakFormulAdaylari, previewKgkBirlesikFormulSurumu,
   saveKgkBirlesikFormulVaryanti, KgkBirlesikTaslakDetay, KgkBirlesikFormulSurumu, KgkBirlesikFormulVaryanti,
   KgkBirlesikFormulHazirligi, KgkBirlesikOnizlemeHucresi, KgkBirlesikOnizlemeSonucu, KgkMatrisSutunu, KgkExcelFormulAdaylari, KgkEskiFormulAdaylari, KgkEskiOzkaynakFormulAdaylari,
 } from "@/api/FinansalTabloYonetimi/Tanimlar";
@@ -93,6 +93,8 @@ export default function BirlesikTaslakSayfasi() {
   const [degerMizani, setDegerMizani] = useState<string | null>(null);
   const [hesaplaniyor, setHesaplaniyor] = useState(false);
   const [kaydediliyor, setKaydediliyor] = useState(false);
+  const [yayinTaslagiOlusturuluyor, setYayinTaslagiOlusturuluyor] = useState(false);
+  const [gecerlilikBaslangici, setGecerlilikBaslangici] = useState(`${new Date().getFullYear()}-01-01`);
   const [gecmisAnchor, setGecmisAnchor] = useState<HTMLElement | null>(null);
   const [hata, setHata] = useState("");
   const [mesaj, setMesaj] = useState("");
@@ -332,6 +334,19 @@ export default function BirlesikTaslakSayfasi() {
     }
   };
 
+  const yayinTaslagiOlustur = async () => {
+    if (!token || !son || !hazirlik?.sonuc.hazirMi || !gecerlilikBaslangici || yayinTaslagiOlusturuluyor) return;
+    setHata(""); setMesaj(""); setYayinTaslagiOlusturuluyor(true);
+    try {
+      const sonuc = await createKgkBirlesikYayinTaslagi(token, id, son.surumNo, gecerlilikBaslangici);
+      setMesaj(`Münferit ve konsolide yayın taslakları oluşturuldu: ${sonuc.surumler.map((x) => `#${x.id}`).join(", ")}. Tablolar henüz yayımlanmadı.`);
+    } catch (error) {
+      setHata(error instanceof Error ? error.message : "Yayın taslakları oluşturulamadı.");
+    } finally {
+      setYayinTaslagiOlusturuluyor(false);
+    }
+  };
+
   const tusla = (olay: KeyboardEvent) => {
     if (olay.key === "Enter" && (olay.ctrlKey || olay.metaKey)) { olay.preventDefault(); void kaydet(); }
   };
@@ -459,8 +474,17 @@ export default function BirlesikTaslakSayfasi() {
         </Alert>}
         {genelYapiSorunlari.length > 0 && <Alert severity="error">{genelYapiSorunlari.join("; ")}</Alert>}
         {hazirlik?.sonuc.hazirMi && <Alert severity="info">
-          Gerekli formüller mevcut. Gerçek mizan karşılaştırması tamamlanmadan ve birleşik taslak üretim tanımına bağlanmadan yayımlanamaz.
+          Gerekli formüller mevcut. Yayın taslağı oluşturabilirsiniz; gerçek mizan ve dipnot karşılaştırması tamamlanmadan yayına almayın.
         </Alert>}
+        {hazirlik?.sonuc.hazirMi && son && <Stack direction={{ xs: "column", sm: "row" }} spacing={1} alignItems={{ sm: "center" }}>
+          <TextField size="small" type="date" label="Geçerlilik başlangıcı" value={gecerlilikBaslangici}
+            onChange={(event) => setGecerlilikBaslangici(event.target.value)} slotProps={{ inputLabel: { shrink: true } }} />
+          <Button size="small" variant="contained" disabled={yayinTaslagiOlusturuluyor || hazirlik.surumNo !== son.surumNo || !gecerlilikBaslangici}
+            onClick={() => void yayinTaslagiOlustur()}>
+            {yayinTaslagiOlusturuluyor ? "Taslaklar oluşturuluyor" : "Münferit ve konsolide yayın taslağı oluştur"}
+          </Button>
+          <Typography variant="caption" color="text.secondary">Bu işlem tabloları yayımlamaz.</Typography>
+        </Stack>}
         {kgkAdaylari && kgkAdaylari.toplam > 0 && <Alert severity="info" sx={{ py: 0 }}>
           KGK Excel toplamları: {kgkAdaylari.toplam} hücre; {kgkAdaylari.eklenecek} formül incelenmeyi bekliyor.
           Önce toplamların dayandığı giriş hücrelerine formül girin. Özkaynak tablosunda mavi KGK hücresini açarak öneriyi görebilirsiniz.

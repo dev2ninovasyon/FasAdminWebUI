@@ -1312,6 +1312,22 @@ export const getKgkBirlesikFormulHazirligi = async (token: string, id: number) =
   enumlariSayiyaCevir(await jsonGet<KgkBirlesikFormulHazirligi>(token,
     `/Kgk/BirlesikTaslaklar/${id}/FormulHazirligi`));
 
+export const createKgkBirlesikYayinTaslagi = async (
+  token: string, id: number, beklenenFormulSurumNo: number, gecerlilikBaslangici: string
+) => {
+  const response = await fetch(`${url}/FinansalTabloYonetimi/Kgk/BirlesikTaslaklar/${id}/YayinTaslagiOlustur`, {
+    method: "POST",
+    headers: { accept: "application/json", "Content-Type": "application/json", Authorization: `Bearer ${token}` },
+    body: JSON.stringify({ beklenenFormulSurumNo, gecerlilikBaslangici: `${gecerlilikBaslangici}T00:00:00`,
+      aciklama: `KGK birleşik taslak #${id}, formül alt sürümü #${beklenenFormulSurumNo}` }),
+  });
+  const payload = await response.json().catch(() => ({}));
+  if (!response.ok) throw new Error(payload?.message || "KGK yayın taslağı oluşturulamadı.");
+  return enumlariSayiyaCevir(payload as { kgkAnaSurumId: number; surumler: Array<{
+    id: number; surumNo: number; kapsam: number; tabloSayisi: number;
+  }> });
+};
+
 export const saveKgkBirlesikFormulVaryanti = async (
   token: string, id: number, beklenenSurumNo: number,
   varyant: KgkBirlesikFormulVaryanti, aciklama: string
