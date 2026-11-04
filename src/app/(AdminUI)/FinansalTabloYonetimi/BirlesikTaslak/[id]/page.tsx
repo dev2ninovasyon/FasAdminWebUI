@@ -651,6 +651,11 @@ export default function BirlesikTaslakSayfasi() {
             <Typography variant="caption" sx={{ display: "block" }}>
               {seciliOzkaynakAdayi.eskiSatirAdi || "Satır adı yok"} / {seciliOzkaynakAdayi.eskiSutunAdi || "Sütun adı yok"}
             </Typography>
+            {seciliOzkaynakAdayi.durum === "YerTutucuFormulIncelenmeli" &&
+              seciliSatir.ad === "Diğer Transferler" && <Typography variant="caption" sx={{ display: "block" }}>
+                Eski rapor bu tutarı bağımsız dönem sonu bakiyesinden kalan fark olarak hesaplıyordu.
+                KGK dönem sonu toplamı bu hücreyi içerir; onu kaynak almak döngü oluşturur.
+              </Typography>}
             <Typography variant="body2" sx={{ fontFamily: "Consolas, monospace", overflowWrap: "anywhere" }}>
               {seciliOzkaynakAdayi.hamEskiFormul || "Eski kayıtta kullanılabilir formül yok."}
             </Typography>
