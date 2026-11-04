@@ -59,6 +59,7 @@ export default function BirlesikTaslakSayfasi() {
   const [karsilastirmaYukleniyor, setKarsilastirmaYukleniyor] = useState(false);
   const [hazirlik, setHazirlik] = useState<KgkBirlesikFormulHazirligi | null>(null);
   const [kgkAdaylari, setKgkAdaylari] = useState<KgkExcelFormulAdaylari | null>(null);
+  const [kgkAdayHatasi, setKgkAdayHatasi] = useState("");
   const [gecmis, setGecmis] = useState<Gecmis[]>([]);
   const [testMizanlari, setTestMizanlari] = useState<FinansalTabloTestMizan[]>([]);
   const [tabloAdi, setTabloAdi] = useState("");
@@ -86,6 +87,7 @@ export default function BirlesikTaslakSayfasi() {
     setKarsilastirma(null);
     setHazirlik(null);
     setKgkAdaylari(null);
+    setKgkAdayHatasi("");
     setGecmis([]);
     setTabloAdi("");
     setSecili(null);
@@ -96,7 +98,10 @@ export default function BirlesikTaslakSayfasi() {
       getKgkBirlesikSonFormulSurumu(token, id),
       getKgkBirlesikFormulHazirligi(token, id),
       getKgkBirlesikFormulSurumleri(token, id),
-      getKgkExcelFormulAdaylari(token, id).catch(() => null),
+      getKgkExcelFormulAdaylari(token, id).catch((error) => {
+        if (aktif) setKgkAdayHatasi(error instanceof Error ? error.message : "KGK Excel formül adayları alınamadı.");
+        return null;
+      }),
       getFinansalTabloTestMizanlari(token, 20).catch(() => [] as FinansalTabloTestMizan[]),
     ]).then(([kaynakTaslak, formulSurumu, kapsamDurumu, tarihce, adaylar, mizanlar]) => {
       if (!aktif) return;
@@ -200,9 +205,13 @@ export default function BirlesikTaslakSayfasi() {
         (aciklama.trim() || varsayilan).slice(0, 500));
       const [guncel, kapsamDurumu, tarihce, guncelAdaylar] = await Promise.all([
         getKgkBirlesikSonFormulSurumu(token, id), getKgkBirlesikFormulHazirligi(token, id),
-        getKgkBirlesikFormulSurumleri(token, id), getKgkExcelFormulAdaylari(token, id).catch(() => null),
+        getKgkBirlesikFormulSurumleri(token, id), getKgkExcelFormulAdaylari(token, id).catch((error) => {
+          setKgkAdayHatasi(error instanceof Error ? error.message : "KGK Excel formül adayları güncellenemedi.");
+          return null;
+        }),
       ]);
       setSon(guncel); setHazirlik(kapsamDurumu); setGecmis(tarihce); setKgkAdaylari(guncelAdaylar);
+      if (guncelAdaylar) setKgkAdayHatasi("");
       setKayitliForm(form); setAciklama("");
       setMesaj(`Alt sürüm #${sonuc.surumNo} kaydedildi; önceki sürümler korunuyor.`);
     } catch (error) {
@@ -320,6 +329,9 @@ export default function BirlesikTaslakSayfasi() {
       <Stack spacing={1.5}>
         {hata && <Alert severity="error" onClose={() => setHata("")}>{hata}</Alert>}
         {mesaj && <Alert severity="success" onClose={() => setMesaj("")}>{mesaj}</Alert>}
+        {kgkAdayHatasi && <Alert severity="warning" onClose={() => setKgkAdayHatasi("")}>
+          KGK Excel formül önerileri gösterilemiyor: {kgkAdayHatasi}
+        </Alert>}
         {hazirlik && !hazirlik.sonuc.hazirMi && <Alert severity="error">
           Formül kapsamı eksik: {hazirlik.sonuc.mevcutFormulSayisi}/{hazirlik.sonuc.gerekliFormulSayisi} gerekli hücre dolu;
           {" "}{hazirlik.sonuc.eksikler.length} eksik formül, {hazirlik.sonuc.yapiSorunlari.length} yapı sorunu,
