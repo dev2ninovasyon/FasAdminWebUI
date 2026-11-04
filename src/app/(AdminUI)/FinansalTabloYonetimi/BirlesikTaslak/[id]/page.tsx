@@ -18,7 +18,7 @@ import { useSelector } from "@/store/hooks";
 import { AppState } from "@/store/store";
 import {
   getKgkBirlesikTaslak, createKgkBirlesikTaslak, getKgkBirlesikFormulSurumleri, getKgkBirlesikSonFormulSurumu, getKgkBirlesikFormulSurumu, getKgkBirlesikFormulHazirligi, createKgkBirlesikYayinTaslagi, getKgkExcelFormulAdaylari, getKgkEskiFormulAdaylari, getKgkEskiOzkaynakFormulAdaylari, previewKgkBirlesikFormulSurumu,
-  saveKgkBirlesikFormulVaryanti, KgkBirlesikTaslakDetay, KgkBirlesikFormulSurumu, KgkBirlesikFormulVaryanti,
+  saveKgkBirlesikFormulVaryanti, saveKgkBirlesikExcelToplamlari, KgkBirlesikTaslakDetay, KgkBirlesikFormulSurumu, KgkBirlesikFormulVaryanti,
   KgkBirlesikFormulHazirligi, KgkBirlesikOnizlemeHucresi, KgkBirlesikOnizlemeSonucu, KgkMatrisSutunu, KgkExcelFormulAdaylari, KgkEskiFormulAdaylari, KgkEskiOzkaynakFormulAdaylari,
 } from "@/api/FinansalTabloYonetimi/Tanimlar";
 import { getFinansalTabloTestMizanlari, FinansalTabloTestMizan } from "@/api/FinansalTabloYonetimi/TestMizan";
@@ -96,6 +96,7 @@ export default function BirlesikTaslakSayfasi() {
   const [degerMizani, setDegerMizani] = useState<string | null>(null);
   const [hesaplaniyor, setHesaplaniyor] = useState(false);
   const [kaydediliyor, setKaydediliyor] = useState(false);
+  const [kgkAktariliyor, setKgkAktariliyor] = useState(false);
   const [yayinTaslagiOlusturuluyor, setYayinTaslagiOlusturuluyor] = useState(false);
   const [taslakYenileniyor, setTaslakYenileniyor] = useState(false);
   const [gecerlilikBaslangici, setGecerlilikBaslangici] = useState(`${new Date().getFullYear()}-01-01`);
@@ -338,6 +339,28 @@ export default function BirlesikTaslakSayfasi() {
     }
   };
 
+  const kgkToplamlariniAktar = async () => {
+    const eksikler = kgkAdaylari?.adaylar.filter((x) => x.durum === "Eklenecek") ?? [];
+    if (!token || !eksikler.length || kgkAktariliyor || kaydediliyor) return;
+    if (degisti && !window.confirm("Kaydedilmemiş formül değişikliği var. Vazgeçilsin mi?")) return;
+    setHata(""); setMesaj(""); setKgkAktariliyor(true);
+    try {
+      const sonuc = await saveKgkBirlesikExcelToplamlari(token, id, son?.surumNo || 0,
+        eksikler.map((x) => x.varyant));
+      const [guncel, kapsamDurumu, tarihce, adaylar] = await Promise.all([
+        getKgkBirlesikSonFormulSurumu(token, id), getKgkBirlesikFormulHazirligi(token, id),
+        getKgkBirlesikFormulSurumleri(token, id), getKgkExcelFormulAdaylari(token, id),
+      ]);
+      setSon(guncel); setHazirlik(kapsamDurumu); setGecmis(tarihce); setKgkAdaylari(adaylar);
+      setKgkAdayHatasi(""); setSecili(null); setOnizleme(null); setEskiOnizleme(null);
+      setMesaj(`${sonuc.eklenenVaryantSayisi} KGK Excel toplamı alt sürüm #${sonuc.surumNo} içine eklendi. Eksik giriş formülleri tamamlanmadan yayın yapılamaz.`);
+    } catch (error) {
+      setHata(error instanceof Error ? error.message : "KGK Excel toplamları aktarılamadı.");
+    } finally {
+      setKgkAktariliyor(false);
+    }
+  };
+
   const yayinTaslagiOlustur = async () => {
     if (!token || !son || !hazirlik?.sonuc.hazirMi || !gecerlilikBaslangici || yayinTaslagiOlusturuluyor) return;
     setHata(""); setMesaj(""); setYayinTaslagiOlusturuluyor(true);
@@ -515,6 +538,10 @@ export default function BirlesikTaslakSayfasi() {
           KGK Excel toplamları: {kgkAdaylari.toplam} hücre; {kgkAdaylari.adaylar.filter((x) => x.durum === "Eklenecek" && !x.aciklama).length} şu anda derlenebilir,
           {" "}{kgkAdaylari.adaylar.filter((x) => x.durum === "Eklenecek" && x.aciklama).length} alt hücre formülü bekliyor.
           Özkaynak tablosunda KGK hücresini açarak öneriyi inceleyin.
+          {kgkAdaylari.eklenecek > 0 && <Button size="small" disabled={kgkAktariliyor || kaydediliyor}
+            onClick={() => void kgkToplamlariniAktar()}>
+            {kgkAktariliyor ? "KGK toplamları aktarılıyor" : `${kgkAdaylari.eklenecek} KGK toplamını alt sürüme ekle`}
+          </Button>}
         </Alert>}
         <Stack direction={{ xs: "column", md: "row" }} spacing={1} alignItems={{ md: "center" }} justifyContent="space-between">
           <Typography variant="body2" color="text.secondary">

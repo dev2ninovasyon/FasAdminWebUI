@@ -1347,6 +1347,19 @@ export const saveKgkBirlesikFormulVaryanti = async (
   return payload as { id: number; surumNo: number; varyantSayisi: number };
 };
 
+export const saveKgkBirlesikExcelToplamlari = async (
+  token: string, id: number, beklenenSurumNo: number, varyantlar: KgkBirlesikFormulVaryanti[]
+) => {
+  const response = await fetch(`${url}/FinansalTabloYonetimi/Kgk/BirlesikTaslaklar/${id}/FormulVaryantlari/Toplu`, {
+    method: "POST",
+    headers: { accept: "application/json", "Content-Type": "application/json", Authorization: `Bearer ${token}` },
+    body: JSON.stringify({ beklenenSurumNo, varyantlar, aciklama: "KGK Excel toplamları aktarıldı" }),
+  });
+  const payload = await response.json().catch(() => ({}));
+  if (!response.ok) throw new Error(payload?.message || "KGK Excel toplamları kaydedilemedi.");
+  return payload as { id: number; surumNo: number; eklenenVaryantSayisi: number };
+};
+
 export type KgkBirlesikOnizlemeHucresi = {
   eslesmeAnahtari: string;
   yataySutunAnahtari: string | null;
