@@ -1222,6 +1222,7 @@ export type KgkBirlesikFormulSurumu = {
   birlesikTaslakId: number;
   surumNo: number;
   kaynakSurumId: number | null;
+  kaynakSurum?: { id: number; birlesikTaslakId: number; surumNo: number } | null;
   icerikSha256: string;
   aciklama: string;
   olusturmaTarihi: string;
@@ -1246,6 +1247,10 @@ export const getKgkBirlesikSonFormulSurumu = async (
   if (!response.ok) throw new Error(payload?.message || "Formül sürümü okunamadı.");
   return enumlariSayiyaCevir(payload as KgkBirlesikFormulSurumu);
 };
+
+export const getKgkBirlesikFormulSurumu = async (token: string, id: number, surumNo: number) =>
+  enumlariSayiyaCevir(await jsonGet<KgkBirlesikFormulSurumu>(token,
+    `/Kgk/BirlesikTaslaklar/${id}/FormulSurumleri/${surumNo}`));
 
 export type KgkBirlesikFormulHazirligi = {
   surumNo: number;

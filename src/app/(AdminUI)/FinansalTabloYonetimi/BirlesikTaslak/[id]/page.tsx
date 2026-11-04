@@ -4,7 +4,7 @@ import { Fragment, useCallback, useEffect, useMemo, useState } from "react";
 import type { KeyboardEvent } from "react";
 import { useParams } from "next/navigation";
 import {
-  Alert, Box, Button, Chip, IconButton, InputAdornment, List, ListItem, ListItemText, MenuItem, Paper, Popover,
+  Alert, Box, Button, Chip, IconButton, InputAdornment, List, ListItem, ListItemButton, ListItemText, MenuItem, Paper, Popover,
   Stack, Tab, Table, TableBody, TableCell, TableContainer, TableHead, TableRow, Tabs, TextField,
   ToggleButton, ToggleButtonGroup, Tooltip, Typography,
 } from "@mui/material";
@@ -17,7 +17,7 @@ import ParentCard from "@/app/components/Shared/ParentCard";
 import { useSelector } from "@/store/hooks";
 import { AppState } from "@/store/store";
 import {
-  getKgkBirlesikTaslak, getKgkBirlesikFormulSurumleri, getKgkBirlesikSonFormulSurumu, getKgkBirlesikFormulHazirligi, previewKgkBirlesikFormulSurumu,
+  getKgkBirlesikTaslak, getKgkBirlesikFormulSurumleri, getKgkBirlesikSonFormulSurumu, getKgkBirlesikFormulSurumu, getKgkBirlesikFormulHazirligi, previewKgkBirlesikFormulSurumu,
   saveKgkBirlesikFormulVaryanti, KgkBirlesikTaslakDetay, KgkBirlesikFormulSurumu, KgkBirlesikFormulVaryanti,
   KgkBirlesikFormulHazirligi, KgkBirlesikOnizlemeHucresi, KgkBirlesikOnizlemeSonucu, KgkMatrisSutunu,
 } from "@/api/FinansalTabloYonetimi/Tanimlar";
@@ -55,6 +55,8 @@ export default function BirlesikTaslakSayfasi() {
   const token = useSelector((state: AppState) => state.userReducer.token);
   const [taslak, setTaslak] = useState<KgkBirlesikTaslakDetay | null>(null);
   const [son, setSon] = useState<KgkBirlesikFormulSurumu | null>(null);
+  const [karsilastirma, setKarsilastirma] = useState<KgkBirlesikFormulSurumu | null>(null);
+  const [karsilastirmaYukleniyor, setKarsilastirmaYukleniyor] = useState(false);
   const [hazirlik, setHazirlik] = useState<KgkBirlesikFormulHazirligi | null>(null);
   const [gecmis, setGecmis] = useState<Gecmis[]>([]);
   const [testMizanlari, setTestMizanlari] = useState<FinansalTabloTestMizan[]>([]);
@@ -78,6 +80,15 @@ export default function BirlesikTaslakSayfasi() {
   useEffect(() => {
     if (!token || !Number.isInteger(id) || id <= 0) return;
     let aktif = true;
+    setTaslak(null);
+    setSon(null);
+    setKarsilastirma(null);
+    setHazirlik(null);
+    setGecmis([]);
+    setTabloAdi("");
+    setSecili(null);
+    setOnizleme(null);
+    setHata("");
     Promise.all([
       getKgkBirlesikTaslak(token, id),
       getKgkBirlesikSonFormulSurumu(token, id),
@@ -87,7 +98,7 @@ export default function BirlesikTaslakSayfasi() {
     ]).then(([kaynakTaslak, formulSurumu, kapsamDurumu, tarihce, mizanlar]) => {
       if (!aktif) return;
       setTaslak(kaynakTaslak);
-      setTabloAdi((eski) => eski || kaynakTaslak.icerik.tablolar[0]?.ad || "");
+      setTabloAdi(kaynakTaslak.icerik.tablolar[0]?.ad || "");
       setSon(formulSurumu);
       setHazirlik(kapsamDurumu);
       setGecmis(tarihce);
@@ -114,6 +125,9 @@ export default function BirlesikTaslakSayfasi() {
   const seciliSatir = secili ? satirHaritasi.get(secili.satir) : undefined;
   const seciliSutun = secili?.sutun ? matris.yapraklar.find((x) => x.sabitAnahtar === secili.sutun) : undefined;
   const seciliSonuc = secili ? sonuclar.get(hucreAnahtari(secili.satir, secili.sutun, secili.kapsam, NORMAL)) : undefined;
+  const eskiKayit = secili ? karsilastirma?.varyantlar.find((x) => x.tabloAdi === tabloAdi &&
+    x.eslesmeAnahtari === secili.satir && x.yataySutunAnahtari === secili.sutun &&
+    x.kapsam === secili.kapsam && x.donusumTipi === NORMAL) : undefined;
   const degisti = form.formul !== kayitliForm.formul || form.dipnot !== kayitliForm.dipnot || form.kaynak !== kayitliForm.kaynak;
 
   const denetle = useCallback(async (mizanId: string | null) => {
@@ -145,6 +159,19 @@ export default function BirlesikTaslakSayfasi() {
   const tabloDegistir = (ad: string) => {
     if (degisti && !window.confirm("Kaydedilmemiş formül değişikliği var. Vazgeçilsin mi?")) return;
     setTabloAdi(ad); setSecili(null); setKapali(new Set()); setArama("");
+  };
+
+  const gecmisSurumuAc = async (surumNo: number) => {
+    setGecmisAnchor(null);
+    if (!token || surumNo === son?.surumNo) { setKarsilastirma(null); return; }
+    setKarsilastirmaYukleniyor(true);
+    try {
+      setKarsilastirma(await getKgkBirlesikFormulSurumu(token, id, surumNo));
+    } catch (error) {
+      setHata(error instanceof Error ? error.message : "Önceki formül sürümü okunamadı.");
+    } finally {
+      setKarsilastirmaYukleniyor(false);
+    }
   };
 
   const kaydet = async () => {
@@ -296,12 +323,28 @@ export default function BirlesikTaslakSayfasi() {
         <Popover open={Boolean(gecmisAnchor)} anchorEl={gecmisAnchor} onClose={() => setGecmisAnchor(null)}
           anchorOrigin={{ vertical: "bottom", horizontal: "right" }} transformOrigin={{ vertical: "top", horizontal: "right" }}>
           <List dense sx={{ width: 380, maxHeight: 360, overflowY: "auto" }}>
-            {gecmis.slice(0, 15).map((x) => <ListItem key={x.id} divider>
-              <ListItemText primary={`#${x.surumNo} · ${x.aciklama}`}
-                secondary={new Date(x.olusturmaTarihi).toLocaleString("tr-TR")} />
+            {son?.kaynakSurum && son.kaynakSurum.birlesikTaslakId !== id &&
+              <ListItem divider>
+                <Button size="small" href={`/FinansalTabloYonetimi/BirlesikTaslak/${son.kaynakSurum.birlesikTaslakId}`}>
+                  Kaynak KGK taslağı #{son.kaynakSurum.birlesikTaslakId} · alt sürüm #{son.kaynakSurum.surumNo}
+                </Button>
+              </ListItem>}
+            {gecmis.map((x) => <ListItem key={x.id} divider disablePadding>
+              <ListItemButton onClick={() => void gecmisSurumuAc(x.surumNo)} disabled={karsilastirmaYukleniyor}>
+                <ListItemText primary={`#${x.surumNo} · ${x.aciklama}`}
+                  secondary={`${new Date(x.olusturmaTarihi).toLocaleString("tr-TR")} · ${x.surumNo === son?.surumNo ? "Güncel" : "Karşılaştır"}`} />
+              </ListItemButton>
             </ListItem>)}
           </List>
         </Popover>
+        {karsilastirma && <Alert severity="info" onClose={() => setKarsilastirma(null)}>
+          Güncel alt sürüm #{son?.surumNo} ile önceki alt sürüm #{karsilastirma.surumNo} karşılaştırılıyor.
+          Eski sürüm salt okunurdur; kaydettiğiniz değişiklikler yeni bir alt sürüm oluşturur.
+          {karsilastirma.kaynakSurum && karsilastirma.kaynakSurum.birlesikTaslakId !== id &&
+            <Button size="small" href={`/FinansalTabloYonetimi/BirlesikTaslak/${karsilastirma.kaynakSurum.birlesikTaslakId}`}>
+              Kaynak taslağı aç
+            </Button>}
+        </Alert>}
 
         <Tabs value={tablo ? tabloAdi : false} onChange={(_, ad) => tabloDegistir(ad)} variant="scrollable" scrollButtons="auto"
           sx={{ minHeight: 40, borderBottom: 1, borderColor: "divider", "& .MuiTab-root": { minHeight: 40, textTransform: "none" } }}>
@@ -420,6 +463,20 @@ export default function BirlesikTaslakSayfasi() {
           {kapsamKaynagi(seciliSatir, secili.kapsam) ? ` · Excel satırı ${kapsamKaynagi(seciliSatir, secili.kapsam)!.satirNo}` : ""}
         </> : null}>
         {secili && seciliSatir && <Stack spacing={1.5}>
+          {karsilastirma && <Alert severity="info" sx={{ py: 0 }}>
+            <Typography variant="caption" sx={{ display: "block", fontWeight: 700 }}>
+              Alt sürüm #{karsilastirma.surumNo} · {new Date(karsilastirma.olusturmaTarihi).toLocaleString("tr-TR")}
+            </Typography>
+            <Typography variant="body2" sx={{ fontFamily: "Consolas, monospace", overflowWrap: "anywhere" }}>
+              {eskiKayit?.hamFormul || "Bu hücrede formül yoktu."}
+            </Typography>
+            {eskiKayit?.dipnot && <Typography variant="caption">Dipnot: {eskiKayit.dipnot}</Typography>}
+            {eskiKayit?.hamFormul && eskiKayit.hamFormul !== kayitliForm.formul &&
+              <Button size="small" onClick={() => setForm({ formul: eskiKayit.hamFormul ?? "",
+                dipnot: eskiKayit.dipnot ?? "", kaynak: eskiKayit.kaynak ?? "" })}>
+                Eski formülü düzenleyiciye al
+              </Button>}
+          </Alert>}
           <TextField label="Formül" value={form.formul} multiline minRows={3} fullWidth
             onChange={(e) => setForm((x) => ({ ...x, formul: e.target.value }))}
             slotProps={{
