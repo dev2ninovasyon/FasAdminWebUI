@@ -578,8 +578,8 @@ export default function BirlesikTaslakSayfasi() {
                 <Typography sx={{ fontStyle: "italic", fontFamily: "Cambria, Georgia, serif", color: EXCEL.yesil, fontWeight: 700 }}>fx</Typography>
               </InputAdornment> },
             }}
-            helperText={matrisMi ? "Hesap kodu (500) veya KGK hücre toplamı: SUM(C12:D12). Kaynak hücrelerin de formülü olmalıdır."
-              : "Hesap kodu (100), satır (C12), TOPLA(C10:C15) veya ALT. Satır numarası tablonun Satır sütunundadır."} />
+            helperText={matrisMi ? "Hesap: 500, KONTROL(500), TRANSFERHARIC(500), KONTROLTRANSFERHARIC(500). KGK toplamı: SUM(C12:D12); kaynak hücrelerin de formülü olmalıdır."
+              : "100 bakiye, KONTROL(100) kontrol bakiyesi, TRANSFERHARIC(100) transfer fişi hariç bakiye, KONTROLTRANSFERHARIC(100) kontrol bakiyesi; ayrıca C12, TOPLA(C10:C15), ALT kullanılabilir."} />
           {seciliSonuc?.hata && <Alert severity="error" sx={{ py: 0 }}>{seciliSonuc.hata}</Alert>}
           {!seciliSonuc?.hata && seciliSonuc?.deger != null && <Typography variant="body2">
             Örnek mizan sonucu: <strong>{tutar.format(seciliSonuc.deger)}</strong>
