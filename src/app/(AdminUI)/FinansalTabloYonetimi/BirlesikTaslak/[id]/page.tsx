@@ -2,7 +2,7 @@
 
 import { Fragment, useCallback, useEffect, useMemo, useState } from "react";
 import type { KeyboardEvent } from "react";
-import { useParams } from "next/navigation";
+import { useParams, useRouter } from "next/navigation";
 import {
   Alert, Box, Button, Chip, IconButton, InputAdornment, List, ListItem, ListItemButton, ListItemText, MenuItem, Paper, Popover,
   Stack, Tab, Table, TableBody, TableCell, TableContainer, TableHead, TableRow, Tabs, TextField,
@@ -17,7 +17,7 @@ import ParentCard from "@/app/components/Shared/ParentCard";
 import { useSelector } from "@/store/hooks";
 import { AppState } from "@/store/store";
 import {
-  getKgkBirlesikTaslak, getKgkBirlesikFormulSurumleri, getKgkBirlesikSonFormulSurumu, getKgkBirlesikFormulSurumu, getKgkBirlesikFormulHazirligi, createKgkBirlesikYayinTaslagi, getKgkExcelFormulAdaylari, getKgkEskiFormulAdaylari, getKgkEskiOzkaynakFormulAdaylari, previewKgkBirlesikFormulSurumu,
+  getKgkBirlesikTaslak, createKgkBirlesikTaslak, getKgkBirlesikFormulSurumleri, getKgkBirlesikSonFormulSurumu, getKgkBirlesikFormulSurumu, getKgkBirlesikFormulHazirligi, createKgkBirlesikYayinTaslagi, getKgkExcelFormulAdaylari, getKgkEskiFormulAdaylari, getKgkEskiOzkaynakFormulAdaylari, previewKgkBirlesikFormulSurumu,
   saveKgkBirlesikFormulVaryanti, KgkBirlesikTaslakDetay, KgkBirlesikFormulSurumu, KgkBirlesikFormulVaryanti,
   KgkBirlesikFormulHazirligi, KgkBirlesikOnizlemeHucresi, KgkBirlesikOnizlemeSonucu, KgkMatrisSutunu, KgkExcelFormulAdaylari, KgkEskiFormulAdaylari, KgkEskiOzkaynakFormulAdaylari,
 } from "@/api/FinansalTabloYonetimi/Tanimlar";
@@ -62,6 +62,7 @@ const kullanilabilir = (satir: KgkAgacSatiri, kapsam: number) => satir.kalem.dur
 
 export default function BirlesikTaslakSayfasi() {
   const params = useParams<{ id: string }>();
+  const router = useRouter();
   const id = Number(params.id);
   const token = useSelector((state: AppState) => state.userReducer.token);
   const [taslak, setTaslak] = useState<KgkBirlesikTaslakDetay | null>(null);
@@ -94,6 +95,7 @@ export default function BirlesikTaslakSayfasi() {
   const [hesaplaniyor, setHesaplaniyor] = useState(false);
   const [kaydediliyor, setKaydediliyor] = useState(false);
   const [yayinTaslagiOlusturuluyor, setYayinTaslagiOlusturuluyor] = useState(false);
+  const [taslakYenileniyor, setTaslakYenileniyor] = useState(false);
   const [gecerlilikBaslangici, setGecerlilikBaslangici] = useState(`${new Date().getFullYear()}-01-01`);
   const [gecmisAnchor, setGecmisAnchor] = useState<HTMLElement | null>(null);
   const [hata, setHata] = useState("");
@@ -347,6 +349,20 @@ export default function BirlesikTaslakSayfasi() {
     }
   };
 
+  const eskiTaslagiYenile = async () => {
+    if (!token || !taslak || taslakYenileniyor) return;
+    setHata(""); setTaslakYenileniyor(true);
+    try {
+      const guncel = await createKgkBirlesikTaslak(token, taslak.ozet.kgkAnaSurumId,
+        taslak.ozet.raporlamaStandardi);
+      router.push(`/FinansalTabloYonetimi/BirlesikTaslak/${guncel.id}`);
+    } catch (error) {
+      setHata(error instanceof Error ? error.message : "Güncel KGK taslağı oluşturulamadı.");
+    } finally {
+      setTaslakYenileniyor(false);
+    }
+  };
+
   const tusla = (olay: KeyboardEvent) => {
     if (olay.key === "Enter" && (olay.ctrlKey || olay.metaKey)) { olay.preventDefault(); void kaydet(); }
   };
@@ -457,6 +473,14 @@ export default function BirlesikTaslakSayfasi() {
       <Stack spacing={1.5}>
         {hata && <Alert severity="error" onClose={() => setHata("")}>{hata}</Alert>}
         {mesaj && <Alert severity="success" onClose={() => setMesaj("")}>{mesaj}</Alert>}
+        {taslak && taslak.ozet.olusturucuSurumu < taslak.guncelOlusturucuSurumu &&
+          <Alert severity="warning" action={<Button size="small" disabled={taslakYenileniyor}
+            onClick={() => void eskiTaslagiYenile()}>
+            {taslakYenileniyor ? "Oluşturuluyor" : "Güncel taslağı oluştur"}
+          </Button>}>
+            Bu taslak eski KGK oluşturucusuyla hazırlandı. Özkaynak hücre maskesi eksik olabilir; yayına alınamaz.
+            Güncel taslak oluşturulurken eşleşen formüller yeni alt sürüme taşınır.
+          </Alert>}
         {kgkAdayHatasi && <Alert severity="warning" onClose={() => setKgkAdayHatasi("")}>
           KGK Excel formül önerileri gösterilemiyor: {kgkAdayHatasi}
         </Alert>}

@@ -1204,6 +1204,7 @@ export type KgkBirlesikKaynak = { baslik?: string | null; sutunlar?: KgkMatrisSu
 
 export type KgkBirlesikTaslakDetay = {
   ozet: KgkBirlesikTaslakOzeti;
+  guncelOlusturucuSurumu: number;
   icerik: { raporlamaStandardi: number; tablolar: Array<{
     ad: string; kalemler: KgkBirlesikSatir[];
     munferit: KgkBirlesikKaynak; konsolide: KgkBirlesikKaynak;
