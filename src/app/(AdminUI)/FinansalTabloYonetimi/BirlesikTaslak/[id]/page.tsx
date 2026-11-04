@@ -23,6 +23,7 @@ import {
 } from "@/api/FinansalTabloYonetimi/Tanimlar";
 import { getFinansalTabloTestMizanlari, FinansalTabloTestMizan } from "@/api/FinansalTabloYonetimi/TestMizan";
 import { KgkAgacSatiri, gorunurSatirlar, kgkAgaciOlustur, sutunBasliklari } from "./kgkAgaci";
+import { surumTutarlariKarsilastir } from "./surumTutarFarki";
 import { EXCEL, EXCEL_SATIR_YUKSEKLIGI as SATIR_YUKSEKLIGI, excelBaslikHucresi } from "../../excelStili";
 import FormulCekmecesi from "../../FormulCekmecesi";
 
@@ -67,6 +68,8 @@ export default function BirlesikTaslakSayfasi() {
   const [son, setSon] = useState<KgkBirlesikFormulSurumu | null>(null);
   const [karsilastirma, setKarsilastirma] = useState<KgkBirlesikFormulSurumu | null>(null);
   const [karsilastirmaYukleniyor, setKarsilastirmaYukleniyor] = useState(false);
+  const [eskiOnizleme, setEskiOnizleme] = useState<KgkBirlesikOnizlemeSonucu | null>(null);
+  const [eskiOnizlemeYukleniyor, setEskiOnizlemeYukleniyor] = useState(false);
   const [hazirlik, setHazirlik] = useState<KgkBirlesikFormulHazirligi | null>(null);
   const [kgkAdaylari, setKgkAdaylari] = useState<KgkExcelFormulAdaylari | null>(null);
   const [kgkAdayHatasi, setKgkAdayHatasi] = useState("");
@@ -100,6 +103,7 @@ export default function BirlesikTaslakSayfasi() {
     setTaslak(null);
     setSon(null);
     setKarsilastirma(null);
+    setEskiOnizleme(null);
     setHazirlik(null);
     setKgkAdaylari(null);
     setKgkAdayHatasi("");
@@ -177,6 +181,16 @@ export default function BirlesikTaslakSayfasi() {
   const seciliSatir = secili ? satirHaritasi.get(secili.satir) : undefined;
   const seciliSutun = secili?.sutun ? matris.yapraklar.find((x) => x.sabitAnahtar === secili.sutun) : undefined;
   const seciliSonuc = secili ? sonuclar.get(hucreAnahtari(secili.satir, secili.sutun, secili.kapsam, NORMAL)) : undefined;
+  const gecerliEskiOnizleme = eskiOnizleme && karsilastirma && onizleme?.testMizanId &&
+    eskiOnizleme.formulSurumNo === karsilastirma.surumNo && eskiOnizleme.tabloAdi === tabloAdi &&
+    eskiOnizleme.testMizanId === onizleme.testMizanId &&
+    onizleme.formulSurumNo === son?.surumNo && onizleme.tabloAdi === tabloAdi ? eskiOnizleme : null;
+  const surumTutarFarki = useMemo(() => gecerliEskiOnizleme && onizleme?.testMizanId
+    ? surumTutarlariKarsilastir(onizleme.hucreler, gecerliEskiOnizleme.hucreler) : null,
+  [gecerliEskiOnizleme, onizleme]);
+  const seciliEskiSonuc = secili && gecerliEskiOnizleme?.hucreler.find((x) =>
+    x.eslesmeAnahtari === secili.satir && x.yataySutunAnahtari === secili.sutun &&
+    x.kapsam === secili.kapsam && x.donusumTipi === NORMAL);
   const seciliAday = secili ? adaylar.get(hucreAnahtari(secili.satir, secili.sutun, secili.kapsam, NORMAL)) : undefined;
   const seciliEskiAday = secili && !secili.sutun ? eskiAdaylar.get(hucreAnahtari(secili.satir, null, secili.kapsam, NORMAL)) : undefined;
   const seciliOzkaynakAdayi = secili?.sutun ? ozkaynakAdaylar.get(hucreAnahtari(secili.satir, secili.sutun, secili.kapsam, NORMAL)) : undefined;
@@ -249,6 +263,7 @@ export default function BirlesikTaslakSayfasi() {
 
   const gecmisSurumuAc = async (surumNo: number) => {
     setGecmisAnchor(null);
+    setEskiOnizleme(null);
     if (!token || surumNo === son?.surumNo) { setKarsilastirma(null); return; }
     setKarsilastirmaYukleniyor(true);
     try {
@@ -257,6 +272,20 @@ export default function BirlesikTaslakSayfasi() {
       setHata(error instanceof Error ? error.message : "Önceki formül sürümü okunamadı.");
     } finally {
       setKarsilastirmaYukleniyor(false);
+    }
+  };
+
+  const eskiSurumTutarlariHesapla = async () => {
+    if (!token || !karsilastirma || !onizleme?.testMizanId || !tabloAdi || !son || hesaplaniyor) return;
+    setEskiOnizlemeYukleniyor(true);
+    try {
+      setEskiOnizleme(await previewKgkBirlesikFormulSurumu(token, id, {
+        formulSurumNo: karsilastirma.surumNo, tabloAdi, testMizanId: onizleme.testMizanId,
+      }));
+    } catch (error) {
+      setHata(error instanceof Error ? error.message : "Önceki sürümün tutarları hesaplanamadı.");
+    } finally {
+      setEskiOnizlemeYukleniyor(false);
     }
   };
 
@@ -464,10 +493,31 @@ export default function BirlesikTaslakSayfasi() {
         {karsilastirma && <Alert severity="info" onClose={() => setKarsilastirma(null)}>
           Güncel alt sürüm #{son?.surumNo} ile önceki alt sürüm #{karsilastirma.surumNo} karşılaştırılıyor.
           Eski sürüm salt okunurdur; kaydettiğiniz değişiklikler yeni bir alt sürüm oluşturur.
+          {onizleme?.testMizanId && onizleme.formulSurumNo === son?.surumNo &&
+            onizleme.tabloAdi === tabloAdi && <Button size="small" disabled={eskiOnizlemeYukleniyor || hesaplaniyor}
+              onClick={() => void eskiSurumTutarlariHesapla()}>
+              {eskiOnizlemeYukleniyor ? "Tutarlar hesaplanıyor" : "Örnek mizanda tutar farklarını hesapla"}
+            </Button>}
           {karsilastirma.kaynakSurum && karsilastirma.kaynakSurum.birlesikTaslakId !== id &&
             <Button size="small" href={`/FinansalTabloYonetimi/BirlesikTaslak/${karsilastirma.kaynakSurum.birlesikTaslakId}`}>
               Kaynak taslağı aç
             </Button>}
+        </Alert>}
+        {surumTutarFarki && <Alert severity={surumTutarFarki.farklilar.length ? "warning" : "info"}>
+          #{karsilastirma?.surumNo} → #{son?.surumNo}: {surumTutarFarki.karsilastirilan} hücre iki sürümde de hesaplandı;
+          {" "}{surumTutarFarki.farklilar.length} tutar farkı, {surumTutarFarki.tekTarafli} yalnız bir sürümde hesaplanan hücre var.
+          Eksik formüllü veya hatalı hücreler için tutar eşitliği sonucu çıkarılamaz.
+          {surumTutarFarki.farklilar.slice(0, 12).map((fark) => <Button
+            key={hucreAnahtari(fark.hucre.satir, fark.hucre.sutun, fark.hucre.kapsam, NORMAL)} size="small"
+            onClick={() => {
+              if (sec(fark.hucre)) {
+                setYalnizEksikler(false);
+                setMatrisKapsam(fark.hucre.kapsam);
+                setArama(fark.hucre.satir);
+              }
+            }}>
+            {satirHaritasi.get(fark.hucre.satir)?.ad || fark.hucre.satir}: {tutar.format(fark.onceki)} → {tutar.format(fark.guncel)}
+          </Button>)}
         </Alert>}
 
         <Tabs value={tablo ? tabloAdi : false} onChange={(_, ad) => tabloDegistir(ad)} variant="scrollable" scrollButtons="auto"
@@ -479,7 +529,14 @@ export default function BirlesikTaslakSayfasi() {
         {tabloEksikleri.length > 0 && <Alert severity="warning">
           Bu tabloda {tabloEksikleri.length} eksik formül var. İlk eksikler:{" "}
           {tabloEksikleri.slice(0, 6).map((x, i) => <Button key={`${x.eslesmeAnahtari}-${x.kapsam}-${x.yataySutunAnahtari}`} size="small"
-            onClick={() => { setArama(x.kalemAdi); setMatrisKapsam(x.kapsam); }}>
+            onClick={() => {
+              const hucre = { satir: x.eslesmeAnahtari, sutun: x.yataySutunAnahtari, kapsam: x.kapsam };
+              if (sec(hucre)) {
+                setYalnizEksikler(false);
+                setArama(x.eslesmeAnahtari);
+                setMatrisKapsam(x.kapsam);
+              }
+            }}>
             {i + 1}. {x.kalemAdi} ({KAPSAM[x.kapsam]})
           </Button>)}
         </Alert>}
@@ -705,6 +762,12 @@ export default function BirlesikTaslakSayfasi() {
           </Alert>}
           {!seciliSonuc?.hata && seciliSonuc?.deger != null && <Typography variant="body2">
             Örnek mizan sonucu: <strong>{tutar.format(seciliSonuc.deger)}</strong>
+          </Typography>}
+          {gecerliEskiOnizleme && <Typography variant="body2">
+            Önceki alt sürüm #{karsilastirma?.surumNo}: {seciliEskiSonuc?.deger == null ?
+              "Bu hücrede karşılaştırılabilir tutar yok." :
+              <><strong>{tutar.format(seciliEskiSonuc.deger)}</strong>
+                {seciliSonuc?.deger != null && ` · fark ${tutar.format(seciliSonuc.deger - seciliEskiSonuc.deger)}`}</>}
           </Typography>}
           <TextField size="small" label="Dipnot" value={form.dipnot} fullWidth
             onChange={(e) => setForm((x) => ({ ...x, dipnot: e.target.value }))} />
