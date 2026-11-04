@@ -71,12 +71,14 @@ export const kgkAgaciOlustur = (kalemler: KgkBirlesikSatir[]): KgkAgacSatiri[] =
 };
 
 /** Arama varsa eşleşen satırları üst kalemleriyle; yoksa kapalı dalları gizleyerek döndürür. */
-export const gorunurSatirlar = (agac: KgkAgacSatiri[], kapali: Set<string>, arama: string) => {
+export const gorunurSatirlar = (agac: KgkAgacSatiri[], kapali: Set<string>, arama: string,
+  eksikAnahtarlar?: ReadonlySet<string>) => {
   const aranan = aramaAnahtari(arama.trim());
-  if (aranan) {
+  if (aranan || eksikAnahtarlar) {
     const ustler = new Map(agac.map((x) => [x.anahtar, x.ust]));
     const goster = new Set<string>();
-    agac.filter((x) => aramaAnahtari(x.ad).includes(aranan) || aramaAnahtari(x.anahtar).includes(aranan))
+    agac.filter((x) => (!eksikAnahtarlar || eksikAnahtarlar.has(x.anahtar)) &&
+      (!aranan || aramaAnahtari(x.ad).includes(aranan) || aramaAnahtari(x.anahtar).includes(aranan)))
       .forEach((x) => {
         for (let a: string | null = x.anahtar; a && !goster.has(a); a = ustler.get(a) ?? null) goster.add(a);
       });

@@ -66,6 +66,7 @@ export default function BirlesikTaslakSayfasi() {
   const [testMizanlari, setTestMizanlari] = useState<FinansalTabloTestMizan[]>([]);
   const [tabloAdi, setTabloAdi] = useState("");
   const [arama, setArama] = useState("");
+  const [yalnizEksikler, setYalnizEksikler] = useState(false);
   const [kapali, setKapali] = useState<Set<string>>(new Set());
   const [matrisKapsam, setMatrisKapsam] = useState(1);
   const [secili, setSecili] = useState<Hucre | null>(null);
@@ -129,7 +130,11 @@ export default function BirlesikTaslakSayfasi() {
   const tablo = taslak?.icerik.tablolar.find((x) => x.ad === tabloAdi);
   const matrisMi = Boolean(tablo?.munferit?.sutunlar?.length || tablo?.konsolide?.sutunlar?.length);
   const agac = useMemo(() => kgkAgaciOlustur(tablo?.kalemler ?? []), [tablo]);
-  const satirlar = useMemo(() => gorunurSatirlar(agac, kapali, arama), [agac, kapali, arama]);
+  const eksikAnahtarlar = useMemo(() => new Set((hazirlik?.sonuc.eksikler ?? [])
+    .filter((x) => x.tabloAdi === tabloAdi && (!matrisMi || x.kapsam === matrisKapsam))
+    .map((x) => x.eslesmeAnahtari)), [hazirlik, tabloAdi, matrisMi, matrisKapsam]);
+  const satirlar = useMemo(() => gorunurSatirlar(agac, kapali, arama,
+    yalnizEksikler ? eksikAnahtarlar : undefined), [agac, kapali, arama, yalnizEksikler, eksikAnahtarlar]);
   const satirHaritasi = useMemo(() => new Map(agac.map((x) => [x.anahtar, x])), [agac]);
   const matris = useMemo(() => sutunBasliklari(
     (matrisKapsam === 1 ? tablo?.munferit?.sutunlar : tablo?.konsolide?.sutunlar) ?? []), [tablo, matrisKapsam]);
@@ -289,7 +294,7 @@ export default function BirlesikTaslakSayfasi() {
   const satirEtiketi = (satir: KgkAgacSatiri, kapsam: number) => {
     const no = matrisMi ? kapsamKaynagi(satir, kapsam)?.satirNo : satir.munferit?.satirNo ?? satir.konsolide?.satirNo;
     const farkliNo = !matrisMi && satir.munferit && satir.konsolide && satir.munferit.satirNo !== satir.konsolide.satirNo;
-    const aramada = Boolean(arama.trim());
+    const aramada = Boolean(arama.trim()) || yalnizEksikler;
     return <>
       <TableCell sx={{ position: "sticky", left: 0, zIndex: 1, bgcolor: secili?.satir === satir.anahtar ? EXCEL.seciliBaslik : EXCEL.baslik,
         color: secili?.satir === satir.anahtar ? EXCEL.yesil : "text.secondary", fontWeight: secili?.satir === satir.anahtar ? 700 : 400,
@@ -427,6 +432,10 @@ export default function BirlesikTaslakSayfasi() {
               startAdornment: <InputAdornment position="start"><IconSearch size={16} /></InputAdornment>,
               endAdornment: arama ? <InputAdornment position="end"><IconButton size="small" aria-label="Aramayı temizle" onClick={() => setArama("")}><IconX size={14} /></IconButton></InputAdornment> : undefined,
             } }} />
+          <ToggleButton size="small" value="eksikler" selected={yalnizEksikler}
+            onChange={() => setYalnizEksikler((eski) => !eski)} disabled={!hazirlik}>
+            Eksikler ({eksikAnahtarlar.size})
+          </ToggleButton>
           <Stack direction="row" spacing={0.5}>
             <Tooltip title="Tümünü aç"><span><IconButton size="small" aria-label="Tümünü aç" onClick={() => setKapali(new Set())}><IconChevronsDown size={18} /></IconButton></span></Tooltip>
             <Tooltip title="Tümünü daralt"><span><IconButton size="small" aria-label="Tümünü daralt" onClick={() => setKapali(new Set(agac.filter((x) => x.altSayisi > 0).map((x) => x.anahtar)))}><IconChevronsUp size={18} /></IconButton></span></Tooltip>
@@ -510,7 +519,8 @@ export default function BirlesikTaslakSayfasi() {
                     : KAPSAMLAR.map((k) => <Fragment key={k}>{formulHucresi(satir, null, k)}</Fragment>)}
                 </TableRow>)}
                 {taslak && satirlar.length === 0 && <TableRow><TableCell colSpan={8}>
-                  <Typography variant="body2" color="text.secondary">{arama ? "Aramayla eşleşen satır yok." : "Bu tabloda satır yok."}</Typography>
+                  <Typography variant="body2" color="text.secondary">{arama ? "Aramayla eşleşen satır yok." :
+                    yalnizEksikler ? "Bu kapsamda eksik formül yok." : "Bu tabloda satır yok."}</Typography>
                 </TableCell></TableRow>}
               </TableBody>
             </Table>
