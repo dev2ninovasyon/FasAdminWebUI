@@ -1234,7 +1234,7 @@ export type KgkEskiFormulAdaylari = {
     tabloAdi: string; eslesmeAnahtari: string; kapsam: number;
     kgkKalemAdi: string; kgkSatirNo: number; eskiKayitId: number | null;
     eskiKalemAdi: string | null; hamEskiFormul: string | null;
-    durum: "AdAyni" | "AdFarkli" | "EskiSatirCoklu" | "EskiFormulIncelenmeli";
+    durum: "AdAyni" | "AdFarkli" | "KontrolBakiyesiAdayi" | "EskiSatirCoklu" | "EskiFormulIncelenmeli";
     varyant: KgkBirlesikFormulVaryanti | null;
   }>;
 };

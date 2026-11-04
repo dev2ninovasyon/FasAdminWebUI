@@ -541,6 +541,7 @@ export default function BirlesikTaslakSayfasi() {
             <Typography variant="caption" sx={{ display: "block", fontWeight: 700 }}>
               Eski formül kaydı {seciliEskiAday.eskiKayitId ? `#${seciliEskiAday.eskiKayitId}` : "birden fazla"}
               {seciliEskiAday.durum === "AdFarkli" ? " · kalem adları farklı, inceleyin" : ""}
+              {seciliEskiAday.durum === "KontrolBakiyesiAdayi" ? " · * hesabı kontrol bakiyesi olarak önerildi; tutarı doğrulayın" : ""}
             </Typography>
             {seciliEskiAday.eskiKalemAdi && seciliEskiAday.eskiKalemAdi !== seciliEskiAday.kgkKalemAdi &&
               <Typography variant="caption" sx={{ display: "block" }}>Eski kalem: {seciliEskiAday.eskiKalemAdi}</Typography>}
