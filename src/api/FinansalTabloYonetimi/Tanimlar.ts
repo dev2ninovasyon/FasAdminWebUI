@@ -1293,6 +1293,9 @@ export type KgkBirlesikOnizlemeHucresi = {
 export type KgkBirlesikOnizlemeSonucu = {
   formulSurumNo: number;
   tabloAdi: string;
+  eksikFormulSayisi: number;
+  yapiSorunuSayisi: number;
+  tamMi: boolean;
   testMizanId: string | null;
   testMizanAdi: string | null;
   motorSurumu: string;

@@ -355,6 +355,11 @@ export default function BirlesikTaslakSayfasi() {
         {onizleme?.testMizanAdi && onizleme.tabloAdi === tabloAdi && <Typography variant="caption" color="text.secondary">
           Değerler “{onizleme.testMizanAdi}” test mizanından, alt sürüm #{onizleme.formulSurumNo} ile hesaplandı (cari dönem bakiyesi).
         </Typography>}
+        {onizleme?.tabloAdi === tabloAdi && !onizleme.tamMi && <Alert severity="error">
+          Bu önizleme kısmi bir formül testidir; finansal tablo olarak kullanılmamalıdır.
+          {" "}{onizleme.eksikFormulSayisi} eksik formül, {onizleme.yapiSorunuSayisi} yapı sorunu var.
+          Motor hatalarını da hücrelerde kontrol edin.
+        </Alert>}
 
         <Box>
           {/* width 0 + minWidth: kaydırmalı tablonun içerik genişliği sayfa sarmalayıcısını taşırmasın. */}
