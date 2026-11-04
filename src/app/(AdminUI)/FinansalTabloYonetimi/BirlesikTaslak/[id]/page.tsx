@@ -17,9 +17,9 @@ import ParentCard from "@/app/components/Shared/ParentCard";
 import { useSelector } from "@/store/hooks";
 import { AppState } from "@/store/store";
 import {
-  getKgkBirlesikTaslak, getKgkBirlesikFormulSurumleri, getKgkBirlesikSonFormulSurumu, getKgkBirlesikFormulSurumu, getKgkBirlesikFormulHazirligi, getKgkExcelFormulAdaylari, previewKgkBirlesikFormulSurumu,
+  getKgkBirlesikTaslak, getKgkBirlesikFormulSurumleri, getKgkBirlesikSonFormulSurumu, getKgkBirlesikFormulSurumu, getKgkBirlesikFormulHazirligi, getKgkExcelFormulAdaylari, getKgkEskiFormulAdaylari, previewKgkBirlesikFormulSurumu,
   saveKgkBirlesikFormulVaryanti, KgkBirlesikTaslakDetay, KgkBirlesikFormulSurumu, KgkBirlesikFormulVaryanti,
-  KgkBirlesikFormulHazirligi, KgkBirlesikOnizlemeHucresi, KgkBirlesikOnizlemeSonucu, KgkMatrisSutunu, KgkExcelFormulAdaylari,
+  KgkBirlesikFormulHazirligi, KgkBirlesikOnizlemeHucresi, KgkBirlesikOnizlemeSonucu, KgkMatrisSutunu, KgkExcelFormulAdaylari, KgkEskiFormulAdaylari,
 } from "@/api/FinansalTabloYonetimi/Tanimlar";
 import { getFinansalTabloTestMizanlari, FinansalTabloTestMizan } from "@/api/FinansalTabloYonetimi/TestMizan";
 import { KgkAgacSatiri, gorunurSatirlar, kgkAgaciOlustur, sutunBasliklari } from "./kgkAgaci";
@@ -60,6 +60,8 @@ export default function BirlesikTaslakSayfasi() {
   const [hazirlik, setHazirlik] = useState<KgkBirlesikFormulHazirligi | null>(null);
   const [kgkAdaylari, setKgkAdaylari] = useState<KgkExcelFormulAdaylari | null>(null);
   const [kgkAdayHatasi, setKgkAdayHatasi] = useState("");
+  const [eskiAdaylari, setEskiAdaylari] = useState<KgkEskiFormulAdaylari | null>(null);
+  const [eskiAdayHatasi, setEskiAdayHatasi] = useState("");
   const [gecmis, setGecmis] = useState<Gecmis[]>([]);
   const [testMizanlari, setTestMizanlari] = useState<FinansalTabloTestMizan[]>([]);
   const [tabloAdi, setTabloAdi] = useState("");
@@ -88,6 +90,8 @@ export default function BirlesikTaslakSayfasi() {
     setHazirlik(null);
     setKgkAdaylari(null);
     setKgkAdayHatasi("");
+    setEskiAdaylari(null);
+    setEskiAdayHatasi("");
     setGecmis([]);
     setTabloAdi("");
     setSecili(null);
@@ -102,14 +106,19 @@ export default function BirlesikTaslakSayfasi() {
         if (aktif) setKgkAdayHatasi(error instanceof Error ? error.message : "KGK Excel formül adayları alınamadı.");
         return null;
       }),
+      getKgkEskiFormulAdaylari(token, id).catch((error) => {
+        if (aktif) setEskiAdayHatasi(error instanceof Error ? error.message : "Eski formül adayları alınamadı.");
+        return null;
+      }),
       getFinansalTabloTestMizanlari(token, 20).catch(() => [] as FinansalTabloTestMizan[]),
-    ]).then(([kaynakTaslak, formulSurumu, kapsamDurumu, tarihce, adaylar, mizanlar]) => {
+    ]).then(([kaynakTaslak, formulSurumu, kapsamDurumu, tarihce, adaylar, eskiAdaylar, mizanlar]) => {
       if (!aktif) return;
       setTaslak(kaynakTaslak);
       setTabloAdi(kaynakTaslak.icerik.tablolar[0]?.ad || "");
       setSon(formulSurumu);
       setHazirlik(kapsamDurumu);
       setKgkAdaylari(adaylar);
+      setEskiAdaylari(eskiAdaylar);
       setGecmis(tarihce);
       setTestMizanlari(mizanlar);
       setTestMizanId((eski) => eski || mizanlar[0]?.id || "");
@@ -129,6 +138,8 @@ export default function BirlesikTaslakSayfasi() {
   const adaylar = useMemo(() => new Map((kgkAdaylari?.adaylar ?? []).filter((x) => x.varyant.tabloAdi === tabloAdi)
     .map((x) => [hucreAnahtari(x.varyant.eslesmeAnahtari, x.varyant.yataySutunAnahtari,
       x.varyant.kapsam, x.varyant.donusumTipi), x])), [kgkAdaylari, tabloAdi]);
+  const eskiAdaylar = useMemo(() => new Map((eskiAdaylari?.adaylar ?? []).filter((x) => x.tabloAdi === tabloAdi)
+    .map((x) => [hucreAnahtari(x.eslesmeAnahtari, null, x.kapsam, NORMAL), x])), [eskiAdaylari, tabloAdi]);
   const matrisHucreleri = useMemo(() => new Map(KAPSAMLAR.map((k) => [k, new Set(
     ((k === 1 ? tablo?.munferit : tablo?.konsolide)?.matrisHucreleri ?? [])
       .map((x) => `${x.sayfaAdi}\u0001${x.satirNo}\u0001${x.sutun}`))])), [tablo]);
@@ -141,6 +152,7 @@ export default function BirlesikTaslakSayfasi() {
   const seciliSutun = secili?.sutun ? matris.yapraklar.find((x) => x.sabitAnahtar === secili.sutun) : undefined;
   const seciliSonuc = secili ? sonuclar.get(hucreAnahtari(secili.satir, secili.sutun, secili.kapsam, NORMAL)) : undefined;
   const seciliAday = secili ? adaylar.get(hucreAnahtari(secili.satir, secili.sutun, secili.kapsam, NORMAL)) : undefined;
+  const seciliEskiAday = secili && !secili.sutun ? eskiAdaylar.get(hucreAnahtari(secili.satir, null, secili.kapsam, NORMAL)) : undefined;
   const eskiKayit = secili ? karsilastirma?.varyantlar.find((x) => x.tabloAdi === tabloAdi &&
     x.eslesmeAnahtari === secili.satir && x.yataySutunAnahtari === secili.sutun &&
     x.kapsam === secili.kapsam && x.donusumTipi === NORMAL) : undefined;
@@ -203,15 +215,21 @@ export default function BirlesikTaslakSayfasi() {
       };
       const sonuc = await saveKgkBirlesikFormulVaryanti(token, id, son?.surumNo || 0, varyant,
         (aciklama.trim() || varsayilan).slice(0, 500));
-      const [guncel, kapsamDurumu, tarihce, guncelAdaylar] = await Promise.all([
+      const [guncel, kapsamDurumu, tarihce, guncelAdaylar, guncelEskiAdaylar] = await Promise.all([
         getKgkBirlesikSonFormulSurumu(token, id), getKgkBirlesikFormulHazirligi(token, id),
         getKgkBirlesikFormulSurumleri(token, id), getKgkExcelFormulAdaylari(token, id).catch((error) => {
           setKgkAdayHatasi(error instanceof Error ? error.message : "KGK Excel formül adayları güncellenemedi.");
           return null;
         }),
+        getKgkEskiFormulAdaylari(token, id).catch((error) => {
+          setEskiAdayHatasi(error instanceof Error ? error.message : "Eski formül adayları güncellenemedi.");
+          return null;
+        }),
       ]);
       setSon(guncel); setHazirlik(kapsamDurumu); setGecmis(tarihce); setKgkAdaylari(guncelAdaylar);
       if (guncelAdaylar) setKgkAdayHatasi("");
+      setEskiAdaylari(guncelEskiAdaylar);
+      if (guncelEskiAdaylar) setEskiAdayHatasi("");
       setKayitliForm(form); setAciklama("");
       setMesaj(`Alt sürüm #${sonuc.surumNo} kaydedildi; önceki sürümler korunuyor.`);
     } catch (error) {
@@ -331,6 +349,9 @@ export default function BirlesikTaslakSayfasi() {
         {mesaj && <Alert severity="success" onClose={() => setMesaj("")}>{mesaj}</Alert>}
         {kgkAdayHatasi && <Alert severity="warning" onClose={() => setKgkAdayHatasi("")}>
           KGK Excel formül önerileri gösterilemiyor: {kgkAdayHatasi}
+        </Alert>}
+        {eskiAdayHatasi && <Alert severity="warning" onClose={() => setEskiAdayHatasi("")}>
+          Eski formül önerileri gösterilemiyor: {eskiAdayHatasi}
         </Alert>}
         {hazirlik && !hazirlik.sonuc.hazirMi && <Alert severity="error">
           Formül kapsamı eksik: {hazirlik.sonuc.mevcutFormulSayisi}/{hazirlik.sonuc.gerekliFormulSayisi} gerekli hücre dolu;
@@ -509,6 +530,25 @@ export default function BirlesikTaslakSayfasi() {
             {seciliAday.durum !== "Ayni" && <Button size="small" onClick={() => setForm((x) => ({
               ...x, formul: seciliAday.varyant.hamFormul ?? "", kaynak: seciliAday.varyant.kaynak ?? "",
             }))}>KGK formülünü düzenleyiciye al</Button>}
+          </Alert>}
+          {seciliEskiAday && <Alert severity={seciliEskiAday.durum === "AdAyni" ? "info" : "warning"} sx={{ py: 0 }}>
+            <Typography variant="caption" sx={{ display: "block", fontWeight: 700 }}>
+              Eski formül kaydı {seciliEskiAday.eskiKayitId ? `#${seciliEskiAday.eskiKayitId}` : "birden fazla"}
+              {seciliEskiAday.durum === "AdFarkli" ? " · kalem adları farklı, inceleyin" : ""}
+            </Typography>
+            {seciliEskiAday.eskiKalemAdi && seciliEskiAday.eskiKalemAdi !== seciliEskiAday.kgkKalemAdi &&
+              <Typography variant="caption" sx={{ display: "block" }}>Eski kalem: {seciliEskiAday.eskiKalemAdi}</Typography>}
+            <Typography variant="body2" sx={{ fontFamily: "Consolas, monospace", overflowWrap: "anywhere" }}>
+              {seciliEskiAday.hamEskiFormul || "Eski kayıtta kullanılabilir formül yok."}
+            </Typography>
+            {seciliEskiAday.varyant && <Typography variant="caption" sx={{ display: "block" }}>
+              Kaydetmeden önce örnek mizan ve eski rapor tutarıyla karşılaştırın.
+            </Typography>}
+            {seciliEskiAday.varyant ? <Button size="small" onClick={() => setForm((x) => ({
+              ...x, formul: seciliEskiAday.varyant?.hamFormul ?? "",
+              dipnot: seciliEskiAday.varyant?.dipnot ?? "", kaynak: seciliEskiAday.varyant?.kaynak ?? "",
+            }))}>Eski formülü düzenleyiciye al</Button> :
+              <Typography variant="caption">Bu kayıt otomatik formüle çevrilemez.</Typography>}
           </Alert>}
           {karsilastirma && <Alert severity="info" sx={{ py: 0 }}>
             <Typography variant="caption" sx={{ display: "block", fontWeight: 700 }}>

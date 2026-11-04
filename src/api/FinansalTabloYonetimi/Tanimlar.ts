@@ -1228,6 +1228,21 @@ export const getKgkExcelFormulAdaylari = async (token: string, id: number) =>
   enumlariSayiyaCevir(await jsonGet<KgkExcelFormulAdaylari>(token,
     `/Kgk/BirlesikTaslaklar/${id}/KgkExcelFormulAdaylari`));
 
+export type KgkEskiFormulAdaylari = {
+  taslakId: number; formulSurumNo: number; toplam: number; kullanilabilir: number;
+  adaylar: Array<{
+    tabloAdi: string; eslesmeAnahtari: string; kapsam: number;
+    kgkKalemAdi: string; kgkSatirNo: number; eskiKayitId: number | null;
+    eskiKalemAdi: string | null; hamEskiFormul: string | null;
+    durum: "AdAyni" | "AdFarkli" | "EskiSatirCoklu" | "EskiFormulIncelenmeli";
+    varyant: KgkBirlesikFormulVaryanti | null;
+  }>;
+};
+
+export const getKgkEskiFormulAdaylari = async (token: string, id: number) =>
+  enumlariSayiyaCevir(await jsonGet<KgkEskiFormulAdaylari>(token,
+    `/Kgk/BirlesikTaslaklar/${id}/EskiFormulAdaylari`));
+
 export type KgkBirlesikFormulSurumu = {
   id: number;
   birlesikTaslakId: number;
