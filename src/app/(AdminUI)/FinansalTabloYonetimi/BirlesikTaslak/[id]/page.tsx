@@ -340,6 +340,7 @@ export default function BirlesikTaslakSayfasi() {
   const tabloEksikleri = hazirlik?.sonuc.eksikler.filter((x) => x.tabloAdi === tabloAdi) ?? [];
   const tabloYapiSorunlari = hazirlik?.sonuc.yapiSorunlari.filter((x) => x.startsWith(`${tabloAdi} /`)) ?? [];
   const sonGecmis = gecmis[0];
+  const onizlemeMizani = onizleme?.testMizanId ? testMizanlari.find((x) => x.id === onizleme.testMizanId) : undefined;
 
   return <PageContainer title="Birleşik KGK formülleri" description="KGK kalemleri ve formül alt sürümleri">
     <Breadcrumb title="Birleşik KGK formülleri" items={[{ title: "Finansal Tablolar", to: "/FinansalTabloYonetimi" }, { title: "Birleşik taslak" }]} />
@@ -454,6 +455,11 @@ export default function BirlesikTaslakSayfasi() {
         {onizleme?.testMizanAdi && onizleme.tabloAdi === tabloAdi && <Typography variant="caption" color="text.secondary">
           Değerler “{onizleme.testMizanAdi}” test mizanından, alt sürüm #{onizleme.formulSurumNo} ile hesaplandı (cari dönem bakiyesi).
         </Typography>}
+        {onizleme?.tabloAdi === tabloAdi && onizleme.varyantlar.some((x) => x.durum === "MizanKapsamiFarkli") &&
+          <Alert severity="info" sx={{ py: 0 }}>
+            Seçilen mizan {onizlemeMizani?.konsolidasyonMu ? "konsolide" : "münferit"} kapsamındadır.
+            Diğer kapsamın formülleri denetlendi; tutarları bu mizanla hesaplanmadı. Diğer kapsam için uygun bir test mizanı seçin.
+          </Alert>}
         {onizleme?.tabloAdi === tabloAdi && !onizleme.tamMi && <Alert severity="error">
           Bu önizleme kısmi bir formül testidir; finansal tablo olarak kullanılmamalıdır.
           {" "}{onizleme.eksikFormulSayisi} eksik formül, {onizleme.yapiSorunuSayisi} yapı sorunu var.
