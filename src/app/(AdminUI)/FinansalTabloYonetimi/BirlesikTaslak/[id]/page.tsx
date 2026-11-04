@@ -48,6 +48,7 @@ const ozkaynakAdayDurumu = {
   EskiAdresCoklu: "Eski adreste birden fazla kayıt var",
   OzelFormulIncelenmeli: "Özel * formülü elle incelenmeli",
   EskiFormulIncelenmeli: "Eski formül otomatik çevrilemedi",
+  YerTutucuFormulIncelenmeli: "Eski değer bir yer tutucudur; hücrenin gerçek hesaplama kuralı belirlenmeli",
   KontrolBakiyesiAdayi: "* hesabı kontrol bakiyesi olarak çevrildi; tutarı mizanda doğrulayın",
   YinelenenBakiyeFormuluIncelenmeli: "Aynı bakiye formülü sonraki satırda yinelenmiş; hareket tutarını elle doğrulayın",
 };
