@@ -432,6 +432,7 @@ export default function BirlesikTaslakSayfasi() {
   const formulSayisi = (son?.varyantlar ?? []).filter((x) => x.tabloAdi === tabloAdi).length;
   const tabloEksikleri = hazirlik?.sonuc.eksikler.filter((x) => x.tabloAdi === tabloAdi) ?? [];
   const tabloYapiSorunlari = hazirlik?.sonuc.yapiSorunlari.filter((x) => x.startsWith(`${tabloAdi} /`)) ?? [];
+  const genelYapiSorunlari = hazirlik?.sonuc.yapiSorunlari.filter((x) => !x.includes(" / ")) ?? [];
   const sonGecmis = gecmis[0];
   const onizlemeMizani = onizleme?.testMizanId ? testMizanlari.find((x) => x.id === onizleme.testMizanId) : undefined;
 
@@ -456,8 +457,9 @@ export default function BirlesikTaslakSayfasi() {
           {" "}{hazirlik.sonuc.derlemeSorunlari.length} derleme sorunu var.
           Bu taslak üretim için hazır değildir. Aşağıdaki tabloda eksik hücreleri tamamlayıp tekrar denetleyin.
         </Alert>}
+        {genelYapiSorunlari.length > 0 && <Alert severity="error">{genelYapiSorunlari.join("; ")}</Alert>}
         {hazirlik?.sonuc.hazirMi && <Alert severity="info">
-          Gerekli formüller mevcut. Üretime geçmeden motor hesapları ve gerçek mizan karşılaştırması ayrıca doğrulanmalıdır.
+          Gerekli formüller mevcut. Gerçek mizan karşılaştırması tamamlanmadan ve birleşik taslak üretim tanımına bağlanmadan yayımlanamaz.
         </Alert>}
         {kgkAdaylari && kgkAdaylari.toplam > 0 && <Alert severity="info" sx={{ py: 0 }}>
           KGK Excel toplamları: {kgkAdaylari.toplam} hücre; {kgkAdaylari.eklenecek} formül incelenmeyi bekliyor.
