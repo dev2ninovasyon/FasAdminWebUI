@@ -247,6 +247,19 @@ const surumDurumKodu = (durum: number | string) => {
   return ({ Taslak: 1, Dogrulandi: 2, Yayinda: 3, KullanimdanKaldirildi: 4 } as Record<string, number>)[durum] ?? 0;
 };
 
+const kgkYayinGruplari = (anaSurum: KgkAnaSurum) => {
+  const taslaklar = anaSurum.surumler.filter((surum) => surumDurumKodu(surum.durum) === 1);
+  const birlesik = taslaklar.filter((surum) => surum.birlesikTaslakId && surum.birlesikFormulSurumuId);
+  if (birlesik.length === 0) return taslaklar.length === anaSurum.surumler.length && taslaklar.length > 0
+    ? [{ anahtar: "eski", baslik: "Bağlı taslaklar", surumler: taslaklar }] : [];
+  const anahtarlar = [...new Set(birlesik.map((surum) => `${surum.birlesikTaslakId}:${surum.birlesikFormulSurumuId}`))];
+  return anahtarlar.map((anahtar) => {
+    const surumler = birlesik.filter((surum) => `${surum.birlesikTaslakId}:${surum.birlesikFormulSurumuId}` === anahtar);
+    return { anahtar, baslik: `${raporlamaStandardiAdi(Number(surumler[0]?.raporlamaStandardi))} · birleşik taslak #${surumler[0]?.birlesikTaslakId}`,
+      surumler };
+  }).filter((grup) => grup.surumler.length === 2);
+};
+
 const tabloTuruEtiketi = (tabloTuru: number | string) => {
   const kod = typeof tabloTuru === "number"
     ? tabloTuru
@@ -363,6 +376,7 @@ const Page = ({ editorSurumId }: PageProps) => {
   const [kgkTopluHatasi, setKgkTopluHatasi] = useState("");
   const [kgkTopluMesaji, setKgkTopluMesaji] = useState("");
   const [kgkTopluSeciliId, setKgkTopluSeciliId] = useState(0);
+  const [kgkTopluSeciliGrup, setKgkTopluSeciliGrup] = useState("");
   const [kgkGecmisYukleniyor, setKgkGecmisYukleniyor] = useState(false);
   const [kgkWorkbookSonucu, setKgkWorkbookSonucu] = useState<KgkWorkbookFarkSonucu | null>(null);
   const [kgkBaslangicKalemleri, setKgkBaslangicKalemleri] = useState<{ dosyaAdi: string; kalemler: KgkArsivKalemi[] } | null>(null);
@@ -1110,12 +1124,12 @@ const Page = ({ editorSurumId }: PageProps) => {
     }
   };
 
-  const kgkAnaSurumuDevreyeAl = async (anaSurum: KgkAnaSurum) => {
+  const kgkAnaSurumuDevreyeAl = async (anaSurum: KgkAnaSurum, surumler: KgkAnaSurum["surumler"]) => {
     if (!user.token || kgkTopluYukleniyor) return;
     if (!kgkTopluTarih || kgkTopluNeden.trim().length < 10 ||
-        anaSurum.surumler.length === 0 ||
-        anaSurum.surumler.some((surum) => surumDurumKodu(surum.durum) !== 1 || !surum.ornekMizanHazirMi)) {
-      setKgkTopluHatasi("Tüm bağlı taslaklar örnek mizanla hazırlanmalı; etkinlik tarihi ve en az 10 karakterlik onay nedeni girilmelidir.");
+        surumler.length === 0 ||
+        surumler.some((surum) => surumDurumKodu(surum.durum) !== 1 || !surum.ornekMizanHazirMi)) {
+      setKgkTopluHatasi("Seçilen taslaklar örnek mizanla hazırlanmalı; etkinlik tarihi ve en az 10 karakterlik onay nedeni girilmelidir.");
       return;
     }
     setKgkTopluYukleniyor(true);
@@ -1125,7 +1139,7 @@ const Page = ({ editorSurumId }: PageProps) => {
       const sonuc = await activateKgkAnaSurum(user.token, anaSurum.id, {
         etkinlikTarihi: kgkTopluTarih,
         onayAciklamasi: kgkTopluNeden.trim(),
-        surumler: anaSurum.surumler.map((surum) => ({
+        surumler: surumler.map((surum) => ({
           surumId: surum.id,
           eszamanlilikSurumu: surum.eszamanlilikSurumu,
         })),
@@ -1133,6 +1147,7 @@ const Page = ({ editorSurumId }: PageProps) => {
       setKgkTopluMesaji(`KGK ana sürüm #${anaSurum.surumNo} kapsamındaki ${sonuc.surumler.length} rapor sürümü devreye alındı. Önceki rapor kayıtları değişmedi.`);
       setKgkTopluNeden("");
       setKgkTopluSeciliId(0);
+      setKgkTopluSeciliGrup("");
       await kgkTaramaGecmisiniYukle();
     } catch (error) {
       setKgkTopluHatasi(error instanceof Error ? error.message : "KGK ana sürümü devreye alınamadı.");
@@ -2286,11 +2301,11 @@ const Page = ({ editorSurumId }: PageProps) => {
                     onClick={() => kgkBirlesikTaslakOlustur(anaSurum.id, standart.kod)}>
                     {kgkBirlesikYukleniyor === `${anaSurum.id}-${standart.kod}` ? <CircularProgress size={16} /> : `${standart.ad} taslağı`}
                   </Button>)}
-                {anaSurum.surumler.length > 0 && anaSurum.surumler.every((surum) => surumDurumKodu(surum.durum) === 1)
-                ? <Button size="small" variant="text" onClick={() => { setKgkTopluSeciliId(anaSurum.id); setKgkTopluHatasi(""); setKgkTopluMesaji(""); }}>
-                    Toplu devreye al
-                  </Button>
-                : null}</Stack></TableCell>
+                {kgkYayinGruplari(anaSurum).map((grup) =>
+                  <Button key={grup.anahtar} size="small" variant="text" onClick={() => {
+                    setKgkTopluSeciliId(anaSurum.id); setKgkTopluSeciliGrup(grup.anahtar);
+                    setKgkTopluHatasi(""); setKgkTopluMesaji("");
+                  }}>Devreye al · {grup.baslik}</Button>)}</Stack></TableCell>
             </TableRow>)}</TableBody>
           </Table>
           {kgkBirlesikHata && <Alert severity="error" sx={{ mt: 1 }} onClose={() => setKgkBirlesikHata("")}>{kgkBirlesikHata}</Alert>}
@@ -2305,14 +2320,16 @@ const Page = ({ editorSurumId }: PageProps) => {
           </Alert>}
           {kgkTopluHatasi && <Alert severity="error" sx={{ mt: 1 }} onClose={() => setKgkTopluHatasi("")}>{kgkTopluHatasi}</Alert>}
           {kgkTopluMesaji && <Alert severity="success" sx={{ mt: 1 }} onClose={() => setKgkTopluMesaji("")}>{kgkTopluMesaji}</Alert>}
-          {kgkAnaSurumler.filter((anaSurum) => anaSurum.id === kgkTopluSeciliId).map((anaSurum) => (
+          {kgkAnaSurumler.filter((anaSurum) => anaSurum.id === kgkTopluSeciliId).flatMap((anaSurum) =>
+            kgkYayinGruplari(anaSurum).filter((grup) => grup.anahtar === kgkTopluSeciliGrup)
+              .map((grup) => (
             <Paper key={anaSurum.id} variant="outlined" sx={{ p: 1.5, mt: 1.5 }}>
               <Stack spacing={1}>
-                <Typography variant="subtitle2">KGK ana sürüm #{anaSurum.surumNo} · {anaSurum.surumler.length} taslak</Typography>
+                <Typography variant="subtitle2">KGK ana sürüm #{anaSurum.surumNo} · {grup.baslik} · {grup.surumler.length} taslak</Typography>
                 <Typography variant="body2" color="text.secondary">
                   Tüm bağlı taslaklar teknik olarak yeniden doğrulanır ve tek işlemde devreye alınır. Her taslak için güncel örnek mizan hazırlığı gerekir. Eski rapor kayıtları korunur.
                 </Typography>
-                {anaSurum.surumler.some((surum) => !surum.ornekMizanHazirMi) && (
+                {grup.surumler.some((surum) => !surum.ornekMizanHazirMi) && (
                   <Alert severity="warning">Örnek mizan hazırlığı eksik olan taslakları açıp test edin.</Alert>
                 )}
                 <Stack direction={{ xs: "column", md: "row" }} spacing={1} alignItems={{ md: "flex-start" }}>
@@ -2322,16 +2339,16 @@ const Page = ({ editorSurumId }: PageProps) => {
                     onChange={(event) => setKgkTopluNeden(event.target.value)} inputProps={{ maxLength: 500 }}
                     helperText="Değişikliği en az 10 karakterle açıklayın." />
                   <Button size="small" variant="contained" color="success"
-                    onClick={() => kgkAnaSurumuDevreyeAl(anaSurum)}
+                    onClick={() => kgkAnaSurumuDevreyeAl(anaSurum, grup.surumler)}
                     disabled={kgkTopluYukleniyor || !kgkTopluTarih || kgkTopluNeden.trim().length < 10 ||
-                      anaSurum.surumler.some((surum) => surumDurumKodu(surum.durum) !== 1 || !surum.ornekMizanHazirMi)}
+                      grup.surumler.some((surum) => surumDurumKodu(surum.durum) !== 1 || !surum.ornekMizanHazirMi)}
                     sx={{ minWidth: 190, minHeight: 40 }}>
                     {kgkTopluYukleniyor ? <CircularProgress size={18} color="inherit" /> : "Tüm taslakları devreye al"}
                   </Button>
                 </Stack>
               </Stack>
             </Paper>
-          ))}
+          )))}
         </AccordionDetails>
       </Accordion>}
       <ParentCard title="KGK format güncelleme kontrolü">

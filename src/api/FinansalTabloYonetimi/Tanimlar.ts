@@ -1135,6 +1135,10 @@ export type KgkAnaSurum = {
     durum: number | string;
     eszamanlilikSurumu: number;
     ornekMizanHazirMi: boolean;
+    birlesikTaslakId?: number | null;
+    birlesikFormulSurumuId?: number | null;
+    raporlamaStandardi?: number | string;
+    kapsam?: number | string;
   }>;
 };
 
