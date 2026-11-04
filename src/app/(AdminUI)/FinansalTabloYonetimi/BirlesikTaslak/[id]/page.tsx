@@ -198,6 +198,18 @@ export default function BirlesikTaslakSayfasi() {
     return { hucre: { satir: hedefSatir.eslesmeAnahtari, sutun: hedefSutun.sabitAnahtar,
       kapsam: secili.kapsam }, ad: hedefSatir.munferitKaynaklari?.[0]?.ad || hedefSatir.konsolideKaynaklari?.[0]?.ad || "Eksik hücre" };
   }, [secili, seciliSatir, seciliAday, tablo]);
+  const eksikAltKalem = useMemo(() => {
+    if (!secili || secili.sutun || !seciliSatir || !seciliSonuc?.hata) return null;
+    const satirNo = /ALT alt kaleminin çalışır formülü yok: (\d+)\. satır/u.exec(seciliSonuc.hata)?.[1];
+    const kaynak = kapsamKaynagi(seciliSatir, secili.kapsam);
+    if (!satirNo || !kaynak) return null;
+    const hedef = agac.find((x) => {
+      const alt = kapsamKaynagi(x, secili.kapsam);
+      return alt?.sayfaAdi === kaynak.sayfaAdi && alt.satirNo === Number(satirNo) &&
+        alt.ustSabitAnahtar === kaynak.sabitAnahtar;
+    });
+    return hedef ? { hucre: { satir: hedef.anahtar, sutun: null, kapsam: secili.kapsam }, ad: hedef.ad } : null;
+  }, [secili, seciliSatir, seciliSonuc?.hata, agac]);
   const eskiKayit = secili ? karsilastirma?.varyantlar.find((x) => x.tabloAdi === tabloAdi &&
     x.eslesmeAnahtari === secili.satir && x.yataySutunAnahtari === secili.sutun &&
     x.kapsam === secili.kapsam && x.donusumTipi === NORMAL) : undefined;
@@ -599,7 +611,8 @@ export default function BirlesikTaslakSayfasi() {
             {eksikBagimlilik && <Button size="small" onClick={() => {
               if (sec(eksikBagimlilik.hucre)) {
                 setMatrisKapsam(eksikBagimlilik.hucre.kapsam);
-                setArama(eksikBagimlilik.ad);
+                setYalnizEksikler(false);
+                setArama(eksikBagimlilik.hucre.satir);
               }
             }}>Eksik hücreye git ({eksikBagimlilik.ad})</Button>}
             {seciliAday.durum === "YoneticiFormuluVar" && seciliAday.aciklama &&
@@ -676,7 +689,15 @@ export default function BirlesikTaslakSayfasi() {
             }}
             helperText={matrisMi ? "Hesap: 500, KONTROL(500), TRANSFERHARIC(500), KONTROLTRANSFERHARIC(500). KGK toplamı: SUM(C12:D12); kaynak hücrelerin de formülü olmalıdır."
               : "100 bakiye, KONTROL(100) kontrol bakiyesi, TRANSFERHARIC(100) transfer fişi hariç bakiye, KONTROLTRANSFERHARIC(100) kontrol bakiyesi; ayrıca C12, TOPLA(C10:C15), ALT kullanılabilir."} />
-          {seciliSonuc?.hata && <Alert severity="error" sx={{ py: 0 }}>{seciliSonuc.hata}</Alert>}
+          {seciliSonuc?.hata && <Alert severity="error" sx={{ py: 0 }}>
+            {seciliSonuc.hata}
+            {eksikAltKalem && <Button size="small" onClick={() => {
+              if (sec(eksikAltKalem.hucre)) {
+                setYalnizEksikler(false);
+                setArama(eksikAltKalem.hucre.satir);
+              }
+            }}>Eksik alt kaleme git ({eksikAltKalem.ad})</Button>}
+          </Alert>}
           {!seciliSonuc?.hata && seciliSonuc?.deger != null && <Typography variant="body2">
             Örnek mizan sonucu: <strong>{tutar.format(seciliSonuc.deger)}</strong>
           </Typography>}
