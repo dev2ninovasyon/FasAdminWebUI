@@ -516,10 +516,15 @@ export default function BirlesikTaslakSayfasi() {
           Eski özkaynak formül önerileri gösterilemiyor: {ozkaynakAdayHatasi}
         </Alert>}
         {hazirlik && !hazirlik.sonuc.hazirMi && <Alert severity="error">
-          Formül kapsamı eksik: {hazirlik.sonuc.mevcutFormulSayisi}/{hazirlik.sonuc.gerekliFormulSayisi} gerekli hücre dolu;
-          {" "}{hazirlik.sonuc.eksikler.length} eksik formül, {hazirlik.sonuc.yapiSorunlari.length} yapı sorunu,
-          {" "}{hazirlik.sonuc.derlemeSorunlari.length} derleme sorunu var.
-          Bu taslak üretim için hazır değildir. Aşağıdaki tabloda eksik hücreleri tamamlayıp tekrar denetleyin.
+          Kayıtlı formül: {hazirlik.sonuc.mevcutFormulSayisi}/{hazirlik.sonuc.gerekliFormulSayisi}.
+          {hazirlik.derlenebilirFormulSayisi != null && <> Çalışabilir formül: {hazirlik.derlenebilirFormulSayisi}.</>}
+          {" "}{hazirlik.sonuc.eksikler.length} formül eksik.
+          {hazirlik.eksikAltHucreBagimliligiSayisi != null && hazirlik.eksikAltHucreBagimliligiSayisi > 0 &&
+            <> {hazirlik.eksikAltHucreBagimliligiSayisi} Excel toplamı alt hücre formülü bekliyor.</>}
+          {hazirlik.digerMotorHatasiSayisi != null && hazirlik.digerMotorHatasiSayisi > 0 &&
+            <> {hazirlik.digerMotorHatasiSayisi} başka hesaplama hatası var.</>}
+          {hazirlik.sonuc.yapiSorunlari.length > 0 && <> {hazirlik.sonuc.yapiSorunlari.length} yapı sorunu var.</>}
+          {" "}Bu taslak üretim için hazır değildir. Aşağıdaki tabloda eksik hücreleri tamamlayıp tekrar denetleyin.
         </Alert>}
         {genelYapiSorunlari.length > 0 && <Alert severity="error">{genelYapiSorunlari.join("; ")}</Alert>}
         {hazirlik?.sonuc.hazirMi && <Alert severity="info">

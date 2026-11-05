@@ -1300,6 +1300,9 @@ export const getKgkBirlesikFormulSurumu = async (token: string, id: number, suru
 
 export type KgkBirlesikFormulHazirligi = {
   surumNo: number;
+  derlenebilirFormulSayisi?: number | null;
+  eksikAltHucreBagimliligiSayisi?: number | null;
+  digerMotorHatasiSayisi?: number | null;
   sonuc: {
     hazirMi: boolean;
     gerekliFormulSayisi: number;
