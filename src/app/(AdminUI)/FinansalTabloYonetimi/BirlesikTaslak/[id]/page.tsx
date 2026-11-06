@@ -22,7 +22,9 @@ export default function BirlesikTaslakSayfasi() {
   const token = useSelector((state: AppState) => state.userReducer.token);
   const [taslak, setTaslak] = useState<KgkBirlesikTaslakDetay | null>(null);
   const [son, setSon] = useState<KgkBirlesikFormulSurumu | null>(null);
+  const [surumGuncelMi, setSurumGuncelMi] = useState(false);
   const [hazirlik, setHazirlik] = useState<KgkBirlesikFormulHazirligi | null>(null);
+  const [hazirlikHatasi, setHazirlikHatasi] = useState("");
   const [gecmis, setGecmis] = useState<Gecmis[]>([]);
   const [tabloAdi, setTabloAdi] = useState("");
   const [arama, setArama] = useState("");
@@ -47,15 +49,19 @@ export default function BirlesikTaslakSayfasi() {
       getKgkBirlesikTaslak(token, id),
       getKgkBirlesikSonFormulSurumu(token, id),
       getKgkBirlesikFormulSurumleri(token, id),
-      getKgkBirlesikFormulHazirligi(token, id),
-    ]).then(([kaynakTaslak, formulSurumu, tarihce, durum]) => {
+    ]).then(([kaynakTaslak, formulSurumu, tarihce]) => {
       if (!aktif) return;
       setTaslak(kaynakTaslak);
       setTabloAdi((eski) => eski || kaynakTaslak.icerik.tablolar[0]?.ad || "");
       setSon(formulSurumu);
+      setSurumGuncelMi(true);
       setGecmis(tarihce);
-      setHazirlik(durum);
     }).catch((error) => { if (aktif) setHata(error instanceof Error ? error.message : "Taslak okunamadı."); });
+    getKgkBirlesikFormulHazirligi(token, id).then((durum) => {
+      if (aktif) { setHazirlik(durum); setHazirlikHatasi(""); }
+    }).catch((error) => {
+      if (aktif) { setHazirlik(null); setHazirlikHatasi(error instanceof Error ? error.message : "Formül hazırlığı okunamadı."); }
+    });
     return () => { aktif = false; };
   }, [token, id]);
 
@@ -102,7 +108,7 @@ export default function BirlesikTaslakSayfasi() {
   useEffect(() => { setSutunAnahtari(""); }, [tabloAdi, kapsam]);
 
   const kaydet = async () => {
-    if (!token || !taslak || !satir || yukleniyor || (matrisSutunlari.length > 0 && !sutunAnahtari)) return;
+    if (!token || !taslak || !satir || !surumGuncelMi || yukleniyor || (matrisSutunlari.length > 0 && !sutunAnahtari)) return;
     setHata(""); setMesaj(""); setYukleniyor(true);
     try {
       const sonuc = await saveKgkBirlesikFormulVaryanti(token, id, son?.surumNo || 0, {
@@ -111,13 +117,25 @@ export default function BirlesikTaslakSayfasi() {
         hamFormul: formul.trim() || null, dipnot: dipnot.trim() || null,
         hesaplamaKurali: null, kaynak: kaynak.trim() || null,
       }, aciklama.trim());
-      const [guncel, tarihce, durum] = await Promise.all([
-        getKgkBirlesikSonFormulSurumu(token, id), getKgkBirlesikFormulSurumleri(token, id),
-        getKgkBirlesikFormulHazirligi(token, id),
-      ]);
-      setSon(guncel); setGecmis(tarihce); setHazirlik(durum);
+      setSurumGuncelMi(false);
+      setHazirlik(null);
       setMesaj(`Formül sürümü #${sonuc.surumNo} kaydedildi. Önceki sürüm korundu.`);
       setAciklama("");
+      try {
+        const [guncel, tarihce] = await Promise.all([
+          getKgkBirlesikSonFormulSurumu(token, id), getKgkBirlesikFormulSurumleri(token, id),
+        ]);
+        setSon(guncel); setGecmis(tarihce); setSurumGuncelMi(true);
+      } catch {
+        setHata("Formül kaydedildi, ancak güncel alt sürüm okunamadı. Yeniden düzenlemeden önce sayfayı yenileyin.");
+        return;
+      }
+      try {
+        setHazirlik(await getKgkBirlesikFormulHazirligi(token, id));
+        setHazirlikHatasi("");
+      } catch (error) {
+        setHazirlikHatasi(error instanceof Error ? error.message : "Formül hazırlığı okunamadı.");
+      }
     } catch (error) {
       setHata(error instanceof Error ? error.message : "Formül kaydedilemedi.");
     } finally {
@@ -145,6 +163,7 @@ export default function BirlesikTaslakSayfasi() {
       <Stack spacing={2}>
         {hata && <Alert severity="error" onClose={() => setHata("")}>{hata}</Alert>}
         {mesaj && <Alert severity="success" onClose={() => setMesaj("")}>{mesaj}</Alert>}
+        {hazirlikHatasi && <Alert severity="warning">Formüller düzenlenebilir; yayın hazırlığı denetlenemedi: {hazirlikHatasi}</Alert>}
         {taslak && <Typography variant="body2" color="text.secondary">
           {taslak.ozet.tabloSayisi} tablo · {taslak.ozet.ortakKalemSayisi} ortak satır · {taslak.ozet.kapsamaOzelKalemSayisi} kapsama özel satır
           {taslak.ozet.belirsizEslesmeSayisi > 0 && ` · ${taslak.ozet.belirsizEslesmeSayisi} belirsiz eşleşme`}
@@ -215,6 +234,7 @@ export default function BirlesikTaslakSayfasi() {
           <TextField label="Kaynak açıklaması" value={kaynak} onChange={(e) => setKaynak(e.target.value)} fullWidth />
           <TextField label="Değişiklik nedeni" value={aciklama} onChange={(e) => setAciklama(e.target.value)} fullWidth />
           <Box><Button variant="contained" onClick={kaydet} disabled={yukleniyor || satir.durum === "Belirsiz" ||
+            !surumGuncelMi ||
             (matrisSutunlari.length > 0 && !sutunAnahtari) ||
             (!formul.trim() && !dipnot.trim()) || !aciklama.trim()}>{yukleniyor ? "Kaydediliyor..." : "Yeni revizyon olarak kaydet"}</Button></Box>
         </Stack></Paper>}
