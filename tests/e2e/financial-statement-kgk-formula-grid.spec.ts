@@ -190,7 +190,7 @@ test("birleşik KGK formülleri Excel tablosunda düzenlenir ve motorla hesaplan
   await expect(page.getByRole("columnheader", { name: "Ödenmiş Sermaye" })).toBeVisible();
   await expect(page.getByRole("columnheader", { name: "Toplam", exact: true })).toBeVisible();
   await expect(tablo.getByText("500", { exact: true })).toBeVisible();
-  await page.getByRole("button", { name: "Konsolide", exact: true }).click();
+  await page.getByRole("button", { name: "Konsolide", exact: true }).last().click();
   await expect(tablo.getByText("500", { exact: true })).toHaveCount(0);
   await page.screenshot({ path: "test-results/kgk-ozkaynak-tablosu.png", fullPage: true });
 

@@ -18,8 +18,10 @@ import { useSelector } from "@/store/hooks";
 import { AppState } from "@/store/store";
 import {
   getKgkBirlesikTaslak, createKgkBirlesikTaslak, getKgkBirlesikFormulSurumleri, getKgkBirlesikSonFormulSurumu, getKgkBirlesikFormulSurumu, getKgkBirlesikFormulHazirligi, createKgkBirlesikYayinTaslagi, getKgkExcelFormulAdaylari, previewKgkBirlesikFormulSurumu,
+  previewKgkBirlesikGercekMizan, publishKgkKismiRapor, listKgkKismiRaporlar, getKgkKismiRapor,
   saveKgkBirlesikFormulVaryanti, saveKgkBirlesikExcelToplamlari, KgkBirlesikTaslakDetay, KgkBirlesikFormulSurumu, KgkBirlesikFormulVaryanti,
   KgkBirlesikFormulHazirligi, KgkBirlesikOnizlemeHucresi, KgkBirlesikOnizlemeSonucu, KgkMatrisSutunu, KgkExcelFormulAdaylari,
+  KgkKismiRaporOzeti, KgkKismiRaporDetayi,
 } from "@/api/FinansalTabloYonetimi/Tanimlar";
 import { getFinansalTabloTestMizanlari, FinansalTabloTestMizan } from "@/api/FinansalTabloYonetimi/TestMizan";
 import { KgkAgacSatiri, gorunurSatirlar, kgkAgaciOlustur, sutunBasliklari } from "./kgkAgaci";
@@ -56,7 +58,10 @@ export default function BirlesikTaslakSayfasi() {
   const params = useParams<{ id: string }>();
   const router = useRouter();
   const id = Number(params.id);
-  const token = useSelector((state: AppState) => state.userReducer.token);
+  const user = useSelector((state: AppState) => state.userReducer);
+  const token = user.token;
+  const denetlenenId = user.denetlenenId || 0;
+  const yil = user.yil || 0;
   const [taslak, setTaslak] = useState<KgkBirlesikTaslakDetay | null>(null);
   const [son, setSon] = useState<KgkBirlesikFormulSurumu | null>(null);
   const [karsilastirma, setKarsilastirma] = useState<KgkBirlesikFormulSurumu | null>(null);
@@ -89,6 +94,12 @@ export default function BirlesikTaslakSayfasi() {
   const [gecmisAnchor, setGecmisAnchor] = useState<HTMLElement | null>(null);
   const [hata, setHata] = useState("");
   const [mesaj, setMesaj] = useState("");
+  const [gercekOnizleme, setGercekOnizleme] = useState<KgkBirlesikOnizlemeSonucu | null>(null);
+  const [gercekOnizlemeYukleniyor, setGercekOnizlemeYukleniyor] = useState(false);
+  const [kismiYayinYukleniyor, setKismiYayinYukleniyor] = useState(false);
+  const [kismiYayinHatasi, setKismiYayinHatasi] = useState("");
+  const [kismiRaporlar, setKismiRaporlar] = useState<KgkKismiRaporOzeti[]>([]);
+  const [seciliKismiRapor, setSeciliKismiRapor] = useState<KgkKismiRaporDetayi | null>(null);
 
   useEffect(() => {
     if (!token || !Number.isInteger(id) || id <= 0) return;
@@ -128,6 +139,17 @@ export default function BirlesikTaslakSayfasi() {
     }).catch((error) => { if (aktif) setHata(error instanceof Error ? error.message : "Taslak okunamadı."); });
     return () => { aktif = false; };
   }, [token, id]);
+
+  useEffect(() => {
+    setGercekOnizleme(null);
+    setSeciliKismiRapor(null);
+    if (!token || !denetlenenId || !yil) { setKismiRaporlar([]); return; }
+    let aktif = true;
+    listKgkKismiRaporlar(token, denetlenenId, yil, matrisKapsam === 2)
+      .then((items) => { if (aktif) setKismiRaporlar(items); })
+      .catch((error) => { if (aktif) setKismiYayinHatasi(error instanceof Error ? error.message : "Kısmi rapor geçmişi alınamadı."); });
+    return () => { aktif = false; };
+  }, [token, denetlenenId, yil, matrisKapsam]);
 
   const tablo = taslak?.icerik.tablolar.find((x) => x.ad === tabloAdi);
   const matrisMi = Boolean(tablo?.munferit?.sutunlar?.length || tablo?.konsolide?.sutunlar?.length);
@@ -319,13 +341,45 @@ export default function BirlesikTaslakSayfasi() {
     if (!token || !son || !hazirlik?.sonuc.hazirMi || !gecerlilikBaslangici || yayinTaslagiOlusturuluyor) return;
     setHata(""); setMesaj(""); setYayinTaslagiOlusturuluyor(true);
     try {
-      const sonuc = await createKgkBirlesikYayinTaslagi(token, id, son.surumNo, gecerlilikBaslangici);
+      const sonuc = await createKgkBirlesikYayinTaslagi(token, id, son.surumNo, gecerlilikBaslangici,
+        `KGK taslağı #${id}, formül alt sürümü #${son.surumNo}`);
       setMesaj(`Münferit ve konsolide yayın taslakları oluşturuldu: ${sonuc.surumler.map((x) => `#${x.id}`).join(", ")}. Tablolar henüz yayımlanmadı.`);
     } catch (error) {
       setHata(error instanceof Error ? error.message : "Yayın taslakları oluşturulamadı.");
     } finally {
       setYayinTaslagiOlusturuluyor(false);
     }
+  };
+
+  const gercekMizaniOnizle = async () => {
+    if (!token || !son || !tabloAdi || !denetlenenId || !yil || gercekOnizlemeYukleniyor) return;
+    setKismiYayinHatasi(""); setGercekOnizleme(null); setGercekOnizlemeYukleniyor(true);
+    try {
+      setGercekOnizleme(await previewKgkBirlesikGercekMizan(token, id, son.surumNo, tabloAdi, denetlenenId, yil, matrisKapsam));
+    } catch (error) {
+      setKismiYayinHatasi(error instanceof Error ? error.message : "Gerçek mizan önizlemesi oluşturulamadı.");
+    } finally { setGercekOnizlemeYukleniyor(false); }
+  };
+
+  const kismiRaporYayinla = async () => {
+    if (!token || !son || !denetlenenId || !yil || kismiYayinYukleniyor) return;
+    setKismiYayinHatasi(""); setKismiYayinYukleniyor(true);
+    try {
+      const sonuc = await publishKgkKismiRapor(token, id, son.surumNo, denetlenenId, yil, matrisKapsam);
+      const [detay, arsiv] = await Promise.all([
+        getKgkKismiRapor(token, sonuc.id), listKgkKismiRaporlar(token, denetlenenId, yil, matrisKapsam === 2),
+      ]);
+      setSeciliKismiRapor(detay); setKismiRaporlar(arsiv); setMesaj(
+        `${sonuc.hesaplananHucreSayisi} tutar hesaplandı; ${sonuc.hesaplanmayanHucreSayisi} tutar hesaplanmadı. Kısmi rapor arşive kaydedildi.`);
+    } catch (error) {
+      setKismiYayinHatasi(error instanceof Error ? error.message : "Kısmi rapor yayımlanamadı.");
+    } finally { setKismiYayinYukleniyor(false); }
+  };
+
+  const kismiRaporAc = async (raporId: string) => {
+    if (!token || !raporId) { setSeciliKismiRapor(null); return; }
+    try { setSeciliKismiRapor(await getKgkKismiRapor(token, raporId)); }
+    catch (error) { setKismiYayinHatasi(error instanceof Error ? error.message : "Kısmi rapor açılamadı."); }
   };
 
   const eskiTaslagiYenile = async () => {
@@ -506,6 +560,50 @@ export default function BirlesikTaslakSayfasi() {
             {son ? `Alt sürüm #${son.surumNo}` : "Henüz alt sürüm yok"}
           </Button>
         </Stack>
+        <Paper variant="outlined" sx={{ p: 1.5 }}>
+          <Stack spacing={1.25}>
+            <Stack direction={{ xs: "column", md: "row" }} spacing={1} alignItems={{ md: "center" }}>
+              <Box sx={{ flex: 1 }}>
+                <Typography variant="subtitle2">Gerçek mizan kontrolü ve kısmi rapor</Typography>
+                <Typography variant="caption" color="text.secondary">
+                  {denetlenenId && yil ? `${user.denetlenenFirmaAdi || `Firma #${denetlenenId}`} · ${yil}` : "Üst menüden firma ve yıl seçin."}
+                  {son ? ` · Formül alt sürümü #${son.surumNo}` : ""}
+                </Typography>
+              </Box>
+              <ToggleButtonGroup size="small" exclusive value={matrisKapsam}
+                onChange={(_, value) => { if (value) { setMatrisKapsam(value); setGercekOnizleme(null); setSeciliKismiRapor(null); } }}>
+                <ToggleButton value={1}>Münferit</ToggleButton>
+                <ToggleButton value={2}>Konsolide</ToggleButton>
+              </ToggleButtonGroup>
+              <Button size="small" variant="outlined" onClick={() => void gercekMizaniOnizle()}
+                disabled={!son || !tabloAdi || !denetlenenId || !yil || gercekOnizlemeYukleniyor}>
+                {gercekOnizlemeYukleniyor ? "Hesaplanıyor…" : "Seçili tabloda gerçek mizanı denetle"}
+              </Button>
+              <Button size="small" variant="contained" onClick={() => void kismiRaporYayinla()}
+                disabled={!son || !denetlenenId || !yil || kismiYayinYukleniyor}>
+                {kismiYayinYukleniyor ? "Arşivleniyor…" : "Kısmi raporu hesapla ve arşivle"}
+              </Button>
+            </Stack>
+            {kismiYayinHatasi && <Alert severity="error" onClose={() => setKismiYayinHatasi("")}>{kismiYayinHatasi}</Alert>}
+            {gercekOnizleme && <Alert severity={gercekOnizleme.yapiSorunuSayisi ? "error" : gercekOnizleme.tamMi ? "success" : "warning"}>
+              {tabloAdi}: {gercekOnizleme.hucreler.filter((x) => x.deger !== null).length} tutar hesaplandı,
+              {` ${gercekOnizleme.hucreler.filter((x) => x.deger === null).length}`} hesaplanmadı; {gercekOnizleme.eksikFormulSayisi} formül eksiği,
+              {` ${gercekOnizleme.yapiSorunuSayisi}`} yapı sorunu.
+              {!gercekOnizleme.tamMi && " Bu kontrol kısmi; eksik tutarlar sıfır sayılmaz."}
+            </Alert>}
+            {kismiRaporlar.length > 0 && <TextField select size="small" label="Arşivlenmiş kısmi rapor" value={seciliKismiRapor?.id ?? ""}
+              onChange={(event) => void kismiRaporAc(event.target.value)} sx={{ maxWidth: 520 }}>
+              <MenuItem value="">Rapor seçin</MenuItem>
+              {kismiRaporlar.map((rapor) => <MenuItem key={rapor.id} value={rapor.id}>
+                {new Date(rapor.olusturmaTarihi).toLocaleString("tr-TR")} · #{rapor.birlesikFormulSurumuId} · {rapor.hesaplananHucreSayisi} hesaplandı / {rapor.hesaplanmayanHucreSayisi} hesaplanmadı
+              </MenuItem>)}
+            </TextField>}
+            {seciliKismiRapor && <Alert severity="info">
+              Arşiv raporu: {seciliKismiRapor.icerik.tablolar.length} tablo · {seciliKismiRapor.icerik.tablolar.map((x) =>
+                `${x.ad} (${x.hucreler.filter((h) => h.deger !== null).length}/${x.hucreler.length} hesaplandı)`).join(" · ")}
+            </Alert>}
+          </Stack>
+        </Paper>
         <Popover open={Boolean(gecmisAnchor)} anchorEl={gecmisAnchor} onClose={() => setGecmisAnchor(null)}
           anchorOrigin={{ vertical: "bottom", horizontal: "right" }} transformOrigin={{ vertical: "top", horizontal: "right" }}>
           <List dense sx={{ width: 380, maxHeight: 360, overflowY: "auto" }}>
