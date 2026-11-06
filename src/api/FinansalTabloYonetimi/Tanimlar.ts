@@ -1132,6 +1132,8 @@ export type KgkBirlesikSatir = {
   durum: string;
   munferitMi: boolean;
   konsolideMi: boolean;
+  munferitKaynaklari: Array<{ ad: string; satirNo: number; kalemTuru: string }>;
+  konsolideKaynaklari: Array<{ ad: string; satirNo: number; kalemTuru: string }>;
 };
 
 export type KgkMatrisSutunu = {
@@ -1176,6 +1178,49 @@ export type KgkBirlesikFormulSurumu = {
   aciklama: string;
   olusturmaTarihi: string;
   varyantlar: KgkBirlesikFormulVaryanti[];
+};
+
+export type KgkBirlesikFormulHazirligi = {
+  surumNo: number;
+  sonuc: {
+    gerekliFormulSayisi: number;
+    mevcutFormulSayisi: number;
+    hazirMi: boolean;
+    eksikler: Array<{
+      tabloAdi: string;
+      eslesmeAnahtari: string;
+      kapsam: number;
+      yataySutunAnahtari: string | null;
+      kalemAdi: string;
+      satirNo: number;
+    }>;
+    yapiSorunlari: string[];
+    derlemeSorunlari: string[];
+  };
+  derlenebilirFormulSayisi: number | null;
+  eksikAltHucreBagimliligiSayisi: number | null;
+  digerMotorHatasiSayisi: number | null;
+};
+
+export const getKgkBirlesikFormulHazirligi = (token: string, id: number) =>
+  jsonGet<KgkBirlesikFormulHazirligi>(token, `/Kgk/BirlesikTaslaklar/${id}/FormulHazirligi`);
+
+export const createKgkBirlesikYayinTaslagi = async (
+  token: string, id: number, beklenenFormulSurumNo: number,
+  gecerlilikBaslangici: string, aciklama: string
+) => {
+  const response = await fetch(`${url}/FinansalTabloYonetimi/Kgk/BirlesikTaslaklar/${id}/YayinTaslagiOlustur`, {
+    method: "POST",
+    headers: { accept: "application/json", "Content-Type": "application/json", Authorization: `Bearer ${token}` },
+    body: JSON.stringify({ beklenenFormulSurumNo, gecerlilikBaslangici: `${gecerlilikBaslangici}T00:00:00`, aciklama }),
+  });
+  const payload = await response.json().catch(() => ({}));
+  if (!response.ok) throw new Error(payload?.message || "KGK yayın taslakları oluşturulamadı.");
+  return payload as {
+    formulSurumNo: number;
+    zatenOlusturulmus?: boolean;
+    surumler: Array<{ id: number; surumNo: number; kapsam: number; tabloSayisi: number }>;
+  };
 };
 
 export const getKgkBirlesikTaslak = (token: string, id: number) =>

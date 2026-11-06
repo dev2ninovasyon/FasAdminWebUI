@@ -10,7 +10,8 @@ import { useSelector } from "@/store/hooks";
 import { AppState } from "@/store/store";
 import {
   getKgkBirlesikTaslak, getKgkBirlesikFormulSurumleri, getKgkBirlesikSonFormulSurumu,
-  saveKgkBirlesikFormulVaryanti, KgkBirlesikTaslakDetay, KgkBirlesikFormulSurumu,
+  getKgkBirlesikFormulHazirligi, createKgkBirlesikYayinTaslagi, saveKgkBirlesikFormulVaryanti,
+  KgkBirlesikTaslakDetay, KgkBirlesikFormulSurumu, KgkBirlesikFormulHazirligi,
 } from "@/api/FinansalTabloYonetimi/Tanimlar";
 
 type Gecmis = Pick<KgkBirlesikFormulSurumu, "id" | "surumNo" | "aciklama" | "olusturmaTarihi">;
@@ -21,17 +22,20 @@ export default function BirlesikTaslakSayfasi() {
   const token = useSelector((state: AppState) => state.userReducer.token);
   const [taslak, setTaslak] = useState<KgkBirlesikTaslakDetay | null>(null);
   const [son, setSon] = useState<KgkBirlesikFormulSurumu | null>(null);
+  const [hazirlik, setHazirlik] = useState<KgkBirlesikFormulHazirligi | null>(null);
   const [gecmis, setGecmis] = useState<Gecmis[]>([]);
   const [tabloAdi, setTabloAdi] = useState("");
   const [arama, setArama] = useState("");
+  const [yalnizEksikler, setYalnizEksikler] = useState(false);
   const [satirAnahtari, setSatirAnahtari] = useState("");
   const [sutunAnahtari, setSutunAnahtari] = useState("");
   const [kapsam, setKapsam] = useState(1);
-  const [donusumTipi, setDonusumTipi] = useState(1);
   const [formul, setFormul] = useState("");
   const [dipnot, setDipnot] = useState("");
   const [kaynak, setKaynak] = useState("");
   const [aciklama, setAciklama] = useState("");
+  const [yayinTarihi, setYayinTarihi] = useState("");
+  const [yayinAciklamasi, setYayinAciklamasi] = useState("");
   const [hata, setHata] = useState("");
   const [mesaj, setMesaj] = useState("");
   const [yukleniyor, setYukleniyor] = useState(false);
@@ -43,12 +47,14 @@ export default function BirlesikTaslakSayfasi() {
       getKgkBirlesikTaslak(token, id),
       getKgkBirlesikSonFormulSurumu(token, id),
       getKgkBirlesikFormulSurumleri(token, id),
-    ]).then(([kaynakTaslak, formulSurumu, tarihce]) => {
+      getKgkBirlesikFormulHazirligi(token, id),
+    ]).then(([kaynakTaslak, formulSurumu, tarihce, durum]) => {
       if (!aktif) return;
       setTaslak(kaynakTaslak);
       setTabloAdi((eski) => eski || kaynakTaslak.icerik.tablolar[0]?.ad || "");
       setSon(formulSurumu);
       setGecmis(tarihce);
+      setHazirlik(durum);
     }).catch((error) => { if (aktif) setHata(error instanceof Error ? error.message : "Taslak okunamadı."); });
     return () => { aktif = false; };
   }, [token, id]);
@@ -56,11 +62,11 @@ export default function BirlesikTaslakSayfasi() {
   useEffect(() => {
     const onceki = son?.varyantlar?.find((x) => x.tabloAdi === tabloAdi &&
       x.eslesmeAnahtari === satirAnahtari && x.yataySutunAnahtari === (sutunAnahtari || null) &&
-      x.kapsam === kapsam && x.donusumTipi === donusumTipi);
+      x.kapsam === kapsam && x.donusumTipi === 1);
     setFormul(onceki?.hamFormul || "");
     setDipnot(onceki?.dipnot || "");
     setKaynak(onceki?.kaynak || "");
-  }, [son, tabloAdi, satirAnahtari, sutunAnahtari, kapsam, donusumTipi]);
+  }, [son, tabloAdi, satirAnahtari, sutunAnahtari, kapsam]);
 
   const tablo = taslak?.icerik.tablolar.find((x) => x.ad === tabloAdi);
   const matrisSutunlari = (kapsam === 1 ? tablo?.munferit : tablo?.konsolide)?.sutunlar || [];
@@ -77,19 +83,23 @@ export default function BirlesikTaslakSayfasi() {
     }
     return derinlik;
   };
-  const gorunenSatirlar = (tablo?.kalemler || []).filter((x) =>
-    x.eslesmeAnahtari.toLocaleLowerCase("tr-TR").includes(arama.toLocaleLowerCase("tr-TR"))).slice(0, 100);
+  const eksikAnahtarlar = new Set((hazirlik?.sonuc.eksikler || [])
+    .filter((x) => x.tabloAdi === tabloAdi && x.kapsam === kapsam)
+    .map((x) => x.eslesmeAnahtari));
+  const gorunenSatirlar = (tablo?.kalemler || []).filter((x) => {
+    const kaynak = (kapsam === 1 ? x.munferitKaynaklari : x.konsolideKaynaklari)?.[0];
+    const aranan = arama.toLocaleLowerCase("tr-TR");
+    return (kapsam === 1 ? x.munferitMi : x.konsolideMi) &&
+      (!yalnizEksikler || eksikAnahtarlar.has(x.eslesmeAnahtari)) &&
+      (`${kaynak?.ad || ""} ${kaynak?.satirNo || ""} ${x.eslesmeAnahtari}`)
+        .toLocaleLowerCase("tr-TR").includes(aranan);
+  }).slice(0, 100);
   const satir = tablo?.kalemler.find((x) => x.eslesmeAnahtari === satirAnahtari);
   const mevcut = son?.varyantlar?.find((x) => x.tabloAdi === tabloAdi &&
     x.eslesmeAnahtari === satirAnahtari && x.yataySutunAnahtari === (sutunAnahtari || null) &&
-    x.kapsam === kapsam && x.donusumTipi === donusumTipi);
+    x.kapsam === kapsam && x.donusumTipi === 1);
 
   useEffect(() => { setSutunAnahtari(""); }, [tabloAdi, kapsam]);
-
-  useEffect(() => {
-    if (satir && !satir.munferitMi && satir.konsolideMi) setKapsam(2);
-    if (satir && satir.munferitMi && !satir.konsolideMi) setKapsam(1);
-  }, [satir?.eslesmeAnahtari, satir?.munferitMi, satir?.konsolideMi]);
 
   const kaydet = async () => {
     if (!token || !taslak || !satir || yukleniyor || (matrisSutunlari.length > 0 && !sutunAnahtari)) return;
@@ -97,18 +107,33 @@ export default function BirlesikTaslakSayfasi() {
     try {
       const sonuc = await saveKgkBirlesikFormulVaryanti(token, id, son?.surumNo || 0, {
         tabloAdi, eslesmeAnahtari: satirAnahtari, yataySutunAnahtari: sutunAnahtari || null,
-        kapsam, donusumTipi,
+        kapsam, donusumTipi: 1,
         hamFormul: formul.trim() || null, dipnot: dipnot.trim() || null,
         hesaplamaKurali: null, kaynak: kaynak.trim() || null,
       }, aciklama.trim());
-      const [guncel, tarihce] = await Promise.all([
+      const [guncel, tarihce, durum] = await Promise.all([
         getKgkBirlesikSonFormulSurumu(token, id), getKgkBirlesikFormulSurumleri(token, id),
+        getKgkBirlesikFormulHazirligi(token, id),
       ]);
-      setSon(guncel); setGecmis(tarihce);
+      setSon(guncel); setGecmis(tarihce); setHazirlik(durum);
       setMesaj(`Formül sürümü #${sonuc.surumNo} kaydedildi. Önceki sürüm korundu.`);
       setAciklama("");
     } catch (error) {
       setHata(error instanceof Error ? error.message : "Formül kaydedilemedi.");
+    } finally {
+      setYukleniyor(false);
+    }
+  };
+
+  const yayinTaslagiOlustur = async () => {
+    if (!token || !hazirlik?.sonuc.hazirMi || !yayinTarihi || !yayinAciklamasi.trim() || yukleniyor) return;
+    setHata(""); setMesaj(""); setYukleniyor(true);
+    try {
+      const sonuc = await createKgkBirlesikYayinTaslagi(token, id, hazirlik.surumNo,
+        yayinTarihi, yayinAciklamasi.trim());
+      setMesaj(`${sonuc.surumler.length} kapsam için yayın taslağı ${sonuc.zatenOlusturulmus ? "zaten mevcut" : "oluşturuldu"}. Finansal Tablolar sayfasından teknik test ve devreye alma adımına geçin.`);
+    } catch (error) {
+      setHata(error instanceof Error ? error.message : "Yayın taslakları oluşturulamadı.");
     } finally {
       setYukleniyor(false);
     }
@@ -124,17 +149,36 @@ export default function BirlesikTaslakSayfasi() {
           {taslak.ozet.tabloSayisi} tablo · {taslak.ozet.ortakKalemSayisi} ortak satır · {taslak.ozet.kapsamaOzelKalemSayisi} kapsama özel satır
           {taslak.ozet.belirsizEslesmeSayisi > 0 && ` · ${taslak.ozet.belirsizEslesmeSayisi} belirsiz eşleşme`}
         </Typography>}
+        {hazirlik && <Alert severity={hazirlik.sonuc.hazirMi ? "success" : "warning"}>
+          Formül alt sürümü #{hazirlik.surumNo}: {hazirlik.sonuc.mevcutFormulSayisi} / {hazirlik.sonuc.gerekliFormulSayisi} formül kayıtlı.
+          {hazirlik.sonuc.eksikler.length > 0 && ` ${hazirlik.sonuc.eksikler.length} eksik formül var; bu sürüm henüz rapor üretimine açılamaz.`}
+          {hazirlik.sonuc.yapiSorunlari.length > 0 && ` ${hazirlik.sonuc.yapiSorunlari.length} yapı sorunu var.`}
+          {hazirlik.sonuc.derlemeSorunlari.length > 0 && ` ${hazirlik.sonuc.derlemeSorunlari.length} derleme sorunu var.`}
+        </Alert>}
         <Alert severity="info">Bu alandaki ham formüller ve dipnotlar taslak önerisidir. Rapor hesaplamasına bağlanmadan önce çalıştırılabilir kural olarak doğrulanmalıdır.</Alert>
         <Stack direction={{ xs: "column", md: "row" }} spacing={1}>
           <TextField select size="small" label="Tablo" value={tabloAdi} onChange={(e) => { setTabloAdi(e.target.value); setSatirAnahtari(""); }} sx={{ minWidth: 280 }}>
             {taslak?.icerik.tablolar.map((x) => <MenuItem key={x.ad} value={x.ad}>{x.ad}</MenuItem>)}
           </TextField>
+          <Stack direction="row" spacing={0.5}>
+            <Button size="small" variant={kapsam === 1 ? "contained" : "outlined"}
+              onClick={() => { setKapsam(1); setSatirAnahtari(""); }}>Münferit</Button>
+            <Button size="small" variant={kapsam === 2 ? "contained" : "outlined"}
+              onClick={() => { setKapsam(2); setSatirAnahtari(""); }}>Konsolide</Button>
+          </Stack>
           <TextField size="small" label="Satır ara" value={arama} onChange={(e) => setArama(e.target.value)} fullWidth />
+          <Button size="small" variant={yalnizEksikler ? "contained" : "outlined"}
+            onClick={() => { setYalnizEksikler((deger) => !deger); setSatirAnahtari(""); }}>
+            Eksikleri göster ({eksikAnahtarlar.size})
+          </Button>
         </Stack>
         <TextField select size="small" label="KGK satırı" value={satirAnahtari} onChange={(e) => setSatirAnahtari(e.target.value)} fullWidth
           helperText="İlk 100 eşleşme gösterilir; arayarak daraltın. Belirsiz eşleşmelere formül atanamaz.">
-          {gorunenSatirlar.map((x) => <MenuItem key={x.eslesmeAnahtari} value={x.eslesmeAnahtari} disabled={x.durum === "Belirsiz"}>
-            {x.eslesmeAnahtari} · {x.durum}
+          {gorunenSatirlar.map((x) => <MenuItem key={x.eslesmeAnahtari} value={x.eslesmeAnahtari}
+            disabled={x.durum === "Belirsiz" || (kapsam === 1 ? x.munferitKaynaklari : x.konsolideKaynaklari)?.[0]?.kalemTuru === "Baslik"}>
+            {(kapsam === 1 ? x.munferitKaynaklari : x.konsolideKaynaklari)?.[0]?.ad || x.eslesmeAnahtari}
+            {eksikAnahtarlar.has(x.eslesmeAnahtari) ? " · Formül eksik" : ""}
+            {x.durum === "Belirsiz" ? " · Eşleşme belirsiz" : ""}
           </MenuItem>)}
         </TextField>
         {(tablo?.munferit?.sutunlar?.length || tablo?.konsolide?.sutunlar?.length) ? <Paper variant="outlined" sx={{ p: 1.5 }}>
@@ -157,15 +201,6 @@ export default function BirlesikTaslakSayfasi() {
           </Stack>
         </Paper> : null}
         {satir && <Paper variant="outlined" sx={{ p: 1.5 }}><Stack spacing={1.5}>
-          <Stack direction={{ xs: "column", md: "row" }} spacing={1}>
-            <TextField select size="small" label="Kapsam" value={kapsam} onChange={(e) => setKapsam(Number(e.target.value))} sx={{ minWidth: 180 }}>
-              {satir.munferitMi && <MenuItem value={1}>Münferit</MenuItem>}
-              {satir.konsolideMi && <MenuItem value={2}>Konsolide</MenuItem>}
-            </TextField>
-            <TextField select size="small" label="Formül türü" value={donusumTipi} onChange={(e) => setDonusumTipi(Number(e.target.value))} sx={{ minWidth: 200 }}>
-              <MenuItem value={1}>Normal</MenuItem><MenuItem value={2}>Enflasyon düzeltmesi</MenuItem>
-            </TextField>
-          </Stack>
           {matrisSutunlari.length > 0 && <TextField select size="small" label="Özkaynak sütunu"
             value={sutunAnahtari} onChange={(e) => setSutunAnahtari(e.target.value)} fullWidth
             helperText="Formül seçilen satır ve sütun hücresine kaydedilir.">
@@ -174,7 +209,7 @@ export default function BirlesikTaslakSayfasi() {
               {x.sutun} · {x.ad}
             </MenuItem>)}
           </TextField>}
-          {mevcut && <Typography variant="caption" color="text.secondary">Bu satır, sütun, kapsam ve formül türü için kayıtlı değer mevcut; düzenleme yeni revizyon oluşturur.</Typography>}
+          {mevcut && <Typography variant="caption" color="text.secondary">Bu satır, sütun ve kapsam için kayıtlı değer mevcut; düzenleme yeni revizyon oluşturur.</Typography>}
           <TextField label="Ham formül" value={formul} onChange={(e) => setFormul(e.target.value)} multiline minRows={2} fullWidth />
           <TextField label="Dipnot" value={dipnot} onChange={(e) => setDipnot(e.target.value)} fullWidth />
           <TextField label="Kaynak açıklaması" value={kaynak} onChange={(e) => setKaynak(e.target.value)} fullWidth />
@@ -188,6 +223,24 @@ export default function BirlesikTaslakSayfasi() {
           {gecmis.length === 0 ? <Typography variant="body2" color="text.secondary">Henüz kayıt yok.</Typography> :
             gecmis.slice(0, 10).map((x) => <Typography key={x.id} variant="body2">#{x.surumNo} · {new Date(x.olusturmaTarihi).toLocaleString("tr-TR")} · {x.aciklama}</Typography>)}
         </Box>
+        <Paper variant="outlined" sx={{ p: 1.5 }}>
+          <Stack spacing={1.5}>
+            <Typography variant="subtitle2">Yayın taslağına aktar</Typography>
+            <Typography variant="body2" color="text.secondary">
+              Formüller ve yapı doğrulandığında münferit ve konsolide tablolar aynı KGK ana sürümünden taslak olarak oluşturulur.
+            </Typography>
+            <Stack direction={{ xs: "column", md: "row" }} spacing={1}>
+              <TextField size="small" type="date" label="Geçerlilik başlangıcı" value={yayinTarihi}
+                onChange={(e) => setYayinTarihi(e.target.value)} InputLabelProps={{ shrink: true }} sx={{ minWidth: 210 }} />
+              <TextField size="small" label="Değişiklik açıklaması" value={yayinAciklamasi}
+                onChange={(e) => setYayinAciklamasi(e.target.value)} fullWidth />
+              <Button variant="contained" onClick={yayinTaslagiOlustur}
+                disabled={!hazirlik?.sonuc.hazirMi || !yayinTarihi || !yayinAciklamasi.trim() || yukleniyor}>
+                Taslakları oluştur
+              </Button>
+            </Stack>
+          </Stack>
+        </Paper>
       </Stack>
     </ParentCard>
   </PageContainer>;
