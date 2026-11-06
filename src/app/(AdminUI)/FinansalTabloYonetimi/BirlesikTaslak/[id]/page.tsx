@@ -26,6 +26,8 @@ export default function BirlesikTaslakSayfasi() {
   const id = Number(params.id);
   const user = useSelector((state: AppState) => state.userReducer);
   const token = user.token;
+  const yayinDenetlenenId = user.denetlenenId || 0;
+  const yayinYil = user.yil || 0;
   const [taslak, setTaslak] = useState<KgkBirlesikTaslakDetay | null>(null);
   const [son, setSon] = useState<KgkBirlesikFormulSurumu | null>(null);
   const [surumGuncelMi, setSurumGuncelMi] = useState(false);
@@ -52,8 +54,6 @@ export default function BirlesikTaslakSayfasi() {
   const [onizleme, setOnizleme] = useState<KgkBirlesikOnizlemeSonucu | null>(null);
   const [onizlemeHatasi, setOnizlemeHatasi] = useState("");
   const [onizlemeYukleniyor, setOnizlemeYukleniyor] = useState(false);
-  const [yayinDenetlenenId, setYayinDenetlenenId] = useState("");
-  const [yayinYil, setYayinYil] = useState("");
   const [kismiYayinlar, setKismiYayinlar] = useState<KgkKismiRaporOzeti[]>([]);
   const [seciliRapor, setSeciliRapor] = useState<KgkKismiRaporDetayi | null>(null);
   const [raporSayfasi, setRaporSayfasi] = useState(0);
@@ -63,12 +63,8 @@ export default function BirlesikTaslakSayfasi() {
   const [gercekOnizlemeYukleniyor, setGercekOnizlemeYukleniyor] = useState(false);
 
   useEffect(() => {
-    if (!yayinDenetlenenId && user.denetlenenId) setYayinDenetlenenId(String(user.denetlenenId));
-    if (!yayinYil && user.yil) setYayinYil(String(user.yil));
-  }, [user.denetlenenId, user.yil, yayinDenetlenenId, yayinYil]);
-
-  useEffect(() => {
     setSeciliRapor(null);
+    setKismiYayinlar([]);
     setRaporSayfasi(0);
   }, [yayinDenetlenenId, yayinYil, kapsam]);
   useEffect(() => { setGercekOnizleme(null); },
@@ -396,10 +392,11 @@ export default function BirlesikTaslakSayfasi() {
               Güncel formül alt sürümü gerçek dönüşüm mizanıyla hesaplanır. Eksik tutarlar “Hesaplanmadı” olarak değişmez arşive kaydedilir.
             </Typography>
             <Stack direction={{ xs: "column", md: "row" }} spacing={1}>
-              <TextField size="small" type="number" label="Firma ID" value={yayinDenetlenenId}
-                onChange={(e) => setYayinDenetlenenId(e.target.value)} sx={{ minWidth: 140 }} />
-              <TextField size="small" type="number" label="Yıl" value={yayinYil}
-                onChange={(e) => setYayinYil(e.target.value)} sx={{ minWidth: 120 }} />
+              <Typography variant="body2" sx={{ alignSelf: "center", minWidth: 180 }}>
+                {yayinDenetlenenId && yayinYil
+                  ? `${user.denetlenenFirmaAdi || "Seçili firma"} · ${yayinYil}`
+                  : "Üst menüden firma ve yıl seçin."}
+              </Typography>
               <Button variant="outlined" onClick={gercekMizaniOnizle}
                 disabled={!son || !tabloAdi || !Number(yayinDenetlenenId) || !Number(yayinYil) || gercekOnizlemeYukleniyor}>
                 {gercekOnizlemeYukleniyor ? "Hesaplanıyor..." : "Gerçek mizanla önizle"}
