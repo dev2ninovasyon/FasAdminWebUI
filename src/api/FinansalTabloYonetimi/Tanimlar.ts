@@ -1323,6 +1323,12 @@ export const listKgkKismiRaporlar = (token: string, denetlenenId: number, yil: n
     denetlenenId: String(denetlenenId), yil: String(yil), konsolidasyonMu: String(konsolidasyonMu),
   })}`);
 
+export type KgkBirlesikYayinTaslagiSonucu = {
+  formulSurumNo: number;
+  zatenOlusturulmus?: boolean;
+  surumler: Array<{ id: number; surumNo: number; kapsam: number; tabloSayisi: number }>;
+};
+
 export const createKgkBirlesikYayinTaslagi = async (
   token: string, id: number, beklenenFormulSurumNo: number,
   gecerlilikBaslangici: string, aciklama: string
@@ -1334,11 +1340,7 @@ export const createKgkBirlesikYayinTaslagi = async (
   });
   const payload = await response.json().catch(() => ({}));
   if (!response.ok) throw new Error(payload?.message || "KGK yayın taslakları oluşturulamadı.");
-  return payload as {
-    formulSurumNo: number;
-    zatenOlusturulmus?: boolean;
-    surumler: Array<{ id: number; surumNo: number; kapsam: number; tabloSayisi: number }>;
-  };
+  return payload as KgkBirlesikYayinTaslagiSonucu;
 };
 
 export const getKgkBirlesikTaslak = (token: string, id: number) =>

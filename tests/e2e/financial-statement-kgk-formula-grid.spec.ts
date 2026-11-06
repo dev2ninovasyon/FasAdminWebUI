@@ -94,6 +94,17 @@ test("birleşik KGK formülleri Excel tablosunda düzenlenir ve motorla hesaplan
     if (path.endsWith("/Kgk/BirlesikTaslaklar/7")) return json(route, taslak);
     if (path.endsWith("/Kgk/BirlesikTaslaklar/7/FormulSurumleri/Son")) return json(route, son);
     if (path.endsWith("/Kgk/BirlesikTaslaklar/7/FormulSurumleri")) return json(route, gecmis);
+    if (path.endsWith("/Kgk/BirlesikTaslaklar/7/FormulHazirligi")) return json(route, {
+      surumNo: son.surumNo,
+      sonuc: { hazirMi: true, gerekliFormulSayisi: 4, mevcutFormulSayisi: 4, eksikler: [], yapiSorunlari: [], derlemeSorunlari: [] },
+    });
+    if (path.endsWith("/Kgk/BirlesikTaslaklar/7/YayinTaslagiOlustur") && request.method() === "POST") return json(route, {
+      birlesikTaslakId: 7, formulSurumNo: son.surumNo, kgkAnaSurumId: 1,
+      surumler: [
+        { id: 101, surumNo: 1, kapsam: 1, tabloSayisi: 2 },
+        { id: 102, surumNo: 1, kapsam: 2, tabloSayisi: 2 },
+      ],
+    });
     if (path.endsWith("/FinansalTabloYonetimi/TestMizanlari")) return json(route, [{
       id: "11111111-2222-3333-4444-555555555555", ad: "Örnek 2025", denetlenenId: 7, yil: 2025, konsolidasyonMu: false,
       olusturmaTarihi: "2026-11-01T10:00:00Z", sha256: "b".repeat(64), satirlar: [],
@@ -193,6 +204,12 @@ test("birleşik KGK formülleri Excel tablosunda düzenlenir ve motorla hesaplan
   await page.getByRole("button", { name: "Konsolide", exact: true }).last().click();
   await expect(tablo.getByText("500", { exact: true })).toHaveCount(0);
   await page.screenshot({ path: "test-results/kgk-ozkaynak-tablosu.png", fullPage: true });
+
+  // Yayın taslakları doğrudan kendi sürüm inceleme ekranlarından açılabilmeli.
+  await page.getByRole("button", { name: "Münferit ve konsolide yayın taslağı oluştur" }).click();
+  await expect(page.getByText("Münferit ve konsolide yayın taslakları oluşturuldu.", { exact: false })).toBeVisible();
+  await expect(page.getByRole("link", { name: "Münferit taslağını aç · #101" })).toHaveAttribute("href", "/FinansalTabloYonetimi/Surum/101");
+  await expect(page.getByRole("link", { name: "Konsolide taslağını aç · #102" })).toHaveAttribute("href", "/FinansalTabloYonetimi/Surum/102");
 
   expect(hatalar).toEqual([]);
 });
