@@ -11,8 +11,10 @@ import { AppState } from "@/store/store";
 import {
   getKgkBirlesikTaslak, getKgkBirlesikFormulSurumleri, getKgkBirlesikSonFormulSurumu,
   getKgkBirlesikFormulHazirligi, createKgkBirlesikYayinTaslagi, saveKgkBirlesikFormulVaryanti,
+  previewKgkBirlesikTaslak, KgkBirlesikOnizlemeSonucu,
   KgkBirlesikTaslakDetay, KgkBirlesikFormulSurumu, KgkBirlesikFormulHazirligi,
 } from "@/api/FinansalTabloYonetimi/Tanimlar";
+import { FinansalTabloTestMizan, getFinansalTabloTestMizanlari } from "@/api/FinansalTabloYonetimi/TestMizan";
 
 type Gecmis = Pick<KgkBirlesikFormulSurumu, "id" | "surumNo" | "aciklama" | "olusturmaTarihi">;
 
@@ -41,6 +43,11 @@ export default function BirlesikTaslakSayfasi() {
   const [hata, setHata] = useState("");
   const [mesaj, setMesaj] = useState("");
   const [yukleniyor, setYukleniyor] = useState(false);
+  const [testMizanlari, setTestMizanlari] = useState<FinansalTabloTestMizan[]>([]);
+  const [testMizanId, setTestMizanId] = useState("");
+  const [onizleme, setOnizleme] = useState<KgkBirlesikOnizlemeSonucu | null>(null);
+  const [onizlemeHatasi, setOnizlemeHatasi] = useState("");
+  const [onizlemeYukleniyor, setOnizlemeYukleniyor] = useState(false);
 
   useEffect(() => {
     if (!token || !Number.isInteger(id) || id <= 0) return;
@@ -62,6 +69,9 @@ export default function BirlesikTaslakSayfasi() {
     }).catch((error) => {
       if (aktif) { setHazirlik(null); setHazirlikHatasi(error instanceof Error ? error.message : "Formül hazırlığı okunamadı."); }
     });
+    getFinansalTabloTestMizanlari(token, 100).then((mizanlar) => {
+      if (aktif) setTestMizanlari(mizanlar);
+    }).catch(() => { if (aktif) setTestMizanlari([]); });
     return () => { aktif = false; };
   }, [token, id]);
 
@@ -106,6 +116,19 @@ export default function BirlesikTaslakSayfasi() {
     x.kapsam === kapsam && x.donusumTipi === 1);
 
   useEffect(() => { setSutunAnahtari(""); }, [tabloAdi, kapsam]);
+  useEffect(() => { setOnizleme(null); setOnizlemeHatasi(""); }, [tabloAdi, testMizanId, son?.surumNo]);
+
+  const onizle = async () => {
+    if (!token || !son || !tabloAdi || !testMizanId || onizlemeYukleniyor) return;
+    setOnizlemeHatasi(""); setOnizlemeYukleniyor(true);
+    try {
+      setOnizleme(await previewKgkBirlesikTaslak(token, id, son.surumNo, tabloAdi, testMizanId));
+    } catch (error) {
+      setOnizlemeHatasi(error instanceof Error ? error.message : "Önizleme oluşturulamadı.");
+    } finally {
+      setOnizlemeYukleniyor(false);
+    }
+  };
 
   const kaydet = async () => {
     if (!token || !taslak || !satir || !surumGuncelMi || yukleniyor || (matrisSutunlari.length > 0 && !sutunAnahtari)) return;
@@ -243,6 +266,45 @@ export default function BirlesikTaslakSayfasi() {
           {gecmis.length === 0 ? <Typography variant="body2" color="text.secondary">Henüz kayıt yok.</Typography> :
             gecmis.slice(0, 10).map((x) => <Typography key={x.id} variant="body2">#{x.surumNo} · {new Date(x.olusturmaTarihi).toLocaleString("tr-TR")} · {x.aciklama}</Typography>)}
         </Box>
+        <Paper variant="outlined" sx={{ p: 1.5 }}>
+          <Stack spacing={1.5}>
+            <Typography variant="subtitle2">Örnek mizanla önizle</Typography>
+            <Stack direction={{ xs: "column", md: "row" }} spacing={1}>
+              <TextField select size="small" label="Örnek mizan" value={testMizanId}
+                onChange={(e) => setTestMizanId(e.target.value)} sx={{ minWidth: 260 }}>
+                <MenuItem value="">Mizan seçin</MenuItem>
+                {testMizanlari.map((x) => <MenuItem key={x.id} value={x.id}>
+                  {x.ad} · {x.yil} · {x.konsolidasyonMu ? "Konsolide" : "Münferit"}
+                </MenuItem>)}
+              </TextField>
+              <Button variant="outlined" onClick={onizle} disabled={!son || !testMizanId || onizlemeYukleniyor}>
+                {onizlemeYukleniyor ? "Hesaplanıyor..." : "Tabloyu önizle"}
+              </Button>
+            </Stack>
+            {onizlemeHatasi && <Alert severity="error">{onizlemeHatasi}</Alert>}
+            {onizleme && <>
+              <Alert severity={onizleme.tamMi ? "success" : "warning"}>
+                {onizleme.tamMi ? "Tablo tam hesaplandı." :
+                  `${onizleme.eksikFormulSayisi} formül eksik; boş tutarlar hesaplanmadı olarak gösteriliyor.`}
+              </Alert>
+              <Box sx={{ maxHeight: 360, overflowY: "auto" }}>
+                {onizleme.hucreler.filter((x) => x.kapsam === kapsam).slice(0, 100).map((x) => {
+                  const kalem = tablo?.kalemler.find((y) => y.eslesmeAnahtari === x.eslesmeAnahtari);
+                  const ad = (kapsam === 1 ? kalem?.munferitKaynaklari : kalem?.konsolideKaynaklari)?.[0]?.ad || x.eslesmeAnahtari;
+                  return <Box key={`${x.eslesmeAnahtari}:${x.yataySutunAnahtari || ""}`} sx={{ py: 0.75,
+                    borderBottom: "1px solid", borderColor: "divider", display: "flex", justifyContent: "space-between", gap: 2 }}>
+                    <Typography variant="body2">{ad}{x.yataySutunAnahtari ? ` · ${x.yataySutunAnahtari}` : ""}</Typography>
+                    <Typography variant="body2" color={x.deger === null ? "warning.main" : "text.primary"} title={x.hata || ""}>
+                      {x.deger === null ? "Hesaplanmadı" : x.deger.toLocaleString("tr-TR", { maximumFractionDigits: 2 })}
+                    </Typography>
+                  </Box>;
+                })}
+              </Box>
+              {onizleme.hucreler.filter((x) => x.kapsam === kapsam).length > 100 &&
+                <Typography variant="caption" color="text.secondary">İlk 100 hücre gösteriliyor.</Typography>}
+            </>}
+          </Stack>
+        </Paper>
         <Paper variant="outlined" sx={{ p: 1.5 }}>
           <Stack spacing={1.5}>
             <Typography variant="subtitle2">Yayın taslağına aktar</Typography>

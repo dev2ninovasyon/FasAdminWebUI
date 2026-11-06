@@ -1205,6 +1205,36 @@ export type KgkBirlesikFormulHazirligi = {
 export const getKgkBirlesikFormulHazirligi = (token: string, id: number) =>
   jsonGet<KgkBirlesikFormulHazirligi>(token, `/Kgk/BirlesikTaslaklar/${id}/FormulHazirligi`);
 
+export type KgkBirlesikOnizlemeSonucu = {
+  tabloAdi: string;
+  formulSurumNo: number;
+  testMizanId: string | null;
+  eksikFormulSayisi: number;
+  yapiSorunuSayisi: number;
+  tamMi: boolean;
+  hucreler: Array<{
+    eslesmeAnahtari: string;
+    yataySutunAnahtari: string | null;
+    kapsam: number;
+    hazirMi: boolean;
+    deger: number | null;
+    hata: string | null;
+  }>;
+};
+
+export const previewKgkBirlesikTaslak = async (
+  token: string, id: number, formulSurumNo: number, tabloAdi: string, testMizanId: string
+): Promise<KgkBirlesikOnizlemeSonucu> => {
+  const response = await fetch(`${url}/FinansalTabloYonetimi/Kgk/BirlesikTaslaklar/${id}/Onizle`, {
+    method: "POST",
+    headers: { accept: "application/json", "Content-Type": "application/json", Authorization: `Bearer ${token}` },
+    body: JSON.stringify({ formulSurumNo, tabloAdi, testMizanId }),
+  });
+  const payload = await response.json().catch(() => ({}));
+  if (!response.ok) throw new Error(payload?.message || "KGK önizlemesi oluşturulamadı.");
+  return payload as KgkBirlesikOnizlemeSonucu;
+};
+
 export const createKgkBirlesikYayinTaslagi = async (
   token: string, id: number, beklenenFormulSurumNo: number,
   gecerlilikBaslangici: string, aciklama: string
