@@ -12,6 +12,8 @@ import {
   getKgkBirlesikTaslak, getKgkBirlesikFormulSurumleri, getKgkBirlesikSonFormulSurumu,
   getKgkBirlesikFormulHazirligi, createKgkBirlesikYayinTaslagi, saveKgkBirlesikFormulVaryanti,
   previewKgkBirlesikTaslak, KgkBirlesikOnizlemeSonucu,
+  publishKgkKismiRapor, getKgkKismiRapor, listKgkKismiRaporlar,
+  KgkKismiRaporOzeti, KgkKismiRaporDetayi,
   KgkBirlesikTaslakDetay, KgkBirlesikFormulSurumu, KgkBirlesikFormulHazirligi,
 } from "@/api/FinansalTabloYonetimi/Tanimlar";
 import { FinansalTabloTestMizan, getFinansalTabloTestMizanlari } from "@/api/FinansalTabloYonetimi/TestMizan";
@@ -21,7 +23,8 @@ type Gecmis = Pick<KgkBirlesikFormulSurumu, "id" | "surumNo" | "aciklama" | "olu
 export default function BirlesikTaslakSayfasi() {
   const params = useParams();
   const id = Number(params.id);
-  const token = useSelector((state: AppState) => state.userReducer.token);
+  const user = useSelector((state: AppState) => state.userReducer);
+  const token = user.token;
   const [taslak, setTaslak] = useState<KgkBirlesikTaslakDetay | null>(null);
   const [son, setSon] = useState<KgkBirlesikFormulSurumu | null>(null);
   const [surumGuncelMi, setSurumGuncelMi] = useState(false);
@@ -48,6 +51,32 @@ export default function BirlesikTaslakSayfasi() {
   const [onizleme, setOnizleme] = useState<KgkBirlesikOnizlemeSonucu | null>(null);
   const [onizlemeHatasi, setOnizlemeHatasi] = useState("");
   const [onizlemeYukleniyor, setOnizlemeYukleniyor] = useState(false);
+  const [yayinDenetlenenId, setYayinDenetlenenId] = useState("");
+  const [yayinYil, setYayinYil] = useState("");
+  const [kismiYayinlar, setKismiYayinlar] = useState<KgkKismiRaporOzeti[]>([]);
+  const [seciliRapor, setSeciliRapor] = useState<KgkKismiRaporDetayi | null>(null);
+  const [raporSayfasi, setRaporSayfasi] = useState(0);
+  const [kismiYayinYukleniyor, setKismiYayinYukleniyor] = useState(false);
+  const [kismiYayinHatasi, setKismiYayinHatasi] = useState("");
+
+  useEffect(() => {
+    if (!yayinDenetlenenId && user.denetlenenId) setYayinDenetlenenId(String(user.denetlenenId));
+    if (!yayinYil && user.yil) setYayinYil(String(user.yil));
+  }, [user.denetlenenId, user.yil, yayinDenetlenenId, yayinYil]);
+
+  useEffect(() => {
+    setSeciliRapor(null);
+    setRaporSayfasi(0);
+  }, [yayinDenetlenenId, yayinYil, kapsam]);
+
+  useEffect(() => {
+    if (!token || !Number(yayinDenetlenenId) || !Number(yayinYil)) return;
+    let aktif = true;
+    listKgkKismiRaporlar(token, Number(yayinDenetlenenId), Number(yayinYil), kapsam === 2)
+      .then((kayitlar) => { if (aktif) setKismiYayinlar(kayitlar); })
+      .catch(() => { if (aktif) setKismiYayinlar([]); });
+    return () => { aktif = false; };
+  }, [token, yayinDenetlenenId, yayinYil, kapsam]);
 
   useEffect(() => {
     if (!token || !Number.isInteger(id) || id <= 0) return;
@@ -114,6 +143,8 @@ export default function BirlesikTaslakSayfasi() {
   const mevcut = son?.varyantlar?.find((x) => x.tabloAdi === tabloAdi &&
     x.eslesmeAnahtari === satirAnahtari && x.yataySutunAnahtari === (sutunAnahtari || null) &&
     x.kapsam === kapsam && x.donusumTipi === 1);
+  const arsivTablosu = seciliRapor?.icerik.tablolar.find((x) => x.ad === tabloAdi);
+  const arsivHucreleri = arsivTablosu?.hucreler || [];
 
   useEffect(() => { setSutunAnahtari(""); }, [tabloAdi, kapsam]);
   useEffect(() => { setOnizleme(null); setOnizlemeHatasi(""); }, [tabloAdi, testMizanId, son?.surumNo]);
@@ -127,6 +158,38 @@ export default function BirlesikTaslakSayfasi() {
       setOnizlemeHatasi(error instanceof Error ? error.message : "Önizleme oluşturulamadı.");
     } finally {
       setOnizlemeYukleniyor(false);
+    }
+  };
+
+  const kismiYayinla = async () => {
+    const firmaId = Number(yayinDenetlenenId);
+    const yil = Number(yayinYil);
+    if (!token || !son || !surumGuncelMi || !Number.isInteger(firmaId) || firmaId <= 0 ||
+      !Number.isInteger(yil) || yil < 1900 || yil > 2200 || kismiYayinYukleniyor) return;
+    setKismiYayinHatasi(""); setKismiYayinYukleniyor(true);
+    try {
+      const yayin = await publishKgkKismiRapor(token, id, son.surumNo, firmaId, yil, kapsam);
+      const [detay, kayitlar] = await Promise.all([
+        getKgkKismiRapor(token, yayin.id),
+        listKgkKismiRaporlar(token, firmaId, yil, kapsam === 2),
+      ]);
+      setSeciliRapor(detay); setKismiYayinlar(kayitlar); setRaporSayfasi(0);
+      setMesaj(`${yayin.hesaplananHucreSayisi} tutar hesaplandı; ${yayin.hesaplanmayanHucreSayisi} tutar hesaplanmadı. Kısmi rapor arşive kaydedildi.`);
+    } catch (error) {
+      setKismiYayinHatasi(error instanceof Error ? error.message : "Kısmi rapor yayımlanamadı.");
+    } finally {
+      setKismiYayinYukleniyor(false);
+    }
+  };
+
+  const raporAc = async (raporId: string) => {
+    if (!token) return;
+    setKismiYayinHatasi("");
+    try {
+      setSeciliRapor(await getKgkKismiRapor(token, raporId));
+      setRaporSayfasi(0);
+    } catch (error) {
+      setKismiYayinHatasi(error instanceof Error ? error.message : "Kısmi rapor açılamadı.");
     }
   };
 
@@ -302,6 +365,60 @@ export default function BirlesikTaslakSayfasi() {
               </Box>
               {onizleme.hucreler.filter((x) => x.kapsam === kapsam).length > 100 &&
                 <Typography variant="caption" color="text.secondary">İlk 100 hücre gösteriliyor.</Typography>}
+            </>}
+          </Stack>
+        </Paper>
+        <Paper variant="outlined" sx={{ p: 1.5 }}>
+          <Stack spacing={1.5}>
+            <Typography variant="subtitle2">Kısmi raporu yayımla</Typography>
+            <Typography variant="body2" color="text.secondary">
+              Güncel formül alt sürümü gerçek dönüşüm mizanıyla hesaplanır. Eksik tutarlar “Hesaplanmadı” olarak değişmez arşive kaydedilir.
+            </Typography>
+            <Stack direction={{ xs: "column", md: "row" }} spacing={1}>
+              <TextField size="small" type="number" label="Firma ID" value={yayinDenetlenenId}
+                onChange={(e) => setYayinDenetlenenId(e.target.value)} sx={{ minWidth: 140 }} />
+              <TextField size="small" type="number" label="Yıl" value={yayinYil}
+                onChange={(e) => setYayinYil(e.target.value)} sx={{ minWidth: 120 }} />
+              <Button variant="contained" onClick={kismiYayinla}
+                disabled={!son || !surumGuncelMi || !Number(yayinDenetlenenId) || !Number(yayinYil) || kismiYayinYukleniyor}>
+                {kismiYayinYukleniyor ? "Yayımlanıyor..." : `${kapsam === 2 ? "Konsolide" : "Münferit"} kısmi raporu yayımla`}
+              </Button>
+            </Stack>
+            {kismiYayinHatasi && <Alert severity="error">{kismiYayinHatasi}</Alert>}
+            {kismiYayinlar.length > 0 && <Stack spacing={0.5}>
+              <Typography variant="body2">Önceki kısmi yayınlar</Typography>
+              {kismiYayinlar.filter((x) => x.birlesikTaslakId === id).slice(0, 10).map((x) =>
+                <Button key={x.id} size="small" variant="text" onClick={() => raporAc(x.id)} sx={{ alignSelf: "flex-start" }}>
+                  {new Date(x.olusturmaTarihi).toLocaleString("tr-TR")} · {x.hesaplananHucreSayisi} hesaplandı · {x.hesaplanmayanHucreSayisi} hesaplanmadı
+                </Button>)}
+            </Stack>}
+            {seciliRapor && <>
+              <Alert severity={seciliRapor.hesaplanmayanHucreSayisi ? "warning" : "success"}>
+                Arşiv #{seciliRapor.id}: {seciliRapor.hesaplananHucreSayisi} hesaplandı,
+                {` ${seciliRapor.hesaplanmayanHucreSayisi}`} hesaplanmadı. Ana rapor kayıtları bu arşivle değiştirilmez.
+              </Alert>
+              {arsivTablosu ? <>
+                <Typography variant="body2">{arsivTablosu.ad} · {arsivHucreleri.length} hücre</Typography>
+                <Box sx={{ maxHeight: 360, overflowY: "auto" }}>
+                  {arsivHucreleri.slice(raporSayfasi * 100, (raporSayfasi + 1) * 100).map((x) => {
+                    const eslesme = arsivTablosu.eslesmeler.find((y) => y.eslesmeAnahtari === x.eslesmeAnahtari);
+                    const ad = (seciliRapor.konsolidasyonMu ? eslesme?.konsolideKaynaklari : eslesme?.munferitKaynaklari)?.[0]?.ad || x.eslesmeAnahtari;
+                    return <Box key={`${x.eslesmeAnahtari}:${x.yataySutunAnahtari || ""}`} sx={{ py: 0.75,
+                      borderBottom: "1px solid", borderColor: "divider", display: "flex", justifyContent: "space-between", gap: 2 }}>
+                      <Typography variant="body2">{ad}{x.yataySutunAnahtari ? ` · ${x.yataySutunAnahtari}` : ""}</Typography>
+                      <Typography variant="body2" color={x.deger === null ? "warning.main" : "text.primary"} title={x.hata || ""}>
+                        {x.deger === null ? "Hesaplanmadı" : x.deger.toLocaleString("tr-TR", { maximumFractionDigits: 2 })}
+                      </Typography>
+                    </Box>;
+                  })}
+                </Box>
+                <Stack direction="row" spacing={1} alignItems="center">
+                  <Button size="small" disabled={raporSayfasi === 0} onClick={() => setRaporSayfasi((s) => s - 1)}>Önceki</Button>
+                  <Typography variant="caption">{raporSayfasi + 1} / {Math.max(1, Math.ceil(arsivHucreleri.length / 100))}</Typography>
+                  <Button size="small" disabled={(raporSayfasi + 1) * 100 >= arsivHucreleri.length}
+                    onClick={() => setRaporSayfasi((s) => s + 1)}>Sonraki</Button>
+                </Stack>
+              </> : <Typography variant="body2" color="text.secondary">Bu raporda seçili tablo bulunmuyor.</Typography>}
             </>}
           </Stack>
         </Paper>
