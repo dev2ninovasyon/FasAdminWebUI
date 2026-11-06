@@ -1236,6 +1236,20 @@ export const previewKgkBirlesikTaslak = async (
   return payload as KgkBirlesikOnizlemeSonucu;
 };
 
+export const previewKgkBirlesikGercekMizan = async (
+  token: string, id: number, formulSurumNo: number, tabloAdi: string,
+  denetlenenId: number, yil: number, kapsam: number
+): Promise<KgkBirlesikOnizlemeSonucu> => {
+  const response = await fetch(`${url}/FinansalTabloYonetimi/Kgk/BirlesikTaslaklar/${id}/GercekMizanOnizle`, {
+    method: "POST",
+    headers: { accept: "application/json", "Content-Type": "application/json", Authorization: `Bearer ${token}` },
+    body: JSON.stringify({ formulSurumNo, tabloAdi, denetlenenId, yil, kapsam }),
+  });
+  const payload = await response.json().catch(() => ({}));
+  if (!response.ok) throw new Error(payload?.message || "Gerçek mizan önizlemesi oluşturulamadı.");
+  return payload as KgkBirlesikOnizlemeSonucu;
+};
+
 export type KgkKismiRaporOzeti = {
   id: string;
   birlesikTaslakId: number;

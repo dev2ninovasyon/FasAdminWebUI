@@ -12,6 +12,7 @@ import {
   getKgkBirlesikTaslak, getKgkBirlesikFormulSurumleri, getKgkBirlesikSonFormulSurumu,
   getKgkBirlesikFormulHazirligi, createKgkBirlesikYayinTaslagi, saveKgkBirlesikFormulVaryanti,
   previewKgkBirlesikTaslak, KgkBirlesikOnizlemeSonucu,
+  previewKgkBirlesikGercekMizan,
   publishKgkKismiRapor, getKgkKismiRapor, listKgkKismiRaporlar,
   KgkKismiRaporOzeti, KgkKismiRaporDetayi,
   KgkBirlesikTaslakDetay, KgkBirlesikFormulSurumu, KgkBirlesikFormulHazirligi,
@@ -58,6 +59,8 @@ export default function BirlesikTaslakSayfasi() {
   const [raporSayfasi, setRaporSayfasi] = useState(0);
   const [kismiYayinYukleniyor, setKismiYayinYukleniyor] = useState(false);
   const [kismiYayinHatasi, setKismiYayinHatasi] = useState("");
+  const [gercekOnizleme, setGercekOnizleme] = useState<KgkBirlesikOnizlemeSonucu | null>(null);
+  const [gercekOnizlemeYukleniyor, setGercekOnizlemeYukleniyor] = useState(false);
 
   useEffect(() => {
     if (!yayinDenetlenenId && user.denetlenenId) setYayinDenetlenenId(String(user.denetlenenId));
@@ -68,6 +71,8 @@ export default function BirlesikTaslakSayfasi() {
     setSeciliRapor(null);
     setRaporSayfasi(0);
   }, [yayinDenetlenenId, yayinYil, kapsam]);
+  useEffect(() => { setGercekOnizleme(null); },
+    [yayinDenetlenenId, yayinYil, kapsam, tabloAdi, son?.surumNo]);
 
   useEffect(() => {
     if (!token || !Number(yayinDenetlenenId) || !Number(yayinYil)) return;
@@ -179,6 +184,22 @@ export default function BirlesikTaslakSayfasi() {
       setKismiYayinHatasi(error instanceof Error ? error.message : "Kısmi rapor yayımlanamadı.");
     } finally {
       setKismiYayinYukleniyor(false);
+    }
+  };
+
+  const gercekMizaniOnizle = async () => {
+    const firmaId = Number(yayinDenetlenenId);
+    const yil = Number(yayinYil);
+    if (!token || !son || !tabloAdi || !Number.isInteger(firmaId) || firmaId <= 0 ||
+      !Number.isInteger(yil) || yil < 1900 || yil > 2200 || gercekOnizlemeYukleniyor) return;
+    setKismiYayinHatasi(""); setGercekOnizlemeYukleniyor(true);
+    try {
+      setGercekOnizleme(await previewKgkBirlesikGercekMizan(token, id,
+        son.surumNo, tabloAdi, firmaId, yil, kapsam));
+    } catch (error) {
+      setKismiYayinHatasi(error instanceof Error ? error.message : "Gerçek mizan önizlemesi oluşturulamadı.");
+    } finally {
+      setGercekOnizlemeYukleniyor(false);
     }
   };
 
@@ -379,12 +400,38 @@ export default function BirlesikTaslakSayfasi() {
                 onChange={(e) => setYayinDenetlenenId(e.target.value)} sx={{ minWidth: 140 }} />
               <TextField size="small" type="number" label="Yıl" value={yayinYil}
                 onChange={(e) => setYayinYil(e.target.value)} sx={{ minWidth: 120 }} />
+              <Button variant="outlined" onClick={gercekMizaniOnizle}
+                disabled={!son || !tabloAdi || !Number(yayinDenetlenenId) || !Number(yayinYil) || gercekOnizlemeYukleniyor}>
+                {gercekOnizlemeYukleniyor ? "Hesaplanıyor..." : "Gerçek mizanla önizle"}
+              </Button>
               <Button variant="contained" onClick={kismiYayinla}
                 disabled={!son || !surumGuncelMi || !Number(yayinDenetlenenId) || !Number(yayinYil) || kismiYayinYukleniyor}>
                 {kismiYayinYukleniyor ? "Yayımlanıyor..." : `${kapsam === 2 ? "Konsolide" : "Münferit"} kısmi raporu yayımla`}
               </Button>
             </Stack>
             {kismiYayinHatasi && <Alert severity="error">{kismiYayinHatasi}</Alert>}
+            {gercekOnizleme && <>
+              <Alert severity={gercekOnizleme.yapiSorunuSayisi ? "error" : "info"}>
+                {tabloAdi}: {gercekOnizleme.hucreler.filter((x) => x.deger !== null).length} tutar hesaplandı,
+                {` ${gercekOnizleme.hucreler.filter((x) => x.deger === null).length}`} tutar hesaplanmadı.
+                {gercekOnizleme.yapiSorunuSayisi > 0 && " Yapı hatası var; yayın engellenir."}
+              </Alert>
+              <Box sx={{ maxHeight: 220, overflowY: "auto" }}>
+                {gercekOnizleme.hucreler.slice(0, 30).map((x) => {
+                  const eslesme = tablo?.kalemler.find((y) => y.eslesmeAnahtari === x.eslesmeAnahtari);
+                  const ad = (kapsam === 2 ? eslesme?.konsolideKaynaklari : eslesme?.munferitKaynaklari)?.[0]?.ad || x.eslesmeAnahtari;
+                  return <Box key={`${x.eslesmeAnahtari}:${x.yataySutunAnahtari || ""}`} sx={{ py: 0.5,
+                    display: "flex", justifyContent: "space-between", gap: 2, borderBottom: "1px solid", borderColor: "divider" }}>
+                    <Typography variant="body2">{ad}</Typography>
+                    <Typography variant="body2" color={x.deger === null ? "warning.main" : "text.primary"} title={x.hata || ""}>
+                      {x.deger === null ? "Hesaplanmadı" : x.deger.toLocaleString("tr-TR", { maximumFractionDigits: 2 })}
+                    </Typography>
+                  </Box>;
+                })}
+              </Box>
+              {gercekOnizleme.hucreler.length > 30 &&
+                <Typography variant="caption">İlk 30 hücre gösteriliyor; yayın tüm tabloları hesaplar.</Typography>}
+            </>}
             {kismiYayinlar.length > 0 && <Stack spacing={0.5}>
               <Typography variant="body2">Önceki kısmi yayınlar</Typography>
               {kismiYayinlar.filter((x) => x.birlesikTaslakId === id).slice(0, 10).map((x) =>
