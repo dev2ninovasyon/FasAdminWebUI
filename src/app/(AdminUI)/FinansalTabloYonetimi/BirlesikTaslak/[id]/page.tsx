@@ -21,7 +21,7 @@ import {
   previewKgkBirlesikGercekMizan, publishKgkKismiRapor, listKgkKismiRaporlar, getKgkKismiRapor,
   saveKgkBirlesikFormulVaryanti, saveKgkBirlesikExcelToplamlari, KgkBirlesikTaslakDetay, KgkBirlesikFormulSurumu, KgkBirlesikFormulVaryanti,
   KgkBirlesikFormulHazirligi, KgkBirlesikOnizlemeHucresi, KgkBirlesikOnizlemeSonucu, KgkMatrisSutunu, KgkExcelFormulAdaylari,
-  KgkKismiRaporOzeti, KgkKismiRaporDetayi,
+  KgkKismiRaporOzeti, KgkKismiRaporDetayi, KgkBirlesikYayinTaslagiSonucu,
 } from "@/api/FinansalTabloYonetimi/Tanimlar";
 import { getFinansalTabloTestMizanlari, FinansalTabloTestMizan } from "@/api/FinansalTabloYonetimi/TestMizan";
 import { KgkAgacSatiri, gorunurSatirlar, kgkAgaciOlustur, sutunBasliklari } from "./kgkAgaci";
@@ -89,6 +89,7 @@ export default function BirlesikTaslakSayfasi() {
   const [kaydediliyor, setKaydediliyor] = useState(false);
   const [kgkAktariliyor, setKgkAktariliyor] = useState(false);
   const [yayinTaslagiOlusturuluyor, setYayinTaslagiOlusturuluyor] = useState(false);
+  const [yayinTaslaklari, setYayinTaslaklari] = useState<KgkBirlesikYayinTaslagiSonucu["surumler"]>([]);
   const [taslakYenileniyor, setTaslakYenileniyor] = useState(false);
   const [gecerlilikBaslangici, setGecerlilikBaslangici] = useState(`${new Date().getFullYear()}-01-01`);
   const [gecmisAnchor, setGecmisAnchor] = useState<HTMLElement | null>(null);
@@ -339,11 +340,14 @@ export default function BirlesikTaslakSayfasi() {
 
   const yayinTaslagiOlustur = async () => {
     if (!token || !son || !hazirlik?.sonuc.hazirMi || !gecerlilikBaslangici || yayinTaslagiOlusturuluyor) return;
-    setHata(""); setMesaj(""); setYayinTaslagiOlusturuluyor(true);
+    setHata(""); setMesaj(""); setYayinTaslaklari([]); setYayinTaslagiOlusturuluyor(true);
     try {
       const sonuc = await createKgkBirlesikYayinTaslagi(token, id, son.surumNo, gecerlilikBaslangici,
         `KGK taslağı #${id}, formül alt sürümü #${son.surumNo}`);
-      setMesaj(`Münferit ve konsolide yayın taslakları oluşturuldu: ${sonuc.surumler.map((x) => `#${x.id}`).join(", ")}. Tablolar henüz yayımlanmadı.`);
+      setYayinTaslaklari(sonuc.surumler);
+      setMesaj(sonuc.zatenOlusturulmus
+        ? "Bu formül alt sürümü için yayın taslakları zaten oluşturulmuş."
+        : "Münferit ve konsolide yayın taslakları oluşturuldu. Tablolar henüz yayımlanmadı.");
     } catch (error) {
       setHata(error instanceof Error ? error.message : "Yayın taslakları oluşturulamadı.");
     } finally {
@@ -505,7 +509,25 @@ export default function BirlesikTaslakSayfasi() {
     <ParentCard title={taslak ? `KGK taslağı #${taslak.ozet.id}` : "KGK taslağı yükleniyor"}>
       <Stack spacing={1.5}>
         {hata && <Alert severity="error" onClose={() => setHata("")}>{hata}</Alert>}
-        {mesaj && <Alert severity="success" onClose={() => setMesaj("")}>{mesaj}</Alert>}
+        {mesaj && <Alert severity="success" onClose={() => { setMesaj(""); setYayinTaslaklari([]); }}>
+          <Stack spacing={0.75}>
+            <Typography variant="body2">{mesaj}</Typography>
+            {yayinTaslaklari.length > 0 && <>
+              <Typography variant="caption" color="text.secondary">
+                Her kapsamı açıp teknik doğrulamayı inceleyin; yayın ve devreye alma ilgili sürüm ekranından yapılır.
+              </Typography>
+              <Stack direction={{ xs: "column", sm: "row" }} spacing={0.75} flexWrap="wrap">
+                {[...yayinTaslaklari].sort((a, b) => a.kapsam - b.kapsam).map((surum) => {
+                  const kapsamAdi = surum.kapsam === 1 ? "Münferit" : surum.kapsam === 2 ? "Konsolide" : `Kapsam ${surum.kapsam}`;
+                  return <Button key={surum.id} size="small" variant="outlined"
+                    href={`/FinansalTabloYonetimi/Surum/${surum.id}`}>
+                    {kapsamAdi} taslağını aç · #{surum.id}
+                  </Button>;
+                })}
+              </Stack>
+            </>}
+          </Stack>
+        </Alert>}
         {taslak && taslak.ozet.olusturucuSurumu < taslak.guncelOlusturucuSurumu &&
           <Alert severity="warning" action={<Button size="small" disabled={taslakYenileniyor}
             onClick={() => void eskiTaslagiYenile()}>
