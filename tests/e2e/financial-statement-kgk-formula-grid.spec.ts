@@ -210,6 +210,7 @@ test("birleşik KGK formülleri Excel tablosunda düzenlenir ve motorla hesaplan
   await expect(page.getByText("Münferit ve konsolide yayın taslakları oluşturuldu.", { exact: false })).toBeVisible();
   await expect(page.getByRole("link", { name: "Münferit taslağını aç · #101" })).toHaveAttribute("href", "/FinansalTabloYonetimi/Surum/101");
   await expect(page.getByRole("link", { name: "Konsolide taslağını aç · #102" })).toHaveAttribute("href", "/FinansalTabloYonetimi/Surum/102");
+  await expect(page.getByRole("link", { name: "Birleşik KGK etkinleştirmesine git" })).toHaveAttribute("href", "/FinansalTabloYonetimi/KgkGuncellemeleri");
 
   expect(hatalar).toEqual([]);
 });

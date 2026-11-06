@@ -28,6 +28,8 @@ export type FinansalSurum = {
   kaynakPaketSurumu?: string | null;
   kaynakPaketSha256?: string | null;
   kaynakVeriSha256?: string | null;
+  birlesikTaslakId?: number | null;
+  birlesikFormulSurumuId?: number | null;
   eszamanlilikSurumu: number;
   tabloSayisi: number;
   kalemSayisi: number;
