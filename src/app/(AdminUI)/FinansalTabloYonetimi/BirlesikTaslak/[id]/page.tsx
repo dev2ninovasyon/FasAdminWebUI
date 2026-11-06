@@ -514,7 +514,7 @@ export default function BirlesikTaslakSayfasi() {
             <Typography variant="body2">{mesaj}</Typography>
             {yayinTaslaklari.length > 0 && <>
               <Typography variant="caption" color="text.secondary">
-                Her kapsamı açıp teknik doğrulamayı inceleyin; yayın ve devreye alma ilgili sürüm ekranından yapılır.
+                Her iki kapsamı açıp örnek mizan testlerini tamamlayın. Münferit ve konsolide sürümler KGK Güncellemeleri ekranından birlikte devreye alınır.
               </Typography>
               <Stack direction={{ xs: "column", sm: "row" }} spacing={0.75} flexWrap="wrap">
                 {[...yayinTaslaklari].sort((a, b) => a.kapsam - b.kapsam).map((surum) => {
@@ -525,6 +525,9 @@ export default function BirlesikTaslakSayfasi() {
                   </Button>;
                 })}
               </Stack>
+              <Button size="small" variant="contained" href="/FinansalTabloYonetimi/KgkGuncellemeleri">
+                Birleşik KGK etkinleştirmesine git
+              </Button>
             </>}
           </Stack>
         </Alert>}

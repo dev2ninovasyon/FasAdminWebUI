@@ -2054,6 +2054,7 @@ const Page = ({ editorSurumId }: PageProps) => {
 
   const seciliSurumTaslakMi = surumDurumKodu(secilenSurum?.durum ?? 0) === 1;
   const seciliSurumYayindaMi = surumDurumKodu(secilenSurum?.durum ?? 0) === 3;
+  const seciliSurumBirlesikKgkMi = Boolean(secilenSurum?.birlesikTaslakId && secilenSurum?.birlesikFormulSurumuId);
   const yeniSurumDevredeMi = Boolean(seciliSurumYayindaMi && sonDevreyeAlinanSurumId === secilenSurum?.id);
   const teknikDogrulamaGuncelMi = Boolean(
     dogrulamaSonucu && secilenSurum &&
@@ -2098,6 +2099,7 @@ const Page = ({ editorSurumId }: PageProps) => {
     if (yeniSurumDevredeMi) return { seviye: "success" as const, baslik: "Sürüm devreye alındı", aciklama: "Ana tablolarda kullanmak için örnek mizanla hazırlayıp geçişi etkinleştirin. Önceki raporlar korunur.", eylem: "ana-tablo", dugme: "Ana tablo geçişine git" };
     if (!seciliTestMizani) return { seviye: "info" as const, baslik: "İzole test başlatılabilir", aciklama: "Sistem dengeli örnek mizanı hazırlayıp salt-okunur önizlemeyi kendisi çalıştıracak. Gerçek veriler ve mevcut raporlar etkilenmeyecek.", eylem: "otomatik-test", dugme: "Otomatik testi çalıştır" };
     if (!onizlemeBasariliMi) return { seviye: uretimOnizlemeSonucu ? "warning" as const : "info" as const, baslik: uretimOnizlemeSonucu ? "Test yeniden çalıştırılmalı" : "Yeni motor önizlemeye hazır", aciklama: tumTestTutarlariSifirMi ? "Tüm tutarlar sıfır. Test mizanı seçili formülleri tetiklemedi; hesap kodlarını kontrol edip yeniden deneyin." : uretimOnizlemeSonucu?.aciklama || "Seçili tanım ve test mizanıyla salt-okunur finansal tablo üretilecek.", eylem: "otomatik-test", dugme: "Otomatik testi çalıştır" };
+    if (seciliSurumTaslakMi && seciliSurumBirlesikKgkMi) return { seviye: "info" as const, baslik: "Birleşik KGK sürümü", aciklama: "Münferit ve konsolide sürümler birlikte doğrulanıp tek işlemde devreye alınır. KGK Güncellemeleri ekranında iki kapsamı birlikte etkinleştirin.", eylem: "kgk", dugme: "Birleşik KGK etkinleştirmesine git" };
     if (seciliSurumTaslakMi && surumYonetimiDurumu?.etkin !== true) return { seviye: "warning" as const, baslik: "Devreye alma bekliyor", aciklama: surumYonetimiDurumu?.aciklama || "Sürüm yönetimi durumu doğrulanamadı.", eylem: "bekle", dugme: "Devreye alma kullanılamıyor" };
     if (seciliSurumTaslakMi) return { seviye: "success" as const, baslik: "Taslak devreye alınabilir", aciklama: `${uretimOnizlemeSonucu?.sonuclar.length ?? 0} tablo sonucu başarılı. Etkinlik tarihi ve onay nedenini girerek sürümü devreye alın.`, eylem: "devreye-al", dugme: "Devreye almaya geç" };
     return { seviye: "success" as const, baslik: "Admin testi başarıyla tamamlandı", aciklama: `${uretimOnizlemeSonucu?.sonuclar.length ?? 0} finansal tablo sonucu üretildi; mevcut raporlar ve üretim arşivi değiştirilmedi.`, eylem: "kgk", dugme: "KGK kontrolüne geç" };
@@ -2654,7 +2656,19 @@ const Page = ({ editorSurumId }: PageProps) => {
           </Stack>
         )}
       </Paper>
-      {seciliSurumTaslakMi && teknikDogrulamaBasariliMi && onizlemeBasariliMi && (
+      {seciliSurumTaslakMi && seciliSurumBirlesikKgkMi ? (
+        <Paper id="taslak-devreye-al" variant="outlined" sx={{ p: 1.5, mb: 2 }}>
+          <Stack spacing={1}>
+            <Typography variant="subtitle2">Birleşik KGK taslağını birlikte devreye alın</Typography>
+            <Typography variant="body2" color="text.secondary">
+              Bu sürüm tek başına etkinleştirilemez. Münferit ve konsolide kapsamların örnek mizan kontrollerini tamamlayın; sonra KGK Güncellemeleri ekranında iki sürümü birlikte devreye alın.
+            </Typography>
+            <Button variant="contained" onClick={() => router.push("/FinansalTabloYonetimi/KgkGuncellemeleri")} sx={{ alignSelf: "flex-start" }}>
+              Birleşik KGK etkinleştirmesine git
+            </Button>
+          </Stack>
+        </Paper>
+      ) : seciliSurumTaslakMi && teknikDogrulamaBasariliMi && onizlemeBasariliMi && (
         <Paper id="taslak-devreye-al" variant="outlined" sx={{ p: 1.5, mb: 2, borderColor: "success.main" }}>
           <Stack spacing={1.25}>
             <Box>
