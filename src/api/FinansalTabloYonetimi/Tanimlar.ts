@@ -1233,36 +1233,6 @@ export const getKgkExcelFormulAdaylari = async (token: string, id: number) =>
   enumlariSayiyaCevir(await jsonGet<KgkExcelFormulAdaylari>(token,
     `/Kgk/BirlesikTaslaklar/${id}/KgkExcelFormulAdaylari`));
 
-export type KgkEskiFormulAdaylari = {
-  taslakId: number; formulSurumNo: number; toplam: number; kullanilabilir: number;
-  adaylar: Array<{
-    tabloAdi: string; eslesmeAnahtari: string; kapsam: number;
-    kgkKalemAdi: string; kgkSatirNo: number; eskiKayitId: number | null;
-    eskiKalemAdi: string | null; hamEskiFormul: string | null;
-    durum: "AdAyni" | "AdFarkli" | "AdFarkliIncelenmeli" | "KontrolBakiyesiAdayi" | "EskiSatirCoklu" | "EskiFormulIncelenmeli";
-    varyant: KgkBirlesikFormulVaryanti | null;
-  }>;
-};
-
-export const getKgkEskiFormulAdaylari = async (token: string, id: number) =>
-  enumlariSayiyaCevir(await jsonGet<KgkEskiFormulAdaylari>(token,
-    `/Kgk/BirlesikTaslaklar/${id}/EskiFormulAdaylari`));
-
-export type KgkEskiOzkaynakFormulAdaylari = {
-  taslakId: number; formulSurumNo: number; toplam: number; kullanilabilir: number;
-  adaylar: Array<{
-    tabloAdi: string; eslesmeAnahtari: string; kapsam: number; yataySutunAnahtari: string;
-    hucreAdresi: string; eskiKayitId: number | null; eskiSatirAdi: string | null;
-    eskiSutunAdi: string | null; hamEskiFormul: string | null;
-    durum: "AdAyni" | "AdFarkliIncelenmeli" | "EskiAdresCoklu" | "OzelFormulIncelenmeli" | "EskiFormulIncelenmeli" | "YerTutucuFormulIncelenmeli" | "KontrolBakiyesiAdayi" | "YinelenenBakiyeFormuluIncelenmeli";
-    varyant: KgkBirlesikFormulVaryanti | null;
-  }>;
-};
-
-export const getKgkEskiOzkaynakFormulAdaylari = async (token: string, id: number) =>
-  enumlariSayiyaCevir(await jsonGet<KgkEskiOzkaynakFormulAdaylari>(token,
-    `/Kgk/BirlesikTaslaklar/${id}/EskiOzkaynakFormulAdaylari`));
-
 export type KgkBirlesikFormulSurumu = {
   id: number;
   birlesikTaslakId: number;

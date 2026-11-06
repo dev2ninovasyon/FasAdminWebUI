@@ -2269,7 +2269,7 @@ const Page = ({ editorSurumId }: PageProps) => {
           <Box sx={{ flexGrow: 1 }}>
             <Typography variant="subtitle2">KGK dosya arşivi</Typography>
             <Typography variant="body2" color="text.secondary">
-              KGK dosya değişikliği doğrudan kullanıcı tanımını değiştirmez. Önce arşivlenir, kalem ve formül farkları incelenir, sonra seçili taslağa Admin onayıyla aktarılır.
+               KGK dosyaları arşivlenir ve yeni ana sürüm olarak izlenir. Taslak, bu dosyaların kalemlerinden ve Excel toplamlarından oluşturulur. Eksik formüller tamamlanmadan yayına alınamaz.
             </Typography>
           </Box>
           {kgkTaramaGecmisi[0]
@@ -2313,7 +2313,7 @@ const Page = ({ editorSurumId }: PageProps) => {
             Birleşik taslak #{kgkBirlesikSonuc.id}: {kgkBirlesikSonuc.tabloSayisi} tablo, {kgkBirlesikSonuc.ortakKalemSayisi} ortak,
             {" "}{kgkBirlesikSonuc.kapsamaOzelKalemSayisi} kapsama özel satır.
             {kgkBirlesikSonuc.belirsizEslesmeSayisi > 0 && ` ${kgkBirlesikSonuc.belirsizEslesmeSayisi} belirsiz eşleşme inceleme gerektiriyor.`}
-            {" "}Bu kaynak taslağı rapor üretimini henüz değiştirmez.
+             {" "}Taslak KGK Excel dosyalarından oluşturuldu; önceki formüller aktarılmadı. Eksik formüller tamamlanmadan rapor üretimini değiştirmez.
             <Button size="small" variant="text" onClick={() => router.push(`/FinansalTabloYonetimi/BirlesikTaslak/${kgkBirlesikSonuc.id}`)}>
               Formülleri ve dipnotları aç
             </Button>
