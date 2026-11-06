@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import { useParams } from "next/navigation";
 import { Alert, Box, Button, MenuItem, Paper, Stack, TextField, Typography } from "@mui/material";
 import PageContainer from "@/app/components/Container/PageContainer";
@@ -40,6 +40,8 @@ export default function BirlesikTaslakSayfasi() {
   const [satirAnahtari, setSatirAnahtari] = useState("");
   const [sutunAnahtari, setSutunAnahtari] = useState("");
   const [kapsam, setKapsam] = useState(1);
+  const raporBaglami = `${yayinDenetlenenId}:${yayinYil}:${kapsam}`;
+  const guncelRaporBaglami = useRef(raporBaglami);
   const [formul, setFormul] = useState("");
   const [dipnot, setDipnot] = useState("");
   const [kaynak, setKaynak] = useState("");
@@ -61,14 +63,19 @@ export default function BirlesikTaslakSayfasi() {
   const [kismiYayinHatasi, setKismiYayinHatasi] = useState("");
   const [gercekOnizleme, setGercekOnizleme] = useState<KgkBirlesikOnizlemeSonucu | null>(null);
   const [gercekOnizlemeYukleniyor, setGercekOnizlemeYukleniyor] = useState(false);
+  const onizlemeBaglami = `${raporBaglami}:${tabloAdi}:${son?.surumNo || 0}`;
+  const guncelOnizlemeBaglami = useRef(onizlemeBaglami);
 
   useEffect(() => {
+    guncelRaporBaglami.current = raporBaglami;
     setSeciliRapor(null);
     setKismiYayinlar([]);
     setRaporSayfasi(0);
-  }, [yayinDenetlenenId, yayinYil, kapsam]);
-  useEffect(() => { setGercekOnizleme(null); },
-    [yayinDenetlenenId, yayinYil, kapsam, tabloAdi, son?.surumNo]);
+  }, [raporBaglami]);
+  useEffect(() => {
+    guncelOnizlemeBaglami.current = onizlemeBaglami;
+    setGercekOnizleme(null);
+  }, [onizlemeBaglami]);
 
   useEffect(() => {
     if (!token || !Number(yayinDenetlenenId) || !Number(yayinYil)) return;
@@ -163,6 +170,7 @@ export default function BirlesikTaslakSayfasi() {
   };
 
   const kismiYayinla = async () => {
+    const istekBaglami = raporBaglami;
     const firmaId = Number(yayinDenetlenenId);
     const yil = Number(yayinYil);
     if (!token || !son || !surumGuncelMi || !Number.isInteger(firmaId) || firmaId <= 0 ||
@@ -174,26 +182,31 @@ export default function BirlesikTaslakSayfasi() {
         getKgkKismiRapor(token, yayin.id),
         listKgkKismiRaporlar(token, firmaId, yil, kapsam === 2),
       ]);
+      if (guncelRaporBaglami.current !== istekBaglami) return;
       setSeciliRapor(detay); setKismiYayinlar(kayitlar); setRaporSayfasi(0);
       setMesaj(`${yayin.hesaplananHucreSayisi} tutar hesaplandı; ${yayin.hesaplanmayanHucreSayisi} tutar hesaplanmadı. Kısmi rapor arşive kaydedildi.`);
     } catch (error) {
-      setKismiYayinHatasi(error instanceof Error ? error.message : "Kısmi rapor yayımlanamadı.");
+      if (guncelRaporBaglami.current === istekBaglami)
+        setKismiYayinHatasi(error instanceof Error ? error.message : "Kısmi rapor yayımlanamadı.");
     } finally {
       setKismiYayinYukleniyor(false);
     }
   };
 
   const gercekMizaniOnizle = async () => {
+    const istekBaglami = onizlemeBaglami;
     const firmaId = Number(yayinDenetlenenId);
     const yil = Number(yayinYil);
     if (!token || !son || !tabloAdi || !Number.isInteger(firmaId) || firmaId <= 0 ||
       !Number.isInteger(yil) || yil < 1900 || yil > 2200 || gercekOnizlemeYukleniyor) return;
     setKismiYayinHatasi(""); setGercekOnizlemeYukleniyor(true);
     try {
-      setGercekOnizleme(await previewKgkBirlesikGercekMizan(token, id,
-        son.surumNo, tabloAdi, firmaId, yil, kapsam));
+      const sonuc = await previewKgkBirlesikGercekMizan(token, id,
+        son.surumNo, tabloAdi, firmaId, yil, kapsam);
+      if (guncelOnizlemeBaglami.current === istekBaglami) setGercekOnizleme(sonuc);
     } catch (error) {
-      setKismiYayinHatasi(error instanceof Error ? error.message : "Gerçek mizan önizlemesi oluşturulamadı.");
+      if (guncelOnizlemeBaglami.current === istekBaglami)
+        setKismiYayinHatasi(error instanceof Error ? error.message : "Gerçek mizan önizlemesi oluşturulamadı.");
     } finally {
       setGercekOnizlemeYukleniyor(false);
     }
@@ -201,12 +214,16 @@ export default function BirlesikTaslakSayfasi() {
 
   const raporAc = async (raporId: string) => {
     if (!token) return;
+    const istekBaglami = raporBaglami;
     setKismiYayinHatasi("");
     try {
-      setSeciliRapor(await getKgkKismiRapor(token, raporId));
+      const detay = await getKgkKismiRapor(token, raporId);
+      if (guncelRaporBaglami.current !== istekBaglami) return;
+      setSeciliRapor(detay);
       setRaporSayfasi(0);
     } catch (error) {
-      setKismiYayinHatasi(error instanceof Error ? error.message : "Kısmi rapor açılamadı.");
+      if (guncelRaporBaglami.current === istekBaglami)
+        setKismiYayinHatasi(error instanceof Error ? error.message : "Kısmi rapor açılamadı.");
     }
   };
 
