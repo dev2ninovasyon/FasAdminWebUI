@@ -16,6 +16,9 @@ const draftVersion = {
   kaynakPaketSurumu: null,
   kaynakPaketSha256: null,
   kaynakVeriSha256: null,
+  kgkAnaSurumId: null as number | null,
+  birlesikTaslakId: null as number | null,
+  birlesikFormulSurumuId: null as number | null,
   eszamanlilikSurumu: 7,
   tabloSayisi: 1,
   kalemSayisi: 3,
@@ -646,6 +649,19 @@ test("admin girişinden güvenli doğrulama ve sürüm aktivasyonuna kadar çal�
     aciklama: "E2E ana tablo geçişi",
   });
   await expect(page.getByText("Yeni üretim durduruldu", { exact: true }).last()).toBeVisible();
+
+  draftVersion.durum = 1;
+  draftVersion.birlesikTaslakId = 77;
+  draftVersion.birlesikFormulSurumuId = 12;
+  draftVersion.kgkAnaSurumId = 9;
+  await page.goto("/FinansalTabloYonetimi/Surum/11");
+  await expect(page.getByText("Birleşik KGK taslağını birlikte devreye alın", { exact: true })).toBeVisible();
+  await expect(page.getByRole("button", { name: "Devreye al", exact: true })).toHaveCount(0);
+  const birlikteEtkinlestir = page.getByRole("button", { name: "Birleşik KGK etkinleştirmesine git", exact: true });
+  await expect(birlikteEtkinlestir).toBeVisible();
+  await birlikteEtkinlestir.click();
+  await expect(page).toHaveURL(/\/FinansalTabloYonetimi\/KgkGuncellemeleri$/);
+
   expect(productionWriteCount).toBe(0);
   expect(runtimeErrors).toEqual([]);
 });
