@@ -153,7 +153,7 @@ test("başarılı tarama KGK ana sürümünü ve bağlı taslakları gösterir",
   await expect(page.getByText("KGK ana sürüm #2 hazır.", { exact: false })).toBeVisible();
   await page.getByText("KGK ana sürümleri (1)").click();
   await expect(page.getByRole("button", { name: "BOBI-MUNFERIT · #4 · Hazır" })).toBeVisible();
-  await page.getByRole("button", { name: "Toplu devreye al" }).click();
+  await page.getByRole("button", { name: "Devreye al · Bağlı taslaklar" }).click();
   await page.getByRole("textbox", { name: "Onay nedeni" }).fill("KGK tablo sürümleri onaylandı");
   await page.getByRole("button", { name: "Tüm taslakları devreye al" }).click();
   await expect.poll(() => topluIstegi).not.toBeNull();

@@ -654,7 +654,9 @@ test("admin girişinden güvenli doğrulama ve sürüm aktivasyonuna kadar çal�
   draftVersion.birlesikTaslakId = 77;
   draftVersion.birlesikFormulSurumuId = 12;
   draftVersion.kgkAnaSurumId = 9;
-  await page.goto("/FinansalTabloYonetimi/Surum/11");
+  await page.goto("/FinansalTabloYonetimi");
+  await expect(page.getByRole("button", { name: "Sonraki: Test et", exact: true })).toBeVisible();
+  await page.getByRole("button", { name: "Sonraki: Test et", exact: true }).click();
   await expect(page.getByText("Birleşik KGK taslağını birlikte devreye alın", { exact: true })).toBeVisible();
   await expect(page.getByRole("button", { name: "Devreye al", exact: true })).toHaveCount(0);
   const birlikteEtkinlestir = page.getByRole("button", { name: "Birleşik KGK etkinleştirmesine git", exact: true });

@@ -149,7 +149,7 @@ test("birleşik KGK formülleri Excel tablosunda düzenlenir ve motorla hesaplan
   await expect(tablo.getByText("5", { exact: true })).toBeVisible();
   // Formüller tek tip: yalnız Münferit ve Konsolide sütunları var (Normal/Enflasyon ayrımı yok).
   await expect(tablo.getByRole("columnheader", { name: "Enflasyon" })).toHaveCount(0);
-  await expect(tablo.locator('td[title="Bu satır münferit tabloda yok."]')).toHaveCount(1);
+  await expect(tablo.getByText("Yalnız konsolide", { exact: true })).toHaveCount(1);
 
   // Ağaç: daraltınca alt kalemler gizlenir, aramada Türkçe I/İ farkı önemsizdir.
   await tablo.getByRole("row", { name: /Dönen Varlıklar/ }).first().getByRole("button", { name: "Daralt" }).click();
