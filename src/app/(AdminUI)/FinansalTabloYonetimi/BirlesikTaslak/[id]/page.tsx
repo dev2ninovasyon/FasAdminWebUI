@@ -17,10 +17,10 @@ import ParentCard from "@/app/components/Shared/ParentCard";
 import { useSelector } from "@/store/hooks";
 import { AppState } from "@/store/store";
 import {
-  getKgkBirlesikTaslak, createKgkBirlesikTaslak, getKgkBirlesikFormulSurumleri, getKgkBirlesikSonFormulSurumu, getKgkBirlesikFormulSurumu, getKgkBirlesikFormulHazirligi, createKgkBirlesikYayinTaslagi, getKgkExcelFormulAdaylari, previewKgkBirlesikFormulSurumu,
+  getKgkBirlesikTaslak, createKgkBirlesikTaslak, getKgkBirlesikFormulSurumleri, getKgkBirlesikSonFormulSurumu, getKgkBirlesikFormulSurumu, getKgkBirlesikFormulHazirligi, createKgkBirlesikYayinTaslagi, getKgkExcelFormulAdaylari, getKgkEskiFormulAdaylari, getKgkEskiOzkaynakFormulAdaylari, saveKgkBirlesikEskiFormulAdaylari, previewKgkBirlesikFormulSurumu,
   previewKgkBirlesikGercekMizan, publishKgkKismiRapor, listKgkKismiRaporlar, getKgkKismiRapor,
   saveKgkBirlesikFormulVaryanti, saveKgkBirlesikExcelToplamlari, KgkBirlesikTaslakDetay, KgkBirlesikFormulSurumu, KgkBirlesikFormulVaryanti,
-  KgkBirlesikFormulHazirligi, KgkBirlesikOnizlemeHucresi, KgkBirlesikOnizlemeSonucu, KgkMatrisSutunu, KgkExcelFormulAdaylari,
+  KgkBirlesikFormulHazirligi, KgkBirlesikOnizlemeHucresi, KgkBirlesikOnizlemeSonucu, KgkMatrisSutunu, KgkExcelFormulAdaylari, KgkEskiFormulAdaylari, KgkEskiOzkaynakFormulAdaylari,
   KgkKismiRaporOzeti, KgkKismiRaporDetayi, KgkBirlesikYayinTaslagiSonucu,
 } from "@/api/FinansalTabloYonetimi/Tanimlar";
 import { getFinansalTabloTestMizanlari, FinansalTabloTestMizan } from "@/api/FinansalTabloYonetimi/TestMizan";
@@ -71,6 +71,9 @@ export default function BirlesikTaslakSayfasi() {
   const [hazirlik, setHazirlik] = useState<KgkBirlesikFormulHazirligi | null>(null);
   const [kgkAdaylari, setKgkAdaylari] = useState<KgkExcelFormulAdaylari | null>(null);
   const [kgkAdayHatasi, setKgkAdayHatasi] = useState("");
+  const [eskiAdaylari, setEskiAdaylari] = useState<KgkEskiFormulAdaylari | null>(null);
+  const [eskiOzkaynakAdaylari, setEskiOzkaynakAdaylari] = useState<KgkEskiOzkaynakFormulAdaylari | null>(null);
+  const [eskiAdayHatasi, setEskiAdayHatasi] = useState("");
   const [gecmis, setGecmis] = useState<Gecmis[]>([]);
   const [testMizanlari, setTestMizanlari] = useState<FinansalTabloTestMizan[]>([]);
   const [tabloAdi, setTabloAdi] = useState("");
@@ -88,6 +91,7 @@ export default function BirlesikTaslakSayfasi() {
   const [hesaplaniyor, setHesaplaniyor] = useState(false);
   const [kaydediliyor, setKaydediliyor] = useState(false);
   const [kgkAktariliyor, setKgkAktariliyor] = useState(false);
+  const [eskiAdaylariAktariliyor, setEskiAdaylariAktariliyor] = useState(false);
   const [yayinTaslagiOlusturuluyor, setYayinTaslagiOlusturuluyor] = useState(false);
   const [yayinTaslaklari, setYayinTaslaklari] = useState<KgkBirlesikYayinTaslagiSonucu["surumler"]>([]);
   const [taslakYenileniyor, setTaslakYenileniyor] = useState(false);
@@ -112,6 +116,9 @@ export default function BirlesikTaslakSayfasi() {
     setHazirlik(null);
     setKgkAdaylari(null);
     setKgkAdayHatasi("");
+    setEskiAdaylari(null);
+    setEskiOzkaynakAdaylari(null);
+    setEskiAdayHatasi("");
     setGecmis([]);
     setTabloAdi("");
     setSecili(null);
@@ -126,14 +133,24 @@ export default function BirlesikTaslakSayfasi() {
         if (aktif) setKgkAdayHatasi(error instanceof Error ? error.message : "KGK Excel formül adayları alınamadı.");
         return null;
       }),
+      getKgkEskiFormulAdaylari(token, id).catch((error) => {
+        if (aktif) setEskiAdayHatasi(error instanceof Error ? error.message : "Eski formül adayları alınamadı.");
+        return null;
+      }),
+      getKgkEskiOzkaynakFormulAdaylari(token, id).catch((error) => {
+        if (aktif) setEskiAdayHatasi(error instanceof Error ? error.message : "Eski özkaynak formül adayları alınamadı.");
+        return null;
+      }),
       getFinansalTabloTestMizanlari(token, 20).catch(() => [] as FinansalTabloTestMizan[]),
-    ]).then(([kaynakTaslak, formulSurumu, kapsamDurumu, tarihce, adaylar, mizanlar]) => {
+    ]).then(([kaynakTaslak, formulSurumu, kapsamDurumu, tarihce, adaylar, eski, eskiOzkaynak, mizanlar]) => {
       if (!aktif) return;
       setTaslak(kaynakTaslak);
       setTabloAdi(kaynakTaslak.icerik.tablolar[0]?.ad || "");
       setSon(formulSurumu);
       setHazirlik(kapsamDurumu);
       setKgkAdaylari(adaylar);
+      setEskiAdaylari(eski);
+      setEskiOzkaynakAdaylari(eskiOzkaynak);
       setGecmis(tarihce);
       setTestMizanlari(mizanlar);
       setTestMizanId((eski) => eski || mizanlar[0]?.id || "");
@@ -156,18 +173,34 @@ export default function BirlesikTaslakSayfasi() {
   const matrisMi = Boolean(tablo?.munferit?.sutunlar?.length || tablo?.konsolide?.sutunlar?.length);
   const agac = useMemo(() => kgkAgaciOlustur(tablo?.kalemler ?? []), [tablo]);
   const eksikAnahtarlar = useMemo(() => new Set((hazirlik?.sonuc.eksikler ?? [])
-    .filter((x) => x.tabloAdi === tabloAdi && (!matrisMi || x.kapsam === matrisKapsam))
+    .filter((x) => x.tabloAdi === tabloAdi && (!matrisMi || x.kapsam === 1 || x.kapsam === 2))
     .map((x) => x.eslesmeAnahtari)), [hazirlik, tabloAdi, matrisMi, matrisKapsam]);
   const satirlar = useMemo(() => gorunurSatirlar(agac, kapali, arama,
     yalnizEksikler ? eksikAnahtarlar : undefined), [agac, kapali, arama, yalnizEksikler, eksikAnahtarlar]);
   const satirHaritasi = useMemo(() => new Map(agac.map((x) => [x.anahtar, x])), [agac]);
-  const matris = useMemo(() => sutunBasliklari(
-    (matrisKapsam === 1 ? tablo?.munferit?.sutunlar : tablo?.konsolide?.sutunlar) ?? []), [tablo, matrisKapsam]);
+  const matrisler = useMemo(() => new Map<number, ReturnType<typeof sutunBasliklari>>(
+    KAPSAMLAR.map((k) => [k, sutunBasliklari((k === 1 ? tablo?.munferit?.sutunlar : tablo?.konsolide?.sutunlar) ?? [])] as const)), [tablo]);
+  const matris = matrisler.get(secili?.kapsam ?? matrisKapsam)!;
   const varyantlar = useMemo(() => new Map((son?.varyantlar ?? []).filter((x) => x.tabloAdi === tabloAdi)
     .map((x) => [hucreAnahtari(x.eslesmeAnahtari, x.yataySutunAnahtari, x.kapsam, x.donusumTipi), x])), [son, tabloAdi]);
   const adaylar = useMemo(() => new Map((kgkAdaylari?.adaylar ?? []).filter((x) => x.varyant.tabloAdi === tabloAdi)
     .map((x) => [hucreAnahtari(x.varyant.eslesmeAnahtari, x.varyant.yataySutunAnahtari,
       x.varyant.kapsam, x.varyant.donusumTipi), x])), [kgkAdaylari, tabloAdi]);
+  const aktarilabilirEskiVaryantlar = useMemo(() => {
+    const adaylar = [
+      ...(eskiAdaylari?.adaylar ?? []),
+      ...(eskiOzkaynakAdaylari?.adaylar ?? []),
+    ];
+    const benzersiz = new Map<string, KgkBirlesikFormulVaryanti>();
+    adaylar.filter((x) => ["AdAyni", "AltKalemlerdenBirlesik"].includes(x.durum) &&
+      x.varyant?.tabloAdi === tabloAdi)
+      .forEach((x) => {
+        const varyant = x.varyant!;
+        benzersiz.set(hucreAnahtari(varyant.eslesmeAnahtari, varyant.yataySutunAnahtari,
+          varyant.kapsam, varyant.donusumTipi), varyant);
+      });
+    return [...benzersiz.values()];
+  }, [eskiAdaylari, eskiOzkaynakAdaylari, tabloAdi]);
   const matrisHucreleri = useMemo(() => new Map(KAPSAMLAR.map((k) => [k, new Set(
     ((k === 1 ? tablo?.munferit : tablo?.konsolide)?.matrisHucreleri ?? [])
       .map((x) => `${x.sayfaAdi}\u0001${x.satirNo}\u0001${x.sutun}`))])), [tablo]);
@@ -190,6 +223,11 @@ export default function BirlesikTaslakSayfasi() {
     x.eslesmeAnahtari === secili.satir && x.yataySutunAnahtari === secili.sutun &&
     x.kapsam === secili.kapsam && x.donusumTipi === NORMAL);
   const seciliAday = secili ? adaylar.get(hucreAnahtari(secili.satir, secili.sutun, secili.kapsam, NORMAL)) : undefined;
+  const seciliEskiAday = secili ? (eskiOzkaynakAdaylari?.adaylar.find((x) =>
+    x.tabloAdi === tabloAdi && x.eslesmeAnahtari === secili.satir && x.kapsam === secili.kapsam &&
+    x.yataySutunAnahtari === secili.sutun) ?? eskiAdaylari?.adaylar.find((x) =>
+    x.tabloAdi === tabloAdi && x.eslesmeAnahtari === secili.satir && x.kapsam === secili.kapsam &&
+    secili.sutun === null)) : undefined;
   const eksikBagimlilik = useMemo(() => {
     if (!secili || !seciliSatir || !tablo || !seciliAday?.aciklama) return null;
     const adres = /\b([A-Z]{1,3})(\d+) hücresinin çalışır formülü yok\./u.exec(seciliAday.aciklama);
@@ -298,14 +336,17 @@ export default function BirlesikTaslakSayfasi() {
       };
       const sonuc = await saveKgkBirlesikFormulVaryanti(token, id, son?.surumNo || 0, varyant,
         (aciklama.trim() || varsayilan).slice(0, 500));
-      const [guncel, kapsamDurumu, tarihce, guncelAdaylar] = await Promise.all([
+      const [guncel, kapsamDurumu, tarihce, guncelAdaylar, eski, eskiOzkaynak] = await Promise.all([
         getKgkBirlesikSonFormulSurumu(token, id), getKgkBirlesikFormulHazirligi(token, id),
         getKgkBirlesikFormulSurumleri(token, id), getKgkExcelFormulAdaylari(token, id).catch((error) => {
           setKgkAdayHatasi(error instanceof Error ? error.message : "KGK Excel formül adayları güncellenemedi.");
           return null;
         }),
+        getKgkEskiFormulAdaylari(token, id).catch(() => null),
+        getKgkEskiOzkaynakFormulAdaylari(token, id).catch(() => null),
       ]);
       setSon(guncel); setHazirlik(kapsamDurumu); setGecmis(tarihce); setKgkAdaylari(guncelAdaylar);
+      setEskiAdaylari(eski); setEskiOzkaynakAdaylari(eskiOzkaynak);
       if (guncelAdaylar) setKgkAdayHatasi("");
       setKayitliForm(form); setAciklama("");
       setMesaj(`Alt sürüm #${sonuc.surumNo} kaydedildi; önceki sürümler korunuyor.`);
@@ -335,6 +376,28 @@ export default function BirlesikTaslakSayfasi() {
       setHata(error instanceof Error ? error.message : "KGK Excel toplamları aktarılamadı.");
     } finally {
       setKgkAktariliyor(false);
+    }
+  };
+
+  const eskiFormulAdaylariniAktar = async () => {
+    if (!token || !son || aktarilabilirEskiVaryantlar.length === 0 || eskiAdaylariAktariliyor || kaydediliyor) return;
+    if (degisti && !window.confirm("Kaydedilmemiş formül değişikliği var. Vazgeçilsin mi?")) return;
+    setHata(""); setMesaj(""); setEskiAdaylariAktariliyor(true);
+    try {
+      const sonuc = await saveKgkBirlesikEskiFormulAdaylari(token, id, son.surumNo, aktarilabilirEskiVaryantlar);
+      const [guncel, kapsamDurumu, tarihce, kgkFormuller, eski, eskiOzkaynak] = await Promise.all([
+        getKgkBirlesikSonFormulSurumu(token, id), getKgkBirlesikFormulHazirligi(token, id),
+        getKgkBirlesikFormulSurumleri(token, id), getKgkExcelFormulAdaylari(token, id),
+        getKgkEskiFormulAdaylari(token, id), getKgkEskiOzkaynakFormulAdaylari(token, id),
+      ]);
+      setSon(guncel); setHazirlik(kapsamDurumu); setGecmis(tarihce);
+      setKgkAdaylari(kgkFormuller); setEskiAdaylari(eski); setEskiOzkaynakAdaylari(eskiOzkaynak);
+      setEskiAdayHatasi(""); setSecili(null); setOnizleme(null); setEskiOnizleme(null);
+      setMesaj(`${sonuc.eklenenVaryantSayisi} güvenli eski formül adayı alt sürüm #${sonuc.surumNo} olarak kaydedildi. Bu sayıya tam ad eşleşmeleri ve alt kalemlerden birleştirilen formüller dahildir; yayımdan önce örnek mizan önizlemesinde doğrulayın.`);
+    } catch (error) {
+      setHata(error instanceof Error ? error.message : "Eşleşen eski formüller aktarılamadı.");
+    } finally {
+      setEskiAdaylariAktariliyor(false);
     }
   };
 
@@ -448,14 +511,16 @@ export default function BirlesikTaslakSayfasi() {
   };
 
   const satirEtiketi = (satir: KgkAgacSatiri, kapsam: number) => {
-    const no = matrisMi ? kapsamKaynagi(satir, kapsam)?.satirNo : satir.munferit?.satirNo ?? satir.konsolide?.satirNo;
-    const farkliNo = !matrisMi && satir.munferit && satir.konsolide && satir.munferit.satirNo !== satir.konsolide.satirNo;
+    const no = matrisMi
+      ? satir.munferit && satir.konsolide ? `${satir.munferit.satirNo}/${satir.konsolide.satirNo}` : satir.munferit?.satirNo ?? satir.konsolide?.satirNo
+      : satir.munferit?.satirNo ?? satir.konsolide?.satirNo;
     const aramada = Boolean(arama.trim()) || yalnizEksikler;
     return <>
       <TableCell sx={{ position: "sticky", left: 0, zIndex: 1, bgcolor: secili?.satir === satir.anahtar ? EXCEL.seciliBaslik : EXCEL.baslik,
         color: secili?.satir === satir.anahtar ? EXCEL.yesil : "text.secondary", fontWeight: secili?.satir === satir.anahtar ? 700 : 400,
         fontSize: 12, textAlign: "center", px: 0.5, width: 56, borderRight: "1px solid", borderRightColor: EXCEL.kenar, borderBottomColor: EXCEL.kenar }}
-        title={farkliNo ? `Münferit ${satir.munferit!.satirNo} · Konsolide ${satir.konsolide!.satirNo}` : undefined}>
+        title={satir.munferit && satir.konsolide
+          ? `Münferit ${satir.munferit.satirNo} · Konsolide ${satir.konsolide.satirNo}` : undefined}>
         {no ?? ""}
       </TableCell>
       <TableCell sx={{ position: "sticky", left: 56, zIndex: 1, bgcolor: satir.baslikMi ? EXCEL.baslikSatiri : "background.paper", py: 0.25, pr: 1,
@@ -489,8 +554,8 @@ export default function BirlesikTaslakSayfasi() {
   const ustHucre = excelBaslikHucresi;
   const varyantDurumu = (kapsam: number) =>
     onizleme?.tabloAdi === tabloAdi ? onizleme.varyantlar.find((x) => x.kapsam === kapsam && x.donusumTipi === NORMAL) : undefined;
-  const seviyeSayisi = matrisMi ? matris.satirlar.length : 1;
-  const baslikUstu = matrisMi ? HARF_YUKSEKLIGI : 0;
+  const matrisSeviyeSayisi = Math.max(1, ...[...matrisler.values()].map((x) => x.satirlar.length));
+  const seviyeSayisi = matrisMi ? matrisSeviyeSayisi : 1;
   const solBaslik = (seviyeSayisi: number, ust: number) => <>
     <TableCell rowSpan={seviyeSayisi} sx={{ ...ustHucre, position: "sticky", left: 0, top: ust, zIndex: 4, width: 56, textAlign: "center" }}>Satır</TableCell>
     <TableCell rowSpan={seviyeSayisi} sx={{ ...ustHucre, position: "sticky", left: 56, top: ust, zIndex: 4, minWidth: 280 }}>KGK kalemi</TableCell>
@@ -498,6 +563,19 @@ export default function BirlesikTaslakSayfasi() {
   const harfHucresi = { ...ustHucre, height: HARF_YUKSEKLIGI, py: 0, fontSize: 11.5, fontWeight: 400, color: "text.secondary", textAlign: "center" } as const;
 
   const formulSayisi = (son?.varyantlar ?? []).filter((x) => x.tabloAdi === tabloAdi).length;
+  const eskiTabloAdaylari = [
+    ...(eskiAdaylari?.adaylar ?? []), ...(eskiOzkaynakAdaylari?.adaylar ?? []),
+  ].filter((x) => x.tabloAdi === tabloAdi);
+  const aktarilabilirAnahtarlari = new Set(aktarilabilirEskiVaryantlar.map((x) =>
+    hucreAnahtari(x.eslesmeAnahtari, x.yataySutunAnahtari, x.kapsam, x.donusumTipi)));
+  const birlesikAltKalemAnahtarlari = new Set(eskiTabloAdaylari
+    .filter((x) => x.durum === "AltKalemlerdenBirlesik" && x.varyant)
+    .map((x) => hucreAnahtari(x.varyant!.eslesmeAnahtari, x.varyant!.yataySutunAnahtari,
+      x.varyant!.kapsam, x.varyant!.donusumTipi)));
+  const birlesikAltKalemSayisi = [...birlesikAltKalemAnahtarlari]
+    .filter((anahtar) => aktarilabilirAnahtarlari.has(anahtar)).length;
+  const guvenliEskiFormulSayisi = aktarilabilirEskiVaryantlar.length;
+  const digerEskiAdaySayisi = eskiTabloAdaylari.length - guvenliEskiFormulSayisi;
   const tabloEksikleri = hazirlik?.sonuc.eksikler.filter((x) => x.tabloAdi === tabloAdi) ?? [];
   const tabloYapiSorunlari = hazirlik?.sonuc.yapiSorunlari.filter((x) => x.startsWith(`${tabloAdi} /`)) ?? [];
   const genelYapiSorunlari = hazirlik?.sonuc.yapiSorunlari.filter((x) => !x.includes(" / ")) ?? [];
@@ -541,6 +619,19 @@ export default function BirlesikTaslakSayfasi() {
           </Alert>}
         {kgkAdayHatasi && <Alert severity="warning" onClose={() => setKgkAdayHatasi("")}>
           KGK Excel formül önerileri gösterilemiyor: {kgkAdayHatasi}
+        </Alert>}
+        {eskiAdayHatasi && <Alert severity="warning" onClose={() => setEskiAdayHatasi("")}>
+          Eski formül veritabanı önerileri alınamadı: {eskiAdayHatasi}
+        </Alert>}
+        {eskiTabloAdaylari.length > 0 && <Alert severity={guvenliEskiFormulSayisi > 0 ? "info" : "warning"} sx={{ py: 0 }}>
+          Eski kalem adları noktalama ve boşluk farkları yok sayılarak karşılaştırılır; tek formülsüz ana kalem için tüm doğrudan alt formüller birleştirilir.
+          {` Bu tabloda ${guvenliEskiFormulSayisi} güvenli eşleşme aktarılabilir`}
+          {birlesikAltKalemSayisi > 0 ? ` (${birlesikAltKalemSayisi} alt kalem formüllerinden birleştirildi)` : ""}
+          {digerEskiAdaySayisi > 0 ? `, ${digerEskiAdaySayisi} aday inceleme gerektiriyor.` : "."}
+          {guvenliEskiFormulSayisi > 0 && <Button size="small" disabled={eskiAdaylariAktariliyor || kaydediliyor || !son}
+            onClick={() => void eskiFormulAdaylariniAktar()}>
+            {eskiAdaylariAktariliyor ? "Eski formüller aktarılıyor" : `${guvenliEskiFormulSayisi} güvenli eşleşmeyi alt sürüme ekle`}
+          </Button>}
         </Alert>}
         {hazirlik && !hazirlik.sonuc.hazirMi && <Alert severity="error">
           Kayıtlı formül: {hazirlik.sonuc.mevcutFormulSayisi}/{hazirlik.sonuc.gerekliFormulSayisi}.
@@ -715,11 +806,9 @@ export default function BirlesikTaslakSayfasi() {
             <Tooltip title="Tümünü aç"><span><IconButton size="small" aria-label="Tümünü aç" onClick={() => setKapali(new Set())}><IconChevronsDown size={18} /></IconButton></span></Tooltip>
             <Tooltip title="Tümünü daralt"><span><IconButton size="small" aria-label="Tümünü daralt" onClick={() => setKapali(new Set(agac.filter((x) => x.altSayisi > 0).map((x) => x.anahtar)))}><IconChevronsUp size={18} /></IconButton></span></Tooltip>
           </Stack>
-          {matrisMi && <Stack direction="row" spacing={1}>
-            <ToggleButtonGroup size="small" exclusive value={matrisKapsam} onChange={(_, v) => { if (v) { setMatrisKapsam(v); setSecili(null); } }}>
-              <ToggleButton value={1}>Münferit</ToggleButton><ToggleButton value={2}>Konsolide</ToggleButton>
-            </ToggleButtonGroup>
-          </Stack>}
+          {matrisMi && <Typography variant="caption" color="text.secondary">
+            Tek kalem ağacı kullanılır. Münferit ve konsolide kaynak Excel sütunları yan yana gösterilir; kapsam seçimi yalnızca mizan önizlemesini etkiler.
+          </Typography>}
           <Box sx={{ flex: 1 }} />
           <Typography variant="caption" color={hataliSayisi ? "error.main" : "text.secondary"} sx={{ whiteSpace: "nowrap" }}>
             {formulSayisi} formül{hataliSayisi ? ` · ${hataliSayisi} hatalı` : ""}{hesaplaniyor ? " · denetleniyor" : ""}
@@ -754,25 +843,45 @@ export default function BirlesikTaslakSayfasi() {
           {/* width 0 + minWidth: kaydırmalı tablonun içerik genişliği sayfa sarmalayıcısını taşırmasın. */}
           <TableContainer component={Paper} variant="outlined" sx={{ width: 0, minWidth: "100%", maxHeight: "calc(100vh - 330px)", minHeight: 320,
             borderRadius: 0, borderColor: EXCEL.kenar, scrollPaddingLeft: 56 + 280,
-            scrollPaddingTop: matrisMi ? HARF_YUKSEKLIGI + BASLIK_YUKSEKLIGI * seviyeSayisi : SATIR_YUKSEKLIGI }}>
+            scrollPaddingTop: matrisMi ? 2 * HARF_YUKSEKLIGI + BASLIK_YUKSEKLIGI * seviyeSayisi : SATIR_YUKSEKLIGI }}>
             <Table size="small" stickyHeader sx={{ borderCollapse: "separate" }}>
               <TableHead>
                 {matrisMi ? <>
-                  {/* Excel sütun harfleri: KGK dosyasındaki sütunla birebir eşleşir. */}
                   <TableRow>
-                    <TableCell sx={{ ...harfHucresi, position: "sticky", left: 0, top: 0, zIndex: 5, width: 56 }} />
-                    <TableCell sx={{ ...harfHucresi, position: "sticky", left: 56, top: 0, zIndex: 5 }}>A</TableCell>
-                    {matris.yapraklar.map((s) => <TableCell key={s.sabitAnahtar} sx={{ ...harfHucresi, top: 0,
-                      ...(secili?.sutun === s.sabitAnahtar ? { bgcolor: EXCEL.seciliBaslik, color: EXCEL.yesil, fontWeight: 700 } : {}) }}>{s.sutun}</TableCell>)}
-                  </TableRow>
-                  {matris.satirlar.map((seviye, i) => <TableRow key={i}>
-                    {i === 0 && solBaslik(seviyeSayisi, baslikUstu)}
-                    {seviye.map((b) => <TableCell key={b.sutun.sabitAnahtar} colSpan={b.colSpan} rowSpan={b.rowSpan} title={b.sutun.ad}
-                      sx={{ ...ustHucre, height: BASLIK_YUKSEKLIGI * b.rowSpan, top: HARF_YUKSEKLIGI + i * BASLIK_YUKSEKLIGI,
-                        textAlign: "center", verticalAlign: "middle", minWidth: b.colSpan === 1 ? 120 : undefined, maxWidth: b.colSpan === 1 ? 180 : undefined,
-                        fontSize: 11.5, lineHeight: 1.25, whiteSpace: "normal" }}>
-                      <Box sx={{ display: "-webkit-box", WebkitLineClamp: 3, WebkitBoxOrient: "vertical", overflow: "hidden" }}>{b.sutun.ad}</Box>
+                    {solBaslik(2 + matrisSeviyeSayisi, 0)}
+                    {KAPSAMLAR.map((k) => <TableCell key={`kapsam-${k}`} colSpan={Math.max(1, matrisler.get(k)!.yapraklar.length)}
+                      sx={{ ...ustHucre, top: 0, textAlign: "center", fontWeight: 700 }}>
+                      {`Formül · ${KAPSAM[k]}`}
+                      {varyantDurumu(k)?.hataliHucreSayisi ? <Typography component="span" variant="caption" color="error.main"> · {varyantDurumu(k)!.hataliHucreSayisi} hata</Typography> : null}
                     </TableCell>)}
+                  </TableRow>
+                  <TableRow>
+                    {KAPSAMLAR.flatMap((k) => {
+                      const yapraklar = matrisler.get(k)!.yapraklar;
+                      return yapraklar.length ? yapraklar.map((s) => <TableCell key={`${k}-${s.sabitAnahtar}`}
+                        sx={{ ...harfHucresi, top: HARF_YUKSEKLIGI,
+                          ...(secili?.kapsam === k && secili.sutun === s.sabitAnahtar ? { bgcolor: EXCEL.seciliBaslik, color: EXCEL.yesil, fontWeight: 700 } : {}) }}>{s.sutun}</TableCell>)
+                        : [<TableCell key={`bos-sutun-${k}`} sx={{ ...harfHucresi, top: HARF_YUKSEKLIGI }}>—</TableCell>];
+                    })}
+                  </TableRow>
+                  {Array.from({ length: matrisSeviyeSayisi }, (_, i) => <TableRow key={`baslik-${i}`}>
+                    {KAPSAMLAR.flatMap((k) => {
+                      const kapsamMatrisi = matrisler.get(k)!;
+                      if (kapsamMatrisi.yapraklar.length === 0) return i === 0
+                        ? [<TableCell key={`bos-matris-${k}`} rowSpan={matrisSeviyeSayisi} sx={{ ...ustHucre, textAlign: "center", color: "text.secondary" }}>Bu kapsamda KGK sütunu yok</TableCell>]
+                        : [];
+                      const seviye = kapsamMatrisi.satirlar[i] ?? [];
+                      return seviye.map((b) => {
+                        const yaprakMi = kapsamMatrisi.yapraklar.some((y) => y.sabitAnahtar === b.sutun.sabitAnahtar);
+                        const rowSpan = yaprakMi ? matrisSeviyeSayisi - i : 1;
+                        return <TableCell key={`${k}-${b.sutun.sabitAnahtar}`} colSpan={b.colSpan} rowSpan={rowSpan} title={b.sutun.ad}
+                          sx={{ ...ustHucre, height: BASLIK_YUKSEKLIGI * rowSpan, top: BASLIK_YUKSEKLIGI + HARF_YUKSEKLIGI + i * BASLIK_YUKSEKLIGI,
+                            textAlign: "center", verticalAlign: "middle", minWidth: b.colSpan === 1 ? 120 : undefined, maxWidth: b.colSpan === 1 ? 180 : undefined,
+                            fontSize: 11.5, lineHeight: 1.25, whiteSpace: "normal" }}>
+                          <Box sx={{ display: "-webkit-box", WebkitLineClamp: 3, WebkitBoxOrient: "vertical", overflow: "hidden" }}>{b.sutun.ad}</Box>
+                        </TableCell>;
+                      });
+                    })}
                   </TableRow>)}
                 </> : <TableRow>
                   {solBaslik(1, 0)}
@@ -790,7 +899,11 @@ export default function BirlesikTaslakSayfasi() {
                   bgcolor: satir.baslikMi ? EXCEL.baslikSatiri : "background.paper" }}>
                   {satirEtiketi(satir, matrisKapsam)}
                   {matrisMi
-                    ? matris.yapraklar.map((s) => formulHucresi(satir, s, matrisKapsam))
+                    ? KAPSAMLAR.flatMap((k) => {
+                      const yapraklar = matrisler.get(k)!.yapraklar;
+                      return yapraklar.length ? yapraklar.map((s) => formulHucresi(satir, s, k))
+                        : [<TableCell key={`bos-formul-${k}-${satir.anahtar}`} sx={{ bgcolor: EXCEL.bos, textAlign: "center" }}>—</TableCell>];
+                    })
                     : KAPSAMLAR.map((k) => <Fragment key={k}>{formulHucresi(satir, null, k)}</Fragment>)}
                 </TableRow>)}
                 {taslak && satirlar.length === 0 && <TableRow><TableCell colSpan={8}>
@@ -810,6 +923,26 @@ export default function BirlesikTaslakSayfasi() {
           {kapsamKaynagi(seciliSatir, secili.kapsam) ? ` · Excel satırı ${kapsamKaynagi(seciliSatir, secili.kapsam)!.satirNo}` : ""}
         </> : null}>
         {secili && seciliSatir && <Stack spacing={1.5}>
+          {seciliEskiAday && <Alert severity={["AdAyni", "AltKalemlerdenBirlesik"].includes(seciliEskiAday.durum) ? "info" : "warning"} sx={{ py: 0 }}>
+            <Typography variant="caption" sx={{ display: "block", fontWeight: 700 }}>
+              Eski formül adayı · {seciliEskiAday.durum}{seciliEskiAday.eskiKayitId ? ` · kayıt #${seciliEskiAday.eskiKayitId}` : ""}
+            </Typography>
+            {seciliEskiAday.hamEskiFormul && <Typography variant="body2" sx={{ fontFamily: "Consolas, monospace", overflowWrap: "anywhere" }}>
+              Kaynak: {seciliEskiAday.hamEskiFormul}
+            </Typography>}
+            {seciliEskiAday.varyant && <>
+              <Typography variant="body2" sx={{ fontFamily: "Consolas, monospace", overflowWrap: "anywhere" }}>
+                Dönüştürülen: {seciliEskiAday.varyant.hamFormul}
+              </Typography>
+              {seciliEskiAday.durum === "AltKalemlerdenBirlesik" && <Typography variant="caption" sx={{ display: "block" }}>
+                Eski ana kalemin doğrudan alt kalem formülleri tek formülde birleştirildi. Aktardıktan sonra örnek mizan önizlemesinde doğrulayın.
+              </Typography>}
+              <Button size="small" onClick={() => setForm((x) => ({
+                ...x, formul: seciliEskiAday.varyant!.hamFormul ?? "",
+                dipnot: seciliEskiAday.varyant!.dipnot ?? "", kaynak: seciliEskiAday.varyant!.kaynak ?? "",
+              }))}>Aday formülünü düzenleyiciye al</Button>
+            </>}
+          </Alert>}
           {seciliAday && <Alert severity={seciliAday.aciklama ? "warning" : "info"} sx={{ py: 0 }}>
             <Typography variant="caption" sx={{ display: "block", fontWeight: 700 }}>
               KGK Excel {seciliAday.hucreAdresi} · {seciliAday.durum === "Eklenecek" ? "Excel toplam formülü" :
