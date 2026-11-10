@@ -305,7 +305,9 @@ const Page = ({ editorSurumId }: PageProps) => {
   const user = useSelector((state: AppState) => state.userReducer);
   const pathname = usePathname();
   const router = useRouter();
-  const kgkSayfasi = pathname.endsWith("/KgkGuncellemeleri");
+  // Finansal tabloların varsayılan yönetim ekranı artık birleşik KGK akışıdır.
+  // Eski rapor tanım setleri yalnızca eski rapor/sürüm bağlantılarında açılır.
+  const kgkSayfasi = pathname.endsWith("/KgkGuncellemeleri") || pathname === "/FinansalTabloYonetimi";
   const duzenleyiciSayfasi = editorSurumId !== undefined;
   const sayfaBasligi = kgkSayfasi ? "KGK Güncellemeleri" : duzenleyiciSayfasi ? "Sürüm ve Formül Düzenleme" : "Sürümlü Tanım ve Formüller";
   const breadcrumbItems = [
@@ -2279,13 +2281,13 @@ const Page = ({ editorSurumId }: PageProps) => {
             : <Chip variant="outlined" label={kgkGecmisYukleniyor ? "Tarama durumu okunuyor" : "Henüz tarama kaydı yok"} />}
         </Stack>
       </Paper>
-      {kgkAnaSurumler.length > 0 && <Accordion disableGutters sx={{ mb: 2 }}>
+      {kgkAnaSurumler.length > 0 && <Accordion disableGutters defaultExpanded sx={{ mb: 2 }}>
         <AccordionSummary expandIcon={<ExpandMoreIcon />}>
-          <Typography variant="subtitle2">KGK ana sürümleri ({kgkAnaSurumler.length})</Typography>
+          <Typography variant="subtitle2">Birleşik KGK tabloları · tek kalem ağacı ({kgkAnaSurumler.length})</Typography>
         </AccordionSummary>
         <AccordionDetails sx={{ pt: 0, overflowX: "auto" }}>
           <Table size="small">
-            <TableHead><TableRow><TableCell>Kaynak dönemi</TableCell><TableCell>Ana sürüm</TableCell><TableCell align="right">Dosya</TableCell><TableCell>Bağlı rapor sürümleri</TableCell><TableCell>İşlem</TableCell></TableRow></TableHead>
+            <TableHead><TableRow><TableCell>Kaynak dönemi</TableCell><TableCell>KGK sürümü</TableCell><TableCell align="right">Dosya</TableCell><TableCell>Rapor çıktıları</TableCell><TableCell>Formül tablosu</TableCell></TableRow></TableHead>
             <TableBody>{kgkAnaSurumler.map((anaSurum) => <TableRow key={anaSurum.id}>
               <TableCell>{kgkKaynakDonemleri.find((donem) => donem.kod === anaSurum.kaynakDonemKodu)?.ad || anaSurum.kaynakDonemKodu}</TableCell>
               <TableCell>#{anaSurum.surumNo}<br /><Typography variant="caption" color="text.secondary">{new Date(anaSurum.olusturmaTarihi).toLocaleDateString("tr-TR")}</Typography></TableCell>
@@ -2301,7 +2303,7 @@ const Page = ({ editorSurumId }: PageProps) => {
                   <Button key={standart.kod} size="small" variant="outlined"
                     disabled={Boolean(kgkBirlesikYukleniyor)}
                     onClick={() => kgkBirlesikTaslakOlustur(anaSurum.id, standart.kod)}>
-                    {kgkBirlesikYukleniyor === `${anaSurum.id}-${standart.kod}` ? <CircularProgress size={16} /> : `${standart.ad} taslağı`}
+                    {kgkBirlesikYukleniyor === `${anaSurum.id}-${standart.kod}` ? <CircularProgress size={16} /> : `${standart.ad} formüllerini aç`}
                   </Button>)}
                 {kgkYayinGruplari(anaSurum).map((grup) =>
                   <Button key={grup.anahtar} size="small" variant="text" onClick={() => {
@@ -2548,8 +2550,8 @@ const Page = ({ editorSurumId }: PageProps) => {
                 {kgkFarkBaglami?.dosya && <Chip size="small" variant="outlined" label={`Kaynak: ${kgkFarkBaglami.dosya.grup}`} />}
                 <Chip size="small" color={kgkWorkbookSonucu.yapisalDegisiklikVarMi ? "warning" : "success"} label={kgkWorkbookSonucu.yapisalDegisiklikVarMi ? `${kgkWorkbookSonucu.farkSayisi} yapısal fark` : "Yapısal fark yok"} />
                 {kgkWorkbookSonucu.makroVarMi && <Chip size="small" color="info" label="Makro bulundu; çalıştırılmadı" />}
-                {(kgkWorkbookSonucu.semantikDegisiklikVarMi || kgkWorkbookSonucu.formulDegisikligiVarMi) && secilenSurum && surumDurumKodu(secilenSurum.durum) !== 1 && <Button size="small" variant="outlined" onClick={kgkFarktanTaslakOlustur} disabled={surumIslemiYukleniyor}>KGK farkından taslak oluştur</Button>}
-                {kgkWorkbookSonucu.semantikDegisiklikVarMi && secilenSurum && surumDurumKodu(secilenSurum.durum) === 1 && !kgkKalemFarkiUygulandiMi && <Button size="small" variant="outlined" onClick={kgkKalemFarklariniTaslagAktar} disabled={surumIslemiYukleniyor}>KGK kalem farklarını taslağa aktar</Button>}
+                {(kgkWorkbookSonucu.semantikDegisiklikVarMi || kgkWorkbookSonucu.formulDegisikligiVarMi || kgkWorkbookSonucu.kalemFarklari.some((fark) => fark.degisiklikTuru === "KonumDegisti")) && secilenSurum && surumDurumKodu(secilenSurum.durum) !== 1 && <Button size="small" variant="outlined" onClick={kgkFarktanTaslakOlustur} disabled={surumIslemiYukleniyor}>KGK farkından taslak oluştur</Button>}
+                {(kgkWorkbookSonucu.semantikDegisiklikVarMi || kgkWorkbookSonucu.kalemFarklari.some((fark) => fark.degisiklikTuru === "KonumDegisti")) && secilenSurum && surumDurumKodu(secilenSurum.durum) === 1 && !kgkKalemFarkiUygulandiMi && <Button size="small" variant="outlined" onClick={kgkKalemFarklariniTaslagAktar} disabled={surumIslemiYukleniyor}>KGK kalem/konum farklarını taslağa aktar</Button>}
                 {kgkKalemFarkiUygulandiMi && <Chip size="small" color="success" variant="outlined" label="Kalem farkları aktarıldı" />}
                 {kgkWorkbookSonucu.formulDegisikligiVarMi && secilenSurum && surumDurumKodu(secilenSurum.durum) === 1 && !kgkFormulFarkiUygulandiMi && <Button size="small" variant="contained" color="secondary" onClick={kgkFormulFarklariniTaslagAktar} disabled={surumIslemiYukleniyor || (kgkWorkbookSonucu.semantikDegisiklikVarMi && !kgkKalemFarkiUygulandiMi)}>KGK formül farklarını taslağa aktar</Button>}
                 {kgkFormulFarkiUygulandiMi && <Chip size="small" color="success" variant="outlined" label="Formül farkları aktarıldı" />}
@@ -2558,15 +2560,15 @@ const Page = ({ editorSurumId }: PageProps) => {
               <Divider sx={{ my: 1 }} />
               <Stack direction="row" spacing={1} alignItems="center" sx={{ mb: 1 }}>
                 <Typography variant="caption" color="text.secondary">Finansal tablo kalemleri: {kgkWorkbookSonucu.oncekiKalemSayisi} → {kgkWorkbookSonucu.yeniKalemSayisi}</Typography>
-                <Chip size="small" color={kgkWorkbookSonucu.semantikDegisiklikVarMi ? "warning" : "success"} label={kgkWorkbookSonucu.semantikDegisiklikVarMi ? `${kgkWorkbookSonucu.kalemFarklari.length} kalem farkı` : "Kalem farkı yok"} />
+                <Chip size="small" color={kgkWorkbookSonucu.semantikDegisiklikVarMi ? "warning" : kgkWorkbookSonucu.kalemFarklari.some((fark) => fark.degisiklikTuru === "KonumDegisti") ? "info" : "success"} label={kgkWorkbookSonucu.semantikDegisiklikVarMi ? `${kgkWorkbookSonucu.kalemFarklari.length} kalem farkı` : kgkWorkbookSonucu.kalemFarklari.some((fark) => fark.degisiklikTuru === "KonumDegisti") ? `${kgkWorkbookSonucu.kalemFarklari.filter((fark) => fark.degisiklikTuru === "KonumDegisti").length} KGK konumu değişti` : "Kalem farkı yok"} />
               </Stack>
-              {kgkWorkbookSonucu.kalemFarklari.length > 0 && <Table size="small"><TableHead><TableRow><TableCell>Değişiklik</TableCell><TableCell>Sayfa</TableCell><TableCell>Kalem</TableCell><TableCell>Üst kalem</TableCell><TableCell>Anahtar</TableCell></TableRow></TableHead><TableBody>{kgkWorkbookSonucu.kalemFarklari.map((fark) => { const kalem = fark.yeniKalem || fark.oncekiKalem; return <TableRow key={`${fark.degisiklikTuru}-${fark.sabitAnahtar}`}><TableCell>{fark.degisiklikTuru}</TableCell><TableCell>{kalem?.sayfaAdi || "—"}</TableCell><TableCell>{kalem?.ad || "—"}</TableCell><TableCell>{kalem?.ustSabitAnahtar || "—"}</TableCell><TableCell>{fark.sabitAnahtar}</TableCell></TableRow>; })}</TableBody></Table>}
+              {kgkWorkbookSonucu.kalemFarklari.length > 0 && <Table size="small"><TableHead><TableRow><TableCell>Değişiklik</TableCell><TableCell>Sayfa / satır ve cari dönem hedefi</TableCell><TableCell>Kalem</TableCell><TableCell>Üst kalem</TableCell><TableCell>Anahtar</TableCell></TableRow></TableHead><TableBody>{kgkWorkbookSonucu.kalemFarklari.map((fark) => { const kalem = fark.yeniKalem || fark.oncekiKalem; const konum = (x: typeof kalem) => x ? `${x.sayfaAdi}!${x.satirNo}${x.cariDonemSutunu ? ` · ${x.cariDonemSutunu}${x.satirNo}` : ""}` : "—"; return <TableRow key={`${fark.degisiklikTuru}-${fark.sabitAnahtar}`}><TableCell>{fark.degisiklikTuru === "KonumDegisti" ? "KGK konumu değişti" : fark.degisiklikTuru}</TableCell><TableCell>{konum(fark.oncekiKalem)} → {konum(fark.yeniKalem)}</TableCell><TableCell>{kalem?.ad || "—"}</TableCell><TableCell>{kalem?.ustSabitAnahtar || "—"}</TableCell><TableCell>{fark.sabitAnahtar}</TableCell></TableRow>; })}</TableBody></Table>}
               <Divider sx={{ my: 1 }} />
               <Stack direction="row" spacing={1} alignItems="center" sx={{ mb: 1 }}>
                 <Typography variant="caption" color="text.secondary">Formüller: {kgkWorkbookSonucu.oncekiFormulSayisi} → {kgkWorkbookSonucu.yeniFormulSayisi}</Typography>
                 <Chip size="small" color={kgkWorkbookSonucu.formulDegisikligiVarMi ? "warning" : "success"} label={kgkWorkbookSonucu.formulDegisikligiVarMi ? `${kgkWorkbookSonucu.formulFarklari.length} formül farkı` : "Formül farkı yok"} />
               </Stack>
-              {kgkWorkbookSonucu.formulFarklari.length > 0 && <Table size="small"><TableHead><TableRow><TableCell>Değişiklik</TableCell><TableCell>Sayfa / hedef</TableCell><TableCell>Kalem anahtarı</TableCell><TableCell>Formül</TableCell><TableCell>Terim</TableCell><TableCell>Durum</TableCell></TableRow></TableHead><TableBody>{kgkWorkbookSonucu.formulFarklari.map((fark) => { const formul = fark.yeniFormul || fark.oncekiFormul; const hatalar = formul?.dogrulamaHatalari || []; return <TableRow key={`${fark.degisiklikTuru}-${fark.sabitAnahtar}`}><TableCell>{fark.degisiklikTuru}</TableCell><TableCell>{formul ? `${formul.sayfaAdi}!${formul.hedefHucreAdresi}` : "—"}</TableCell><TableCell>{formul?.kalemSabitAnahtari || "—"}</TableCell><TableCell sx={{ maxWidth: 320, overflowWrap: "anywhere" }}>{formul?.hamFormul || "—"}</TableCell><TableCell>{formul?.terimler.length || 0}</TableCell><TableCell>{hatalar.length > 0 ? <Chip size="small" color="error" label={`${hatalar.length} çözümleme hatası`} title={hatalar.join("; ")} /> : <Chip size="small" color="success" variant="outlined" label="Hazır" />}</TableCell></TableRow>; })}</TableBody></Table>}
+              {kgkWorkbookSonucu.formulFarklari.length > 0 && <Table size="small"><TableHead><TableRow><TableCell>Değişiklik</TableCell><TableCell>Sayfa / hedef</TableCell><TableCell>Kalem anahtarı</TableCell><TableCell>Formül</TableCell><TableCell>Terim</TableCell><TableCell>Durum</TableCell></TableRow></TableHead><TableBody>{kgkWorkbookSonucu.formulFarklari.map((fark) => { const formul = fark.yeniFormul || fark.oncekiFormul; const hatalar = formul?.dogrulamaHatalari || []; return <TableRow key={`${fark.degisiklikTuru}-${fark.sabitAnahtar}`}><TableCell>{fark.degisiklikTuru === "KonumDegisti" ? "Satır konumu değişti" : fark.degisiklikTuru}</TableCell><TableCell>{fark.oncekiFormul ? `${fark.oncekiFormul.sayfaAdi}!${fark.oncekiFormul.hedefHucreAdresi}` : "—"} → {fark.yeniFormul ? `${fark.yeniFormul.sayfaAdi}!${fark.yeniFormul.hedefHucreAdresi}` : "—"}</TableCell><TableCell>{formul?.kalemSabitAnahtari || "—"}</TableCell><TableCell sx={{ maxWidth: 320, overflowWrap: "anywhere" }}>{formul?.hamFormul || "—"}</TableCell><TableCell>{formul?.terimler.length || 0}</TableCell><TableCell>{hatalar.length > 0 ? <Chip size="small" color="error" label={`${hatalar.length} çözümleme hatası`} title={hatalar.join("; ")} /> : <Chip size="small" color="success" variant="outlined" label="Hazır" />}</TableCell></TableRow>; })}</TableBody></Table>}
             </Paper>
           )}
         </Stack>
@@ -3120,16 +3122,21 @@ const Page = ({ editorSurumId }: PageProps) => {
             </Stack>
           )}
           {!duzenleyiciSayfasi && <>
-          <Typography variant="body2" color="text.secondary">
-            Kullanılacak tanım seti otomatik seçilir. Formül değişikliği gerekiyorsa taslağın düzenleme sayfasını açın.
-          </Typography>
+          <Stack direction={{ xs: "column", md: "row" }} spacing={1} alignItems={{ md: "center" }} justifyContent="space-between">
+            <Typography variant="body2" color="text.secondary">
+              Aşağıdaki seçim rapor/önizleme çıktısını belirler. Formüller KGK birleşik taslağında tek kalem ağacı ve iki kapsam sütunuyla yönetilir.
+            </Typography>
+            <Button size="small" variant="outlined" onClick={() => router.push("/FinansalTabloYonetimi/KgkGuncellemeleri")}>
+              Birleşik formül tablosunu aç
+            </Button>
+          </Stack>
           <Accordion
             disableGutters
             expanded={tanimFiltreleriAcik}
             onChange={(_, acik) => setTanimFiltreleriAcik(acik)}
           >
             <AccordionSummary expandIcon={<ExpandMoreIcon />}>
-              <Typography variant="body2" fontWeight={600}>Tanım arama filtreleri</Typography>
+              <Typography variant="body2" fontWeight={600}>Rapor çıktısı filtreleri</Typography>
             </AccordionSummary>
             <AccordionDetails>
           <Grid container spacing={1.5}>
@@ -3143,8 +3150,8 @@ const Page = ({ editorSurumId }: PageProps) => {
             </Grid>
             <Grid item xs={12} sm={4}>
               <FormControl fullWidth size="small">
-                <InputLabel>Kapsam</InputLabel>
-                <Select label="Kapsam" value={tanimFiltresi.kapsam} onChange={(event) => setTanimFiltresi((onceki) => ({ ...onceki, kapsam: Number(event.target.value) }))}>
+                <InputLabel>Rapor kapsamı</InputLabel>
+                <Select label="Rapor kapsamı" value={tanimFiltresi.kapsam} onChange={(event) => setTanimFiltresi((onceki) => ({ ...onceki, kapsam: Number(event.target.value) }))}>
                   <MenuItem value={0}>Tümü</MenuItem><MenuItem value={1}>Münferit</MenuItem><MenuItem value={2}>Konsolide</MenuItem>
                 </Select>
               </FormControl>
@@ -3167,8 +3174,8 @@ const Page = ({ editorSurumId }: PageProps) => {
             <Grid container spacing={2} alignItems="center">
               <Grid item xs={12} md={6}>
                 <FormControl fullWidth size="small">
-                  <InputLabel>Tanım seti</InputLabel>
-                  <Select label="Tanım seti" value={secilenSet ? secilenSetId : ""} onChange={(event) => tanimSetiSec(Number(event.target.value))}>
+                  <InputLabel>Rapor çıktısı</InputLabel>
+                  <Select label="Rapor çıktısı" value={secilenSet ? secilenSetId : ""} onChange={(event) => tanimSetiSec(Number(event.target.value))}>
                     {tanimSetleri.map((set) => <MenuItem key={set.id} value={set.id}>{tanimSetiAdi(set.ad)}</MenuItem>)}
                   </Select>
                 </FormControl>

@@ -1235,6 +1235,36 @@ export const getKgkExcelFormulAdaylari = async (token: string, id: number) =>
   enumlariSayiyaCevir(await jsonGet<KgkExcelFormulAdaylari>(token,
     `/Kgk/BirlesikTaslaklar/${id}/KgkExcelFormulAdaylari`));
 
+export type KgkEskiFormulAdayi = {
+  tabloAdi: string; eslesmeAnahtari: string; kapsam: number; kgkKalemAdi: string; kgkSatirNo: number;
+  eskiKayitId: number | null; eskiKalemAdi: string | null; hamEskiFormul: string | null;
+  durum: string; varyant: KgkBirlesikFormulVaryanti | null;
+};
+
+export type KgkEskiOzkaynakFormulAdayi = {
+  tabloAdi: string; eslesmeAnahtari: string; kapsam: number; yataySutunAnahtari: string;
+  hucreAdresi: string; eskiKayitId: number | null; eskiSatirAdi: string | null;
+  eskiSutunAdi: string | null; hamEskiFormul: string | null; durum: string;
+  varyant: KgkBirlesikFormulVaryanti | null;
+};
+
+export type KgkEskiFormulAdaylari = {
+  taslakId: number; formulSurumNo: number; toplam: number; kullanilabilir: number;
+  adaylar: KgkEskiFormulAdayi[];
+};
+
+export type KgkEskiOzkaynakFormulAdaylari = Omit<KgkEskiFormulAdaylari, "adaylar"> & {
+  adaylar: KgkEskiOzkaynakFormulAdayi[];
+};
+
+export const getKgkEskiFormulAdaylari = async (token: string, id: number) =>
+  enumlariSayiyaCevir(await jsonGet<KgkEskiFormulAdaylari>(token,
+    `/Kgk/BirlesikTaslaklar/${id}/EskiFormulAdaylari`));
+
+export const getKgkEskiOzkaynakFormulAdaylari = async (token: string, id: number) =>
+  enumlariSayiyaCevir(await jsonGet<KgkEskiOzkaynakFormulAdaylari>(token,
+    `/Kgk/BirlesikTaslaklar/${id}/EskiOzkaynakFormulAdaylari`));
+
 export type KgkBirlesikFormulSurumu = {
   id: number;
   birlesikTaslakId: number;
@@ -1417,6 +1447,22 @@ export const saveKgkBirlesikExcelToplamlari = async (
   return payload as { id: number; surumNo: number; eklenenVaryantSayisi: number };
 };
 
+export const saveKgkBirlesikEskiFormulAdaylari = async (
+  token: string, id: number, beklenenSurumNo: number, varyantlar: KgkBirlesikFormulVaryanti[]
+) => {
+  const response = await fetch(`${url}/FinansalTabloYonetimi/Kgk/BirlesikTaslaklar/${id}/FormulVaryantlari/Toplu`, {
+    method: "POST",
+    headers: { accept: "application/json", "Content-Type": "application/json", Authorization: `Bearer ${token}` },
+    body: JSON.stringify({
+      beklenenSurumNo, varyantlar,
+      aciklama: "Tam adı eşleşen eski formül adayları aktarıldı",
+    }),
+  });
+  const payload = await response.json().catch(() => ({}));
+  if (!response.ok) throw new Error(payload?.message || "Eşleşen eski formüller kaydedilemedi.");
+  return payload as { id: number; surumNo: number; eklenenVaryantSayisi: number };
+};
+
 export type KgkBirlesikOnizlemeHucresi = {
   eslesmeAnahtari: string;
   yataySutunAnahtari: string | null;
@@ -1554,6 +1600,7 @@ export type KgkWorkbookFarkSonucu = {
       ustSabitAnahtar?: string | null;
       kalemTuru: string;
       etiketKolonu: string;
+      cariDonemSutunu?: string | null;
     } | null;
     yeniKalem?: {
       sabitAnahtar: string;
@@ -1564,6 +1611,7 @@ export type KgkWorkbookFarkSonucu = {
       ustSabitAnahtar?: string | null;
       kalemTuru: string;
       etiketKolonu: string;
+      cariDonemSutunu?: string | null;
     } | null;
   }>;
   formulFarklari: Array<{
