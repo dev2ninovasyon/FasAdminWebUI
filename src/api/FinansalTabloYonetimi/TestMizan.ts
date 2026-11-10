@@ -14,7 +14,16 @@ export type FinansalTabloTestMizanSatiri = {
   raporBorcTransferFisiHaric: number;
   raporAlacakTransferFisiHaric: number;
   kontrolBakiyeTransferFisiHaric: number;
+  duzeltmeBakiye?: number | null;
   paraBirimi: string;
+};
+
+export type FinansalTabloTestFisiSatiri = {
+  yil: number;
+  yevmiyeNo: number;
+  hesapKodu: string;
+  borc: number;
+  alacak: number;
 };
 
 export type FinansalTabloTestMizan = {
@@ -26,6 +35,8 @@ export type FinansalTabloTestMizan = {
   olusturmaTarihi: string;
   sha256: string;
   satirlar: FinansalTabloTestMizanSatiri[];
+  fisSatirlari?: FinansalTabloTestFisiSatiri[] | null;
+  manuelDegerler?: Array<{ yil: number; satirAnahtari: string; tutar: number }> | null;
 };
 
 export type FinansalTabloTestMizanOlusturmaIstegi = {
@@ -47,8 +58,11 @@ export type FinansalTabloTestMizanOlusturmaIstegi = {
     raporBorcTransferFisiHaric?: number;
     raporAlacakTransferFisiHaric?: number;
     kontrolBakiyeTransferFisiHaric?: number;
+    duzeltmeBakiye?: number;
     paraBirimi?: string;
   }>;
+  fisSatirlari?: FinansalTabloTestFisiSatiri[];
+  manuelDegerler?: Array<{ yil: number; satirAnahtari: string; tutar: number }>;
 };
 
 export type FinansalTabloMevcutMizanSatiri = {
@@ -65,6 +79,7 @@ export type FinansalTabloMevcutMizanSatiri = {
   raporBorcTransferFisiHaric?: number | null;
   raporAlacakTransferFisiHaric?: number | null;
   kontrolBakiyeTransferFisiHaric?: number | null;
+  duzeltmeBakiye?: number | null;
   paraBirimi?: string | null;
 };
 
