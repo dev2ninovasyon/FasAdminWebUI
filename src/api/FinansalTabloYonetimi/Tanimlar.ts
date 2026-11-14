@@ -1275,6 +1275,12 @@ export type KgkBirlesikFormulSurumu = {
   aciklama: string;
   olusturmaTarihi: string;
   varyantlar: KgkBirlesikFormulVaryanti[];
+  yardimciFormuller: KgkBirlesikYardimciFormul[];
+};
+
+export type KgkBirlesikYardimciFormul = {
+  sabitAnahtar: string; ad: string; kapsam: number; hamFormul: string | null; dipnot: string | null;
+  kirilim: string | null; aktifMi: boolean; aciklama: string | null;
 };
 
 export const previewKgkBirlesikTaslak = async (
@@ -1419,6 +1425,19 @@ export type KgkBirlesikFormulHazirligi = {
 export const getKgkBirlesikFormulHazirligi = async (token: string, id: number) =>
   enumlariSayiyaCevir(await jsonGet<KgkBirlesikFormulHazirligi>(token,
     `/Kgk/BirlesikTaslaklar/${id}/FormulHazirligi`));
+
+export const saveKgkBirlesikYardimciFormuller = async (
+  token: string, id: number, beklenenSurumNo: number, formuller: KgkBirlesikYardimciFormul[], aciklama: string
+) => {
+  const response = await fetch(`${url}/FinansalTabloYonetimi/Kgk/BirlesikTaslaklar/${id}/YardimciFormuller`, {
+    method: "POST",
+    headers: { accept: "application/json", "Content-Type": "application/json", Authorization: `Bearer ${token}` },
+    body: JSON.stringify({ beklenenSurumNo, formuller, aciklama }),
+  });
+  const payload = await response.json().catch(() => ({}));
+  if (!response.ok) throw new Error(payload?.message || "Yard?mc? form?ller kaydedilemedi.");
+  return payload as { id: number; birlesikTaslakId: number; surumNo: number; yardimciFormulSayisi: number };
+};
 
 export const saveKgkBirlesikFormulVaryanti = async (
   token: string, id: number, beklenenSurumNo: number,

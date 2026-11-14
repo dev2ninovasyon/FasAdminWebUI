@@ -4,7 +4,7 @@ import { Fragment, useCallback, useEffect, useMemo, useState } from "react";
 import type { KeyboardEvent } from "react";
 import { useParams, useRouter } from "next/navigation";
 import {
-  Alert, Box, Button, Chip, IconButton, InputAdornment, List, ListItem, ListItemButton, ListItemText, MenuItem, Paper, Popover,
+  Alert, Box, Button, Chip, Drawer, IconButton, InputAdornment, List, ListItem, ListItemButton, ListItemText, MenuItem, Paper, Popover,
   Stack, Tab, Table, TableBody, TableCell, TableContainer, TableHead, TableRow, Tabs, TextField,
   ToggleButton, ToggleButtonGroup, Tooltip, Typography,
 } from "@mui/material";
@@ -19,7 +19,7 @@ import { AppState } from "@/store/store";
 import {
   getKgkBirlesikTaslak, createKgkBirlesikTaslak, getKgkBirlesikFormulSurumleri, getKgkBirlesikSonFormulSurumu, getKgkBirlesikFormulSurumu, getKgkBirlesikFormulHazirligi, createKgkBirlesikYayinTaslagi, getKgkExcelFormulAdaylari, getKgkEskiFormulAdaylari, getKgkEskiOzkaynakFormulAdaylari, saveKgkBirlesikEskiFormulAdaylari, previewKgkBirlesikFormulSurumu,
   previewKgkBirlesikGercekMizan, publishKgkKismiRapor, listKgkKismiRaporlar, getKgkKismiRapor,
-  saveKgkBirlesikFormulVaryanti, saveKgkBirlesikExcelToplamlari, KgkBirlesikTaslakDetay, KgkBirlesikFormulSurumu, KgkBirlesikFormulVaryanti,
+  saveKgkBirlesikFormulVaryanti, saveKgkBirlesikExcelToplamlari, saveKgkBirlesikYardimciFormuller, KgkBirlesikTaslakDetay, KgkBirlesikFormulSurumu, KgkBirlesikFormulVaryanti, KgkBirlesikYardimciFormul,
   KgkBirlesikFormulHazirligi, KgkBirlesikOnizlemeHucresi, KgkBirlesikOnizlemeSonucu, KgkMatrisSutunu, KgkExcelFormulAdaylari, KgkEskiFormulAdaylari, KgkEskiOzkaynakFormulAdaylari,
   KgkKismiRaporOzeti, KgkKismiRaporDetayi, KgkBirlesikYayinTaslagiSonucu,
 } from "@/api/FinansalTabloYonetimi/Tanimlar";
@@ -41,6 +41,14 @@ const KAPSAM = ["", "Münferit", "Konsolide"];
 const HARF_YUKSEKLIGI = 22;
 const BASLIK_YUKSEKLIGI = 52;
 const BOS_FORM: Form = { formul: "", dipnot: "", kaynak: "" };
+const YARDIMCI_FORMUL_TANIMLARI = [
+  ["kredi-riski.ticari-alacak.iliskili", "?li?kili taraflardan ticari alacaklar"],
+  ["kredi-riski.ticari-alacak.diger", "Di?er ticari alacaklar"],
+  ["kredi-riski.diger-alacak.iliskili", "?li?kili taraflardan di?er alacaklar"],
+  ["kredi-riski.diger-alacak.diger", "Di?er taraflardan di?er alacaklar"],
+  ["kredi-riski.finansal-yatirimlar", "Finansal yat?r?mlar"],
+  ["kredi-riski.nakit-benzerleri", "Nakit ve nakit benzerleri"],
+] as const;
 const CEKMECE_GENISLIGI = 440;
 const tutar = new Intl.NumberFormat("tr-TR", { maximumFractionDigits: 2 });
 const hucreAnahtari = (satir: string, sutun: string | null, kapsam: number, donusum: number) =>
@@ -97,6 +105,10 @@ export default function BirlesikTaslakSayfasi() {
   const [taslakYenileniyor, setTaslakYenileniyor] = useState(false);
   const [gecerlilikBaslangici, setGecerlilikBaslangici] = useState(`${new Date().getFullYear()}-01-01`);
   const [gecmisAnchor, setGecmisAnchor] = useState<HTMLElement | null>(null);
+  const [yardimciFormullerAcik, setYardimciFormullerAcik] = useState(false);
+  const [yardimciFormuller, setYardimciFormuller] = useState<Record<string, string>>({});
+  const [yardimciAciklama, setYardimciAciklama] = useState("");
+  const [yardimciKaydediliyor, setYardimciKaydediliyor] = useState(false);
   const [hata, setHata] = useState("");
   const [mesaj, setMesaj] = useState("");
   const [gercekOnizleme, setGercekOnizleme] = useState<KgkBirlesikOnizlemeSonucu | null>(null);
@@ -355,6 +367,43 @@ export default function BirlesikTaslakSayfasi() {
     } finally {
       setKaydediliyor(false);
     }
+  };
+
+  const yardimciFormulDuzenleyicisiniAc = () => {
+    const sonraki: Record<string, string> = {};
+    for (const [anahtar] of YARDIMCI_FORMUL_TANIMLARI) {
+      for (const kapsam of KAPSAMLAR) {
+        const kayit = son?.yardimciFormuller?.find((x) => x.sabitAnahtar === anahtar && x.kapsam === kapsam);
+        sonraki[`${anahtar}:${kapsam}`] = kayit?.hamFormul ?? "";
+      }
+    }
+    setYardimciFormuller(sonraki);
+    setYardimciAciklama("");
+    setYardimciFormullerAcik(true);
+  };
+
+  const yardimciFormulleriKaydet = async () => {
+    if (!token || !taslak || yardimciKaydediliyor) return;
+    setYardimciKaydediliyor(true); setHata(""); setMesaj("");
+    try {
+      const formuller: KgkBirlesikYardimciFormul[] = YARDIMCI_FORMUL_TANIMLARI.flatMap(([sabitAnahtar, ad]) =>
+        KAPSAMLAR.map((kapsam) => {
+          const hamFormul = yardimciFormuller[`${sabitAnahtar}:${kapsam}`]?.trim() ?? "";
+          return { sabitAnahtar, ad, kapsam, hamFormul: hamFormul || null, dipnot: null, kirilim: null, aktifMi: Boolean(hamFormul), aciklama: null };
+        }));
+      const sonuc = await saveKgkBirlesikYardimciFormuller(token, id, son?.surumNo ?? 0, formuller,
+        (yardimciAciklama.trim() || "Kredi riski yard?mc? form?lleri g?ncellendi").slice(0, 500));
+      const [guncel, kapsamDurumu, tarihce] = await Promise.all([
+        getKgkBirlesikSonFormulSurumu(token, id), getKgkBirlesikFormulHazirligi(token, id),
+        getKgkBirlesikFormulSurumleri(token, id),
+      ]);
+      setSon(guncel); setHazirlik(kapsamDurumu); setGecmis(tarihce);
+      setSecili(null); setOnizleme(null); setGercekOnizleme(null); setSeciliKismiRapor(null);
+      setYardimciFormullerAcik(false);
+      setMesaj(`Yard?mc? form?ller alt s?r?m #${sonuc.surumNo} olarak kaydedildi; ?nceki s?r?mler korundu.`);
+    } catch (error) {
+      setHata(error instanceof Error ? error.message : "Yard?mc? form?ller kaydedilemedi.");
+    } finally { setYardimciKaydediliyor(false); }
   };
 
   const kgkToplamlariniAktar = async () => {
@@ -671,6 +720,9 @@ export default function BirlesikTaslakSayfasi() {
             {taslak ? `${taslak.ozet.tabloSayisi} tablo · ${taslak.icerik.tablolar.reduce((toplam, x) => toplam + x.kalemler.length, 0)} satır` : "Yükleniyor"}
             {" · "}Formüller yeni motorla derlenir ve örnek mizanla salt okunur hesaplanır; yayındaki tablolar, eski raporlar ve dipnotlar değişmez.
           </Typography>
+          <Button size="small" variant="outlined" onClick={yardimciFormulDuzenleyicisiniAc} disabled={!son || kaydediliyor}>
+            Dipnot ve kredi riski form?lleri
+          </Button>
           <Button size="small" variant="text" color="inherit" startIcon={<IconHistory size={16} />}
             onClick={(e) => setGecmisAnchor(e.currentTarget)} disabled={gecmis.length === 0} sx={{ flexShrink: 0 }}>
             {son ? `Alt sürüm #${son.surumNo}` : "Henüz alt sürüm yok"}
@@ -1030,6 +1082,41 @@ export default function BirlesikTaslakSayfasi() {
           </Typography>}
         </Stack>}
       </FormulCekmecesi>
+      <Drawer anchor="right" open={yardimciFormullerAcik} onClose={() => setYardimciFormullerAcik(false)}
+        PaperProps={{ sx: { width: { xs: "100%", md: 760 }, maxWidth: "100vw", p: 2 } }}>
+        <Stack spacing={1.5} sx={{ height: "100%" }}>
+          <Box>
+            <Typography variant="h6">Dipnot ve kredi riski form?lleri</Typography>
+            <Typography variant="body2" color="text.secondary">Mizan hesap kodlar?n? girin. De?i?iklikler yeni ve geri al?nabilir bir form?l alt s?r?m? olu?turur.</Typography>
+          </Box>
+          <Alert severity="info">Form?l bi?imi: +100,+101,-103 veya +137.10. M?nferit ve konsolide de?erleri ayr? saklan?r.</Alert>
+          <TableContainer component={Paper} variant="outlined" sx={{ flex: 1, minHeight: 240, overflow: "auto" }}>
+            <Table size="small" stickyHeader>
+              <TableHead><TableRow>
+                <TableCell sx={{ minWidth: 210 }}>Kredi riski kalemi</TableCell>
+                <TableCell sx={{ minWidth: 220 }}>M?nferit form?l?</TableCell>
+                <TableCell sx={{ minWidth: 220 }}>Konsolide form?l?</TableCell>
+              </TableRow></TableHead>
+              <TableBody>{YARDIMCI_FORMUL_TANIMLARI.map(([anahtar, ad]) => <TableRow key={anahtar}>
+                <TableCell>{ad}</TableCell>
+                {KAPSAMLAR.map((kapsam) => <TableCell key={`${anahtar}-${kapsam}`}>
+                  <TextField size="small" fullWidth value={yardimciFormuller[`${anahtar}:${kapsam}`] ?? ""}
+                    aria-label={`${ad} ${KAPSAM[kapsam]} form?l?`} placeholder="+100,+101,-103"
+                    onChange={(event) => setYardimciFormuller((onceki) => ({ ...onceki, [`${anahtar}:${kapsam}`]: event.target.value }))} />
+                </TableCell>)}
+              </TableRow>)}</TableBody>
+            </Table>
+          </TableContainer>
+          <TextField size="small" label="De?i?iklik nedeni" value={yardimciAciklama} fullWidth
+            onChange={(event) => setYardimciAciklama(event.target.value)} placeholder="?rn. KGK kredi riski form?l? g?ncellendi" />
+          <Stack direction="row" spacing={1} justifyContent="flex-end">
+            <Button color="inherit" onClick={() => setYardimciFormullerAcik(false)}>Vazge?</Button>
+            <Button variant="contained" onClick={() => void yardimciFormulleriKaydet()} disabled={yardimciKaydediliyor || !son}>
+              {yardimciKaydediliyor ? "Kaydediliyor?" : `Alt s?r?m #${(son?.surumNo ?? 0) + 1} olarak kaydet`}
+            </Button>
+          </Stack>
+        </Stack>
+      </Drawer>
     </ParentCard>
   </PageContainer>;
 }
