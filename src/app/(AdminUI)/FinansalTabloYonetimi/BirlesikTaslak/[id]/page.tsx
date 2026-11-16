@@ -17,10 +17,12 @@ import ParentCard from "@/app/components/Shared/ParentCard";
 import { useSelector } from "@/store/hooks";
 import { AppState } from "@/store/store";
 import {
-  getKgkBirlesikTaslak, createKgkBirlesikTaslak, getKgkBirlesikFormulSurumleri, getKgkBirlesikSonFormulSurumu, getKgkBirlesikFormulSurumu, getKgkBirlesikFormulHazirligi, createKgkBirlesikYayinTaslagi, getKgkExcelFormulAdaylari, getKgkEskiFormulAdaylari, getKgkEskiOzkaynakFormulAdaylari, saveKgkBirlesikEskiFormulAdaylari, previewKgkBirlesikFormulSurumu,
+  getKgkBirlesikTaslak, createKgkBirlesikTaslak, getKgkBirlesikFormulSurumleri, getKgkBirlesikSonFormulSurumu, getKgkBirlesikFormulSurumu, getKgkBirlesikFormulHazirligi, createKgkBirlesikYayinTaslagi, getKgkExcelFormulAdaylari, getKgkEskiFormulAdaylari, getKgkEskiOzkaynakFormulAdaylari, previewKgkBirlesikFormulSurumu,
   previewKgkBirlesikGercekMizan, publishKgkKismiRapor, listKgkKismiRaporlar, getKgkKismiRapor,
-  saveKgkBirlesikFormulVaryanti, saveKgkBirlesikExcelToplamlari, saveKgkBirlesikYardimciFormuller, KgkBirlesikTaslakDetay, KgkBirlesikFormulSurumu, KgkBirlesikFormulVaryanti, KgkBirlesikYardimciFormul,
-  KgkBirlesikFormulHazirligi, KgkBirlesikOnizlemeHucresi, KgkBirlesikOnizlemeSonucu, KgkMatrisSutunu, KgkExcelFormulAdaylari, KgkEskiFormulAdaylari, KgkEskiOzkaynakFormulAdaylari,
+  saveKgkBirlesikFormulVaryanti, saveKgkBirlesikExcelToplamlari, saveKgkBirlesikYardimciFormuller,
+  KgkBirlesikTaslakDetay, KgkBirlesikFormulSurumu, KgkBirlesikFormulVaryanti, KgkBirlesikYardimciFormul,
+  KgkBirlesikFormulHazirligi, KgkBirlesikOnizlemeHucresi, KgkBirlesikOnizlemeSonucu, KgkMatrisSutunu,
+  KgkExcelFormulAdaylari, KgkEskiFormulAdaylari, KgkEskiOzkaynakFormulAdaylari,
   KgkKismiRaporOzeti, KgkKismiRaporDetayi, KgkBirlesikYayinTaslagiSonucu,
 } from "@/api/FinansalTabloYonetimi/Tanimlar";
 import { getFinansalTabloTestMizanlari, FinansalTabloTestMizan } from "@/api/FinansalTabloYonetimi/TestMizan";
@@ -78,10 +80,11 @@ export default function BirlesikTaslakSayfasi() {
   const [eskiOnizlemeYukleniyor, setEskiOnizlemeYukleniyor] = useState(false);
   const [hazirlik, setHazirlik] = useState<KgkBirlesikFormulHazirligi | null>(null);
   const [kgkAdaylari, setKgkAdaylari] = useState<KgkExcelFormulAdaylari | null>(null);
-  const [kgkAdayHatasi, setKgkAdayHatasi] = useState("");
-  const [eskiAdaylari, setEskiAdaylari] = useState<KgkEskiFormulAdaylari | null>(null);
+  const [eskiAdaylar, setEskiAdaylar] = useState<KgkEskiFormulAdaylari | null>(null);
   const [eskiOzkaynakAdaylari, setEskiOzkaynakAdaylari] = useState<KgkEskiOzkaynakFormulAdaylari | null>(null);
+  const [kgkAdayHatasi, setKgkAdayHatasi] = useState("");
   const [eskiAdayHatasi, setEskiAdayHatasi] = useState("");
+  const [eskiAdaylarKaydediliyor, setEskiAdaylarKaydediliyor] = useState(false);
   const [gecmis, setGecmis] = useState<Gecmis[]>([]);
   const [testMizanlari, setTestMizanlari] = useState<FinansalTabloTestMizan[]>([]);
   const [tabloAdi, setTabloAdi] = useState("");
@@ -99,7 +102,6 @@ export default function BirlesikTaslakSayfasi() {
   const [hesaplaniyor, setHesaplaniyor] = useState(false);
   const [kaydediliyor, setKaydediliyor] = useState(false);
   const [kgkAktariliyor, setKgkAktariliyor] = useState(false);
-  const [eskiAdaylariAktariliyor, setEskiAdaylariAktariliyor] = useState(false);
   const [yayinTaslagiOlusturuluyor, setYayinTaslagiOlusturuluyor] = useState(false);
   const [yayinTaslaklari, setYayinTaslaklari] = useState<KgkBirlesikYayinTaslagiSonucu["surumler"]>([]);
   const [taslakYenileniyor, setTaslakYenileniyor] = useState(false);
@@ -128,7 +130,7 @@ export default function BirlesikTaslakSayfasi() {
     setHazirlik(null);
     setKgkAdaylari(null);
     setKgkAdayHatasi("");
-    setEskiAdaylari(null);
+    setEskiAdaylar(null);
     setEskiOzkaynakAdaylari(null);
     setEskiAdayHatasi("");
     setGecmis([]);
@@ -145,30 +147,34 @@ export default function BirlesikTaslakSayfasi() {
         if (aktif) setKgkAdayHatasi(error instanceof Error ? error.message : "KGK Excel formül adayları alınamadı.");
         return null;
       }),
-      getKgkEskiFormulAdaylari(token, id).catch((error) => {
-        if (aktif) setEskiAdayHatasi(error instanceof Error ? error.message : "Eski formül adayları alınamadı.");
-        return null;
-      }),
-      getKgkEskiOzkaynakFormulAdaylari(token, id).catch((error) => {
-        if (aktif) setEskiAdayHatasi(error instanceof Error ? error.message : "Eski özkaynak formül adayları alınamadı.");
-        return null;
-      }),
       getFinansalTabloTestMizanlari(token, 20).catch(() => [] as FinansalTabloTestMizan[]),
-    ]).then(([kaynakTaslak, formulSurumu, kapsamDurumu, tarihce, adaylar, eski, eskiOzkaynak, mizanlar]) => {
+    ]).then(([kaynakTaslak, formulSurumu, kapsamDurumu, tarihce, adaylar, mizanlar]) => {
       if (!aktif) return;
       setTaslak(kaynakTaslak);
       setTabloAdi(kaynakTaslak.icerik.tablolar[0]?.ad || "");
       setSon(formulSurumu);
       setHazirlik(kapsamDurumu);
       setKgkAdaylari(adaylar);
-      setEskiAdaylari(eski);
-      setEskiOzkaynakAdaylari(eskiOzkaynak);
       setGecmis(tarihce);
       setTestMizanlari(mizanlar);
       setTestMizanId((eski) => eski || mizanlar[0]?.id || "");
     }).catch((error) => { if (aktif) setHata(error instanceof Error ? error.message : "Taslak okunamadı."); });
     return () => { aktif = false; };
   }, [token, id]);
+
+  useEffect(() => {
+    if (!token || !Number.isInteger(id) || id <= 0) return;
+    let aktif = true;
+    Promise.all([getKgkEskiFormulAdaylari(token, id), getKgkEskiOzkaynakFormulAdaylari(token, id)])
+      .then(([adaylar, ozkaynakAdaylari]) => {
+        if (!aktif) return;
+        setEskiAdaylar(adaylar);
+        setEskiOzkaynakAdaylari(ozkaynakAdaylari);
+      }).catch((error) => {
+        if (aktif) setEskiAdayHatasi(error instanceof Error ? error.message : "Formül adayları alınamadı.");
+      });
+    return () => { aktif = false; };
+  }, [token, id, son?.surumNo]);
 
   useEffect(() => {
     setGercekOnizleme(null);
@@ -198,21 +204,6 @@ export default function BirlesikTaslakSayfasi() {
   const adaylar = useMemo(() => new Map((kgkAdaylari?.adaylar ?? []).filter((x) => x.varyant.tabloAdi === tabloAdi)
     .map((x) => [hucreAnahtari(x.varyant.eslesmeAnahtari, x.varyant.yataySutunAnahtari,
       x.varyant.kapsam, x.varyant.donusumTipi), x])), [kgkAdaylari, tabloAdi]);
-  const aktarilabilirEskiVaryantlar = useMemo(() => {
-    const adaylar = [
-      ...(eskiAdaylari?.adaylar ?? []),
-      ...(eskiOzkaynakAdaylari?.adaylar ?? []),
-    ];
-    const benzersiz = new Map<string, KgkBirlesikFormulVaryanti>();
-    adaylar.filter((x) => ["AdAyni", "AltKalemlerdenBirlesik"].includes(x.durum) &&
-      x.varyant?.tabloAdi === tabloAdi)
-      .forEach((x) => {
-        const varyant = x.varyant!;
-        benzersiz.set(hucreAnahtari(varyant.eslesmeAnahtari, varyant.yataySutunAnahtari,
-          varyant.kapsam, varyant.donusumTipi), varyant);
-      });
-    return [...benzersiz.values()];
-  }, [eskiAdaylari, eskiOzkaynakAdaylari, tabloAdi]);
   const matrisHucreleri = useMemo(() => new Map(KAPSAMLAR.map((k) => [k, new Set(
     ((k === 1 ? tablo?.munferit : tablo?.konsolide)?.matrisHucreleri ?? [])
       .map((x) => `${x.sayfaAdi}\u0001${x.satirNo}\u0001${x.sutun}`))])), [tablo]);
@@ -235,11 +226,9 @@ export default function BirlesikTaslakSayfasi() {
     x.eslesmeAnahtari === secili.satir && x.yataySutunAnahtari === secili.sutun &&
     x.kapsam === secili.kapsam && x.donusumTipi === NORMAL);
   const seciliAday = secili ? adaylar.get(hucreAnahtari(secili.satir, secili.sutun, secili.kapsam, NORMAL)) : undefined;
-  const seciliEskiAday = secili ? (eskiOzkaynakAdaylari?.adaylar.find((x) =>
+  const seciliEskiOzkaynakAdayi = secili ? eskiOzkaynakAdaylari?.adaylar.find((x) =>
     x.tabloAdi === tabloAdi && x.eslesmeAnahtari === secili.satir && x.kapsam === secili.kapsam &&
-    x.yataySutunAnahtari === secili.sutun) ?? eskiAdaylari?.adaylar.find((x) =>
-    x.tabloAdi === tabloAdi && x.eslesmeAnahtari === secili.satir && x.kapsam === secili.kapsam &&
-    secili.sutun === null)) : undefined;
+    x.yataySutunAnahtari === secili.sutun) : undefined;
   const eksikBagimlilik = useMemo(() => {
     if (!secili || !seciliSatir || !tablo || !seciliAday?.aciklama) return null;
     const adres = /\b([A-Z]{1,3})(\d+) hücresinin çalışır formülü yok\./u.exec(seciliAday.aciklama);
@@ -348,17 +337,14 @@ export default function BirlesikTaslakSayfasi() {
       };
       const sonuc = await saveKgkBirlesikFormulVaryanti(token, id, son?.surumNo || 0, varyant,
         (aciklama.trim() || varsayilan).slice(0, 500));
-      const [guncel, kapsamDurumu, tarihce, guncelAdaylar, eski, eskiOzkaynak] = await Promise.all([
+      const [guncel, kapsamDurumu, tarihce, guncelAdaylar] = await Promise.all([
         getKgkBirlesikSonFormulSurumu(token, id), getKgkBirlesikFormulHazirligi(token, id),
         getKgkBirlesikFormulSurumleri(token, id), getKgkExcelFormulAdaylari(token, id).catch((error) => {
           setKgkAdayHatasi(error instanceof Error ? error.message : "KGK Excel formül adayları güncellenemedi.");
           return null;
         }),
-        getKgkEskiFormulAdaylari(token, id).catch(() => null),
-        getKgkEskiOzkaynakFormulAdaylari(token, id).catch(() => null),
       ]);
       setSon(guncel); setHazirlik(kapsamDurumu); setGecmis(tarihce); setKgkAdaylari(guncelAdaylar);
-      setEskiAdaylari(eski); setEskiOzkaynakAdaylari(eskiOzkaynak);
       if (guncelAdaylar) setKgkAdayHatasi("");
       setKayitliForm(form); setAciklama("");
       setMesaj(`Alt sürüm #${sonuc.surumNo} kaydedildi; önceki sürümler korunuyor.`);
@@ -428,25 +414,77 @@ export default function BirlesikTaslakSayfasi() {
     }
   };
 
-  const eskiFormulAdaylariniAktar = async () => {
-    if (!token || !son || aktarilabilirEskiVaryantlar.length === 0 || eskiAdaylariAktariliyor || kaydediliyor) return;
-    if (degisti && !window.confirm("Kaydedilmemiş formül değişikliği var. Vazgeçilsin mi?")) return;
-    setHata(""); setMesaj(""); setEskiAdaylariAktariliyor(true);
+  const guvenliEskiAdaylar = (eskiAdaylar?.adaylar ?? []).filter((x) =>
+    x.varyant && ["MizanDuzeltmeAdayi", "AdAyni", "AltKalemlerdenBirlesik"].includes(x.durum));
+  const guvenliOzkaynakAdaylari = (eskiOzkaynakAdaylari?.adaylar ?? []).filter((x) =>
+    x.varyant && ["AdAyni", "AltKalemlerdenBirlesik"].includes(x.durum));
+
+  const eskiFormulAdaylariniKaydet = async () => {
+    const kgkFormulAdaylari = kgkAdaylari?.adaylar.filter((x) => x.durum === "Eklenecek") ?? [];
+    if (!token || !son || (!guvenliEskiAdaylar.length && !guvenliOzkaynakAdaylari.length && !kgkFormulAdaylari.length) ||
+      eskiAdaylarKaydediliyor || kaydediliyor || kgkAktariliyor) return;
+    const toplamAday = guvenliEskiAdaylar.length + guvenliOzkaynakAdaylari.length + kgkFormulAdaylari.length;
+    if (!window.confirm(`${toplamAday} doğrulanabilir KGK/eski formül adayı yeni alt sürümlere kaydedilsin mi? Mevcut formül değişiklikleri geçmişte korunur.`)) return;
+    setHata(""); setMesaj(""); setEskiAdaylarKaydediliyor(true); setKgkAktariliyor(true);
+    let guncelSurumNo = son.surumNo;
+    let kaydedilen = 0;
     try {
-      const sonuc = await saveKgkBirlesikEskiFormulAdaylari(token, id, son.surumNo, aktarilabilirEskiVaryantlar);
-      const [guncel, kapsamDurumu, tarihce, kgkFormuller, eski, eskiOzkaynak] = await Promise.all([
+      if (kgkFormulAdaylari.length) {
+        const sonuc = await saveKgkBirlesikExcelToplamlari(token, id, guncelSurumNo,
+          kgkFormulAdaylari.map((x) => x.varyant));
+        guncelSurumNo = sonuc.surumNo;
+        kaydedilen += sonuc.eklenenVaryantSayisi;
+      }
+      // KGK satır formüllerinden sonra eski formül listesini yeniden al; aynı hücreye
+      // iki ayrı kaynak formülü yazılmasını önle.
+      const [guncelEskiAdaylar, guncelOzkaynakAdaylari] = await Promise.all([
+        getKgkEskiFormulAdaylari(token, id), getKgkEskiOzkaynakFormulAdaylari(token, id),
+      ]);
+      setEskiAdaylar(guncelEskiAdaylar);
+      setEskiOzkaynakAdaylari(guncelOzkaynakAdaylari);
+      const dikeyAdaylar = guncelEskiAdaylar.adaylar.filter((x) =>
+        x.varyant && ["MizanDuzeltmeAdayi", "AdAyni", "AltKalemlerdenBirlesik"].includes(x.durum));
+      const matrisAdaylari = guncelOzkaynakAdaylari.adaylar.filter((x) =>
+        x.varyant && ["AdAyni", "AltKalemlerdenBirlesik"].includes(x.durum));
+      const kayitlar = [
+        ...dikeyAdaylar.map((x) => ({ varyant: x.varyant!, durum: x.durum,
+          ad: x.kgkKalemAdi, tablo: x.tabloAdi, satir: x.kgkSatirNo })),
+        ...matrisAdaylari.map((x) => ({ varyant: x.varyant!, durum: x.durum,
+          ad: `${x.eskiSatirAdi ?? x.hucreAdresi} · ${x.eskiSutunAdi ?? "Özkaynak"}`, tablo: x.tabloAdi, satir: 0 })),
+      ];
+      const benzersizKayitlar = [...new Map(kayitlar.map((x) => [
+        hucreAnahtari(x.varyant.eslesmeAnahtari, x.varyant.yataySutunAnahtari,
+          x.varyant.kapsam, x.varyant.donusumTipi), x,
+      ])).values()];
+      for (const aday of benzersizKayitlar) {
+        const varyant = aday.varyant;
+        const aciklama = `${aday.durum}: ${aday.ad} (${aday.tablo}${aday.satir ? `, satır ${aday.satir}` : ""})`;
+        const sonuc = await saveKgkBirlesikFormulVaryanti(token, id, guncelSurumNo, varyant, aciklama.slice(0, 500));
+        guncelSurumNo = sonuc.surumNo;
+        kaydedilen++;
+      }
+      const [guncel, kapsamDurumu, tarihce, kgkAdayGuncel, eskiAdayGuncel, eskiOzkaynakAdayGuncel] = await Promise.all([
         getKgkBirlesikSonFormulSurumu(token, id), getKgkBirlesikFormulHazirligi(token, id),
         getKgkBirlesikFormulSurumleri(token, id), getKgkExcelFormulAdaylari(token, id),
         getKgkEskiFormulAdaylari(token, id), getKgkEskiOzkaynakFormulAdaylari(token, id),
       ]);
       setSon(guncel); setHazirlik(kapsamDurumu); setGecmis(tarihce);
-      setKgkAdaylari(kgkFormuller); setEskiAdaylari(eski); setEskiOzkaynakAdaylari(eskiOzkaynak);
-      setEskiAdayHatasi(""); setSecili(null); setOnizleme(null); setEskiOnizleme(null);
-      setMesaj(`${sonuc.eklenenVaryantSayisi} güvenli eski formül adayı alt sürüm #${sonuc.surumNo} olarak kaydedildi. Bu sayıya tam ad eşleşmeleri ve alt kalemlerden birleştirilen formüller dahildir; yayımdan önce örnek mizan önizlemesinde doğrulayın.`);
+      setKgkAdaylari(kgkAdayGuncel); setEskiAdaylar(eskiAdayGuncel);
+      setEskiOzkaynakAdaylari(eskiOzkaynakAdayGuncel);
+      setSecili(null); setOnizleme(null); setEskiOnizleme(null);
+      setMesaj(`${kaydedilen} doğrulanabilir formül adayı geçmişi korunarak alt sürüm #${guncelSurumNo} içinde kaydedildi. Yayın öncesi bütün tabloları gerçek mizanla yeniden denetleyin.`);
     } catch (error) {
-      setHata(error instanceof Error ? error.message : "Eşleşen eski formüller aktarılamadı.");
+      setHata(`${kaydedilen} aday kaydedildi; sonraki kayıt durdu. Güncel sürüm yeniden yüklendi. ${error instanceof Error ? error.message : "Formül adayı kaydedilemedi."}`);
+      const [guncel, tarihce, adaylar, ozkaynakAdaylar] = await Promise.all([
+        getKgkBirlesikSonFormulSurumu(token, id).catch(() => null),
+        getKgkBirlesikFormulSurumleri(token, id).catch(() => [] as Gecmis[]),
+        getKgkEskiFormulAdaylari(token, id).catch(() => null),
+        getKgkEskiOzkaynakFormulAdaylari(token, id).catch(() => null),
+      ]);
+      setSon(guncel); setGecmis(tarihce); setEskiAdaylar(adaylar); setEskiOzkaynakAdaylari(ozkaynakAdaylar);
     } finally {
-      setEskiAdaylariAktariliyor(false);
+      setEskiAdaylarKaydediliyor(false);
+      setKgkAktariliyor(false);
     }
   };
 
@@ -612,19 +650,6 @@ export default function BirlesikTaslakSayfasi() {
   const harfHucresi = { ...ustHucre, height: HARF_YUKSEKLIGI, py: 0, fontSize: 11.5, fontWeight: 400, color: "text.secondary", textAlign: "center" } as const;
 
   const formulSayisi = (son?.varyantlar ?? []).filter((x) => x.tabloAdi === tabloAdi).length;
-  const eskiTabloAdaylari = [
-    ...(eskiAdaylari?.adaylar ?? []), ...(eskiOzkaynakAdaylari?.adaylar ?? []),
-  ].filter((x) => x.tabloAdi === tabloAdi);
-  const aktarilabilirAnahtarlari = new Set(aktarilabilirEskiVaryantlar.map((x) =>
-    hucreAnahtari(x.eslesmeAnahtari, x.yataySutunAnahtari, x.kapsam, x.donusumTipi)));
-  const birlesikAltKalemAnahtarlari = new Set(eskiTabloAdaylari
-    .filter((x) => x.durum === "AltKalemlerdenBirlesik" && x.varyant)
-    .map((x) => hucreAnahtari(x.varyant!.eslesmeAnahtari, x.varyant!.yataySutunAnahtari,
-      x.varyant!.kapsam, x.varyant!.donusumTipi)));
-  const birlesikAltKalemSayisi = [...birlesikAltKalemAnahtarlari]
-    .filter((anahtar) => aktarilabilirAnahtarlari.has(anahtar)).length;
-  const guvenliEskiFormulSayisi = aktarilabilirEskiVaryantlar.length;
-  const digerEskiAdaySayisi = eskiTabloAdaylari.length - guvenliEskiFormulSayisi;
   const tabloEksikleri = hazirlik?.sonuc.eksikler.filter((x) => x.tabloAdi === tabloAdi) ?? [];
   const tabloYapiSorunlari = hazirlik?.sonuc.yapiSorunlari.filter((x) => x.startsWith(`${tabloAdi} /`)) ?? [];
   const genelYapiSorunlari = hazirlik?.sonuc.yapiSorunlari.filter((x) => !x.includes(" / ")) ?? [];
@@ -669,19 +694,6 @@ export default function BirlesikTaslakSayfasi() {
         {kgkAdayHatasi && <Alert severity="warning" onClose={() => setKgkAdayHatasi("")}>
           KGK Excel formül önerileri gösterilemiyor: {kgkAdayHatasi}
         </Alert>}
-        {eskiAdayHatasi && <Alert severity="warning" onClose={() => setEskiAdayHatasi("")}>
-          Eski formül veritabanı önerileri alınamadı: {eskiAdayHatasi}
-        </Alert>}
-        {eskiTabloAdaylari.length > 0 && <Alert severity={guvenliEskiFormulSayisi > 0 ? "info" : "warning"} sx={{ py: 0 }}>
-          Eski kalem adları noktalama ve boşluk farkları yok sayılarak karşılaştırılır; tek formülsüz ana kalem için tüm doğrudan alt formüller birleştirilir.
-          {` Bu tabloda ${guvenliEskiFormulSayisi} güvenli eşleşme aktarılabilir`}
-          {birlesikAltKalemSayisi > 0 ? ` (${birlesikAltKalemSayisi} alt kalem formüllerinden birleştirildi)` : ""}
-          {digerEskiAdaySayisi > 0 ? `, ${digerEskiAdaySayisi} aday inceleme gerektiriyor.` : "."}
-          {guvenliEskiFormulSayisi > 0 && <Button size="small" disabled={eskiAdaylariAktariliyor || kaydediliyor || !son}
-            onClick={() => void eskiFormulAdaylariniAktar()}>
-            {eskiAdaylariAktariliyor ? "Eski formüller aktarılıyor" : `${guvenliEskiFormulSayisi} güvenli eşleşmeyi alt sürüme ekle`}
-          </Button>}
-        </Alert>}
         {hazirlik && !hazirlik.sonuc.hazirMi && <Alert severity="error">
           Kayıtlı formül: {hazirlik.sonuc.mevcutFormulSayisi}/{hazirlik.sonuc.gerekliFormulSayisi}.
           {hazirlik.derlenebilirFormulSayisi != null && <> Çalışabilir formül: {hazirlik.derlenebilirFormulSayisi}.</>}
@@ -714,6 +726,25 @@ export default function BirlesikTaslakSayfasi() {
             onClick={() => void kgkToplamlariniAktar()}>
             {kgkAktariliyor ? "KGK toplamları aktarılıyor" : `${kgkAdaylari.eklenecek} KGK toplamını alt sürüme ekle`}
           </Button>}
+        </Alert>}
+        {eskiAdayHatasi && <Alert severity="warning" onClose={() => setEskiAdayHatasi("")}>Eski ve mizan doğrulama formül adayları alınamadı: {eskiAdayHatasi}</Alert>}
+        {((eskiAdaylar && guvenliEskiAdaylar.length > 0) || guvenliOzkaynakAdaylari.length > 0 || (kgkAdaylari?.eklenecek ?? 0) > 0) && <Alert severity="warning" sx={{ py: 0 }}>
+          <Stack spacing={0.5}>
+            <Typography variant="body2">
+              {guvenliEskiAdaylar.length + guvenliOzkaynakAdaylari.length} güvenli eski formül/mizan düzeltmesi ve {kgkAdaylari?.eklenecek ?? 0} KGK Excel formülü var. Kaydetmek formül geçmişinde yeni alt sürüm oluşturur; mevcut ve yayımlanmış raporları değiştirmez.
+            </Typography>
+            <Stack direction={{ xs: "column", sm: "row" }} spacing={0.75} flexWrap="wrap" alignItems={{ sm: "center" }}>
+              {guvenliEskiAdaylar.slice(0, 5).map((aday, index) => <Chip key={`${aday.tabloAdi}-${aday.eslesmeAnahtari}-${aday.kapsam}-${index}`}
+                size="small" variant="outlined" label={`${aday.kgkKalemAdi} · ${aday.durum}`} />)}
+              {guvenliOzkaynakAdaylari.slice(0, Math.max(0, 5 - guvenliEskiAdaylar.length)).map((aday, index) => <Chip key={`ozkaynak-${aday.tabloAdi}-${aday.eslesmeAnahtari}-${aday.kapsam}-${aday.yataySutunAnahtari}-${index}`}
+                size="small" variant="outlined" label={`${aday.eskiSatirAdi ?? aday.hucreAdresi} · ${aday.durum}`} />)}
+              {guvenliEskiAdaylar.length + guvenliOzkaynakAdaylari.length > 5 && <Typography variant="caption">+{guvenliEskiAdaylar.length + guvenliOzkaynakAdaylari.length - 5} aday</Typography>}
+              <Button size="small" variant="outlined" disabled={eskiAdaylarKaydediliyor || kaydediliyor || kgkAktariliyor || !son}
+                onClick={() => void eskiFormulAdaylariniKaydet()}>
+                {eskiAdaylarKaydediliyor ? "Formüller kaydediliyor" : "Güvenli KGK ve mizan formüllerini alt sürüme kaydet"}
+              </Button>
+            </Stack>
+          </Stack>
         </Alert>}
         <Stack direction={{ xs: "column", md: "row" }} spacing={1} alignItems={{ md: "center" }} justifyContent="space-between">
           <Typography variant="body2" color="text.secondary">
@@ -975,25 +1006,16 @@ export default function BirlesikTaslakSayfasi() {
           {kapsamKaynagi(seciliSatir, secili.kapsam) ? ` · Excel satırı ${kapsamKaynagi(seciliSatir, secili.kapsam)!.satirNo}` : ""}
         </> : null}>
         {secili && seciliSatir && <Stack spacing={1.5}>
-          {seciliEskiAday && <Alert severity={["AdAyni", "AltKalemlerdenBirlesik"].includes(seciliEskiAday.durum) ? "info" : "warning"} sx={{ py: 0 }}>
+          {seciliEskiOzkaynakAdayi && <Alert severity={seciliEskiOzkaynakAdayi.durum === "AdAyni" ? "info" : "warning"} sx={{ py: 0 }}>
             <Typography variant="caption" sx={{ display: "block", fontWeight: 700 }}>
-              Eski formül adayı · {seciliEskiAday.durum}{seciliEskiAday.eskiKayitId ? ` · kayıt #${seciliEskiAday.eskiKayitId}` : ""}
+              Eski özkaynak formül adayı · {seciliEskiOzkaynakAdayi.durum}{seciliEskiOzkaynakAdayi.eskiKayitId ? ` · kayıt #${seciliEskiOzkaynakAdayi.eskiKayitId}` : ""}
             </Typography>
-            {seciliEskiAday.hamEskiFormul && <Typography variant="body2" sx={{ fontFamily: "Consolas, monospace", overflowWrap: "anywhere" }}>
-              Kaynak: {seciliEskiAday.hamEskiFormul}
+            {seciliEskiOzkaynakAdayi.hamEskiFormul && <Typography variant="body2" sx={{ fontFamily: "Consolas, monospace", overflowWrap: "anywhere" }}>
+              Kaynak: {seciliEskiOzkaynakAdayi.hamEskiFormul}
             </Typography>}
-            {seciliEskiAday.varyant && <>
-              <Typography variant="body2" sx={{ fontFamily: "Consolas, monospace", overflowWrap: "anywhere" }}>
-                Dönüştürülen: {seciliEskiAday.varyant.hamFormul}
-              </Typography>
-              {seciliEskiAday.durum === "AltKalemlerdenBirlesik" && <Typography variant="caption" sx={{ display: "block" }}>
-                Eski ana kalemin doğrudan alt kalem formülleri tek formülde birleştirildi. Aktardıktan sonra örnek mizan önizlemesinde doğrulayın.
-              </Typography>}
-              <Button size="small" onClick={() => setForm((x) => ({
-                ...x, formul: seciliEskiAday.varyant!.hamFormul ?? "",
-                dipnot: seciliEskiAday.varyant!.dipnot ?? "", kaynak: seciliEskiAday.varyant!.kaynak ?? "",
-              }))}>Aday formülünü düzenleyiciye al</Button>
-            </>}
+            {seciliEskiOzkaynakAdayi.varyant?.hamFormul && <Typography variant="body2" sx={{ fontFamily: "Consolas, monospace", overflowWrap: "anywhere" }}>
+              Dönüştürülen: {seciliEskiOzkaynakAdayi.varyant.hamFormul}
+            </Typography>}
           </Alert>}
           {seciliAday && <Alert severity={seciliAday.aciklama ? "warning" : "info"} sx={{ py: 0 }}>
             <Typography variant="caption" sx={{ display: "block", fontWeight: 700 }}>
