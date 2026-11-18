@@ -1,18 +1,35 @@
-import { Grid, Button, Autocomplete, TextField } from "@mui/material";
+import {
+    Grid,
+    Button,
+    Autocomplete,
+    TextField,
+    Alert,
+    Box,
+    Chip,
+    Stack,
+    Typography,
+    CircularProgress,
+} from "@mui/material";
 import React, { useState, useEffect } from "react";
 import CustomFormLabel from "@/app/components/Forms/ThemeElements/CustomFormLabel";
 import CustomTextField from "@/app/components/Forms/ThemeElements/CustomTextField";
-import { useRouter } from "next/navigation";
-import { getDenetciler, getOldDbDenetciler, importDenetci } from "@/api/DenetciIslemleri/DenetciIslemleri";
+import { enqueueSnackbar } from "notistack";
+import {
+    getDenetciler,
+    getOldDbDenetciler,
+    importDenetci,
+    OldDenetciListItem,
+} from "@/api/DenetciIslemleri/DenetciIslemleri";
 import { useSelector } from "@/store/hooks";
 import { AppState } from "@/store/store";
 
 const DenetciSecimFormu = () => {
     const user = useSelector((state: AppState) => state.userReducer);
-    const router = useRouter();
 
-    const [denetciler, setDenetciler] = useState<any[]>([]);
-    const [selectedDenetci, setSelectedDenetci] = useState<any | null>(null);
+    const [denetciler, setDenetciler] = useState<OldDenetciListItem[]>([]);
+    const [selectedDenetci, setSelectedDenetci] = useState<OldDenetciListItem | null>(null);
+    const [isLoadingList, setIsLoadingList] = useState(false);
+    const [listError, setListError] = useState<string | null>(null);
 
     const [firmaAdi, setFirmaAdi] = useState("");
     const [firmaUnvani, setFirmaUnvani] = useState("");
@@ -30,7 +47,7 @@ const DenetciSecimFormu = () => {
     const [autocompleteKey, setAutocompleteKey] = useState(0);
 
     const resetForm = (savedId: any) => {
-        setDenetciler(prev => prev.filter(d => (d.id ?? d.Id) !== savedId));
+        setDenetciler(prev => prev.filter(d => Number(d.id) !== Number(savedId)));
         setSelectedDenetci(null);
         setFirmaAdi(""); setFirmaUnvani(""); setAdress(""); setIl("");
         setTel(""); setFax(""); setEmail(""); setWeb("");
@@ -39,29 +56,50 @@ const DenetciSecimFormu = () => {
     };
 
     useEffect(() => {
+        let cancelled = false;
         const fetchDenetciler = async () => {
+            setIsLoadingList(true);
+            setListError(null);
             try {
                 const token = user?.token || "";
                 const [oldData, newData] = await Promise.all([
-                    getOldDbDenetciler(),
+                    getOldDbDenetciler(token),
                     getDenetciler(token),
                 ]);
+
+                if (cancelled) return;
+
                 if (Array.isArray(oldData)) {
-                    const newIds = new Set(
-                        Array.isArray(newData) ? newData.map((d: any) => d.id ?? d.Id) : []
+                    const importedLegacyIds = new Set(
+                        Array.isArray(newData)
+                            ? newData
+                                  .map((d: any) => d.legacyOldDbId ?? d.LegacyOldDbId)
+                                  .filter((val: any) => val !== null && val !== undefined && Number(val) > 0)
+                                  .map((val: any) => Number(val))
+                            : []
                     );
-                    setDenetciler(oldData.filter((d: any) => !newIds.has(d.id ?? d.Id)));
+                    setDenetciler(oldData.filter((d) => !importedLegacyIds.has(Number(d.id))));
                 } else {
                     setDenetciler([]);
                 }
-            } catch (err) {
+            } catch (err: any) {
+                if (cancelled) return;
+                const msg = err?.message || "Eski sistem denetçi listesi alınamadı.";
+                setListError(msg);
                 setDenetciler([]);
+            } finally {
+                if (!cancelled) {
+                    setIsLoadingList(false);
+                }
             }
         };
         fetchDenetciler();
-    }, [user]);
+        return () => {
+            cancelled = true;
+        };
+    }, [user?.token]);
 
-    const handleDenetciChange = (event: any, newValue: any) => {
+    const handleDenetciChange = (event: any, newValue: OldDenetciListItem | null) => {
         setSelectedDenetci(newValue);
         if (newValue) {
             setFirmaAdi(newValue.firmaAdi || "");
@@ -78,25 +116,90 @@ const DenetciSecimFormu = () => {
         }
     };
 
+    const previewAdminUsers = selectedDenetci?.denetciAdminKullanicilar || [];
+
     return (
         <Grid container spacing={3}>
+            {listError && (
+                <Grid size={{ xs: 12 }}>
+                    <Alert severity="error">{listError}</Alert>
+                </Grid>
+            )}
+
             <Grid size={{ xs: 12 }}>
                 <Autocomplete
                     key={autocompleteKey}
                     id="denetci-select"
                     options={denetciler}
-                    getOptionLabel={(option) => option.firmaUnvani || option.firmaAdi || ""}
+                    value={selectedDenetci}
+                    isOptionEqualToValue={(option, val) => Number(option.id) === Number(val.id)}
+                    loading={isLoadingList}
+                    getOptionLabel={(option) =>
+                        `${option.firmaUnvani || option.firmaAdi || `Denetçi #${option.id}`} (Eski ID: ${option.id})`
+                    }
+                    renderOption={(props, option) => {
+                        const { key, ...restProps } = props as any;
+                        return (
+                            <Box component="li" key={option.id} {...restProps}>
+                                <Stack direction="row" spacing={1} alignItems="center" justifyContent="space-between" width="100%">
+                                    <Typography variant="body2">
+                                        {option.firmaUnvani || option.firmaAdi} (Eski ID: {option.id})
+                                    </Typography>
+                                    <Chip
+                                        size="small"
+                                        label={`${option.denetciAdminSayisi ?? 0} Ana Kullanıcı`}
+                                        color={(option.denetciAdminSayisi ?? 0) > 0 ? "primary" : "default"}
+                                        variant="outlined"
+                                    />
+                                </Stack>
+                            </Box>
+                        );
+                    }}
                     onChange={handleDenetciChange}
+                    noOptionsText={isLoadingList ? "Yükleniyor..." : "Aktarılacak denetçi bulunamadı"}
                     renderInput={(params) => (
                         <TextField
                             {...params}
                             label="Denetçi Seçiniz"
                             variant="outlined"
                             fullWidth
+                            InputProps={{
+                                ...params.InputProps,
+                                endAdornment: (
+                                    <>
+                                        {isLoadingList ? <CircularProgress color="inherit" size={18} /> : null}
+                                        {params.InputProps.endAdornment}
+                                    </>
+                                ),
+                            }}
                         />
                     )}
                 />
             </Grid>
+
+            {selectedDenetci && (
+                <Grid size={{ xs: 12 }}>
+                    {previewAdminUsers.length > 0 ? (
+                        <Alert severity="info">
+                            <Typography variant="subtitle2" gutterBottom>
+                                Eski sistemdeki DenetciAdmin (Ana Kullanıcı) hesapları da otomatik aktarılacak ({previewAdminUsers.length} kişi):
+                            </Typography>
+                            <Stack spacing={0.5}>
+                                {previewAdminUsers.map((u) => (
+                                    <Typography key={u.id} variant="body2">
+                                        • {u.personelAdi || "Adsız"} ({u.email || "e-posta yok"})
+                                        {u.aktifPasif === false ? " [Pasif]" : ""}
+                                    </Typography>
+                                ))}
+                            </Stack>
+                        </Alert>
+                    ) : (
+                        <Alert severity="warning">
+                            Bu denetçi firması için eski veritabanında DenetciAdmin rolüne sahip ana kullanıcı bulunamadı. Kayıt sonrasında ana kullanıcıyı manuel eklemeniz gerekecektir.
+                        </Alert>
+                    )}
+                </Grid>
+            )}
 
             <Grid size={{ xs: 12, sm: 3 }} display="flex" alignItems="center">
                 <CustomFormLabel htmlFor="firmaAdi" sx={{ mt: 0, mb: { xs: "-10px", sm: 0 } }}>
@@ -210,7 +313,8 @@ const DenetciSecimFormu = () => {
                             setIsSaving(true);
 
                             const payload: any = {
-                                Id: selectedDenetci.id ?? selectedDenetci.Id,
+                                Id: selectedDenetci.id,
+                                LegacyOldDbId: selectedDenetci.id,
                                 FirmaAdi: firmaAdi || null,
                                 FirmaUnvani: firmaUnvani || null,
                                 Adres: adres || null,
@@ -222,21 +326,53 @@ const DenetciSecimFormu = () => {
                                 VergiNo: vergiNo || null,
                                 VergiDairesi: vergiDairesi || null,
                                 TicaretSicilNo: ticaretSicilNo || null,
-                                KayitTarihi: selectedDenetci.kayitTarihi || selectedDenetci.KayitTarihi || null,
-                                ArsivId: selectedDenetci.arsivId || selectedDenetci.ArsivId || null,
-                                Aktifmi: selectedDenetci.aktifmi ?? selectedDenetci.Aktifmi ?? true,
-                                Aciklama: selectedDenetci.aciklama || selectedDenetci.Aciklama || null,
+                                KayitTarihi: selectedDenetci.kayitTarihi || null,
+                                ArsivId: selectedDenetci.arsivId || null,
+                                Aktifmi: selectedDenetci.aktifmi ?? true,
+                                Aciklama: selectedDenetci.aciklama || null,
                             };
 
                             const token = user?.token || "";
                             const result = await importDenetci(token, payload);
-                            if (result === "ok" || result === "already_exists") {
+                            if (result.status === "ok") {
+                                const importedCount = result.data?.importedAdminUsers ?? 0;
+                                const existingCount = result.data?.existingAdminUsers ?? 0;
+                                const totalLinked = importedCount + existingCount;
+                                const odemeText = result.data?.odemeBilgileriImported
+                                    ? " ödeme/kota bilgisiyle"
+                                    : "";
+
+                                enqueueSnackbar(
+                                    totalLinked > 0
+                                        ? `Denetçi${odemeText} ve ${totalLinked} DenetciAdmin (ana kullanıcı) aktarıldı (${importedCount} yeni, ${existingCount} mevcut).`
+                                        : `Denetçi${odemeText} aktarıldı (aktarılan ana kullanıcı yok).`,
+                                    { variant: "success" }
+                                );
+
+                                if (result.data?.skippedUsers && result.data.skippedUsers.length > 0) {
+                                    enqueueSnackbar(
+                                        `Atlanan kullanıcılar: ${result.data.skippedUsers.join(" | ")}`,
+                                        { variant: "warning", autoHideDuration: 8000 }
+                                    );
+                                }
+
+                                resetForm(payload.Id);
+                            } else if (result.status === "already_exists") {
+                                enqueueSnackbar(result.message || "Bu denetçi zaten aktarılmış.", {
+                                    variant: "info",
+                                });
                                 resetForm(payload.Id);
                             } else {
-                                console.error("Denetçi içe aktarma başarısız oldu.");
+                                enqueueSnackbar(
+                                    result.message || "Denetçi içe aktarma başarısız oldu.",
+                                    { variant: "error" }
+                                );
                             }
-                        } catch (err) {
-                            console.error("Kaydet hatası:", err);
+                        } catch (err: any) {
+                            enqueueSnackbar(
+                                err?.message || "Denetçi içe aktarma sırasında hata oluştu.",
+                                { variant: "error" }
+                            );
                         } finally {
                             setIsSaving(false);
                         }

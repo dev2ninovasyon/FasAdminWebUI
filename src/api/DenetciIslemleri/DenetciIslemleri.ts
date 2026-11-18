@@ -17,59 +17,104 @@ export const getDenetciler = async (token: string) => {
   }
 };
 
-export const getOldDbDenetciler = async (token?: string) => {
-  try {
-    const endpoint = `/DataTransfer/Denetciler`;
-    console.log("🔄 getOldDbDenetciler: Request başlatılıyor");
-    console.log("   Endpoint:", endpoint);
-    console.log("   Full URL will be constructed by apiFetch");
-    const response = await apiFetch(`/DataTransfer/Denetciler`, {
-      method: "GET",
-      includeCredentials: false, // ✅ Public endpoint - don't send auth credentials
-    });
+export interface OldDenetciAdminUserPreview {
+  id: number;
+  personelAdi?: string;
+  email?: string;
+  unvani?: string;
+  aktifPasif?: boolean;
+}
 
-    console.log("📊 getOldDbDenetciler: Response status:", response.status, response.statusText);
+export interface OldDenetciListItem {
+  id: number;
+  firmaAdi: string;
+  firmaUnvani: string;
+  adres: string;
+  il: string;
+  tel: string;
+  fax: string;
+  email: string;
+  web: string;
+  vergiNo: string;
+  vergiDairesi: string;
+  ticaretSicilNo: string;
+  kayitTarihi?: string | null;
+  arsivId?: string;
+  aktifmi?: boolean;
+  aciklama?: string;
+  denetciAdminSayisi: number;
+  denetciAdminKullanicilar: OldDenetciAdminUserPreview[];
+}
 
-    if (response.ok) {
-      const data = await response.json();
-      console.log("✅ getOldDbDenetciler: Veri başarıyla alındı, count:", data?.length || 0);
-      console.log("📋 getOldDbDenetciler: Raw data sample:", data?.[0]);
+export interface ImportDenetciResponseData {
+  id?: number;
+  legacyOldDbId?: number;
+  created?: boolean;
+  importedAdminUsers?: number;
+  existingAdminUsers?: number;
+  skippedUsers?: string[];
+  odemeBilgileriImported?: boolean;
+}
 
-      // ✅ Property naming: Backend PascalCase döndürüyor, frontend camelCase bekliyor
-      if (Array.isArray(data)) {
-        const mappedData = data.map((item: any) => ({
-          id: item.id,
-          firmaAdi: item.firmaAdi || item.FirmaAdi || "",
-          firmaUnvani: item.firmaUnvani || item.FirmaUnvani || "",
-          adres: item.adres || item.Adres || "",
-          il: item.il || item.Il || "",
-          tel: item.tel || item.Tel || "",
-          fax: item.fax || item.Fax || "",
-          email: item.email || item.Email || "",
-          web: item.web || item.Web || "",
-          vergiNo: item.vergiNo || item.VergiNo || "",
-          vergiDairesi: item.vergiDairesi || item.VergiDairesi || "",
-          ticaretSicilNo: item.ticaretSicilNo || item.TicaretSicilNo || "",
-          aktifmi: item.aktifmi !== undefined ? item.aktifmi : item.Aktifmi,
-          ...item
-        }));
-        console.log("✅ getOldDbDenetciler: Mapped data sample:", mappedData?.[0]);
-        return mappedData;
-      }
-      return data;
-    } else {
-      const errorText = await response.text();
-      console.error("❌ getOldDbDenetciler: HTTP error", response.status, errorText);
-      return [];
-    }
-  } catch (error: any) {
-    console.error("❌ getOldDbDenetciler: Exception error:", {
-      message: error?.message,
-      stack: error?.stack,
-      name: error?.name
-    });
+export interface ImportDenetciResponse {
+  status: "ok" | "already_exists" | "error";
+  data?: ImportDenetciResponseData;
+  message?: string;
+}
+
+export const getOldDbDenetciler = async (token?: string): Promise<OldDenetciListItem[]> => {
+  const response = await apiFetch(`/DataTransfer/Denetciler`, {
+    method: "GET",
+    token: token || undefined,
+    includeCredentials: true,
+  });
+
+  if (!response.ok) {
+    const errorText = await response.text().catch(() => "");
+    throw new Error(errorText || `Eski denetçi listesi alınamadı (HTTP ${response.status}).`);
+  }
+
+  const data = await response.json();
+  if (!Array.isArray(data)) {
     return [];
   }
+
+  return data.map((item: any) => {
+    const rawAdmins = item.denetciAdminKullanicilar || item.DenetciAdminKullanicilar || [];
+    const denetciAdminKullanicilar: OldDenetciAdminUserPreview[] = Array.isArray(rawAdmins)
+      ? rawAdmins.map((u: any) => ({
+          id: Number(u.id ?? u.Id ?? 0),
+          personelAdi: u.personelAdi ?? u.PersonelAdi ?? "",
+          email: u.email ?? u.Email ?? "",
+          unvani: u.unvani ?? u.Unvani ?? "DenetciAdmin",
+          aktifPasif: u.aktifPasif !== undefined ? u.aktifPasif : u.AktifPasif,
+        }))
+      : [];
+
+    return {
+      ...item,
+      id: Number(item.id ?? item.Id ?? 0),
+      firmaAdi: item.firmaAdi || item.FirmaAdi || "",
+      firmaUnvani: item.firmaUnvani || item.FirmaUnvani || "",
+      adres: item.adres || item.Adres || "",
+      il: item.il || item.Il || "",
+      tel: item.tel || item.Tel || "",
+      fax: item.fax || item.Fax || "",
+      email: item.email || item.Email || "",
+      web: item.web || item.Web || "",
+      vergiNo: item.vergiNo || item.VergiNo || "",
+      vergiDairesi: item.vergiDairesi || item.VergiDairesi || "",
+      ticaretSicilNo: item.ticaretSicilNo || item.TicaretSicilNo || "",
+      kayitTarihi: item.kayitTarihi ?? item.KayitTarihi ?? null,
+      arsivId: item.arsivId || item.ArsivId || "",
+      aktifmi: item.aktifmi !== undefined ? item.aktifmi : item.Aktifmi,
+      aciklama: item.aciklama || item.Aciklama || "",
+      denetciAdminSayisi: Number(
+        item.denetciAdminSayisi ?? item.DenetciAdminSayisi ?? denetciAdminKullanicilar.length
+      ),
+      denetciAdminKullanicilar,
+    };
+  });
 };
 
 export const getDenetciById = async (token: string, id: any) => {
@@ -209,23 +254,50 @@ export const getDenetciKotaGecmisi = async (token: string, denetciId: any) => {
   }
 };
 
-export const importDenetci = async (token: string, denetci: any) => {
+export const importDenetci = async (
+  token: string,
+  denetci: any
+): Promise<ImportDenetciResponse> => {
   try {
     const response = await apiFetch(`/DataTransfer/ImportDenetci`, {
       method: "POST",
-      token: token,
+      token: token || undefined,
+      includeCredentials: true,
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify(denetci),
     });
 
-    if (response.ok) return "ok";
-    if (response.status === 409) return "already_exists";
-    const txt = await response.text();
-    console.error("importDenetci failed", response.status, txt);
-    return false;
-  } catch (error) {
-    console.error("importDenetci error:", error);
-    return false;
+    if (response.ok) {
+      const raw = await response.json().catch(() => undefined);
+      const data: ImportDenetciResponseData | undefined = raw
+        ? {
+            id: raw.id ?? raw.Id,
+            legacyOldDbId: raw.legacyOldDbId ?? raw.LegacyOldDbId,
+            created: raw.created ?? raw.Created,
+            importedAdminUsers: raw.importedAdminUsers ?? raw.ImportedAdminUsers ?? 0,
+            existingAdminUsers: raw.existingAdminUsers ?? raw.ExistingAdminUsers ?? 0,
+            skippedUsers: raw.skippedUsers ?? raw.SkippedUsers ?? [],
+            odemeBilgileriImported:
+              raw.odemeBilgileriImported ?? raw.OdemeBilgileriImported ?? false,
+          }
+        : undefined;
+      return { status: "ok", data };
+    }
+
+    const txt = await response.text().catch(() => "");
+    if (response.status === 409) {
+      return { status: "already_exists", message: txt || "Bu denetçi zaten aktarılmış." };
+    }
+
+    return {
+      status: "error",
+      message: txt || `Denetçi içe aktarma başarısız oldu (HTTP ${response.status}).`,
+    };
+  } catch (error: any) {
+    return {
+      status: "error",
+      message: error?.message || "Denetçi içe aktarma sırasında bağlantı hatası oluştu.",
+    };
   }
 };
 
