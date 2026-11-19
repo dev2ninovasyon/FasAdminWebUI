@@ -1,5 +1,6 @@
 import React, { useState, useEffect } from "react";
 import {
+    Alert,
     Dialog,
     DialogTitle,
     DialogContent,
@@ -10,9 +11,10 @@ import {
     FormControlLabel,
     Checkbox,
 } from "@mui/material";
-import { updateKullanici } from "@/api/KullaniciIslemleri/KullaniciIslemleri";
+import { updateKullaniciDetayli } from "@/api/KullaniciIslemleri/KullaniciIslemleri";
 import { useSelector } from "@/store/hooks";
 import { AppState } from "@/store/store";
+import { enqueueSnackbar } from "notistack";
 
 interface Props {
     open: boolean;
@@ -23,6 +25,7 @@ interface Props {
 
 const KullaniciDuzenleModal = ({ open, onClose, onSuccess, kullanici }: Props) => {
     const user = useSelector((state: AppState) => state.userReducer);
+    const [errorMessage, setErrorMessage] = useState<string | null>(null);
     const [formData, setFormData] = useState<any>({
         unvani: "",
         personelAdi: "",
@@ -35,6 +38,7 @@ const KullaniciDuzenleModal = ({ open, onClose, onSuccess, kullanici }: Props) =
 
     useEffect(() => {
         if (kullanici) {
+            setErrorMessage(null);
             setFormData({
                 unvani: kullanici.unvani || "",
                 personelAdi: kullanici.personelAdi || "",
@@ -56,21 +60,33 @@ const KullaniciDuzenleModal = ({ open, onClose, onSuccess, kullanici }: Props) =
     };
 
     const handleSubmit = async () => {
+        const trimmedEmail = (formData.email || "").trim();
+        if (!trimmedEmail) {
+            setErrorMessage("E-posta adresi zorunludur.");
+            return;
+        }
+
+        setErrorMessage(null);
         try {
-            const result = await updateKullanici(
+            const result = await updateKullaniciDetayli(
                 user.token || "",
                 kullanici.id,
-                formData
+                { ...formData, email: trimmedEmail }
             );
-            if (result) {
+            if (result.ok) {
+                enqueueSnackbar("Kullanıcı güncellendi.", { variant: "success" });
                 onSuccess();
                 onClose();
             } else {
-                alert("Güncelleme sırasında bir hata oluştu.");
+                const msg = result.message || "Güncelleme sırasında bir hata oluştu.";
+                setErrorMessage(msg);
+                enqueueSnackbar(msg, { variant: "error" });
             }
         } catch (error) {
             console.error("Hata:", error);
-            alert("Bir hata oluştu.");
+            const msg = "Bir hata oluştu.";
+            setErrorMessage(msg);
+            enqueueSnackbar(msg, { variant: "error" });
         }
     };
 
@@ -79,6 +95,11 @@ const KullaniciDuzenleModal = ({ open, onClose, onSuccess, kullanici }: Props) =
             <DialogTitle>Kullanıcı Düzenle</DialogTitle>
             <DialogContent dividers>
                 <Grid container spacing={2} sx={{ mt: 1 }}>
+                    {errorMessage && (
+                        <Grid size={{ xs: 12 }}>
+                            <Alert severity="error">{errorMessage}</Alert>
+                        </Grid>
+                    )}
                     <Grid size={{ xs: 12 }}>
                         <TextField
                             fullWidth

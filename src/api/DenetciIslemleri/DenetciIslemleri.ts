@@ -150,7 +150,30 @@ export const createDenetci = async (token: string, createdDenetci: any) => {
   }
 };
 
-export const createKullanici = async (token: string, createdKullanici: any) => {
+export interface KullaniciActionResult {
+  ok: boolean;
+  message?: string;
+}
+
+const parseKullaniciActionError = async (response: Response, fallback: string): Promise<string> => {
+  try {
+    const text = await response.text();
+    if (!text) return fallback;
+    try {
+      const json = JSON.parse(text);
+      return json?.message || json?.Message || json?.title || fallback;
+    } catch {
+      return text;
+    }
+  } catch {
+    return fallback;
+  }
+};
+
+export const createKullaniciDetayli = async (
+  token: string,
+  createdKullanici: any
+): Promise<KullaniciActionResult> => {
   try {
     const response = await apiFetch(`/Kullanici/AnaKullanici`, {
       method: "POST",
@@ -158,11 +181,23 @@ export const createKullanici = async (token: string, createdKullanici: any) => {
       body: JSON.stringify(createdKullanici),
     });
 
-    return response.ok;
+    if (response.ok) {
+      return { ok: true };
+    }
+
+    return {
+      ok: false,
+      message: await parseKullaniciActionError(response, "Kullanıcı eklenemedi."),
+    };
   } catch (error) {
     console.error("Bir hata oluştu:", error);
-    return false;
+    return { ok: false, message: "Kullanıcı eklenirken bağlantı hatası oluştu." };
   }
+};
+
+export const createKullanici = async (token: string, createdKullanici: any) => {
+  const res = await createKullaniciDetayli(token, createdKullanici);
+  return res.ok;
 };
 
 export const updateDenetci = async (

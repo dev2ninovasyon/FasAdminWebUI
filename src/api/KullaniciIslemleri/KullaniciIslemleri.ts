@@ -16,11 +16,31 @@ export const getKullanicilarByDenetciId = async (token: string, denetciId: any) 
     }
 };
 
-export const updateKullanici = async (
+export interface KullaniciMutationResult {
+    ok: boolean;
+    message?: string;
+}
+
+const parseMutationError = async (response: Response, fallback: string): Promise<string> => {
+    try {
+        const text = await response.text();
+        if (!text) return fallback;
+        try {
+            const json = JSON.parse(text);
+            return json?.message || json?.Message || json?.title || fallback;
+        } catch {
+            return text;
+        }
+    } catch {
+        return fallback;
+    }
+};
+
+export const updateKullaniciDetayli = async (
     token: string,
     id: any,
     updatedKullanici: any
-) => {
+): Promise<KullaniciMutationResult> => {
     try {
         const response = await apiFetch(`/Kullanici/${id}`, {
             method: "PUT",
@@ -28,11 +48,27 @@ export const updateKullanici = async (
             body: JSON.stringify(updatedKullanici),
         });
 
-        return response.ok;
+        if (response.ok) {
+            return { ok: true };
+        }
+
+        return {
+            ok: false,
+            message: await parseMutationError(response, "Güncelleme sırasında bir hata oluştu."),
+        };
     } catch (error) {
         console.error("Bir hata oluştu:", error);
-        return false;
+        return { ok: false, message: "Güncelleme sırasında bağlantı hatası oluştu." };
     }
+};
+
+export const updateKullanici = async (
+    token: string,
+    id: any,
+    updatedKullanici: any
+) => {
+    const result = await updateKullaniciDetayli(token, id, updatedKullanici);
+    return result.ok;
 };
 
 export const updateKullaniciSifre = async (
