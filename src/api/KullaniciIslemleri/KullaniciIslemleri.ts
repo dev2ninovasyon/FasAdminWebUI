@@ -27,17 +27,28 @@ export interface KullaniciDataActionResult<T> {
     message?: string;
 }
 
+export interface AdminRolOption {
+    id: number;
+    adi: string;
+}
+
 export interface AdminKullaniciDto {
     id: number;
     denetciId: number;
+    denetciFirmaAdi?: string;
     personelAdi?: string;
     email?: string;
     unvani?: string;
     bdSicilNo?: string;
     tel?: string;
     gsm?: string;
+    personelDosyaArsivId?: string;
+    legacyOldDbId?: number | null;
     aktifPasif: boolean;
     isDenetciAdmin: boolean;
+    kurulumTamamlandi?: boolean | null;
+    turTamamlandi?: boolean | null;
+    rolIds?: number[];
     roller?: string[];
 }
 
@@ -49,21 +60,49 @@ export interface AdminKullaniciCreatePayload {
     bdSicilNo?: string;
     tel?: string;
     gsm?: string;
+    personelDosyaArsivId?: string;
+    legacyOldDbId?: number | null;
     sifre: string;
     aktifPasif: boolean;
     isDenetciAdmin: boolean;
+    rolIds?: number[];
 }
 
 export interface AdminKullaniciUpdatePayload {
+    denetciId?: number;
     personelAdi: string;
     email: string;
     unvani?: string;
     bdSicilNo?: string;
     tel?: string;
     gsm?: string;
+    personelDosyaArsivId?: string;
+    legacyOldDbId?: number | null;
+    clearLegacyOldDbId?: boolean;
+    yeniSifre?: string;
+    yeniSifreTekrar?: string;
     aktifPasif: boolean;
     isDenetciAdmin: boolean;
+    rolIds?: number[];
+    kurulumTamamlandi?: boolean;
+    turTamamlandi?: boolean;
 }
+
+export const DEFAULT_ROL_SECENEKLERI: AdminRolOption[] = [
+    { id: 8, adi: "DenetciAdmin" },
+    { id: 2, adi: "YonetimKuruluBaskani" },
+    { id: 3, adi: "SorumluDenetci" },
+    { id: 4, adi: "KaliteKontrolSorumluDenetci" },
+    { id: 5, adi: "IzlemeSorumluDenetci" },
+    { id: 6, adi: "Denetci" },
+    { id: 7, adi: "DenetciYardimcisi" },
+    { id: 9, adi: "FinansalTabloKontrol" },
+];
+
+export const syncDenetciAdminRoleId = (rolIds: number[], isDenetciAdmin: boolean): number[] => {
+    const filtered = rolIds.filter((id) => id !== 8);
+    return isDenetciAdmin ? [8, ...filtered] : filtered;
+};
 
 export const DEFAULT_UNVAN_SECENEKLERI: string[] = [
     "Yönetim Kurulu Başkanı",
@@ -93,6 +132,31 @@ const parseMutationError = async (response: Response, fallback: string): Promise
         }
     } catch {
         return fallback;
+    }
+};
+
+export const getAdminRoller = async (token: string): Promise<AdminRolOption[]> => {
+    try {
+        const response = await apiFetch(`/Kullanici/Admin/Roller`, {
+            method: "GET",
+            token: token,
+        });
+        if (!response.ok) {
+            return DEFAULT_ROL_SECENEKLERI;
+        }
+        const data = await response.json();
+        if (!Array.isArray(data) || data.length === 0) {
+            return DEFAULT_ROL_SECENEKLERI;
+        }
+        const options = data
+            .map((r: any) => ({
+                id: Number(r?.id ?? r?.Id ?? 0),
+                adi: String(r?.adi ?? r?.Adi ?? "").trim(),
+            }))
+            .filter((r) => r.id > 0 && r.adi);
+        return options.length > 0 ? options : DEFAULT_ROL_SECENEKLERI;
+    } catch {
+        return DEFAULT_ROL_SECENEKLERI;
     }
 };
 

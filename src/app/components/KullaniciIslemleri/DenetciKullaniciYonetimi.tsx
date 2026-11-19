@@ -46,9 +46,12 @@ import BlankCard from "@/app/components/Shared/BlankCard";
 import { getDenetciById, getDenetciler } from "@/api/DenetciIslemleri/DenetciIslemleri";
 import {
     AdminKullaniciDto,
+    AdminRolOption,
+    DEFAULT_ROL_SECENEKLERI,
     DEFAULT_UNVAN_SECENEKLERI,
     deleteAdminKullanici,
     getAdminKullanicilarByDenetciId,
+    getAdminRoller,
     getUnvanlar,
     toggleAdminKullaniciAktifPasif,
 } from "@/api/KullaniciIslemleri/KullaniciIslemleri";
@@ -90,6 +93,7 @@ const DenetciKullaniciYonetimi = ({
     );
     const [selectedDenetciDetail, setSelectedDenetciDetail] = useState<any>(null);
     const [unvanSecenekleri, setUnvanSecenekleri] = useState<string[]>(DEFAULT_UNVAN_SECENEKLERI);
+    const [rolSecenekleri, setRolSecenekleri] = useState<AdminRolOption[]>(DEFAULT_ROL_SECENEKLERI);
 
     const [rows, setRows] = useState<AdminKullaniciDto[]>([]);
     const [loadingUsers, setLoadingUsers] = useState(false);
@@ -132,15 +136,17 @@ const DenetciKullaniciYonetimi = ({
             if (!token) return;
             setLoadingFirmalar(true);
             try {
-                const [firms, unvanlar] = await Promise.all([
-                    hideFirmSelector ? Promise.resolve([]) : getDenetciler(token),
+                const [firms, unvanlar, roller] = await Promise.all([
+                    getDenetciler(token),
                     getUnvanlar(token),
+                    getAdminRoller(token),
                 ]);
                 if (cancelled) return;
-                if (!hideFirmSelector && Array.isArray(firms)) {
+                if (Array.isArray(firms)) {
                     setDenetciFirmalar(firms);
                 }
                 setUnvanSecenekleri(unvanlar);
+                setRolSecenekleri(roller);
             } finally {
                 if (!cancelled) {
                     setLoadingFirmalar(false);
@@ -249,6 +255,7 @@ const DenetciKullaniciYonetimi = ({
                 (row.email || "").toLowerCase().includes(needle) ||
                 (row.unvani || "").toLowerCase().includes(needle) ||
                 (row.bdSicilNo || "").toLowerCase().includes(needle) ||
+                (row.personelDosyaArsivId || "").toLowerCase().includes(needle) ||
                 (row.tel || "").toLowerCase().includes(needle) ||
                 (row.gsm || "").toLowerCase().includes(needle)
             );
@@ -635,9 +642,16 @@ const DenetciKullaniciYonetimi = ({
                                                     <Typography variant="subtitle2" fontWeight={600}>
                                                         {row.personelAdi || "İsimsiz Kullanıcı"}
                                                     </Typography>
-                                                    {row.bdSicilNo ? (
+                                                    {row.bdSicilNo || row.personelDosyaArsivId ? (
                                                         <Typography variant="caption" color="text.secondary">
-                                                            BD Sicil: {row.bdSicilNo}
+                                                            {[
+                                                                row.bdSicilNo ? `BD Sicil: ${row.bdSicilNo}` : null,
+                                                                row.personelDosyaArsivId
+                                                                    ? `Arşiv: ${row.personelDosyaArsivId}`
+                                                                    : null,
+                                                            ]
+                                                                .filter(Boolean)
+                                                                .join(" • ")}
                                                         </Typography>
                                                     ) : null}
                                                 </Box>
@@ -664,12 +678,24 @@ const DenetciKullaniciYonetimi = ({
                                             </Box>
                                         </TableCell>
                                         <TableCell align="center">
-                                            <Chip
-                                                size="small"
-                                                label={row.isDenetciAdmin ? "DenetciAdmin" : "Kullanıcı"}
-                                                color={row.isDenetciAdmin ? "primary" : "default"}
-                                                variant={row.isDenetciAdmin ? "filled" : "outlined"}
-                                            />
+                                            <Stack direction="row" spacing={0.5} justifyContent="center" flexWrap="wrap" useFlexGap>
+                                                <Chip
+                                                    size="small"
+                                                    label={row.isDenetciAdmin ? "DenetciAdmin" : "Kullanıcı"}
+                                                    color={row.isDenetciAdmin ? "primary" : "default"}
+                                                    variant={row.isDenetciAdmin ? "filled" : "outlined"}
+                                                />
+                                                {(row.roller || [])
+                                                    .filter((r) => r !== "DenetciAdmin")
+                                                    .map((rol) => (
+                                                        <Chip
+                                                            key={rol}
+                                                            size="small"
+                                                            label={rol}
+                                                            variant="outlined"
+                                                        />
+                                                    ))}
+                                            </Stack>
                                         </TableCell>
                                         <TableCell align="center">
                                             <Chip
@@ -741,6 +767,7 @@ const DenetciKullaniciYonetimi = ({
                 denetciId={selectedDenetciId}
                 firmaAdi={firmDisplayName}
                 unvanSecenekleri={unvanSecenekleri}
+                rolSecenekleri={rolSecenekleri}
                 defaultIsDenetciAdmin={defaultAddAdmin}
                 onClose={() => setIsAddModalOpen(false)}
                 onSuccess={fetchUsers}
@@ -751,7 +778,9 @@ const DenetciKullaniciYonetimi = ({
                 onClose={() => setEditTarget(null)}
                 onSuccess={fetchUsers}
                 kullanici={editTarget}
+                denetciFirmalar={denetciFirmalar}
                 unvanSecenekleri={unvanSecenekleri}
+                rolSecenekleri={rolSecenekleri}
                 isLastActiveAdmin={Boolean(
                     editTarget?.isDenetciAdmin &&
                         editTarget?.aktifPasif &&
