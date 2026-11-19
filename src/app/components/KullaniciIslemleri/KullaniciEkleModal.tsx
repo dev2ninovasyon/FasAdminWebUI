@@ -1,11 +1,12 @@
 "use client";
 
-import React, { useEffect, useState } from "react";
+import React, { useEffect, useMemo, useState } from "react";
 import {
     Alert,
     Autocomplete,
     Box,
     Button,
+    Chip,
     Dialog,
     DialogActions,
     DialogContent,
@@ -21,7 +22,12 @@ import {
 import { alpha } from "@mui/material/styles";
 import { IconEye, IconEyeOff } from "@tabler/icons-react";
 import { enqueueSnackbar } from "notistack";
-import { createAdminKullanici } from "@/api/KullaniciIslemleri/KullaniciIslemleri";
+import {
+    AdminRolOption,
+    DEFAULT_ROL_SECENEKLERI,
+    createAdminKullanici,
+    syncDenetciAdminRoleId,
+} from "@/api/KullaniciIslemleri/KullaniciIslemleri";
 import PasswordPolicyChecker from "@/components/PasswordPolicy/PasswordPolicyChecker";
 import { validatePassword } from "@/utils/passwordPolicy";
 import { useSelector } from "@/store/hooks";
@@ -32,6 +38,7 @@ interface Props {
     denetciId: number | null;
     firmaAdi?: string;
     unvanSecenekleri: string[];
+    rolSecenekleri?: AdminRolOption[];
     defaultIsDenetciAdmin?: boolean;
     onClose: () => void;
     onSuccess: () => void;
@@ -44,9 +51,12 @@ const initialState = (defaultAdmin: boolean) => ({
     bdSicilNo: "",
     tel: "",
     gsm: "",
+    personelDosyaArsivId: "",
+    legacyOldDbId: "",
     sifre: "",
     aktifPasif: true,
     isDenetciAdmin: defaultAdmin,
+    rolIds: defaultAdmin ? [8] : [],
 });
 
 const KullaniciEkleModal = ({
@@ -54,6 +64,7 @@ const KullaniciEkleModal = ({
     denetciId,
     firmaAdi,
     unvanSecenekleri,
+    rolSecenekleri = DEFAULT_ROL_SECENEKLERI,
     defaultIsDenetciAdmin = false,
     onClose,
     onSuccess,
@@ -73,6 +84,11 @@ const KullaniciEkleModal = ({
         }
     }, [open, defaultIsDenetciAdmin]);
 
+    const selectedRoles = useMemo(
+        () => rolSecenekleri.filter((r) => formData.rolIds.includes(r.id)),
+        [rolSecenekleri, formData.rolIds]
+    );
+
     const handleSubmit = async () => {
         if (!denetciId) {
             setErrorMessage("Önce bir denetçi firma seçilmelidir.");
@@ -81,6 +97,8 @@ const KullaniciEkleModal = ({
 
         const personelAdi = formData.personelAdi.trim();
         const email = formData.email.trim();
+        const legacyText = formData.legacyOldDbId.trim();
+        const parsedLegacyId = legacyText ? Number(legacyText) : null;
 
         if (!personelAdi) {
             setErrorMessage("Personel adı zorunludur.");
@@ -88,6 +106,10 @@ const KullaniciEkleModal = ({
         }
         if (!email) {
             setErrorMessage("E-posta adresi zorunludur.");
+            return;
+        }
+        if (legacyText && (!Number.isInteger(parsedLegacyId) || (parsedLegacyId ?? 0) <= 0)) {
+            setErrorMessage("Eski Sistem ID pozitif bir tam sayı olmalıdır.");
             return;
         }
 
@@ -108,9 +130,12 @@ const KullaniciEkleModal = ({
                 bdSicilNo: formData.bdSicilNo.trim() || undefined,
                 tel: formData.tel.trim() || undefined,
                 gsm: formData.gsm.trim() || undefined,
+                personelDosyaArsivId: formData.personelDosyaArsivId.trim() || undefined,
+                legacyOldDbId: parsedLegacyId,
                 sifre: formData.sifre,
                 aktifPasif: formData.aktifPasif,
                 isDenetciAdmin: formData.isDenetciAdmin,
+                rolIds: formData.rolIds,
             });
 
             if (result.ok) {
@@ -128,7 +153,7 @@ const KullaniciEkleModal = ({
     };
 
     return (
-        <Dialog open={open} onClose={isSubmitting ? undefined : onClose} fullWidth maxWidth="sm">
+        <Dialog open={open} onClose={isSubmitting ? undefined : onClose} fullWidth maxWidth="md">
             <DialogTitle>
                 Yeni Kullanıcı Ekle
                 {firmaAdi ? (
@@ -217,6 +242,66 @@ const KullaniciEkleModal = ({
                         />
                     </Grid>
 
+                    <Grid size={{ xs: 12, sm: 6 }}>
+                        <TextField
+                            fullWidth
+                            label="Personel Dosya Arşiv ID"
+                            value={formData.personelDosyaArsivId}
+                            onChange={(e) =>
+                                setFormData((prev) => ({ ...prev, personelDosyaArsivId: e.target.value }))
+                            }
+                        />
+                    </Grid>
+
+                    <Grid size={{ xs: 12, sm: 6 }}>
+                        <TextField
+                            fullWidth
+                            label="Eski Sistem (Legacy) ID"
+                            value={formData.legacyOldDbId}
+                            onChange={(e) =>
+                                setFormData((prev) => ({ ...prev, legacyOldDbId: e.target.value }))
+                            }
+                            placeholder="Opsiyonel sayısal kimlik"
+                        />
+                    </Grid>
+
+                    <Grid size={{ xs: 12 }}>
+                        <Autocomplete
+                            multiple
+                            options={rolSecenekleri}
+                            value={selectedRoles}
+                            getOptionLabel={(option) => option.adi}
+                            isOptionEqualToValue={(option, value) => option.id === value.id}
+                            onChange={(_, newValues) => {
+                                const nextIds = newValues.map((v) => v.id);
+                                setFormData((prev) => ({
+                                    ...prev,
+                                    rolIds: nextIds,
+                                    isDenetciAdmin: nextIds.includes(8),
+                                }));
+                            }}
+                            renderTags={(value, getTagProps) =>
+                                value.map((option, index) => (
+                                    <Chip
+                                        {...getTagProps({ index })}
+                                        key={option.id}
+                                        size="small"
+                                        label={option.adi}
+                                        color={option.id === 8 ? "primary" : "default"}
+                                    />
+                                ))
+                            }
+                            renderInput={(params) => (
+                                <TextField
+                                    {...params}
+                                    fullWidth
+                                    label="Firma İçi Roller"
+                                    placeholder="Kullanıcıya atanacak rolleri seçin"
+                                />
+                            )}
+                        />
+                    </Grid>
+
                     <Grid size={{ xs: 12 }}>
                         <TextField
                             fullWidth
@@ -260,12 +345,14 @@ const KullaniciEkleModal = ({
                                 control={
                                     <Switch
                                         checked={formData.isDenetciAdmin}
-                                        onChange={(e) =>
+                                        onChange={(e) => {
+                                            const checked = e.target.checked;
                                             setFormData((prev) => ({
                                                 ...prev,
-                                                isDenetciAdmin: e.target.checked,
-                                            }))
-                                        }
+                                                isDenetciAdmin: checked,
+                                                rolIds: syncDenetciAdminRoleId(prev.rolIds, checked),
+                                            }));
+                                        }}
                                         color="primary"
                                     />
                                 }
