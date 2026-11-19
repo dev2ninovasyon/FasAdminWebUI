@@ -1,46 +1,46 @@
 "use client";
 
-import { Grid } from "@mui/material";
-import ParentCard from "@/app/components/Shared/ParentCard";
+import { use } from "react";
+import { usePageTitle } from "@/hooks/usePageTitle";
 import PageContainer from "@/app/components/Container/PageContainer";
 import Breadcrumb from "@/app/components/Layout/Shared/Breadcrumb/Breadcrumb";
-import KullaniciEkleForm from "@/app/components/DenetciIslemleri/KullaniciEkleForm";
+import ParentCard from "@/app/components/Shared/ParentCard";
+import DenetciKullaniciYonetimi from "@/app/components/KullaniciIslemleri/DenetciKullaniciYonetimi";
 
 const BCrumb = [
-  {
-    to: "/Anasayfa",
-    title: "Admin Menü",
-  },
-  {
-    to: "/DenetciFirmaIslemleri",
-    title: "Denetçi Firma İşlemleri",
-  },
+    {
+        to: "/Anasayfa",
+        title: "Admin Menü",
+    },
+    {
+        to: "/DenetciFirmaIslemleri",
+        title: "Denetçi Firma İşlemleri",
+    },
+    {
+        title: "Kullanıcı İşlemleri",
+    },
 ];
 
-import { use } from "react";
-
 const Page = (props: { params: Promise<{ id: string }> }) => {
-  const params = use(props.params);
-  const id = params.id;
+    const params = use(props.params);
+    const denetciId = Number(params.id);
+    usePageTitle("Kullanıcı Ekle");
 
-  return (
-    <PageContainer title="Kullanıcı Ekle" description="this is Kullanıcı Ekle">
-      <ParentCard title="Kullanıcı Ekle">
-        <Grid container spacing={3}>
-          <Grid size={{ xs: 12 }}>
-            <Breadcrumb title="Kullanıcı Ekle" items={BCrumb} />
-            <Grid container spacing={3}>
-              <Grid size={{ xs: 12 }}>
-                <ParentCard title="Yeni Kullanıcı">
-                  <KullaniciEkleForm id={id} />
-                </ParentCard>
-              </Grid>
-            </Grid>
-          </Grid>
-        </Grid>
-      </ParentCard>
-    </PageContainer>
-  );
+    return (
+        <PageContainer
+            title="Denetçi Kullanıcı İşlemleri"
+            description="Denetçi firmaya yeni kullanıcı ekleyin ve mevcut kullanıcıları yönetin"
+        >
+            <Breadcrumb title="Denetçi Kullanıcı İşlemleri" items={BCrumb} />
+            <ParentCard title="Denetçi Firma Kullanıcı Yönetimi">
+                <DenetciKullaniciYonetimi
+                    initialDenetciId={Number.isFinite(denetciId) && denetciId > 0 ? denetciId : null}
+                    openAddOnMount
+                    showBackToFirms
+                />
+            </ParentCard>
+        </PageContainer>
+    );
 };
 
 export default Page;

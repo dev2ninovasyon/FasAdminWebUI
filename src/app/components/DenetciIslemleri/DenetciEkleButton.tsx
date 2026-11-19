@@ -1,5 +1,5 @@
 import { Button, Stack } from "@mui/material";
-import { IconPlus, IconSearch } from "@tabler/icons-react";
+import { IconPlus, IconSearch, IconUsers } from "@tabler/icons-react";
 import { useRouter } from "next/navigation";
 
 const DenetciEkleButton = () => {
@@ -13,11 +13,17 @@ const DenetciEkleButton = () => {
     router.push("/DenetciFirmaIslemleri/DenetciSecimi");
   };
 
+  const handleUserOperationsClick = () => {
+    router.push("/KullaniciIslemleri");
+  };
+
   return (
     <>
       <Stack
         spacing={2}
         direction="row"
+        flexWrap="wrap"
+        useFlexGap
         justifyContent="start"
         marginBottom={4}
       >
@@ -36,6 +42,14 @@ const DenetciEkleButton = () => {
           variant="contained"
         >
           Denetçi Getir
+        </Button>
+        <Button
+          color="info"
+          onClick={handleUserOperationsClick}
+          startIcon={<IconUsers width={18} />}
+          variant="outlined"
+        >
+          Kullanıcı İşlemleri
         </Button>
       </Stack>
     </>

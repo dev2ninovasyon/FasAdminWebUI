@@ -1,80 +1,113 @@
-import React, { useState, useEffect } from "react";
+"use client";
+
+import React, { useEffect, useState } from "react";
 import {
     Alert,
-    Dialog,
-    DialogTitle,
-    DialogContent,
-    DialogActions,
+    Autocomplete,
+    Box,
     Button,
-    Grid,
-    TextField,
+    Dialog,
+    DialogActions,
+    DialogContent,
+    DialogTitle,
     FormControlLabel,
-    Checkbox,
+    Grid,
+    Switch,
+    TextField,
+    Typography,
 } from "@mui/material";
-import { updateKullaniciDetayli } from "@/api/KullaniciIslemleri/KullaniciIslemleri";
+import { alpha } from "@mui/material/styles";
+import { enqueueSnackbar } from "notistack";
+import {
+    AdminKullaniciDto,
+    DEFAULT_UNVAN_SECENEKLERI,
+    updateAdminKullanici,
+} from "@/api/KullaniciIslemleri/KullaniciIslemleri";
 import { useSelector } from "@/store/hooks";
 import { AppState } from "@/store/store";
-import { enqueueSnackbar } from "notistack";
 
 interface Props {
     open: boolean;
     onClose: () => void;
     onSuccess: () => void;
-    kullanici: any;
+    kullanici: AdminKullaniciDto | any;
+    unvanSecenekleri?: string[];
+    isLastActiveAdmin?: boolean;
 }
 
-const KullaniciDuzenleModal = ({ open, onClose, onSuccess, kullanici }: Props) => {
+const KullaniciDuzenleModal = ({
+    open,
+    onClose,
+    onSuccess,
+    kullanici,
+    unvanSecenekleri = DEFAULT_UNVAN_SECENEKLERI,
+    isLastActiveAdmin = false,
+}: Props) => {
     const user = useSelector((state: AppState) => state.userReducer);
     const [errorMessage, setErrorMessage] = useState<string | null>(null);
-    const [formData, setFormData] = useState<any>({
-        unvani: "",
+    const [isSubmitting, setIsSubmitting] = useState(false);
+    const [formData, setFormData] = useState({
         personelAdi: "",
+        email: "",
+        unvani: "",
+        bdSicilNo: "",
         tel: "",
         gsm: "",
-        bdSicilNo: "",
-        email: "",
         aktifPasif: true,
+        isDenetciAdmin: false,
     });
 
     useEffect(() => {
-        if (kullanici) {
+        if (open && kullanici) {
             setErrorMessage(null);
+            setIsSubmitting(false);
             setFormData({
-                unvani: kullanici.unvani || "",
                 personelAdi: kullanici.personelAdi || "",
+                email: kullanici.email || "",
+                unvani: kullanici.unvani || "",
+                bdSicilNo: kullanici.bdSicilNo || "",
                 tel: kullanici.tel || "",
                 gsm: kullanici.gsm || "",
-                bdSicilNo: kullanici.bdSicilNo || "",
-                email: kullanici.email || "",
                 aktifPasif: kullanici.aktifPasif !== false,
+                isDenetciAdmin: Boolean(kullanici.isDenetciAdmin),
             });
         }
-    }, [kullanici]);
+    }, [open, kullanici]);
 
-    const handleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-        const { name, value, type, checked } = e.target;
-        setFormData((prev: any) => ({
-            ...prev,
-            [name]: type === "checkbox" ? checked : value,
-        }));
-    };
+    const showLastAdminWarning =
+        isLastActiveAdmin && (!formData.isDenetciAdmin || !formData.aktifPasif);
 
     const handleSubmit = async () => {
-        const trimmedEmail = (formData.email || "").trim();
-        if (!trimmedEmail) {
+        if (!kullanici?.id) return;
+
+        const personelAdi = formData.personelAdi.trim();
+        const email = formData.email.trim();
+
+        if (!personelAdi) {
+            setErrorMessage("Personel adı zorunludur.");
+            return;
+        }
+        if (!email) {
             setErrorMessage("E-posta adresi zorunludur.");
             return;
         }
 
         setErrorMessage(null);
+        setIsSubmitting(true);
         try {
-            const result = await updateKullaniciDetayli(
-                user.token || "",
-                kullanici.id,
-                { ...formData, email: trimmedEmail }
-            );
+            const result = await updateAdminKullanici(user.token || "", Number(kullanici.id), {
+                personelAdi,
+                email,
+                unvani: formData.unvani.trim() || undefined,
+                bdSicilNo: formData.bdSicilNo.trim() || undefined,
+                tel: formData.tel.trim() || undefined,
+                gsm: formData.gsm.trim() || undefined,
+                aktifPasif: formData.aktifPasif,
+                isDenetciAdmin: formData.isDenetciAdmin,
+            });
+
             if (result.ok) {
-                enqueueSnackbar("Kullanıcı güncellendi.", { variant: "success" });
+                enqueueSnackbar("Kullanıcı bilgileri güncellendi.", { variant: "success" });
                 onSuccess();
                 onClose();
             } else {
@@ -84,94 +117,185 @@ const KullaniciDuzenleModal = ({ open, onClose, onSuccess, kullanici }: Props) =
             }
         } catch (error) {
             console.error("Hata:", error);
-            const msg = "Bir hata oluştu.";
+            const msg = "Güncelleme sırasında beklenmeyen bir hata oluştu.";
             setErrorMessage(msg);
             enqueueSnackbar(msg, { variant: "error" });
+        } finally {
+            setIsSubmitting(false);
         }
     };
 
     return (
-        <Dialog open={open} onClose={onClose} fullWidth maxWidth="sm">
-            <DialogTitle>Kullanıcı Düzenle</DialogTitle>
+        <Dialog open={open} onClose={isSubmitting ? undefined : onClose} fullWidth maxWidth="sm">
+            <DialogTitle>
+                Kullanıcı Düzenle
+                {kullanici?.personelAdi ? (
+                    <Typography variant="body2" color="text.secondary" sx={{ mt: 0.5 }}>
+                        {kullanici.personelAdi}
+                    </Typography>
+                ) : null}
+            </DialogTitle>
             <DialogContent dividers>
-                <Grid container spacing={2} sx={{ mt: 1 }}>
+                <Grid container spacing={2} sx={{ mt: 0.5 }}>
                     {errorMessage && (
                         <Grid size={{ xs: 12 }}>
                             <Alert severity="error">{errorMessage}</Alert>
                         </Grid>
                     )}
-                    <Grid size={{ xs: 12 }}>
-                        <TextField
-                            fullWidth
-                            label="Personel Adı"
-                            name="personelAdi"
-                            value={formData.personelAdi}
-                            onChange={handleChange}
-                        />
-                    </Grid>
+
+                    {showLastAdminWarning && (
+                        <Grid size={{ xs: 12 }}>
+                            <Alert severity="warning">
+                                Dikkat: Bu kullanıcı firmanın son aktif DenetciAdmin (Ana Kullanıcı)
+                                hesabıdır. Değişikliği kaydederseniz firmada aktif Ana Kullanıcı
+                                kalmayacaktır.
+                            </Alert>
+                        </Grid>
+                    )}
+
                     <Grid size={{ xs: 12, sm: 6 }}>
                         <TextField
                             fullWidth
-                            label="Unvanı"
-                            name="unvani"
-                            value={formData.unvani}
-                            onChange={handleChange}
+                            required
+                            label="Personel Adı"
+                            value={formData.personelAdi}
+                            onChange={(e) =>
+                                setFormData((prev) => ({ ...prev, personelAdi: e.target.value }))
+                            }
                         />
                     </Grid>
+
+                    <Grid size={{ xs: 12, sm: 6 }}>
+                        <TextField
+                            fullWidth
+                            required
+                            type="email"
+                            label="E-posta"
+                            value={formData.email}
+                            onChange={(e) =>
+                                setFormData((prev) => ({ ...prev, email: e.target.value }))
+                            }
+                        />
+                    </Grid>
+
+                    <Grid size={{ xs: 12, sm: 6 }}>
+                        <Autocomplete
+                            freeSolo
+                            options={unvanSecenekleri}
+                            value={formData.unvani}
+                            onInputChange={(_, newValue) =>
+                                setFormData((prev) => ({ ...prev, unvani: newValue }))
+                            }
+                            renderInput={(params) => (
+                                <TextField {...params} fullWidth label="Ünvanı" placeholder="Seçin veya yazın" />
+                            )}
+                        />
+                    </Grid>
+
                     <Grid size={{ xs: 12, sm: 6 }}>
                         <TextField
                             fullWidth
                             label="BD Sicil No"
-                            name="bdSicilNo"
                             value={formData.bdSicilNo}
-                            onChange={handleChange}
+                            onChange={(e) =>
+                                setFormData((prev) => ({ ...prev, bdSicilNo: e.target.value }))
+                            }
                         />
                     </Grid>
+
                     <Grid size={{ xs: 12, sm: 6 }}>
                         <TextField
                             fullWidth
                             label="Telefon"
-                            name="tel"
                             value={formData.tel}
-                            onChange={handleChange}
+                            onChange={(e) =>
+                                setFormData((prev) => ({ ...prev, tel: e.target.value }))
+                            }
                         />
                     </Grid>
+
                     <Grid size={{ xs: 12, sm: 6 }}>
                         <TextField
                             fullWidth
                             label="GSM"
-                            name="gsm"
                             value={formData.gsm}
-                            onChange={handleChange}
-                        />
-                    </Grid>
-                    <Grid size={{ xs: 12 }}>
-                        <TextField
-                            fullWidth
-                            label="Email"
-                            name="email"
-                            value={formData.email}
-                            onChange={handleChange}
-                        />
-                    </Grid>
-                    <Grid size={{ xs: 12 }}>
-                        <FormControlLabel
-                            control={
-                                <Checkbox
-                                    name="aktifPasif"
-                                    checked={formData.aktifPasif}
-                                    onChange={handleChange}
-                                />
+                            onChange={(e) =>
+                                setFormData((prev) => ({ ...prev, gsm: e.target.value }))
                             }
-                            label="Aktif"
                         />
+                    </Grid>
+
+                    <Grid size={{ xs: 12, sm: 6 }}>
+                        <Box
+                            sx={{
+                                p: 1.5,
+                                borderRadius: 1,
+                                border: "1px solid",
+                                borderColor: formData.isDenetciAdmin ? "primary.main" : "divider",
+                                bgcolor: (theme) =>
+                                    formData.isDenetciAdmin
+                                        ? alpha(theme.palette.primary.main, 0.08)
+                                        : "transparent",
+                            }}
+                        >
+                            <FormControlLabel
+                                control={
+                                    <Switch
+                                        checked={formData.isDenetciAdmin}
+                                        onChange={(e) =>
+                                            setFormData((prev) => ({
+                                                ...prev,
+                                                isDenetciAdmin: e.target.checked,
+                                            }))
+                                        }
+                                        color="primary"
+                                    />
+                                }
+                                label="Ana Kullanıcı (DenetciAdmin)"
+                            />
+                            <Typography variant="caption" color="text.secondary" display="block">
+                                Firma içi kullanıcı ve yetki yönetimi yapabilir.
+                            </Typography>
+                        </Box>
+                    </Grid>
+
+                    <Grid size={{ xs: 12, sm: 6 }}>
+                        <Box
+                            sx={{
+                                p: 1.5,
+                                borderRadius: 1,
+                                border: "1px solid",
+                                borderColor: "divider",
+                            }}
+                        >
+                            <FormControlLabel
+                                control={
+                                    <Switch
+                                        checked={formData.aktifPasif}
+                                        onChange={(e) =>
+                                            setFormData((prev) => ({
+                                                ...prev,
+                                                aktifPasif: e.target.checked,
+                                            }))
+                                        }
+                                        color="success"
+                                    />
+                                }
+                                label={formData.aktifPasif ? "Aktif Hesap" : "Pasif Hesap"}
+                            />
+                            <Typography variant="caption" color="text.secondary" display="block">
+                                Pasif hesaplar sisteme giriş yapamaz.
+                            </Typography>
+                        </Box>
                     </Grid>
                 </Grid>
             </DialogContent>
-            <DialogActions>
-                <Button onClick={onClose}>İptal</Button>
-                <Button variant="contained" color="primary" onClick={handleSubmit}>
-                    Kaydet
+            <DialogActions sx={{ px: 3, py: 2 }}>
+                <Button onClick={onClose} disabled={isSubmitting}>
+                    İptal
+                </Button>
+                <Button variant="contained" color="primary" onClick={handleSubmit} disabled={isSubmitting}>
+                    {isSubmitting ? "Kaydediliyor..." : "Kaydet"}
                 </Button>
             </DialogActions>
         </Dialog>
