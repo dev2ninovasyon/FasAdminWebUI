@@ -46,6 +46,12 @@ const Menuitems: MenuitemsType[] = [
         icon: IconPoint,
         href: "/DenetciFirmaIslemleri",
       },
+      {
+        id: uniqueId(),
+        title: "Denetçi Kullanıcı İşlemleri",
+        icon: IconPoint,
+        href: "/KullaniciIslemleri",
+      },
     ],
   },
   {

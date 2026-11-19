@@ -286,7 +286,7 @@ const DenetciTable = () => {
     }
 
     if (action === "kullanici") {
-      router.push(`/DenetciFirmaIslemleri/KullaniciEkle/${selectedRow.id}`);
+      router.push(`/DenetciFirmaIslemleri/KullaniciIslemleri/${selectedRow.id}`);
       return;
     }
 
@@ -415,7 +415,7 @@ const DenetciTable = () => {
           >
             {[
               { label: "Ödeme", action: "odeme", color: "text.primary" },
-              { label: "Kullanıcı", action: "kullanici", color: "text.primary" },
+              { label: "Kullanıcı İşlemleri", action: "kullanici", color: "text.primary" },
               { label: "Düzenle", action: "duzenle", color: "text.primary" },
               { label: "Detay", action: "detay", color: "text.primary" },
               { label: "Sil", action: "sil", color: "error.main" },
