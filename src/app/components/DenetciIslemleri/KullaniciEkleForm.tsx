@@ -1,11 +1,12 @@
-import { Grid, Button } from "@mui/material";
+import { Alert, Grid, Button } from "@mui/material";
 import React, { useState } from "react";
 import CustomFormLabel from "@/app/components/Forms/ThemeElements/CustomFormLabel";
 import CustomTextField from "@/app/components/Forms/ThemeElements/CustomTextField";
-import { usePathname, useRouter } from "next/navigation";
-import { createKullanici } from "@/api/DenetciIslemleri/DenetciIslemleri";
+import { useRouter } from "next/navigation";
+import { createKullaniciDetayli } from "@/api/DenetciIslemleri/DenetciIslemleri";
 import { useSelector } from "@/store/hooks";
 import { AppState } from "@/store/store";
+import { enqueueSnackbar } from "notistack";
 
 const KullaniciEkleForm = ({ id }: { id?: string }) => {
   const user = useSelector((state: AppState) => state.userReducer);
@@ -24,33 +25,60 @@ const KullaniciEkleForm = ({ id }: { id?: string }) => {
   const [sifre, setSifre] = useState("");
   const [personelDosyaArsivId, setPersonelDosyaArsivId] = useState("");
   const [aktifPasif, setAktifPasif] = useState(true);
+  const [errorMessage, setErrorMessage] = useState<string | null>(null);
+  const [isSubmitting, setIsSubmitting] = useState(false);
 
   const handleButtonClick = async () => {
+    const trimmedEmail = email.trim();
+    if (!trimmedEmail) {
+      const msg = "E-posta adresi zorunludur.";
+      setErrorMessage(msg);
+      enqueueSnackbar(msg, { variant: "error" });
+      return;
+    }
+
+    setErrorMessage(null);
+    setIsSubmitting(true);
+
     const createdKullanici = {
       denetciId,
+      bdSicilNo: bdScilNo,
       unvani,
       personelAdi,
       tel,
       gsm,
-      email,
+      email: trimmedEmail,
       sifre,
       personelDosyaArsivId,
       aktifPasif,
     };
     try {
-      const result = await createKullanici(user.token || "", createdKullanici);
-      if (result) {
+      const result = await createKullaniciDetayli(user.token || "", createdKullanici);
+      if (result.ok) {
+        enqueueSnackbar("Kullanıcı başarıyla eklendi.", { variant: "success" });
         router.push("/DenetciFirmaIslemleri");
       } else {
-        console.error("Kullanıcı ekleme başarısız");
+        const msg = result.message || "Kullanıcı ekleme başarısız.";
+        setErrorMessage(msg);
+        enqueueSnackbar(msg, { variant: "error" });
       }
     } catch (error) {
       console.error("Bir hata oluştu:", error);
+      const msg = "Kullanıcı eklenirken bir hata oluştu.";
+      setErrorMessage(msg);
+      enqueueSnackbar(msg, { variant: "error" });
+    } finally {
+      setIsSubmitting(false);
     }
   };
 
   return (
     <Grid container spacing={3}>
+      {errorMessage && (
+        <Grid size={{ xs: 12 }}>
+          <Alert severity="error">{errorMessage}</Alert>
+        </Grid>
+      )}
       <Grid size={{ xs: 12, sm: 3 }} display="flex" alignItems="center">
         <CustomFormLabel
           htmlFor="bd-sicilNo"
@@ -159,8 +187,13 @@ const KullaniciEkleForm = ({ id }: { id?: string }) => {
 
       <Grid size={{ xs: 12, sm: 3 }}></Grid>
       <Grid size={{ xs: 12, sm: 9 }}>
-        <Button variant="contained" color="primary" onClick={handleButtonClick}>
-          Kullanıcı Ekle
+        <Button
+          variant="contained"
+          color="primary"
+          disabled={isSubmitting}
+          onClick={handleButtonClick}
+        >
+          {isSubmitting ? "Kaydediliyor..." : "Kullanıcı Ekle"}
         </Button>
       </Grid>
     </Grid>
