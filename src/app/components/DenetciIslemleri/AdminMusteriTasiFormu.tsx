@@ -278,18 +278,11 @@ const AdminMusteriTasiFormu = () => {
     setOverrideWebAdresi(selectedOldCompany.webAdresi || "");
 
     setSelectedTableKeys((prev) => {
-      const hasEnflasyon = selectedOldCompany.enflasyonMu === true;
       const defaultKeys = transferTables
-        .filter(
-          (t) =>
-            t.defaultSelected !== false &&
-            (t.key !== "EnflasyonDonusumMizan" || hasEnflasyon)
-        )
+        .filter((t) => t.defaultSelected !== false)
         .map((t) => t.key);
       if (prev.length === 0) return defaultKeys;
-      return hasEnflasyon
-        ? prev
-        : prev.filter((k) => k !== "EnflasyonDonusumMizan");
+      return prev;
     });
 
     let cancelled = false;
@@ -371,12 +364,7 @@ const AdminMusteriTasiFormu = () => {
     return oldCompanies.filter((c) => !c.alreadyImported);
   }, [oldCompanies, onlyUnimportedCompanies]);
 
-  const visibleTransferTables = useMemo(() => {
-    const hasEnflasyon = selectedOldCompany?.enflasyonMu === true;
-    return transferTables.filter(
-      (t) => t.key !== "EnflasyonDonusumMizan" || hasEnflasyon
-    );
-  }, [transferTables, selectedOldCompany]);
+  const visibleTransferTables = transferTables;
 
   const tableDisplayNameMap = useMemo(() => {
     const map = new Map<string, string>();
