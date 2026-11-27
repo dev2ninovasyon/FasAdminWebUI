@@ -52,6 +52,12 @@ const Menuitems: MenuitemsType[] = [
         icon: IconPoint,
         href: "/KullaniciIslemleri",
       },
+      {
+        id: uniqueId(),
+        title: "Eski Sistemden Müşteri Taşı",
+        icon: IconPoint,
+        href: "/DenetciFirmaIslemleri/MusteriTasi",
+      },
     ],
   },
   {
